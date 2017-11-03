@@ -8,7 +8,7 @@ stds.roblox = {
 
 		-- Extra functions
 		"tick", "warn", "spawn",
-		"wait", "settings",
+		"wait", "settings", "typeof",
 
 		-- Types
 		"Vector2", "Vector3",

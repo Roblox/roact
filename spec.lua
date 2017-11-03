@@ -1,10 +1,10 @@
-local lemur = require("lemur")
+local lemur = require("modules.lemur")
 
 local habitat = lemur.Habitat.new()
 
 local Roact = lemur.Instance.new("Folder")
 Roact.Name = "Roact"
-habitat:loadFromFs("src/roact", Roact)
+habitat:loadFromFs("lib", Roact)
 
 -- Simulate rbxpacker's 'collapse' mechanism
 do
@@ -21,7 +21,7 @@ end
 
 local TestEZ = lemur.Instance.new("Folder")
 TestEZ.Name = "TestEZ"
-habitat:loadFromFs("testez/lib", TestEZ)
+habitat:loadFromFs("modules/testez/lib", TestEZ)
 
 local TestBootstrap = habitat:require(TestEZ.TestBootstrap)
 local TextReporter = habitat:require(TestEZ.Reporters.TextReporter)

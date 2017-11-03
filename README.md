@@ -33,8 +33,6 @@ If building a Roblox place by importing scripts from the filesystem, copy the `s
 # Roact
 Roact is a declarative Lua view framework intended to mirror Facebook's *React* framework. It exposes a very similar API to React and implements nearly identical semantics.
 
-**This document is a work in progress. See the `Examples` folder for pure code examples of how to use Roact.**
-
 ## Hello, Roact!
 This sample creates a full-screen `TextLabel` with a greeting:
 

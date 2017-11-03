@@ -22,7 +22,7 @@ install:
   - ./install-dependencies
 
 script:
-  - luacheck src
+  - luacheck lib
   - lua -lluacov spec.lua
 
 after_success:

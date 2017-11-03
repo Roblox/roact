@@ -1,4 +1,4 @@
 #!/bin/sh
 
-git clone --depth=1 https://github.com/LPGhatguy/lemur.git lemur
-git clone --depth=1 https://github.com/Roblox/TestEZ.git testez
+git clone --depth=1 https://github.com/LPGhatguy/lemur.git modules/lemur
+git clone --depth=1 https://github.com/Roblox/TestEZ.git modules/testez

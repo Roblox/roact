@@ -1,0 +1,3 @@
+#!/bin/sh
+
+rbxpacker --exclude **/*.spec.lua --folder Roact --name Roact src/roact > roact-installer.lua

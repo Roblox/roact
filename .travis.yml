@@ -1,0 +1,29 @@
+# http://kiki.to/blog/2016/02/04/talk-continuous-integration-with-lua/
+language: python
+sudo: false
+
+branches:
+  only:
+    - master
+
+env:
+  - LUA="lua=5.1"
+
+before_install:
+  - pip install hererocks
+  - hererocks lua_install -r^ --$LUA
+  - export PATH=$PATH:$PWD/lua_install/bin
+
+install:
+  - luarocks install busted
+  - luarocks install luacov
+  - luarocks install luacov-coveralls
+  - luarocks install luacheck
+  - ./install-dependencies
+
+script:
+  - luacheck src
+  - lua -lluacov spec.lua
+
+after_success:
+  - luacov-coveralls -e $TRAVIS_BUILD_DIR/lua_install

@@ -1,6 +1,6 @@
 return {
 	include = {
-		"lib",
+		"^lib",
 	},
 	exclude = {
 		"%.spec$",

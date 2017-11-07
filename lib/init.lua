@@ -1,8 +1,5 @@
 --[[
 	Packages up the internals of Roact and exposes a public API for it.
-
-	See the 'RoactImplementation' folder for the actual implementation of Roact,
-	this file exists just to expose it from a single module.
 ]]
 
 local Core = require(script.Core)

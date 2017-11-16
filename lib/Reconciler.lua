@@ -70,6 +70,9 @@ function Reconciler.teardown(instanceHandle)
 		if instanceHandle._reified then
 			Reconciler.teardown(instanceHandle._reified)
 		end
+
+		-- Cut our circular reference between the instance and its handle
+		instanceHandle._instance = nil
 	elseif Core.isPortal(element) then
 		for _, child in pairs(instanceHandle._reifiedChildren) do
 			Reconciler.teardown(child)

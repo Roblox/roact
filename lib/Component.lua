@@ -163,7 +163,7 @@ function Component:_forceUpdate(newProps, newState)
 			newChildElement,
 			self._handle._parent,
 			self._handle._key,
-			self._handle._context
+			self._context
 		)
 	end
 

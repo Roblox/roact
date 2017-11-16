@@ -256,7 +256,13 @@ function Reconciler._reconcile(instanceHandle, newElement)
 	if oldElement.type ~= newElement.type then
 		local parent = instanceHandle._parent
 		local key = instanceHandle._key
-		local context = instanceHandle._context
+
+		local context
+		if Core.isStatefulElement(oldElement) then
+			context = instanceHandle._instance._context
+		else
+			context = instanceHandle._context
+		end
 
 		Reconciler.teardown(instanceHandle)
 

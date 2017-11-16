@@ -34,8 +34,8 @@ Reconciler._singleEventManager = SingleEventManager.new()
 	Destroy the given Roact instance, all of its descendants, and associated
 	Roblox instances owned by the components.
 ]]
-function Reconciler.teardown(instance)
-	local element = instance._element
+function Reconciler.teardown(instanceHandle)
+	local element = instanceHandle._element
 
 	if Core.isPrimitiveElement(element) then
 		-- We're destroying a Roblox Instance-based object
@@ -46,32 +46,32 @@ function Reconciler.teardown(instance)
 			element.props[Core.Ref](nil)
 		end
 
-		for _, child in pairs(instance._reifiedChildren) do
+		for _, child in pairs(instanceHandle._reifiedChildren) do
 			Reconciler.teardown(child)
 		end
 
 		-- Necessary to make sure SingleEventManager doesn't leak references
-		Reconciler._singleEventManager:disconnectAll(instance._rbx)
+		Reconciler._singleEventManager:disconnectAll(instanceHandle._rbx)
 
-		instance._rbx:Destroy()
+		instanceHandle._rbx:Destroy()
 	elseif Core.isFunctionalElement(element) then
 		-- Functional components can return nil
-		if instance._reified then
-			Reconciler.teardown(instance._reified)
+		if instanceHandle._reified then
+			Reconciler.teardown(instanceHandle._reified)
 		end
 	elseif Core.isStatefulElement(element) then
 		-- Tell the component we're about to tear everything down.
 		-- This gives it some notice!
-		if instance._instance.willUnmount then
-			instance._instance:willUnmount()
+		if instanceHandle._instance.willUnmount then
+			instanceHandle._instance:willUnmount()
 		end
 
 		-- Stateful components can return nil from render()
-		if instance._reified then
-			Reconciler.teardown(instance._reified)
+		if instanceHandle._reified then
+			Reconciler.teardown(instanceHandle._reified)
 		end
 	elseif Core.isPortal(element) then
-		for _, child in pairs(instance._reifiedChildren) do
+		for _, child in pairs(instanceHandle._reifiedChildren) do
 			Reconciler.teardown(child)
 		end
 	else
@@ -160,7 +160,7 @@ function Reconciler._reifyInternal(element, parent, key, context)
 	elseif Core.isFunctionalElement(element) then
 		-- Functional elements contain 0 or 1 children.
 
-		local instance = {
+		local instanceHandle = {
 			_key = key,
 			_parent = parent,
 			_element = element,
@@ -169,16 +169,16 @@ function Reconciler._reifyInternal(element, parent, key, context)
 
 		local vdom = element.type(element.props)
 		if vdom then
-			instance._reified = Reconciler._reifyInternal(vdom, parent, key, context)
+			instanceHandle._reified = Reconciler._reifyInternal(vdom, parent, key, context)
 		end
 
-		return instance
+		return instanceHandle
 	elseif Core.isStatefulElement(element) then
 		-- Stateful elements have 0 or 1 children, and also have a backing
 		-- instance that can keep state.
 
 		-- We separate the instance's implementation from our handle to it.
-		local handle = {
+		local instanceHandle = {
 			_key = key,
 			_parent = parent,
 			_element = element,
@@ -188,19 +188,19 @@ function Reconciler._reifyInternal(element, parent, key, context)
 		local instance = element.type._new(element.props, context)
 
 		-- See Component:_forceUpdate for references to this handle.
-		instance._handle = handle
-		handle._instance = instance
+		instance._handle = instanceHandle
+		instanceHandle._instance = instance
 
 		local vdom = instance:render()
 		if vdom then
-			handle._reified = Reconciler._reifyInternal(vdom, parent, key, instance._context)
+			instanceHandle._reified = Reconciler._reifyInternal(vdom, parent, key, instance._context)
 		end
 
 		if instance.didMount then
 			instance:didMount()
 		end
 
-		return handle
+		return instanceHandle
 	elseif Core.isPortal(element) then
 		-- Portal elements have one or more children.
 
@@ -241,12 +241,12 @@ end
 	_reconcile will return the instance that should be used. This instance can
 	be different than the one that was passed in.
 ]]
-function Reconciler._reconcile(instance, newElement)
-	local oldElement = instance._element
+function Reconciler._reconcile(instanceHandle, newElement)
+	local oldElement = instanceHandle._element
 
 	-- Instance was deleted!
 	if not newElement then
-		Reconciler.teardown(instance)
+		Reconciler.teardown(instanceHandle)
 
 		return nil
 	end
@@ -254,11 +254,11 @@ function Reconciler._reconcile(instance, newElement)
 	-- If the element changes type, we assume its subtree will be substantially
 	-- different. This lets us skip comparisons of a large swath of nodes.
 	if oldElement.type ~= newElement.type then
-		local parent = instance._parent
-		local key = instance._key
-		local context = instance._context
+		local parent = instanceHandle._parent
+		local key = instanceHandle._key
+		local context = instanceHandle._context
 
-		Reconciler.teardown(instance)
+		Reconciler.teardown(instanceHandle)
 
 		local newInstance = Reconciler._reifyInternal(newElement, parent, key, context)
 
@@ -278,59 +278,64 @@ function Reconciler._reconcile(instance, newElement)
 		end
 
 		-- Update properties and children of the Roblox object.
-		Reconciler._reconcilePrimitiveProps(oldElement, newElement, instance._rbx)
-		Reconciler._reconcilePrimitiveChildren(instance, newElement)
+		Reconciler._reconcilePrimitiveProps(oldElement, newElement, instanceHandle._rbx)
+		Reconciler._reconcilePrimitiveChildren(instanceHandle, newElement)
 
-		instance._element = newElement
+		instanceHandle._element = newElement
 
 		-- Apply the new ref if there was a ref change.
 		if refChanged and newRef then
-			newRef(instance._rbx)
+			newRef(instanceHandle._rbx)
 		end
 
-		return instance
+		return instanceHandle
 	elseif Core.isFunctionalElement(newElement) then
-		instance._element = newElement
+		instanceHandle._element = newElement
 
 		local rendered = newElement.type(newElement.props)
 		local newChild
 
-		if instance._reified then
+		if instanceHandle._reified then
 			-- Transition from tree to tree, even if 'rendered' is nil
-			newChild = Reconciler._reconcile(instance._reified, rendered)
+			newChild = Reconciler._reconcile(instanceHandle._reified, rendered)
 		elseif rendered then
 			-- Transition from nil to new tree
-			newChild = Reconciler._reifyInternal(rendered, instance._parent, instance._key, instance._context)
+			newChild = Reconciler._reifyInternal(
+				rendered,
+				instanceHandle._parent,
+				instanceHandle._key,
+				instanceHandle._context
+			)
 		end
 
-		instance._reified = newChild
+		instanceHandle._reified = newChild
 
-		return instance
+		return instanceHandle
 	elseif Core.isStatefulElement(newElement) then
-		instance._element = newElement
+		instanceHandle._element = newElement
 
 		-- Stateful elements can take care of themselves.
-		instance._instance:_update(newElement.props)
+		instanceHandle._instance:_update(newElement.props)
 
-		return instance
+		return instanceHandle
 	elseif Core.isPortal(newElement) then
-		if instance._rbx ~= newElement.props.target then
-			local parent = instance._parent
-			local key = instance._key
-			local context = instance._context
+		if instanceHandle._rbx ~= newElement.props.target then
+			local parent = instanceHandle._parent
+			local key = instanceHandle._key
+			local context = instanceHandle._context
 
-			Reconciler.teardown(instance)
+			Reconciler.teardown(instanceHandle)
 
 			local newInstance = Reconciler._reifyInternal(newElement, parent, key, context)
 
 			return newInstance
 		end
 
-		Reconciler._reconcilePrimitiveChildren(instance, newElement)
+		Reconciler._reconcilePrimitiveChildren(instanceHandle, newElement)
 
-		instance._element = newElement
+		instanceHandle._element = newElement
 
-		return instance
+		return instanceHandle
 	end
 
 	error(("Cannot reconcile to match invalid Roact element %q"):format(tostring(newElement)))

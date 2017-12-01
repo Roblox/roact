@@ -99,5 +99,3 @@ Roact.reify(root, LocalPlayer.PlayerGui, "HelloWorld")
 
 ## License
 Roact is available under the Apache 2.0 license. See [LICENSE](LICENSE) for details.
-
-For easy distribution, the license is duplicated in [lib/LICENSE.lua](lib/LICENSE.lua).

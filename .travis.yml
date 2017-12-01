@@ -20,7 +20,7 @@ install:
   - luarocks install luacov
   - luarocks install luacov-coveralls
   - luarocks install luacheck
-  - ./install-dependencies
+  - lua ./install-dependencies.lua
 
 script:
   - luacheck lib

@@ -172,4 +172,26 @@ function Component:_forceUpdate(newProps, newState)
 	end
 end
 
+--[[
+	Initializes the component instance and attaches it to the given
+	instance handle, created by Reconciler._reify.
+]]
+function Component:_reify(handle)
+	self._handle = handle
+
+	local vdom = self:render()
+	if vdom then
+		handle._reified = Reconciler._reifyInternal(
+			vdom,
+			handle._parent,
+			handle._key,
+			self._context
+		)
+	end
+
+	if self.didMount then
+		self:didMount()
+	end
+end
+
 return Component

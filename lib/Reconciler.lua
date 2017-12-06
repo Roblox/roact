@@ -190,18 +190,8 @@ function Reconciler._reifyInternal(element, parent, key, context)
 
 		local instance = element.type._new(element.props, context)
 
-		-- See Component:_forceUpdate for references to this handle.
-		instance._handle = instanceHandle
 		instanceHandle._instance = instance
-
-		local vdom = instance:render()
-		if vdom then
-			instanceHandle._reified = Reconciler._reifyInternal(vdom, parent, key, instance._context)
-		end
-
-		if instance.didMount then
-			instance:didMount()
-		end
+		instance:_reify(instanceHandle)
 
 		return instanceHandle
 	elseif Core.isPortal(element) then

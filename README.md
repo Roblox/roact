@@ -1,10 +1,10 @@
 <h1 align="center">Roact</h1>
 <div align="center">
-	<a href="https://travis-ci.org/Roblox/Roact">
-		<img src="https://api.travis-ci.org/Roblox/Roact.svg?branch=master" alt="Travis-CI Build Status" />
+	<a href="https://travis-ci.org/Roblox/roact">
+		<img src="https://api.travis-ci.org/Roblox/roact.svg?branch=master" alt="Travis-CI Build Status" />
 	</a>
-	<a href="https://coveralls.io/github/Roblox/Roact?branch=master">
-		<img src="https://coveralls.io/repos/github/Roblox/Roact/badge.svg?branch=master" alt="Coveralls Coverage" />
+	<a href="https://coveralls.io/github/Roblox/roact?branch=master">
+		<img src="https://coveralls.io/repos/github/Roblox/roact/badge.svg?branch=master" alt="Coveralls Coverage" />
 	</a>
 	<a href="#">
 		<img src="https://img.shields.io/badge/docs-soon-red.svg" alt="Documentation" />

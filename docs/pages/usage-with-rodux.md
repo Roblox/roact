@@ -45,4 +45,4 @@ local element = Roact.createElement(RoactRodux.StoreProvider, {
 })
 ```
 
-For a complete example, check out the [Roact with Rodux example](examples/roact-rodux.md).
+For a complete example, check out the [Roact with Rodux example](/examples/roact-rodux.md).

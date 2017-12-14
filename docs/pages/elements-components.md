@@ -121,7 +121,7 @@ end
 
 The primary difference here is that you call `extend` on `Roact.Component`, passing in a name to give to your new component. This name is used for debugging.
 
-Stateful components also have a notion of state, which lets them keep track of their own data that can change. See [the 'counter' example](/examples/counter.html) for a good example of how to utilize state.
+Stateful components also have a notion of state, which lets them keep track of their own data that can change. See [the 'counter' example](/examples/counter.md) for a good example of how to utilize state.
 
 ### Higher-Order Components (HOC)
 A higher-order component (or HOC) is just a function that returns a component. It's a common pattern for APIs like Roact-Rodux that wrap an existing component with some extra features.

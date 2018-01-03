@@ -29,5 +29,5 @@ end
 
 local element = Roact.createElement(App)
 
-Roact.reify(element, Player.LocalPlayer.PlayerGui, "EventsExample")
+Roact.reify(element, Players.LocalPlayer.PlayerGui, "EventsExample")
 ```

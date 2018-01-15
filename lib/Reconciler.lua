@@ -223,6 +223,10 @@ function Reconciler._reifyInternal(element, parent, key, context)
 			_reifiedChildren = reifiedChildren,
 			_rbx = target,
 		}
+	elseif typeof(element) == "boolean" then
+		-- Ignore booleans of either value
+		-- See https://github.com/Roblox/roact/issues/14
+		return nil
 	end
 
 	error(("Cannot reify invalid Roact element %q"):format(tostring(element)))

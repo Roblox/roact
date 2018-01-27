@@ -396,7 +396,19 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 		-- Roblox does this check for normal values, but we have special
 		-- properties like events that warrant this.
 		if oldValue ~= newValue then
-			Reconciler._setRbxProp(rbx, key, newValue)
+			local success, err = pcall(Reconciler._setRbxProp, rbx, key, newValue)
+
+			if not success then
+				local source = toElement.source or "\n\t<Use Roact.DEBUG_ENABLE() to enable detailed tracebacks>\n"
+
+				local message = ("Failed to set property %s on primitive instance of class %s\n%s\n%s"):format(
+					key, rbx.ClassName,
+					err,
+					source
+				)
+
+				error(message, 0)
+			end
 		end
 	end
 
@@ -408,7 +420,19 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 			local oldValue = fromElement.props[key]
 
 			if oldValue ~= newValue then
-				Reconciler._setRbxProp(rbx, key, newValue)
+				local success, err = pcall(Reconciler._setRbxProp, rbx, key, newValue)
+
+				if not success then
+					local source = toElement.source or "\n\t<Use Roact.DEBUG_ENABLE() to enable detailed tracebacks>\n"
+
+					local message = ("Failed to set property %s on primitive instance of class %s\n%s\n%s"):format(
+						key, rbx.ClassName,
+						err,
+						source
+					)
+
+					error(message, 0)
+				end
 			end
 		end
 	end

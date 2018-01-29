@@ -60,7 +60,7 @@ function Reconciler.teardown(instanceHandle)
 			Reconciler.teardown(instanceHandle._reified)
 		end
 	elseif Core.isStatefulElement(element) then
-        -- Stop the component from setting state in willUnmount or anywhere thereafter.
+		-- Stop the component from setting state in willUnmount or anywhere thereafter.
 		instanceHandle._instance._canSetState = false
 
 		-- Tell the component we're about to tear everything down.

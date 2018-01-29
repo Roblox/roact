@@ -109,22 +109,8 @@ function Reconciler._reifyInternal(element, parent, key, context)
 		local rbx = Instance.new(element.type)
 
 		-- Update Roblox properties
-		local ok, err = pcall(function()
-			for key, value in pairs(element.props) do
-				Reconciler._setRbxProp(rbx, key, value)
-			end
-		end)
-
-		if not ok then
-			local source = element.source or "\n\t<Use Roact.DEBUG_ENABLE() to enable detailed tracebacks>\n"
-
-			local message = ("\nFailed to set properties on instance of type %q\n%s\n%s"):format(
-				element.type,
-				err,
-				source
-			)
-
-			error(message)
+		for key, value in pairs(element.props) do
+			Reconciler._setRbxProp(rbx, key, value, element)
 		end
 
 		-- Create children!
@@ -396,19 +382,7 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 		-- Roblox does this check for normal values, but we have special
 		-- properties like events that warrant this.
 		if oldValue ~= newValue then
-			local success, err = pcall(Reconciler._setRbxProp, rbx, key, newValue)
-
-			if not success then
-				local source = toElement.source or "\n\t<Use Roact.DEBUG_ENABLE() to enable detailed tracebacks>\n"
-
-				local message = ("Failed to set property %s on primitive instance of class %s\n%s\n%s"):format(
-					key, rbx.ClassName,
-					err,
-					source
-				)
-
-				error(message, 0)
-			end
+			Reconciler._setRbxProp(rbx, key, newValue, toElement)
 		end
 	end
 
@@ -420,22 +394,18 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 			local oldValue = fromElement.props[key]
 
 			if oldValue ~= newValue then
-				local success, err = pcall(Reconciler._setRbxProp, rbx, key, newValue)
-
-				if not success then
-					local source = toElement.source or "\n\t<Use Roact.DEBUG_ENABLE() to enable detailed tracebacks>\n"
-
-					local message = ("Failed to set property %s on primitive instance of class %s\n%s\n%s"):format(
-						key, rbx.ClassName,
-						err,
-						source
-					)
-
-					error(message, 0)
-				end
+				Reconciler._setRbxProp(rbx, key, newValue, toElement)
 			end
 		end
 	end
+end
+
+--[[
+	Used in _setRbxProp to avoid creating a new closure for every property set.
+]]
+
+local function _rawSet(rbx, key, value)
+	rbx[key] = value
 end
 
 --[[
@@ -449,11 +419,24 @@ end
 	element, created using debug.traceback(), that points to where the element
 	was created.
 ]]
-function Reconciler._setRbxProp(rbx, key, value)
+function Reconciler._setRbxProp(rbx, key, value, element)
 	if type(key) == "string" then
 		-- Regular property
 
-		rbx[key] = value
+		local success, err = pcall(_rawSet, rbx, key, value)
+
+		if not success then
+			local source = element.source or "\n\t<Use Roact.DEBUG_ENABLE() to enable detailed tracebacks>\n"
+
+			local message = ("Failed to set property %s on primitive instance of class %s\n%s\n%s"):format(
+				key,
+				rbx.ClassName,
+				err,
+				source
+			)
+
+			error(message, 0)
+		end
 	elseif type(key) == "table" then
 		-- Special property with extra data attached.
 

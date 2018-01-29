@@ -446,6 +446,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 		else
 			local source = element.source or DEFAULT_SOURCE
 
+			-- luacheck: ignore 6
 			local message = ("Failed to set special property on primitive instance of class %s\nInvalid special property type %q\n%s"):format(
 				rbx.ClassName,
 				tostring(key.type),

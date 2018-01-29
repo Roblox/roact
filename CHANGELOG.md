@@ -1,7 +1,9 @@
 # Roact Changelog
 
 ## Current master
-* Support booleans in reconciliation ([#14](https://github.com/Roblox/roact/issues/14))
+* Allow (and ignore) booleans as children of components (#15)
+* Throw a nicer error when failing to set primitive properties (#21)
+* `setState` now throws an error if it's called in the wrong place (#23)
 
-## 1.0.0 (TODO: Date)
-* Initial release
+## 1.0.0 Prerelease 1 (December 1, 2017)
+* Initial pre-release build

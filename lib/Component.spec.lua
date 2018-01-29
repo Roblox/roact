@@ -173,4 +173,59 @@ return function()
 
 		Reconciler.teardown(instance)
 	end)
+
+	describe("setState", function()
+		it("should throw when called in init", function()
+			local InitComponent = Component:extend("InitComponent")
+
+			function InitComponent:init()
+				self:setState({
+					a = 1
+				})
+			end
+
+			local initElement = Core.createElement(InitComponent)
+
+			expect(function()
+				Reconciler.reify(initElement)
+			end).to.throw()
+		end)
+
+		it("should throw when called in render", function()
+			local RenderComponent = Component:extend("RenderComponent")
+
+			function RenderComponent:render()
+				self:setState({
+					a = 1
+				})
+			end
+
+			local renderElement = Core.createElement(RenderComponent)
+
+			expect(function()
+				Reconciler.reify(renderElement)
+			end).to.throw()
+		end)
+
+		it("should throw when called in willUnmount", function()
+			local TestComponent = Component:extend("TestComponent")
+
+			function TestComponent:render()
+				return nil
+			end
+
+			function TestComponent:willUnmount()
+				self:setState({
+					a = 1
+				})
+			end
+
+			local element = Core.createElement(TestComponent)
+			local instance = Reconciler.reify(element)
+
+			expect(function()
+				Reconciler.teardown(instance)
+			end).to.throw()
+		end)
+	end)
 end

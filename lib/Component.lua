@@ -43,6 +43,8 @@ function Component:extend(name)
 		local self = {}
 
 		self.props = props
+		-- Used for tracking whether the component is in a position to set state.
+		self._canSetState = false
 		self._context = {}
 
 		-- Shallow copy all context values from our parent element.
@@ -63,6 +65,9 @@ function Component:extend(name)
 		if not self.state then
 			self.state = {}
 		end
+
+		-- Now that state has definitely been set, we can now allow it to be changed.
+		self._canSetState = true
 
 		return self
 	end
@@ -101,6 +106,14 @@ end
 	current state object.
 ]]
 function Component:setState(partialState)
+	-- State cannot be set in any of the following places:
+	-- * During the component's init function
+	-- * During the component's render function
+	-- * After the component has been unmounted (or is in the process of unmounting, e.g. willUnmount)
+	if not self._canSetState then
+		error("setState cannot be used currently: are you calling setState from an init, render, or willUnmount function?", 0)
+	end
+
 	local newState = {}
 
 	for key, value in pairs(self.state) do
@@ -149,7 +162,9 @@ function Component:_forceUpdate(newProps, newState)
 		self.state = newState
 	end
 
+	self._canSetState = false
 	local newChildElement = self:render()
+	self._canSetState = true
 
 	if self._handle._reified ~= nil then
 		-- We returned an element before, update it.

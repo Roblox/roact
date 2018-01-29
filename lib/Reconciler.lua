@@ -26,6 +26,8 @@ local Core = require(script.Parent.Core)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local SingleEventManager = require(script.Parent.SingleEventManager)
 
+local DEFAULT_SOURCE = "\n\t<Use Roact.DEBUG_ENABLE() to enable detailed tracebacks>\n"
+
 local Reconciler = {}
 
 Reconciler._singleEventManager = SingleEventManager.new()
@@ -112,22 +114,8 @@ function Reconciler._reifyInternal(element, parent, key, context)
 		local rbx = Instance.new(element.type)
 
 		-- Update Roblox properties
-		local ok, err = pcall(function()
-			for key, value in pairs(element.props) do
-				Reconciler._setRbxProp(rbx, key, value)
-			end
-		end)
-
-		if not ok then
-			local source = element.source or "\n\t<Use Roact.DEBUG_ENABLE() to enable detailed tracebacks>\n"
-
-			local message = ("\nFailed to set properties on instance of type %q\n%s\n%s"):format(
-				element.type,
-				err,
-				source
-			)
-
-			error(message)
+		for key, value in pairs(element.props) do
+			Reconciler._setRbxProp(rbx, key, value, element)
 		end
 
 		-- Create children!
@@ -399,7 +387,7 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 		-- Roblox does this check for normal values, but we have special
 		-- properties like events that warrant this.
 		if oldValue ~= newValue then
-			Reconciler._setRbxProp(rbx, key, newValue)
+			Reconciler._setRbxProp(rbx, key, newValue, toElement)
 		end
 	end
 
@@ -411,10 +399,17 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 			local oldValue = fromElement.props[key]
 
 			if oldValue ~= newValue then
-				Reconciler._setRbxProp(rbx, key, newValue)
+				Reconciler._setRbxProp(rbx, key, newValue, toElement)
 			end
 		end
 	end
+end
+
+--[[
+	Used in _setRbxProp to avoid creating a new closure for every property set.
+]]
+local function set(rbx, key, value)
+	rbx[key] = value
 end
 
 --[[
@@ -428,24 +423,53 @@ end
 	element, created using debug.traceback(), that points to where the element
 	was created.
 ]]
-function Reconciler._setRbxProp(rbx, key, value)
+function Reconciler._setRbxProp(rbx, key, value, element)
 	if type(key) == "string" then
 		-- Regular property
 
-		rbx[key] = value
+		local success, err = pcall(set, rbx, key, value)
+
+		if not success then
+			local source = element.source or DEFAULT_SOURCE
+
+			local message = ("Failed to set property %s on primitive instance of class %s\n%s\n%s"):format(
+				key,
+				rbx.ClassName,
+				err,
+				source
+			)
+
+			error(message, 0)
+		end
 	elseif type(key) == "table" then
 		-- Special property with extra data attached.
 
 		if key.type == "event" then
 			Reconciler._singleEventManager:connect(rbx, key.name, value)
 		else
-			error(("Invalid special property type %q"):format(tostring(key.type)))
+			local source = element.source or DEFAULT_SOURCE
+
+			-- luacheck: ignore 6
+			local message = ("Failed to set special property on primitive instance of class %s\nInvalid special property type %q\n%s"):format(
+				rbx.ClassName,
+				tostring(key.type),
+				source
+			)
+
+			error(message, 0)
 		end
 	elseif type(key) ~= "userdata" then
 		-- Userdata values are special markers, usually created by Symbol
 		-- They have no data attached other than being unique keys
 
-		error(("Properties of type %q are not supported"):format(type(key)))
+		local source = element.source or DEFAULT_SOURCE
+
+		local message = ("Properties with a key type of %q are not supported\n%s"):format(
+			type(key),
+			source
+		)
+
+		error(message, 0)
 	end
 end
 

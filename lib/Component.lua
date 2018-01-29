@@ -111,7 +111,7 @@ function Component:setState(partialState)
 	-- * During the component's render function
 	-- * After the component has been unmounted (or is in the process of unmounting, e.g. willUnmount)
 	if not self._canSetState then
-		error("State cannot be set at this point: are you setting state from an init, render, or willUnmount function?", 0)
+		error("setState cannot be used currently: are you calling setState from an init, render, or willUnmount function?", 0)
 	end
 
 	local newState = {}

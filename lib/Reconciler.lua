@@ -403,8 +403,7 @@ end
 --[[
 	Used in _setRbxProp to avoid creating a new closure for every property set.
 ]]
-
-local function _rawSet(rbx, key, value)
+local function set(rbx, key, value)
 	rbx[key] = value
 end
 
@@ -423,7 +422,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 	if type(key) == "string" then
 		-- Regular property
 
-		local success, err = pcall(_rawSet, rbx, key, value)
+		local success, err = pcall(set, rbx, key, value)
 
 		if not success then
 			local source = element.source or "\n\t<Use Roact.DEBUG_ENABLE() to enable detailed tracebacks>\n"

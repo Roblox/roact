@@ -175,7 +175,7 @@ return function()
 	end)
 
 	describe("setState", function()
-		it("should throw when called in init or render", function()
+		it("should throw when called in init", function()
 			local InitComponent = Component:extend("InitComponent")
 
 			function InitComponent:init()
@@ -184,6 +184,14 @@ return function()
 				})
 			end
 
+			local initElement = Core.createElement(InitComponent)
+
+			expect(function()
+				Reconciler.reify(initElement)
+			end).to.throw()
+		end)
+
+		it("should throw when called in render", function()
 			local RenderComponent = Component:extend("RenderComponent")
 
 			function RenderComponent:render()
@@ -192,12 +200,7 @@ return function()
 				})
 			end
 
-			local initElement = Core.createElement(InitComponent)
 			local renderElement = Core.createElement(RenderComponent)
-
-			expect(function()
-				Reconciler.reify(initElement)
-			end).to.throw()
 
 			expect(function()
 				Reconciler.reify(renderElement)

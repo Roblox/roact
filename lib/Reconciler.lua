@@ -26,6 +26,8 @@ local Core = require(script.Parent.Core)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local SingleEventManager = require(script.Parent.SingleEventManager)
 
+local DEFAULT_SOURCE = "\n\t<Use Roact.DEBUG_ENABLE() to enable detailed tracebacks>\n"
+
 local Reconciler = {}
 
 Reconciler._singleEventManager = SingleEventManager.new()
@@ -425,7 +427,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 		local success, err = pcall(set, rbx, key, value)
 
 		if not success then
-			local source = element.source or "\n\t<Use Roact.DEBUG_ENABLE() to enable detailed tracebacks>\n"
+			local source = element.source or DEFAULT_SOURCE
 
 			local message = ("Failed to set property %s on primitive instance of class %s\n%s\n%s"):format(
 				key,
@@ -442,13 +444,28 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 		if key.type == "event" then
 			Reconciler._singleEventManager:connect(rbx, key.name, value)
 		else
-			error(("Invalid special property type %q"):format(tostring(key.type)))
+			local source = element.source or DEFAULT_SOURCE
+
+			local message = ("Failed to set special property on primitive instance of class %s\nInvalid special property type %q\n%s"):format(
+				rbx.ClassName,
+				tostring(key.type),
+				source
+			)
+
+			error(message, 0)
 		end
 	elseif type(key) ~= "userdata" then
 		-- Userdata values are special markers, usually created by Symbol
 		-- They have no data attached other than being unique keys
 
-		error(("Properties of type %q are not supported"):format(type(key)))
+		local source = element.source or DEFAULT_SOURCE
+
+		local message = ("Properties with a key type of %q are not supported\n%s"):format(
+			type(key),
+			source
+		)
+
+		error(message, 0)
 	end
 end
 

@@ -184,6 +184,10 @@ return function()
 				})
 			end
 
+			function InitComponent:render()
+				return nil
+			end
+
 			local initElement = Core.createElement(InitComponent)
 
 			expect(function()

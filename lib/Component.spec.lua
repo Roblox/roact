@@ -214,6 +214,14 @@ return function()
 		it("should throw when called in shouldUpdate", function()
 			local TestComponent = Component:extend("TestComponent")
 
+			local shouldUpdate
+
+			function TestComponent:init()
+				shouldUpdate = function()
+					self:shouldUpdate({}, {})
+				end
+			end
+
 			function TestComponent:render()
 				return nil
 			end
@@ -227,14 +235,20 @@ return function()
 			local testElement = Core.createElement(TestComponent)
 
 			expect(function()
-				local handle = Reconciler.reify(testElement)
-				-- Something of a hack, but...
-				handle._instance:shouldUpdate({}, {})
+				Reconciler.reify(testElement)
+				shouldUpdate()
 			end).to.throw()
 		end)
 
 		it("should throw when called in willUpdate", function()
 			local TestComponent = Component:extend("TestComponent")
+			local forceUpdate
+
+			function TestComponent:init()
+				forceUpdate = function()
+					self:_forceUpdate()
+				end
+			end
 
 			function TestComponent:render()
 				return nil
@@ -249,13 +263,20 @@ return function()
 			local testElement = Core.createElement(TestComponent)
 
 			expect(function()
-				local handle = Reconciler.reify(testElement)
-				handle._instance:_forceUpdate({}, {})
+				Reconciler.reify(testElement)
+				forceUpdate()
 			end).to.throw()
 		end)
 
 		it("should throw when called in didUpdate", function()
 			local TestComponent = Component:extend("TestComponent")
+			local forceUpdate
+
+			function TestComponent:init()
+				forceUpdate = function()
+					self:_forceUpdate()
+				end
+			end
 
 			function TestComponent:render()
 				return nil
@@ -270,8 +291,8 @@ return function()
 			local testElement = Core.createElement(TestComponent)
 
 			expect(function()
-				local handle = Reconciler.reify(testElement)
-				handle._instance:_forceUpdate({}, {})
+				Reconciler.reify(testElement)
+				forceUpdate()
 			end).to.throw()
 		end)
 

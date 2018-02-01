@@ -180,11 +180,11 @@ function Component:_forceUpdate(newProps, newState)
 		)
 	end
 
+	self._canSetState = true
+
 	if self.didUpdate then
 		self:didUpdate(oldProps, oldState)
 	end
-
-	self._canSetState = true
 end
 
 --[[
@@ -205,9 +205,7 @@ function Component:_reify(handle)
 	end
 
 	if self.didMount then
-		self._canSetState = false
 		self:didMount()
-		self._canSetState = true
 	end
 end
 

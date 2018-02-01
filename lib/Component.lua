@@ -106,12 +106,9 @@ end
 	current state object.
 ]]
 function Component:setState(partialState)
-	-- State cannot be set in any of the following places:
-	-- * During the component's init function
-	-- * During the component's render function
-	-- * After the component has been unmounted (or is in the process of unmounting, e.g. willUnmount)
+	-- State cannot be set in any lifecycle hooks.
 	if not self._canSetState then
-		error("setState cannot be used currently: are you calling setState from an init, render, or willUnmount function?", 0)
+		error("setState cannot be used currently: are you calling setState within a lifecycle hook?", 0)
 	end
 
 	local newState = {}
@@ -134,7 +131,9 @@ end
 	reconciliation step.
 ]]
 function Component:_update(newProps, newState)
+	self._canSetState = false
 	local willUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
+	self._canSetState = true
 
 	if willUpdate then
 		self:_forceUpdate(newProps, newState)
@@ -147,6 +146,7 @@ end
 	newProps and newState are optional.
 ]]
 function Component:_forceUpdate(newProps, newState)
+	self._canSetState = false
 	if self.willUpdate then
 		self:willUpdate(newProps or self.props, newState or self.state)
 	end
@@ -162,9 +162,7 @@ function Component:_forceUpdate(newProps, newState)
 		self.state = newState
 	end
 
-	self._canSetState = false
 	local newChildElement = self:render()
-	self._canSetState = true
 
 	if self._handle._reified ~= nil then
 		-- We returned an element before, update it.
@@ -185,6 +183,8 @@ function Component:_forceUpdate(newProps, newState)
 	if self.didUpdate then
 		self:didUpdate(oldProps, oldState)
 	end
+
+	self._canSetState = true
 end
 
 --[[

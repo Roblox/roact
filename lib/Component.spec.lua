@@ -211,6 +211,70 @@ return function()
 			end).to.throw()
 		end)
 
+		it("should throw when called in shouldUpdate", function()
+			local TestComponent = Component:extend("TestComponent")
+
+			function TestComponent:render()
+				return nil
+			end
+
+			function TestComponent:shouldUpdate()
+				self:setState({
+					a = 1
+				})
+			end
+
+			local testElement = Core.createElement(TestComponent)
+
+			expect(function()
+				local handle = Reconciler.reify(testElement)
+				-- Something of a hack, but...
+				handle._instance:shouldUpdate({}, {})
+			end).to.throw()
+		end)
+
+		it("should throw when called in willUpdate", function()
+			local TestComponent = Component:extend("TestComponent")
+
+			function TestComponent:render()
+				return nil
+			end
+
+			function TestComponent:willUpdate()
+				self:setState({
+					a = 1
+				})
+			end
+
+			local testElement = Core.createElement(TestComponent)
+
+			expect(function()
+				local handle = Reconciler.reify(testElement)
+				handle._instance:_forceUpdate({}, {})
+			end).to.throw()
+		end)
+
+		it("should throw when called in didUpdate", function()
+			local TestComponent = Component:extend("TestComponent")
+
+			function TestComponent:render()
+				return nil
+			end
+
+			function TestComponent:didUpdate()
+				self:setState({
+					a = 1
+				})
+			end
+
+			local testElement = Core.createElement(TestComponent)
+
+			expect(function()
+				local handle = Reconciler.reify(testElement)
+				handle._instance:_forceUpdate({}, {})
+			end).to.throw()
+		end)
+
 		it("should throw when called in willUnmount", function()
 			local TestComponent = Component:extend("TestComponent")
 

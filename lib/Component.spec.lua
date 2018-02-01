@@ -275,6 +275,26 @@ return function()
 			end).to.throw()
 		end)
 
+		it("should throw when called in didMount", function()
+			local TestComponent = Component:extend("TestComponent")
+
+			function TestComponent:render()
+				return nil
+			end
+
+			function TestComponent:didMount()
+				self:setState({
+					a = 1
+				})
+			end
+
+			local element = Core.createElement(TestComponent)
+
+			expect(function()
+				Reconciler.reify(element)
+			end).to.throw()
+		end)
+
 		it("should throw when called in willUnmount", function()
 			local TestComponent = Component:extend("TestComponent")
 

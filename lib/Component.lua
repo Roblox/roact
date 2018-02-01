@@ -205,7 +205,9 @@ function Component:_reify(handle)
 	end
 
 	if self.didMount then
+		self._canSetState = false
 		self:didMount()
+		self._canSetState = true
 	end
 end
 

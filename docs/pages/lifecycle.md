@@ -26,3 +26,5 @@ function TestComponent:willUnmount()
 	print("We're about to unmount!")
 end
 ```
+
+**Note:** If you are calling `setState` within `didMount` or `didUpdate`, make sure that you are not calling `setState` unconditionally. If `setState` is called every time `didMount` or `didUpdate` is called, you will cause a stack overflow error.

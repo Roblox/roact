@@ -10,6 +10,14 @@ local Component = {}
 
 Component.__index = Component
 
+-- The error message that is thrown when setState is called in the wrong place.
+-- This is declared here to avoid really messy indentation.
+local INVALID_SETSTATE_MESSAGE = [[setState cannot be used currently, are you calling setState from any of:
+* the willUpdate or willUnmount lifecycle hooks
+* the init function
+* the render function
+* the shouldUpdate function]]
+
 --[[
 	Create a new Roact stateful component class.
 
@@ -108,7 +116,7 @@ end
 function Component:setState(partialState)
 	-- State cannot be set in any lifecycle hooks.
 	if not self._canSetState then
-		error("setState cannot be used currently: are you calling setState within a lifecycle hook?", 0)
+		error(INVALID_SETSTATE_MESSAGE, 0)
 	end
 
 	local newState = {}

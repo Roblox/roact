@@ -214,11 +214,13 @@ return function()
 		it("should throw when called in shouldUpdate", function()
 			local TestComponent = Component:extend("TestComponent")
 
-			local shouldUpdate
+			local triggerTest
 
 			function TestComponent:init()
-				shouldUpdate = function()
-					self:shouldUpdate({}, {})
+				triggerTest = function()
+					self:setState({
+						a = 1
+					})
 				end
 			end
 
@@ -236,7 +238,7 @@ return function()
 
 			expect(function()
 				Reconciler.reify(testElement)
-				shouldUpdate()
+				triggerTest()
 			end).to.throw()
 		end)
 

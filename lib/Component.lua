@@ -12,7 +12,8 @@ Component.__index = Component
 
 -- The error message that is thrown when setState is called in the wrong place.
 -- This is declared here to avoid really messy indentation.
-local INVALID_SETSTATE_MESSAGE = [[setState cannot be used currently, are you calling setState from any of:
+local INVALID_SETSTATE_MESSAGE = [[
+setState cannot be used currently, are you calling setState from any of:
 * the willUpdate or willUnmount lifecycle hooks
 * the init function
 * the render function

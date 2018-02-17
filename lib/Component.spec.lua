@@ -184,6 +184,10 @@ return function()
 				})
 			end
 
+			function InitComponent:render()
+				return nil
+			end
+
 			local initElement = Core.createElement(InitComponent)
 
 			expect(function()
@@ -204,6 +208,65 @@ return function()
 
 			expect(function()
 				Reconciler.reify(renderElement)
+			end).to.throw()
+		end)
+
+		it("should throw when called in shouldUpdate", function()
+			local TestComponent = Component:extend("TestComponent")
+
+			local triggerTest
+
+			function TestComponent:init()
+				triggerTest = function()
+					self:setState({
+						a = 1
+					})
+				end
+			end
+
+			function TestComponent:render()
+				return nil
+			end
+
+			function TestComponent:shouldUpdate()
+				self:setState({
+					a = 1
+				})
+			end
+
+			local testElement = Core.createElement(TestComponent)
+
+			expect(function()
+				Reconciler.reify(testElement)
+				triggerTest()
+			end).to.throw()
+		end)
+
+		it("should throw when called in willUpdate", function()
+			local TestComponent = Component:extend("TestComponent")
+			local forceUpdate
+
+			function TestComponent:init()
+				forceUpdate = function()
+					self:_forceUpdate()
+				end
+			end
+
+			function TestComponent:render()
+				return nil
+			end
+
+			function TestComponent:willUpdate()
+				self:setState({
+					a = 1
+				})
+			end
+
+			local testElement = Core.createElement(TestComponent)
+
+			expect(function()
+				Reconciler.reify(testElement)
+				forceUpdate()
 			end).to.throw()
 		end)
 

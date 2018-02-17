@@ -10,6 +10,15 @@ local Component = {}
 
 Component.__index = Component
 
+-- The error message that is thrown when setState is called in the wrong place.
+-- This is declared here to avoid really messy indentation.
+local INVALID_SETSTATE_MESSAGE = [[
+setState cannot be used currently, are you calling setState from any of:
+* the willUpdate or willUnmount lifecycle hooks
+* the init function
+* the render function
+* the shouldUpdate function]]
+
 --[[
 	Create a new Roact stateful component class.
 
@@ -106,12 +115,9 @@ end
 	current state object.
 ]]
 function Component:setState(partialState)
-	-- State cannot be set in any of the following places:
-	-- * During the component's init function
-	-- * During the component's render function
-	-- * After the component has been unmounted (or is in the process of unmounting, e.g. willUnmount)
+	-- State cannot be set in any lifecycle hooks.
 	if not self._canSetState then
-		error("setState cannot be used currently: are you calling setState from an init, render, or willUnmount function?", 0)
+		error(INVALID_SETSTATE_MESSAGE, 0)
 	end
 
 	local newState = {}
@@ -134,7 +140,9 @@ end
 	reconciliation step.
 ]]
 function Component:_update(newProps, newState)
+	self._canSetState = false
 	local willUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
+	self._canSetState = true
 
 	if willUpdate then
 		self:_forceUpdate(newProps, newState)
@@ -147,6 +155,7 @@ end
 	newProps and newState are optional.
 ]]
 function Component:_forceUpdate(newProps, newState)
+	self._canSetState = false
 	if self.willUpdate then
 		self:willUpdate(newProps or self.props, newState or self.state)
 	end
@@ -162,9 +171,7 @@ function Component:_forceUpdate(newProps, newState)
 		self.state = newState
 	end
 
-	self._canSetState = false
 	local newChildElement = self:render()
-	self._canSetState = true
 
 	if self._handle._reified ~= nil then
 		-- We returned an element before, update it.
@@ -181,6 +188,8 @@ function Component:_forceUpdate(newProps, newState)
 			self._context
 		)
 	end
+
+	self._canSetState = true
 
 	if self.didUpdate then
 		self:didUpdate(oldProps, oldState)

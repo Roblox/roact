@@ -1,0 +1,24 @@
+site_name: Roact Documentation
+theme:
+  name: material
+  palette:
+    primary: 'Light Blue'
+    accent: 'Light Blue'
+
+pages:
+  - Home: index.md
+  - 'What is Roact?': what-is-roact.md
+  - Getting Started: getting-started.md
+  - Guide:
+    - Elements and Components: guide/elements-components.md
+    - Props and State: guide/props-and-state.md
+    - Lifecycle of Components: guide/lifecycle.md
+    - Usage with Rodux: guide/usage-with-rodux.md
+  - API Reference: api-reference.md
+  - Examples:
+    - Hello, Roact: examples/hello-roact.md
+    - Stateful Counter: examples/counter.md
+    - Events, the Roact Way: examples/events.md
+    - Tearing Down Components: examples/teardown.md
+    - Refs: examples/refs.md
+    - Roact with Rodux: examples/roact-rodux.md

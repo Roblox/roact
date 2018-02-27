@@ -39,7 +39,7 @@ The `children` argument is shorthand for adding a `Roact.Children` key to `props
 ### `Roact.reify(element, [parent, [key]]) -> RoactComponentInstance`
 Creates a Roblox Instance given a Roact element, and optionally a `parent` to put it in, and a `key` to use as the instance's `Name`.
 
-The result is a `RoactComponentInstance`, which is an opaque handle that represents this specific instance of the root component. You can pass this to APIs like `Roact.teardown` and the [debug API](/pages/debugging.md).
+The result is a `RoactComponentInstance`, which is an opaque handle that represents this specific instance of the root component. You can pass this to APIs like `Roact.teardown` and the future debug API.
 
 ### `Roact.teardown(instance)`
 Destroys the given `RoactComponentInstance` and all of its descendents. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.reify`.

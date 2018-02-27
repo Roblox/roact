@@ -11,7 +11,8 @@ local RoactRodux = require(ReplicatedStorage.RoactRodux)
 
 -- Roact Portion
 -- This code doesn't know anything about Rodux.
--- It can function as an isolated component -- components designed this way are often cleaner!
+-- It can function as an isolated component -- components designed this way are
+-- often cleaner!
 local App = Roact.Component:extend("App")
 
 function App:render()
@@ -68,8 +69,8 @@ end
 
 local store = Rodux.Store.new(reducer)
 
--- We wrap our Roact-Rodux app in a `StoreProvider`, which makes sure our components know
--- what store they should be connecting to.
+-- We wrap our Roact-Rodux app in a `StoreProvider`, which makes sure our
+-- components know what store they should be connecting to.
 local app = Roact.createElement(RoactRodux.StoreProvider, {
 	store = store,
 }, {

@@ -19,7 +19,8 @@ local currentFrame
 local element = Roact.createElement("Frame", {
 	-- Use Roact.Ref as the key to attach a ref, just like events.
 	[Roact.Ref] = function(rbx)
-		-- All properties are already set and the object has been parented at this point.
+		-- All properties are already set and the object has been parented at
+		-- this point.
 		currentFrame = rbx
 	end
 })

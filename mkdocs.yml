@@ -7,7 +7,7 @@ theme:
 
 pages:
   - Home: index.md
-  - 'What is Roact?': what-is-roact.md
+  - What is Roact?: what-is-roact.md
   - Getting Started: getting-started.md
   - Guide:
     - Elements and Components: guide/elements-components.md
@@ -16,9 +16,14 @@ pages:
     - Usage with Rodux: guide/usage-with-rodux.md
   - API Reference: api-reference.md
   - Examples:
-    - Hello, Roact: examples/hello-roact.md
+    - Hello, Roact!: examples/hello-roact.md
     - Stateful Counter: examples/counter.md
     - Events, the Roact Way: examples/events.md
     - Tearing Down Components: examples/teardown.md
     - Refs: examples/refs.md
     - Roact with Rodux: examples/roact-rodux.md
+
+markdown_extensions:
+  - admonition
+  - codehilite:
+      guess_lang: false

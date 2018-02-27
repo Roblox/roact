@@ -12,8 +12,8 @@ local function HelloComponent()
 	--[[
 		createElement takes three arguments:
 			* The component that this element represents
-			* Optionally, a list of properties to provide
-			* Optionally, a dictionary of children -- the key is that child's Name
+			* Optional: a list of properties to provide
+			* Optional: a dictionary of children -- the key is that child's Name
 	]]
 
 	return Roact.createElement("ScreenGui", {
@@ -29,7 +29,8 @@ end
 local element = Roact.createElement(HelloComponent)
 
 --[[
-	`reify` turns our virtual tree into real instances and puts the top-most one in PlayerGui
+	`reify` turns our virtual tree into real instances and puts the top-most one
+	in PlayerGui
 
 	reify takes three arguments:
 		* The element we're trying to reify

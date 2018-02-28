@@ -1,4 +1,7 @@
 site_name: Roact Documentation
+repo_name: Roblox/roact
+repo_url: https://github.com/Roblox/roact
+
 theme:
   name: material
   palette:

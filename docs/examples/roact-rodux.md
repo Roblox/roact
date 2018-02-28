@@ -1,5 +1,5 @@
 # Roact with Rodux
-More details about the workings of the Roact-Rodux connection can be found in [Usage with Rodux](/guide/usage-with-rodux.md).
+More details about the workings of the Roact-Rodux connection can be found in [Usage with Rodux](/concepts/usage-with-rodux.md).
 
 ```lua
 local Players = game:GetService("Players")

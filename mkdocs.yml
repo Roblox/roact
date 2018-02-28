@@ -9,12 +9,11 @@ pages:
   - Home: index.md
   - What is Roact?: what-is-roact.md
   - Getting Started: getting-started.md
-  - Guide:
-    - Elements and Components: guide/elements-components.md
-    - Props and State: guide/props-and-state.md
-    - Lifecycle of Components: guide/lifecycle.md
-    - Usage with Rodux: guide/usage-with-rodux.md
-  - API Reference: api-reference.md
+  - Concepts:
+    - Elements and Components: concepts/elements-components.md
+    - Props and State: concepts/props-and-state.md
+    - Lifecycle of Components: concepts/lifecycle.md
+    - Usage with Rodux: concepts/usage-with-rodux.md
   - Examples:
     - Hello, Roact!: examples/hello-roact.md
     - Stateful Counter: examples/counter.md
@@ -22,6 +21,7 @@ pages:
     - Tearing Down Components: examples/teardown.md
     - Refs: examples/refs.md
     - Roact with Rodux: examples/roact-rodux.md
+  - API Reference: api-reference.md
 
 markdown_extensions:
   - admonition

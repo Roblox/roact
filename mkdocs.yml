@@ -10,15 +10,11 @@ theme:
 
 pages:
   - Home: index.md
-  - Getting Started: getting-started.md
-  - Concepts:
-    - Elements: concepts/elements.md
-    - Elements and Components: concepts/elements-components.md
-    - Props and State: concepts/props-and-state.md
-    - Lifecycle of Components: concepts/lifecycle.md
-    - Usage with Rodux: concepts/usage-with-rodux.md
+  - Guide:
+    - Installation: guide/installation.md
+    - Hello, Roact!: guide/hello-roact.md
+    - Elements: guide/elements.md
   - Examples:
-    - Hello, Roact!: examples/hello-roact.md
     - Stateful Counter: examples/counter.md
     - Events, the Roact Way: examples/events.md
     - Tearing Down Components: examples/teardown.md

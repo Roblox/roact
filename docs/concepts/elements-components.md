@@ -1,5 +1,5 @@
 # Elements and Components
-Roact is based entirely on the concept of reusable components. These components are then built up entirely of other components, creating a composable hierarchy that represents the UI of an application.
+Roact is based entirely on the concept of reusable components. Components are used by creating *elements* that describe what
 
 ## Elements
 Elements are directly created by a Roact application calling `Roact.createElement`. They represent the structure that should be presented at any given point.

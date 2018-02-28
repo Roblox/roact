@@ -10,9 +10,9 @@ theme:
 
 pages:
   - Home: index.md
-  - What is Roact?: what-is-roact.md
   - Getting Started: getting-started.md
   - Concepts:
+    - Elements: concepts/elements.md
     - Elements and Components: concepts/elements-components.md
     - Props and State: concepts/props-and-state.md
     - Lifecycle of Components: concepts/lifecycle.md

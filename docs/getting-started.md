@@ -1,7 +1,7 @@
 # Getting Started
 The simplest way to get started is to download an installer script from the [Roact GitHub releases page](https://github.com/Roblox/roact/releases).
 
-Install it somewhere that's accessible by your code, and then load it using `requrie`:
+Install it somewhere that's accessible by your code, and then load it using `require`:
 
 ```lua
 local ReplicatedStorage = game:GetService("ReplicatedStorage")

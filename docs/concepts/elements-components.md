@@ -10,6 +10,7 @@ Elements are immutable, fast to create, and replaceable. Creating an element has
 Components define what happens when your elements need to be translated to a real UI.
 
 There are three types of component:
+
 * Primitive
 * Functional
 * Stateful

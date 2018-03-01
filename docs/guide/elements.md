@@ -1,9 +1,9 @@
 # Elements
-Like in React, everything in Roact is built out of elements. Elements are the smallest building block for creating UI.
+Like React, everything in Roact is built out of elements. Elements are the smallest building block for creating UI.
 
-Elements describe what you want your UI to look like at a single point in time. Elements are [immutable](https://en.wikipedia.org/wiki/Immutable_object): you can't change them once they're created, but you can create new ones.
+Elements describe what you want your UI to look like at a single point in time. They're [immutable](https://en.wikipedia.org/wiki/Immutable_object): you can't change elements once they're created, but you can create new ones.
 
-You can create an element using `Roact.createElement` -- just pass what you're creating as the first argument, and any properties as the second argument!
+You can create an element using `Roact.createElement` -- just pass a Roblox class name as the first argument, and any properties as the second argument!
 
 ```lua
 local myElement = Roact.createElement("Frame", {
@@ -23,21 +23,17 @@ local myElement = Roact.createElement("Frame", {
 })
 ```
 
-Creating an element by itself doesn't do anything, however.
-
-In order to turn our description of an object into a real Roblox object, you can call `Roact.reify`:
+Creating an element by itself doesn't do anything, however. In order to turn our description of an object into a real Roblox object, we can call `Roact.reify`:
 
 ```lua
 -- Create a new Frame object in 'Workspace'
 local myHandle = Roact.reify(myElement, game.Workspace)
 ```
 
-`Roact.reify` gives you a handle that you can later use to destroy our object with `Roact.teardown`:
+`Roact.reify` returns a handle that you can later use to destroy that object with `Roact.teardown`:
 
 ```lua
 Roact.teardown(myHandle)
 ```
-
-If you to display something else, create a new element with `Roact.createElement` and `Roact.reify` on it!
 
 In the next section, we'll talk about components, which let us create reusable chunks of UI, as well as *change* our existing UI without destroying it!

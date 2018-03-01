@@ -15,6 +15,8 @@ pages:
     - Installation: guide/installation.md
     - Hello, Roact!: guide/hello-roact.md
     - Elements: guide/elements.md
+    - Components: guide/components.md
+    - State and Lifecycle: guide/state-and-lifecycle.md
   - Examples:
     - Stateful Counter: examples/counter.md
     - Events, the Roact Way: examples/events.md

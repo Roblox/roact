@@ -17,12 +17,12 @@ pages:
     - Elements: guide/elements.md
     - Components: guide/components.md
     - State and Lifecycle: guide/state-and-lifecycle.md
-  - Examples:
-    - Stateful Counter: examples/counter.md
-    - Events, the Roact Way: examples/events.md
-    - Tearing Down Components: examples/teardown.md
-    - Refs: examples/refs.md
-    - Roact with Rodux: examples/roact-rodux.md
+    - Events: guide/events.md
+    - Usage with Rodux: guide/usage-with-rodux.md
+  - Advanced Concepts:
+    - Portals: advanced/portals.md
+    - Refs: advanced/refs.md
+    - Context: advanced/context.md
   - API Reference: api-reference.md
 
 markdown_extensions:

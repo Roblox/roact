@@ -19,6 +19,9 @@ Core.Ref = Symbol.named("Ref")
 -- Marker used to specify that a component is a Roact Portal.
 Core.Portal = Symbol.named("Portal")
 
+-- Market used to specify that the value is nothing, because nil cannot be stored in tables.
+Core.None = Symbol.named("None")
+
 --[[
 	Index into 'Event' to get a prop key for attaching to an event on a
 	Roblox Instance.

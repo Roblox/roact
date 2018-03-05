@@ -329,7 +329,7 @@ return function()
 
 		it("should invoke functions to compute a partial state", function()
 			local TestComponent = Component:extend("TestComponent")
-			local setStateCallback, getStateCallback
+			local setStateCallback, getStateCallback, getPropsCallback
 
 			function TestComponent:init()
 				setStateCallback = function(newState)
@@ -338,6 +338,10 @@ return function()
 
 				getStateCallback = function()
 					return self.state
+				end
+
+				getPropsCallback = function()
+					return self.props
 				end
 
 				self.state = {
@@ -355,6 +359,9 @@ return function()
 			expect(getStateCallback().value).to.equal(0)
 
 			setStateCallback(function(state, props)
+				expect(state).to.equal(getStateCallback())
+				expect(props).to.equal(getPropsCallback())
+
 				return {
 					value = state.value + 1
 				}

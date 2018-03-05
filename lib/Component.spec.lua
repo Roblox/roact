@@ -354,7 +354,7 @@ return function()
 
 			expect(getStateCallback().value).to.equal(0)
 
-			setStateCallback(function(props, state)
+			setStateCallback(function(state, props)
 				return {
 					value = state.value + 1
 				}

@@ -123,7 +123,7 @@ function Component:setState(partialState)
 
 	-- If the partial state is a function, invoke it to get the actual partial state.
 	if type(partialState) == "function" then
-		partialState = partialState(self.props, self.state)
+		partialState = partialState(self.state, self.props)
 	end
 
 	local newState = {}

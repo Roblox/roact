@@ -121,6 +121,11 @@ function Component:setState(partialState)
 		error(INVALID_SETSTATE_MESSAGE, 0)
 	end
 
+	-- If the partial state is a function, invoke it to get the actual partial state.
+	if type(partialState) == "function" then
+		partialState = partialState(self.state, self.props)
+	end
+
 	local newState = {}
 
 	for key, value in pairs(self.state) do

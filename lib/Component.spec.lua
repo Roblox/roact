@@ -326,5 +326,50 @@ return function()
 
 			Reconciler.teardown(instance)
 		end)
+
+		it("should invoke functions to compute a partial state", function()
+			local TestComponent = Component:extend("TestComponent")
+			local setStateCallback, getStateCallback, getPropsCallback
+
+			function TestComponent:init()
+				setStateCallback = function(newState)
+					self:setState(newState)
+				end
+
+				getStateCallback = function()
+					return self.state
+				end
+
+				getPropsCallback = function()
+					return self.props
+				end
+
+				self.state = {
+					value = 0
+				}
+			end
+
+			function TestComponent:render()
+				return nil
+			end
+
+			local element = Core.createElement(TestComponent)
+			local instance = Reconciler.reify(element)
+
+			expect(getStateCallback().value).to.equal(0)
+
+			setStateCallback(function(state, props)
+				expect(state).to.equal(getStateCallback())
+				expect(props).to.equal(getPropsCallback())
+
+				return {
+					value = state.value + 1
+				}
+			end)
+
+			expect(getStateCallback().value).to.equal(1)
+
+			Reconciler.teardown(instance)
+		end)
 	end)
 end

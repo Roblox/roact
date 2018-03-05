@@ -5,6 +5,7 @@
 ]]
 
 local Reconciler = require(script.Parent.Reconciler)
+local Core = require(script.Parent.Core)
 
 local Component = {}
 
@@ -127,7 +128,11 @@ function Component:setState(partialState)
 	end
 
 	for key, value in pairs(partialState) do
-		newState[key] = value
+		if value == Core.None then
+			newState[key] = nil
+		else
+			newState[key] = value
+		end
 	end
 
 	self:_update(self.props, newState)

@@ -290,5 +290,41 @@ return function()
 				Reconciler.teardown(instance)
 			end).to.throw()
 		end)
+
+		it("should remove values from state when the value is Core.None", function()
+			local TestComponent = Component:extend("TestComponent")
+			local setStateCallback, getStateCallback
+
+			function TestComponent:init()
+				setStateCallback = function(newState)
+					self:setState(newState)
+				end
+
+				getStateCallback = function()
+					return self.state
+				end
+
+				self.state = {
+					value = 0
+				}
+			end
+
+			function TestComponent:render()
+				return nil
+			end
+
+			local element = Core.createElement(TestComponent)
+			local instance = Reconciler.reify(element)
+
+			expect(getStateCallback().value).to.equal(0)
+
+			setStateCallback({
+				value = Core.None
+			})
+
+			expect(getStateCallback().value).to.equal(nil)
+
+			Reconciler.teardown(instance)
+		end)
 	end)
 end

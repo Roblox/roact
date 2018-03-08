@@ -50,7 +50,7 @@ render() -> Element | nil
 
 `render` describes what a component should display at the current instant in time.
 
-!!!info
+!!! info
 	Roact assumes that `render` act likes a pure function: the result of `render` must depend only on `props` and `state`, and it must not have side-effects.
 
 ```lua

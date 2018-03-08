@@ -18,7 +18,6 @@ pages:
     - Components: guide/components.md
     - State and Lifecycle: guide/state-and-lifecycle.md
     - Events: guide/events.md
-    - Usage with Rodux: guide/usage-with-rodux.md
   - Advanced Concepts:
     - Portals: advanced/portals.md
     - Refs: advanced/refs.md

@@ -21,8 +21,8 @@ Roact.teardown(handle)
 --     Ref was called with nil of type nil
 ```
 
-!!! warning
-	Refs can only be attached to primitive elements.
+!!! info
+	Refs can only be used with primitive components.
 
 !!! warning
 	When a component instance is destroyed or the ref property changes, `nil` will be passed to the old ref function!

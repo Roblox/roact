@@ -9,4 +9,8 @@ TODO
 ## Lifecycle Methods
 (diagram of lifecycle methods)
 
-TODO
+Stateful components can provide methods to Roact that are called when certain things happen to a component instance.
+
+Lifecycle methods are a great place to send off network requests, measure UI ([with the help of refs](/advanced/refs)), wrap non-Roact components, and other side-effects.
+
+## Combining State and Lifecycle

@@ -16,5 +16,5 @@ local button = Roact.createElement("TextButton", {
 })
 ```
 
-TODO: more stuff, I got sidetracked
-
+!!! info
+	Events will automatically be disconnected when a component instance is unmounted!

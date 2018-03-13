@@ -90,7 +90,14 @@ end
 	represent this component with the current state.
 ]]
 function Component:render()
-	error("`render` must be defined when creating a Roact class!")
+	local message = (
+		"The component %q is missing the 'render' method.\n" ..
+		"render must be defined when creating a Roact component!"
+	):format(
+		tostring(getmetatable(self))
+	)
+
+	error(message, 0)
 end
 
 --[[

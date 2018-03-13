@@ -27,16 +27,19 @@ return function()
 		expect(name:find("FooBar")).to.be.ok()
 	end)
 
-	it("should throw on render by default", function()
+	it("should throw on render with a useful message by default", function()
 		local MyComponent = Component:extend("Foo")
 
 		local instance = MyComponent._new({})
 
 		expect(instance).to.be.ok()
 
-		expect(function()
+		local ok, err = pcall(function()
 			instance:render()
-		end).to.throw()
+		end)
+
+		expect(ok).to.equal(false)
+		expect(err:find("Foo")).to.be.ok()
 	end)
 
 	it("should pass props to the initializer", function()

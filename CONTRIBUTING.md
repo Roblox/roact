@@ -14,7 +14,7 @@ Just like bug reports, take a peak at the issue tracker for duplicates before op
 ## Working on Roact
 To get started working on Roact, you'll need:
 * Git
-* Lua 5.1
+* Lua 5.1 with LuaRocks
 * [LuaFileSystem](https://keplerproject.github.io/luafilesystem/) (`luarocks install luafilesystem`)
 * [Luacheck](https://github.com/mpeterv/luacheck) (`luarocks install luacheck`)
 * [LuaCov](https://keplerproject.github.io/luacov) (`luarocks install luacov`)

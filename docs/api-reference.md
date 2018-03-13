@@ -118,29 +118,29 @@ Right now, components are re-rendered any time a parent component updates, or wh
 ## Lifecycle Events
 Roact exposes a number of events that stateful components can hook into to be notified of various steps in the rendering process.
 
-### Mounting
+Mounting:
 
 <div class="component-diagram" aria-role="presentation">
 	<span class="component-diagram-box">init</span>
-	<span class="component-diagram-arrow">&mdash;&gt;</span>
+	<span class="component-diagram-arrow">➝</span>
 	<span class="component-diagram-box">render</span>
-	<span class="component-diagram-arrow">&mdash;&gt;</span>
+	<span class="component-diagram-arrow">➝</span>
 	<span class="component-diagram-box">didMount</span>
 </div>
 
-### Updating
+Updating:
 
 <div class="component-diagram" aria-role="presentation">
 	<span class="component-diagram-box">shouldUpdate?</span>
-	<span class="component-diagram-arrow">&mdash;&gt;</span>
+	<span class="component-diagram-arrow">➝</span>
 	<span class="component-diagram-box">willUpdate</span>
-	<span class="component-diagram-arrow">&mdash;&gt;</span>
+	<span class="component-diagram-arrow">➝</span>
 	<span class="component-diagram-box">render</span>
-	<span class="component-diagram-arrow">&mdash;&gt;</span>
+	<span class="component-diagram-arrow">➝</span>
 	<span class="component-diagram-box">didUpdate</span>
 </div>
 
-### Unmounting
+Unmounting:
 
 <div class="component-diagram" aria-role="presentation">
 	<span class="component-diagram-box">willUnmount</span>

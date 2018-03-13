@@ -17,6 +17,7 @@
 }
 
 .component-diagram-arrow {
+	font-size: 1.5em;
 	flex: 0 0 auto;
 	margin: 0 1rem;
 }

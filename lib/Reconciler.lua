@@ -29,6 +29,14 @@ local SingleEventManager = require(script.Parent.SingleEventManager)
 
 local DEFAULT_SOURCE = "\n\t<Use Roact.DEBUG_ENABLE() to enable detailed tracebacks>\n"
 
+local function isPortal(element)
+	if type(element) ~= "table" then
+		return false
+	end
+
+	return element.type == Core.Portal
+end
+
 local Reconciler = {}
 
 Reconciler._singleEventManager = SingleEventManager.new()
@@ -79,7 +87,7 @@ function Reconciler.teardown(instanceHandle)
 
 		-- Cut our circular reference between the instance and its handle
 		instanceHandle._instance = nil
-	elseif Core.isPortal(element) then
+	elseif isPortal(element) then
 		for _, child in pairs(instanceHandle._reifiedChildren) do
 			Reconciler.teardown(child)
 		end
@@ -186,7 +194,7 @@ function Reconciler._reifyInternal(element, parent, key, context)
 		instance:_reify(instanceHandle)
 
 		return instanceHandle
-	elseif Core.isPortal(element) then
+	elseif isPortal(element) then
 		-- Portal elements have one or more children.
 
 		local target = element.props.target
@@ -313,7 +321,7 @@ function Reconciler._reconcile(instanceHandle, newElement)
 		instanceHandle._instance:_update(newElement.props)
 
 		return instanceHandle
-	elseif Core.isPortal(newElement) then
+	elseif isPortal(newElement) then
 		if instanceHandle._rbx ~= newElement.props.target then
 			local parent = instanceHandle._parent
 			local key = instanceHandle._key

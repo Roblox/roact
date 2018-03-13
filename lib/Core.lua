@@ -93,17 +93,6 @@ function Core.isStatefulElement(element)
 end
 
 --[[
-	Is this element a Portal?
-]]
-function Core.isPortal(element)
-	if type(element) ~= "table" then
-		return false
-	end
-
-	return element.type == Core.Portal
-end
-
---[[
 	Creates a new Roact element of the given type.
 
 	Does not create any concrete objects.

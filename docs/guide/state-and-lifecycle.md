@@ -7,10 +7,10 @@ Stateful components do everything that functional components do, but have the ad
 TODO
 
 ## Lifecycle Methods
-(diagram of lifecycle methods)
-
 Stateful components can provide methods to Roact that are called when certain things happen to a component instance.
 
 Lifecycle methods are a great place to send off network requests, measure UI ([with the help of refs](/advanced/refs)), wrap non-Roact components, and other side-effects.
+
+A [diagram of Roact's lifecycle methods](/api-reference#lifecycle-events) is available in the API reference.
 
 ## Combining State and Lifecycle

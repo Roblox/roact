@@ -27,7 +27,7 @@ local Event = require(script.Parent.Event)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local SingleEventManager = require(script.Parent.SingleEventManager)
 
-local DEFAULT_SOURCE = "\n\t<Use Roact.DEBUG_ENABLE() to enable detailed tracebacks>\n"
+local DEFAULT_SOURCE = "\n\t<Use Roact.setGlobalConfig with the 'elementTracing' key to enable detailed tracebacks>\n"
 
 local function isPortal(element)
 	if type(element) ~= "table" then

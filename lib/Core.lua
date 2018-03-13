@@ -7,6 +7,7 @@
 ]]
 
 local Symbol = require(script.Parent.Symbol)
+local GlobalConfig = require(script.Parent.GlobalConfig)
 
 local Core = {}
 
@@ -118,7 +119,7 @@ function Core.createElement(elementType, props, children)
 		props = props,
 	}
 
-	if Core._DEBUG_ENABLED then
+	if GlobalConfig.getValue("elementTracing") then
 		element.source = ("\n%s\n"):format(debug.traceback())
 	end
 

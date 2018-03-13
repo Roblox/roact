@@ -158,10 +158,10 @@ end
 ]]
 function Component:_update(newProps, newState)
 	self._canSetState = false
-	local willUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
+	local doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
 	self._canSetState = true
 
-	if willUpdate then
+	if doUpdate then
 		self:_forceUpdate(newProps, newState)
 	end
 end
@@ -173,6 +173,7 @@ end
 ]]
 function Component:_forceUpdate(newProps, newState)
 	self._canSetState = false
+
 	if self.willUpdate then
 		self:willUpdate(newProps or self.props, newState or self.state)
 	end
@@ -220,10 +221,10 @@ end
 function Component:_reify(handle)
 	self._handle = handle
 
-	local vdom = self:render()
-	if vdom then
+	local virtualTree = self:render()
+	if virtualTree then
 		handle._reified = Reconciler._reifyInternal(
-			vdom,
+			virtualTree,
 			handle._parent,
 			handle._key,
 			self._context

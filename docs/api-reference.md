@@ -17,7 +17,7 @@ An extension of `Roact.Component` that only re-renders if its props or state cha
 ### Roact.Portal
 A component that represents a *portal* to a Roblox Instance. Portals are created using `Roact.createElement`.
 
-Any children of a portal are put inside the Roblox Instance specified by the required `target` prop. That Instance should not be one created by Roact.
+Any children of a portal are put inside the Roblox Instance specified by the required `target` prop. That Roblox Instance should not be one created by Roact.
 
 Portals are useful for creating dialogs managed by deeply-nested UI components, and enable Roact to represent and manage multiple disjoint trees at once.
 
@@ -116,37 +116,69 @@ Right now, components are re-rendered any time a parent component updates, or wh
 `PureComponent` implements `shouldUpdate` to only trigger a re-render any time the props are different based on shallow equality. In a future Roact update, *all* components may implement this check by default.
 
 ## Lifecycle Events
-Roact exposes a number of events that components can hook into to create behavior beyond what Roact provides solely via `render`.
+Roact exposes a number of events that stateful components can hook into to be notified of various steps in the rendering process.
 
-**TODO: a beautiful diagram of lifecycle events like the ones I whiteboard for people all the time.**
+### Mounting
+
+<div class="component-diagram" aria-role="presentation">
+	<span class="component-diagram-box">init</span>
+	<span class="component-diagram-arrow">&mdash;&gt;</span>
+	<span class="component-diagram-box">render</span>
+	<span class="component-diagram-arrow">&mdash;&gt;</span>
+	<span class="component-diagram-box">didMount</span>
+</div>
+
+### Updating
+
+<div class="component-diagram" aria-role="presentation">
+	<span class="component-diagram-box">shouldUpdate?</span>
+	<span class="component-diagram-arrow">&mdash;&gt;</span>
+	<span class="component-diagram-box">willUpdate</span>
+	<span class="component-diagram-arrow">&mdash;&gt;</span>
+	<span class="component-diagram-box">render</span>
+	<span class="component-diagram-arrow">&mdash;&gt;</span>
+	<span class="component-diagram-box">didUpdate</span>
+</div>
+
+### Unmounting
+
+<div class="component-diagram" aria-role="presentation">
+	<span class="component-diagram-box">willUnmount</span>
+</div>
 
 ### didMount
 ```
 didMount() -> void
 ```
 
-**TODO**
+`didMount` is fired after the component finishes its initial render. At this point, all associated Roblox Instances have been created, and all components have finished mounting.
+
+`didMount` is a good place to start initial network communications, attach events to services, or modify the Roblox Instance hierarchy.
 
 ### willUnmount
 ```
 willUnmount() -> void
 ```
 
-**TODO**
+`willUnmount` is fired right before Roact begins tearing down a component instance's children.
+
+`willUnmount` acts like a component's destructor, and is a good place to disconnect any manually-connected events.
 
 ### willUpdate
 ```
 willUpdate(nextProps, nextState) -> void
 ```
 
-**TODO**
+`willUpdate` is fired after an update is started but before a component's state and props are updated.
 
 ### didUpdate
 ```
 didUpdate(previousProps, previousState) -> void
 ```
 
-**TODO**
+`didUpdate` is fired after at the end of an update. At this point, the reconciler has updated the properties of any Roblox Instances and the component instance's props and state are up to date.
+
+`didUpdate` is a good place to send network requests or dispatch Rodux actions, but make sure to compare `self.props` and `self.state` with `previousProps` and `previousState` to avoid triggering too many updates.
 
 ## Constants
 

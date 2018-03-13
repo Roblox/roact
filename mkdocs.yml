@@ -3,6 +3,9 @@ site_url: https://roblox.github.io/roact/
 repo_name: Roblox/roact
 repo_url: https://github.com/Roblox/roact
 
+extra_css:
+  - css/component-diagram.css
+
 theme:
   name: material
   palette:

@@ -105,7 +105,7 @@ end
 		- `context`: Used to pass Roact context values down the tree
 
 	The structure created by this method is important to the functionality of
-	the _reconcile methods -- they depend on this structure being well-formed.
+	the reconciliation methods; they depend on this structure being well-formed.
 ]]
 function Reconciler._reifyInternal(element, parent, key, context)
 	if Core.isPrimitiveElement(element) then
@@ -226,10 +226,10 @@ end
 --[[
 	Applies the state given by newElement to an existing Roact instance.
 
-	_reconcile will return the instance that should be used. This instance can
+	reconcile will return the instance that should be used. This instance can
 	be different than the one that was passed in.
 ]]
-function Reconciler._reconcile(instanceHandle, newElement)
+function Reconciler.reconcile(instanceHandle, newElement)
 	local oldElement = instanceHandle._element
 
 	-- Instance was deleted!
@@ -291,7 +291,7 @@ function Reconciler._reconcile(instanceHandle, newElement)
 
 		if instanceHandle._reified then
 			-- Transition from tree to tree, even if 'rendered' is nil
-			newChild = Reconciler._reconcile(instanceHandle._reified, rendered)
+			newChild = Reconciler.reconcile(instanceHandle._reified, rendered)
 		elseif rendered then
 			-- Transition from nil to new tree
 			newChild = Reconciler._reifyInternal(
@@ -345,7 +345,7 @@ function Reconciler._reconcilePrimitiveChildren(instance, newElement)
 	for key, childInstance in pairs(instance._reifiedChildren) do
 		local childElement = elementChildren and elementChildren[key]
 
-		childInstance = Reconciler._reconcile(childInstance, childElement)
+		childInstance = Reconciler.reconcile(childInstance, childElement)
 
 		instance._reifiedChildren[key] = childInstance
 	end

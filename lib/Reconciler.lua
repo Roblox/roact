@@ -23,6 +23,7 @@
 ]]
 
 local Core = require(script.Parent.Core)
+local Event = require(script.Parent.Event)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local SingleEventManager = require(script.Parent.SingleEventManager)
 
@@ -444,7 +445,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 	elseif type(key) == "table" then
 		-- Special property with extra data attached.
 
-		if key.type == "event" then
+		if key.type == Event then
 			Reconciler._singleEventManager:connect(rbx, key.name, value)
 		else
 			local source = element.source or DEFAULT_SOURCE

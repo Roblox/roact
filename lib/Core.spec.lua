@@ -59,11 +59,4 @@ return function()
 			expect(Core.oneChild(nil)).to.equal(nil)
 		end)
 	end)
-
-	describe("Event", function()
-		it("should yield event objects when indexed", function()
-			expect(Core.Event.MouseButton1Click).to.be.ok()
-			expect(Core.Event.Touched).to.be.ok()
-		end)
-	end)
 end

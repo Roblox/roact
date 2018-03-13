@@ -22,43 +22,6 @@ Core.Portal = Symbol.named("Portal")
 -- Marker used to specify that the value is nothing, because nil cannot be stored in tables.
 Core.None = Symbol.named("None")
 
---[[
-	Index into 'Event' to get a prop key for attaching to an event on a
-	Roblox Instance.
-
-	Example:
-
-		Roact.createElement("TextButton", {
-			Text = "Hello, world!",
-
-			[Roact.Event.MouseButton1Click] = function(rbx)
-				print("Clicked", rbx)
-			end
-		})
-]]
-Core.Event = {}
-
-local eventMetatable = {
-	__tostring = function(self)
-		return ("Event(%s)"):format(self.type)
-	end
-}
-
-setmetatable(Core.Event, {
-	__index = function(self, eventName)
-		local event = {
-			type = "event",
-			name = eventName
-		}
-
-		setmetatable(event, eventMetatable)
-
-		Core.Event[eventName] = event
-
-		return event
-	end
-})
-
 Core._DEBUG_ENABLED = false
 
 function Core.DEBUG_ENABLE()
@@ -127,17 +90,6 @@ function Core.isStatefulElement(element)
 	end
 
 	return type(element.type) == "table"
-end
-
---[[
-	Is this element a Portal?
-]]
-function Core.isPortal(element)
-	if type(element) ~= "table" then
-		return false
-	end
-
-	return element.type == Core.Portal
 end
 
 --[[

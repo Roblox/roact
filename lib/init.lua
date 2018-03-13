@@ -2,15 +2,18 @@
 	Packages up the internals of Roact and exposes a public API for it.
 ]]
 
-local Core = require(script.Core)
-local Reconciler = require(script.Reconciler)
 local Component = require(script.Component)
-local PureComponent = require(script.PureComponent)
+local Core = require(script.Core)
 local Debug = require(script.Debug)
+local Event = require(script.Event)
+local PureComponent = require(script.PureComponent)
+local Reconciler = require(script.Reconciler)
 
 --[[
 	A utility to copy one module into another, erroring if there are
 	overlapping keys.
+
+	Any keys that begin with an underscore are considered private.
 ]]
 local function apply(target, source)
 	for key, value in pairs(source) do
@@ -33,6 +36,7 @@ apply(Roact, Reconciler)
 apply(Roact, {
 	Component = Component,
 	PureComponent = PureComponent,
+	Event = Event,
 })
 
 -- Apply unstable modules in a special place.

@@ -116,7 +116,6 @@ function Core.createElement(elementType, props, children)
 	end
 
 	local element = {
-		isElement = true,
 		[Core.Element] = true,
 		type = elementType,
 		props = props,

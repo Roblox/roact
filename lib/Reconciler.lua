@@ -324,7 +324,7 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 
 		if instanceHandle._reified then
 			-- Transition from tree to tree, even if 'rendered' is nil
-			newChild = Reconciler.reconcile(instanceHandle._reified, rendered)
+			newChild = Reconciler._reconcileInternal(instanceHandle._reified, rendered)
 		elseif rendered then
 			-- Transition from nil to new tree
 			newChild = Reconciler._reifyInternal(
@@ -378,7 +378,7 @@ function Reconciler._reconcilePrimitiveChildren(instance, newElement)
 	for key, childInstance in pairs(instance._reifiedChildren) do
 		local childElement = elementChildren and elementChildren[key]
 
-		childInstance = Reconciler.reconcile(childInstance, childElement)
+		childInstance = Reconciler._reconcileInternal(childInstance, childElement)
 
 		instance._reifiedChildren[key] = childInstance
 	end

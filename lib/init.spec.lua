@@ -1,9 +1,26 @@
 return function()
 	local Roact = require(script.Parent)
 
-	it("should load", function()
+	it("should load with all public APIs", function()
 		expect(Roact).to.be.ok()
-		expect(Roact.createElement).to.be.ok()
+
+		-- Public functions
+		expect(Roact.createElement).to.be.a("function")
+		expect(Roact.reify).to.be.a("function")
+		expect(Roact.reconcile).to.be.a("function")
+		expect(Roact.oneChild).to.be.a("function")
+		expect(Roact.isPrimitiveElement).to.be.a("function")
+		expect(Roact.isFunctionalElement).to.be.a("function")
+		expect(Roact.isStatefulElement).to.be.a("function")
+
+		-- Objects
+		expect(Roact.Component).to.be.ok()
+		expect(Roact.PureComponent).to.be.ok()
+		expect(Roact.Portal).to.be.ok()
+		expect(Roact.Children).to.be.ok()
+		expect(Roact.Event).to.be.ok()
+		expect(Roact.Ref).to.be.ok()
+		expect(Roact.None).to.be.ok()
 	end)
 
 	describe("Props", function()

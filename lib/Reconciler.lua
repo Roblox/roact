@@ -26,6 +26,9 @@ local Core = require(script.Parent.Core)
 local Event = require(script.Parent.Event)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local SingleEventManager = require(script.Parent.SingleEventManager)
+local Symbol = require(script.Parent.Symbol)
+
+local isInstanceHandle = Symbol.named("isInstanceHandle")
 
 local DEFAULT_SOURCE = "\n\t<Use Roact.setGlobalConfig with the 'elementTracing' key to enable detailed tracebacks>\n"
 
@@ -114,7 +117,7 @@ end
 		- `context`: Used to pass Roact context values down the tree
 
 	The structure created by this method is important to the functionality of
-	the _reconcile methods -- they depend on this structure being well-formed.
+	the reconciliation methods; they depend on this structure being well-formed.
 ]]
 function Reconciler._reifyInternal(element, parent, key, context)
 	if Core.isPrimitiveElement(element) then
@@ -153,6 +156,7 @@ function Reconciler._reifyInternal(element, parent, key, context)
 		end
 
 		return {
+			[isInstanceHandle] = true,
 			_key = key,
 			_parent = parent,
 			_element = element,
@@ -164,6 +168,7 @@ function Reconciler._reifyInternal(element, parent, key, context)
 		-- Functional elements contain 0 or 1 children.
 
 		local instanceHandle = {
+			[isInstanceHandle] = true,
 			_key = key,
 			_parent = parent,
 			_element = element,
@@ -182,6 +187,7 @@ function Reconciler._reifyInternal(element, parent, key, context)
 
 		-- We separate the instance's implementation from our handle to it.
 		local instanceHandle = {
+			[isInstanceHandle] = true,
 			_key = key,
 			_parent = parent,
 			_element = element,
@@ -216,6 +222,7 @@ function Reconciler._reifyInternal(element, parent, key, context)
 		end
 
 		return {
+			[isInstanceHandle] = true,
 			_key = key,
 			_parent = parent,
 			_element = element,
@@ -233,12 +240,29 @@ function Reconciler._reifyInternal(element, parent, key, context)
 end
 
 --[[
+	A public interface around _reconcileInternal
+]]
+function Reconciler.reconcile(instanceHandle, newElement)
+	if instanceHandle == nil or not instanceHandle[isInstanceHandle] then
+		local message = (
+			"Bad argument #1 to Reconciler.reconcile, expected component instance handle, found %s"
+		):format(
+			typeof(instanceHandle)
+		)
+
+		error(message, 2)
+	end
+
+	return Reconciler._reconcileInternal(instanceHandle, newElement)
+end
+
+--[[
 	Applies the state given by newElement to an existing Roact instance.
 
-	_reconcile will return the instance that should be used. This instance can
+	reconcile will return the instance that should be used. This instance can
 	be different than the one that was passed in.
 ]]
-function Reconciler._reconcile(instanceHandle, newElement)
+function Reconciler._reconcileInternal(instanceHandle, newElement)
 	local oldElement = instanceHandle._element
 
 	-- Instance was deleted!
@@ -300,7 +324,7 @@ function Reconciler._reconcile(instanceHandle, newElement)
 
 		if instanceHandle._reified then
 			-- Transition from tree to tree, even if 'rendered' is nil
-			newChild = Reconciler._reconcile(instanceHandle._reified, rendered)
+			newChild = Reconciler._reconcileInternal(instanceHandle._reified, rendered)
 		elseif rendered then
 			-- Transition from nil to new tree
 			newChild = Reconciler._reifyInternal(
@@ -354,7 +378,7 @@ function Reconciler._reconcilePrimitiveChildren(instance, newElement)
 	for key, childInstance in pairs(instance._reifiedChildren) do
 		local childElement = elementChildren and elementChildren[key]
 
-		childInstance = Reconciler._reconcile(childInstance, childElement)
+		childInstance = Reconciler._reconcileInternal(childInstance, childElement)
 
 		instance._reifiedChildren[key] = childInstance
 	end

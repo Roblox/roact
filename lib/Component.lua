@@ -193,7 +193,7 @@ function Component:_forceUpdate(newProps, newState)
 
 	if self._handle._reified ~= nil then
 		-- We returned an element before, update it.
-		self._handle._reified = Reconciler._reconcile(
+		self._handle._reified = Reconciler._reconcileInternal(
 			self._handle._reified,
 			newChildElement
 		)

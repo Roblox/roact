@@ -12,6 +12,8 @@ return function()
 		expect(Roact.isPrimitiveElement).to.be.a("function")
 		expect(Roact.isFunctionalElement).to.be.a("function")
 		expect(Roact.isStatefulElement).to.be.a("function")
+		expect(Roact.setGlobalConfig).to.be.a("function")
+		expect(Roact.getGlobalConfigValue).to.be.a("function")
 
 		-- Objects
 		expect(Roact.Component).to.be.ok()

@@ -1,8 +1,7 @@
 return function()
 	local GlobalConfig = require(script.Parent.GlobalConfig)
 
-	it("something", function()
-		-- GlobalConfig.set({})
-		-- GlobalConfig.set({})
+	it("TODO", function()
+		expect(GlobalConfig).to.be.ok()
 	end)
 end

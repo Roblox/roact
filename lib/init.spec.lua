@@ -9,6 +9,8 @@ return function()
 		expect(Roact.reify).to.be.a("function")
 		expect(Roact.reconcile).to.be.a("function")
 		expect(Roact.oneChild).to.be.a("function")
+		expect(Roact.setGlobalConfig).to.be.a("function")
+		expect(Roact.getGlobalConfigValue).to.be.a("function")
 
 		-- Objects
 		expect(Roact.Component).to.be.ok()

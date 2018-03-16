@@ -7,6 +7,7 @@
 ]]
 
 local Symbol = require(script.Parent.Symbol)
+local GlobalConfig = require(script.Parent.GlobalConfig)
 
 local Core = {}
 
@@ -21,16 +22,6 @@ Core.Portal = Symbol.named("Portal")
 
 -- Marker used to specify that the value is nothing, because nil cannot be stored in tables.
 Core.None = Symbol.named("None")
-
-Core._DEBUG_ENABLED = false
-
-function Core.DEBUG_ENABLE()
-	if Core._DEBUG_ENABLED then
-		error("Can only call Roact.DEBUG_ENABLE once!", 2)
-	end
-
-	Core._DEBUG_ENABLED = true
-end
 
 --[[
 	Utility to retrieve one child out the children passed to a component.
@@ -85,7 +76,7 @@ function Core.createElement(elementType, props, children)
 		props = props,
 	}
 
-	if Core._DEBUG_ENABLED then
+	if GlobalConfig.getValue("elementTracing") then
 		element.source = ("\n%s\n"):format(debug.traceback())
 	end
 

@@ -60,39 +60,6 @@ function Core.oneChild(children)
 end
 
 --[[
-	Is this element backed by a Roblox instance directly?
-]]
-function Core.isPrimitiveElement(element)
-	if type(element) ~= "table" then
-		return false
-	end
-
-	return type(element.type) == "string"
-end
-
---[[
-	Is this element defined by a pure function?
-]]
-function Core.isFunctionalElement(element)
-	if type(element) ~= "table" then
-		return false
-	end
-
-	return type(element.type) == "function"
-end
-
---[[
-	Is this element defined by a component class?
-]]
-function Core.isStatefulElement(element)
-	if type(element) ~= "table" then
-		return false
-	end
-
-	return type(element.type) == "table"
-end
-
---[[
 	Creates a new Roact element of the given type.
 
 	Does not create any concrete objects.

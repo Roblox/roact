@@ -6,8 +6,6 @@ return function()
 			local element = Core.createElement("Frame")
 
 			expect(element).to.be.ok()
-
-			expect(Core.isPrimitiveElement(element)).to.equal(true)
 		end)
 
 		it("should create new functional elements", function()
@@ -15,16 +13,12 @@ return function()
 			end)
 
 			expect(element).to.be.ok()
-
-			expect(Core.isFunctionalElement(element)).to.equal(true)
 		end)
 
 		it("should create new stateful components", function()
 			local element = Core.createElement({})
 
 			expect(element).to.be.ok()
-
-			expect(Core.isStatefulElement(element)).to.equal(true)
 		end)
 	end)
 

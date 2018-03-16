@@ -45,13 +45,46 @@ local Reconciler = {}
 Reconciler._singleEventManager = SingleEventManager.new()
 
 --[[
+	Is this element backed by a Roblox instance directly?
+]]
+local function isPrimitiveElement(element)
+	if type(element) ~= "table" then
+		return false
+	end
+
+	return type(element.type) == "string"
+end
+
+--[[
+	Is this element defined by a pure function?
+]]
+local function isFunctionalElement(element)
+	if type(element) ~= "table" then
+		return false
+	end
+
+	return type(element.type) == "function"
+end
+
+--[[
+	Is this element defined by a component class?
+]]
+local function isStatefulElement(element)
+	if type(element) ~= "table" then
+		return false
+	end
+
+	return type(element.type) == "table"
+end
+
+--[[
 	Destroy the given Roact instance, all of its descendants, and associated
 	Roblox instances owned by the components.
 ]]
 function Reconciler.teardown(instanceHandle)
 	local element = instanceHandle._element
 
-	if Core.isPrimitiveElement(element) then
+	if isPrimitiveElement(element) then
 		-- We're destroying a Roblox Instance-based object
 
 		-- Kill refs before we make changes, since any mutations past this point
@@ -68,12 +101,12 @@ function Reconciler.teardown(instanceHandle)
 		Reconciler._singleEventManager:disconnectAll(instanceHandle._rbx)
 
 		instanceHandle._rbx:Destroy()
-	elseif Core.isFunctionalElement(element) then
+	elseif isFunctionalElement(element) then
 		-- Functional components can return nil
 		if instanceHandle._reified then
 			Reconciler.teardown(instanceHandle._reified)
 		end
-	elseif Core.isStatefulElement(element) then
+	elseif isStatefulElement(element) then
 		-- Stop the component from setting state in willUnmount or anywhere thereafter.
 		instanceHandle._instance._canSetState = false
 
@@ -120,7 +153,7 @@ end
 	the reconciliation methods; they depend on this structure being well-formed.
 ]]
 function Reconciler._reifyInternal(element, parent, key, context)
-	if Core.isPrimitiveElement(element) then
+	if isPrimitiveElement(element) then
 		-- Primitive elements are backed directly by Roblox Instances.
 
 		local rbx = Instance.new(element.type)
@@ -164,7 +197,7 @@ function Reconciler._reifyInternal(element, parent, key, context)
 			_reifiedChildren = reifiedChildren,
 			_rbx = rbx,
 		}
-	elseif Core.isFunctionalElement(element) then
+	elseif isFunctionalElement(element) then
 		-- Functional elements contain 0 or 1 children.
 
 		local instanceHandle = {
@@ -181,7 +214,7 @@ function Reconciler._reifyInternal(element, parent, key, context)
 		end
 
 		return instanceHandle
-	elseif Core.isStatefulElement(element) then
+	elseif isStatefulElement(element) then
 		-- Stateful elements have 0 or 1 children, and also have a backing
 		-- instance that can keep state.
 
@@ -279,7 +312,7 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 		local key = instanceHandle._key
 
 		local context
-		if Core.isStatefulElement(oldElement) then
+		if isStatefulElement(oldElement) then
 			context = instanceHandle._instance._context
 		else
 			context = instanceHandle._context
@@ -292,7 +325,7 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 		return newInstance
 	end
 
-	if Core.isPrimitiveElement(newElement) then
+	if isPrimitiveElement(newElement) then
 		-- Roblox Instance change
 
 		local oldRef = oldElement[Core.Ref]
@@ -316,7 +349,7 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 		end
 
 		return instanceHandle
-	elseif Core.isFunctionalElement(newElement) then
+	elseif isFunctionalElement(newElement) then
 		instanceHandle._element = newElement
 
 		local rendered = newElement.type(newElement.props)
@@ -338,7 +371,7 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 		instanceHandle._reified = newChild
 
 		return instanceHandle
-	elseif Core.isStatefulElement(newElement) then
+	elseif isStatefulElement(newElement) then
 		instanceHandle._element = newElement
 
 		-- Stateful elements can take care of themselves.

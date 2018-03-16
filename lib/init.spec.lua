@@ -9,9 +9,6 @@ return function()
 		expect(Roact.reify).to.be.a("function")
 		expect(Roact.reconcile).to.be.a("function")
 		expect(Roact.oneChild).to.be.a("function")
-		expect(Roact.isPrimitiveElement).to.be.a("function")
-		expect(Roact.isFunctionalElement).to.be.a("function")
-		expect(Roact.isStatefulElement).to.be.a("function")
 
 		-- Objects
 		expect(Roact.Component).to.be.ok()

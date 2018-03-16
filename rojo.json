@@ -1,0 +1,14 @@
+{
+  "name": "roact",
+  "servePort": 8000,
+  "partitions": {
+    "src": {
+      "path": "lib",
+      "target": "ReplicatedStorage.Roact"
+    },
+    "testez": {
+      "path": "modules/testez/lib",
+      "target": "ReplicatedStorage.TestEZ"
+    }
+  }
+}

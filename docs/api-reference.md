@@ -65,24 +65,3 @@ Given a dictionary of children, returns a single child element.
 If `children` contains more than one child, `oneChild` function will throw an error. This is intended to denote an error when using the component using `oneChild`.
 
 If `children` is `nil` or contains no children, `oneChild` will return `nil`.
-
-### Roact.isPrimitiveElement
-```
-Roact.isPrimitveElement(element) -> bool
-```
-
-Determines whether the given `element` is primtive. These elements are created with a string parameter to `createElement` and represent a Roblox instance.
-
-### Roact.isFunctionalElement
-```
-Roact.isFunctionalElement(element) -> bool
-```
-
-Determines whether the given `element` is functional. These elements are created with a function parameter to `createElement` and represent a stateless Roact component.
-
-### Roact.isStatefulElement
-```
-Roact.isStatefulElement(element) -> bool
-```
-
-Determines whether the given `element` is stateful. These elements are created with a table parameter to `createElement` and represent a *potentially* stateful Roact component.

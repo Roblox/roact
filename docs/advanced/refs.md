@@ -26,3 +26,5 @@ Roact.teardown(handle)
 
 !!! warning
 	When a component instance is destroyed or the ref property changes, `nil` will be passed to the old ref function!
+
+**TODO: Continue!**

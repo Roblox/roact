@@ -1,7 +1,7 @@
 # Portals
 *Portals* are a special kind of component provided by Roact that enable components to render objects into a separate, non-Roact Instance.
 
-(diagram of portals)
+**(TODO: diagram of portals)**
 
 To create a portal, use the `Roact.Portal` component with `createElement`:
 

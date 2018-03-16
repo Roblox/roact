@@ -42,7 +42,6 @@ local function join(a, b)
 end
 
 local Config = {}
-Config.__index = Config
 
 function Config.new()
 	local self = {}
@@ -53,8 +52,6 @@ function Config.new()
 	self._lastConfigTraceback = nil
 
 	self._currentConfig = defaultConfig
-
-	setmetatable(self, Config)
 
 	-- We manually bind these methods here so that the Config's methods can be
 	-- used without passing in self, since they eventually get exposed on the
@@ -67,10 +64,14 @@ function Config.new()
 		return Config.getValue(self, ...)
 	end
 
+	self.reset = function(...)
+		return Config.reset(self, ...)
+	end
+
 	return self
 end
 
-function Config:set(configValues)
+function Config.set(self, configValues)
 	if self._lastConfigTraceback then
 		local message = (
 			"Global configuration can only be set once. Configuration was already set at:%s"
@@ -119,7 +120,7 @@ function Config:set(configValues)
 	self._currentConfig = join(self._currentConfig, configValues)
 end
 
-function Config:getValue(key)
+function Config.getValue(self, key)
 	if defaultConfig[key] == nil then
 		local message = (
 			"Invalid global configuration key %q (type %s). Valid configuration keys are: %s"
@@ -133,6 +134,11 @@ function Config:getValue(key)
 	end
 
 	return self._currentConfig[key]
+end
+
+function Config.reset(self)
+	self._lastConfigTraceback = nil
+	self._currentConfig = defaultConfig
 end
 
 return Config

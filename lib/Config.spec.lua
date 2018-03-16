@@ -67,4 +67,20 @@ return function()
 		-- The error should mention the stack trace with the original set call.
 		expect(err:find("setEmptyConfig")).to.be.ok()
 	end)
+
+	it("should reset to default values after invoking reset()", function()
+		local config = Config.new()
+
+		expect(config.getValue("elementTracing")).to.equal(false)
+
+		config.set({
+			elementTracing = true,
+		})
+
+		expect(config.getValue("elementTracing")).to.equal(true)
+
+		config.reset()
+
+		expect(config.getValue("elementTracing")).to.equal(false)
+	end)
 end

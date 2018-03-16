@@ -7,6 +7,7 @@
 ]]
 
 local Symbol = require(script.Parent.Symbol)
+local GlobalConfig = require(script.Parent.GlobalConfig)
 
 local Core = {}
 
@@ -24,16 +25,6 @@ Core.None = Symbol.named("None")
 
 -- Marker used to specify that the table it is present within is a component.
 Core.Element = Symbol.named("Element")
-
-Core._DEBUG_ENABLED = false
-
-function Core.DEBUG_ENABLE()
-	if Core._DEBUG_ENABLED then
-		error("Can only call Roact.DEBUG_ENABLE once!", 2)
-	end
-
-	Core._DEBUG_ENABLED = true
-end
 
 --[[
 	Utility to retrieve one child out the children passed to a component.
@@ -63,39 +54,6 @@ function Core.oneChild(children)
 end
 
 --[[
-	Is this element backed by a Roblox instance directly?
-]]
-function Core.isPrimitiveElement(element)
-	if type(element) ~= "table" then
-		return false
-	end
-
-	return type(element.component) == "string"
-end
-
---[[
-	Is this element defined by a pure function?
-]]
-function Core.isFunctionalElement(element)
-	if type(element) ~= "table" then
-		return false
-	end
-
-	return type(element.component) == "function"
-end
-
---[[
-	Is this element defined by a component class?
-]]
-function Core.isStatefulElement(element)
-	if type(element) ~= "table" then
-		return false
-	end
-
-	return type(element.component) == "table"
-end
-
---[[
 	Creates a new Roact element of the given type.
 
 	Does not create any concrete objects.
@@ -121,7 +79,7 @@ function Core.createElement(elementType, props, children)
 		props = props,
 	}
 
-	if Core._DEBUG_ENABLED then
+	if GlobalConfig.getValue("elementTracing") then
 		element.source = ("\n%s\n"):format(debug.traceback())
 	end
 

@@ -4,8 +4,8 @@
 
 local Component = require(script.Component)
 local Core = require(script.Core)
-local Debug = require(script.Debug)
 local Event = require(script.Event)
+local GlobalConfig = require(script.GlobalConfig)
 local PureComponent = require(script.PureComponent)
 local Reconciler = require(script.Reconciler)
 
@@ -39,11 +39,9 @@ apply(Roact, {
 	Event = Event,
 })
 
--- Apply unstable modules in a special place.
 apply(Roact, {
-	Unstable = {
-		Debug = Debug,
-	}
+	setGlobalConfig = GlobalConfig.set,
+	getGlobalConfigValue = GlobalConfig.getValue,
 })
 
 return Roact

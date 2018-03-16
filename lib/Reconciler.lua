@@ -34,7 +34,7 @@ local function isPortal(element)
 		return false
 	end
 
-	return element.type == Core.Portal
+	return element.component == Core.Portal
 end
 
 local Reconciler = {}
@@ -120,7 +120,7 @@ function Reconciler._reifyInternal(element, parent, key, context)
 	if Core.isPrimitiveElement(element) then
 		-- Primitive elements are backed directly by Roblox Instances.
 
-		local rbx = Instance.new(element.type)
+		local rbx = Instance.new(element.component)
 
 		-- Update Roblox properties
 		for key, value in pairs(element.props) do
@@ -170,7 +170,7 @@ function Reconciler._reifyInternal(element, parent, key, context)
 			_context = context,
 		}
 
-		local vdom = element.type(element.props)
+		local vdom = element.component(element.props)
 		if vdom then
 			instanceHandle._reified = Reconciler._reifyInternal(vdom, parent, key, context)
 		end
@@ -188,7 +188,7 @@ function Reconciler._reifyInternal(element, parent, key, context)
 			_reified = nil,
 		}
 
-		local instance = element.type._new(element.props, context)
+		local instance = element.component._new(element.props, context)
 
 		instanceHandle._instance = instance
 		instance:_reify(instanceHandle)
@@ -250,7 +250,7 @@ function Reconciler._reconcile(instanceHandle, newElement)
 
 	-- If the element changes type, we assume its subtree will be substantially
 	-- different. This lets us skip comparisons of a large swath of nodes.
-	if oldElement.type ~= newElement.type then
+	if oldElement.component ~= newElement.component then
 		local parent = instanceHandle._parent
 		local key = instanceHandle._key
 
@@ -295,7 +295,7 @@ function Reconciler._reconcile(instanceHandle, newElement)
 	elseif Core.isFunctionalElement(newElement) then
 		instanceHandle._element = newElement
 
-		local rendered = newElement.type(newElement.props)
+		local rendered = newElement.component(newElement.props)
 		local newChild
 
 		if instanceHandle._reified then

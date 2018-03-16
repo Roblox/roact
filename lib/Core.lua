@@ -70,7 +70,7 @@ function Core.isPrimitiveElement(element)
 		return false
 	end
 
-	return type(element.type) == "string"
+	return type(element.component) == "string"
 end
 
 --[[
@@ -81,7 +81,7 @@ function Core.isFunctionalElement(element)
 		return false
 	end
 
-	return type(element.type) == "function"
+	return type(element.component) == "function"
 end
 
 --[[
@@ -92,7 +92,7 @@ function Core.isStatefulElement(element)
 		return false
 	end
 
-	return type(element.type) == "table"
+	return type(element.component) == "table"
 end
 
 --[[
@@ -116,8 +116,8 @@ function Core.createElement(elementType, props, children)
 	end
 
 	local element = {
-		[Core.Element] = true,
-		type = elementType,
+		component = elementType,
+		type = Core.Element,
 		props = props,
 	}
 

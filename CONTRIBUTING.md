@@ -11,6 +11,11 @@ If there are any features you think are missing from Roact, you can post a reque
 
 Just like bug reports, take a peak at the issue tracker for duplicates before opening a new feature request.
 
+## Documentation
+[Roact's documentation](https://roblox.github.io/roact) is built using [MkDocs](http://www.mkdocs.org/), a fairly simple documentation generator.
+
+All of the dependencies that we use to generate the documentation website are located in [requirements.txt](requirements.txt); once they're set up, use `mkdocs serve` to test the documentation locally.
+
 ## Working on Roact
 To get started working on Roact, you'll need:
 * Git

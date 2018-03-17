@@ -92,9 +92,9 @@ function SingleEventManager:connectProperty(rbx, key, method)
 			end
 
 			existingHook.connection:Disconnect()
-
-			rbxHooks[formattedKey] = createChangeHook(rbx, key, method)
 		end
+
+		rbxHooks[formattedKey] = createChangeHook(rbx, key, method)
 	else
 		rbxHooks = {}
 		rbxHooks[formattedKey] = createChangeHook(rbx, key, method)

@@ -52,7 +52,7 @@ local function isPrimitiveElement(element)
 		return false
 	end
 
-	return type(element.type) == "string"
+	return type(element.component) == "string"
 end
 
 --[[
@@ -63,7 +63,7 @@ local function isFunctionalElement(element)
 		return false
 	end
 
-	return type(element.type) == "function"
+	return type(element.component) == "function"
 end
 
 --[[
@@ -74,7 +74,7 @@ local function isStatefulElement(element)
 		return false
 	end
 
-	return type(element.type) == "table"
+	return type(element.component) == "table"
 end
 
 --[[

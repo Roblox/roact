@@ -512,6 +512,8 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 
 		if key.type == Event then
 			Reconciler._singleEventManager:connect(rbx, key.name, value)
+		elseif key.type == "propertyChange" then
+			Reconciler._singleEventManager:connectProperty(rbx, key.name, value)
 		else
 			local source = element.source or DEFAULT_SOURCE
 

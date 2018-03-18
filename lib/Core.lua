@@ -23,6 +23,9 @@ Core.Portal = Symbol.named("Portal")
 -- Marker used to specify that the value is nothing, because nil cannot be stored in tables.
 Core.None = Symbol.named("None")
 
+-- Marker used to specify that the table it is present within is a component.
+Core.Element = Symbol.named("Element")
+
 --[[
 	Utility to retrieve one child out the children passed to a component.
 
@@ -71,8 +74,8 @@ function Core.createElement(elementType, props, children)
 	end
 
 	local element = {
-		isElement = true,
-		type = elementType,
+		component = elementType,
+		type = Core.Element,
 		props = props,
 	}
 

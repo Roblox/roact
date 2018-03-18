@@ -9,7 +9,7 @@ local changeMetatable = {
 setmetatable(Change, {
 	__index = function(self, propertyName)
 		local changeListener = {
-			type = "propertyChange",
+			type = Change,
 			name = propertyName
 		}
 

@@ -529,6 +529,8 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 					rbx:GetFullName(),
 					rbx.ClassName
 				)
+
+				print(message)
 			end
 		else
 			local source = element.source or DEFAULT_SOURCE

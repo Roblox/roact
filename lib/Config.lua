@@ -16,6 +16,8 @@
 local defaultConfig = {
 	-- Enables storage of `debug.traceback()` values on elements for debugging.
 	["elementTracing"] = false,
+	-- Activates "trace mode", logging any and all mutations to Roblox objects that Roact does.
+	["logAllMutations"] = false,
 }
 
 -- Build a list of valid configuration values up for debug messages.

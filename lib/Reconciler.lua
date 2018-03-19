@@ -27,6 +27,7 @@ local Event = require(script.Parent.Event)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local SingleEventManager = require(script.Parent.SingleEventManager)
 local Symbol = require(script.Parent.Symbol)
+local GlobalConfig = require(script.Parent.GlobalConfig)
 
 local isInstanceHandle = Symbol.named("isInstanceHandle")
 
@@ -506,12 +507,29 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 			)
 
 			error(message, 0)
+		elseif GlobalConfig.getValue("logAllMutations") then
+			local message = ("<TRACE> Setting %s on %s of class %s to %s"):format(
+				key,
+				rbx:GetFullName(),
+				rbx.ClassName,
+				tostring(value)
+			)
+
+			print(message)
 		end
 	elseif type(key) == "table" then
 		-- Special property with extra data attached.
 
 		if key.type == Event then
 			Reconciler._singleEventManager:connect(rbx, key.name, value)
+
+			if GlobalConfig.getValue("logAllMutations") then
+				local message = ("<TRACE> Connecting function to event %s on %s of class %s"):format(
+					key,
+					rbx:GetFullName(),
+					rbx.ClassName
+				)
+			end
 		else
 			local source = element.source or DEFAULT_SOURCE
 

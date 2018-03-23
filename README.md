@@ -12,7 +12,7 @@
 </div>
 
 <div align="center">
-	A declarative view library for Roblox Lua inspired by <a href="https://reactjs.org">React</a>.
+	A declarative UI library for Roblox Lua inspired by <a href="https://reactjs.org">React</a>.
 </div>
 
 <div>&nbsp;</div>
@@ -29,69 +29,23 @@
 * Use a plugin like [Rojo](https://github.com/LPGhatguy/rojo) to sync the files into a place
 
 ## Usage
-This sample creates a full-screen `TextLabel` with a greeting.
-
-For more detailed examples, check out [the documentation](#).
+For a detailed guide and examples, check out [the official Roact documentation](https://roblox.github.io/roact).
 
 ```lua
 local LocalPlayer = game:GetService("Players").LocalPlayer
 
 local Roact = require(Roact)
 
--- Define a functional component
-local function HelloComponent()
-	-- createElement takes three arguments:
-	-- * The type of element to make
-	-- * Optionally, a list of properties to provide
-	-- * Optionally, a dictionary of children. The key is that child's Name
-
-	return Roact.createElement("ScreenGui", {
-	}, {
-		MainLabel = Roact.createElement("TextLabel", {
-			Text = "Hello, world!",
-			Size = UDim2.new(1, 0, 1, 0),
-		}),
-	})
-end
-
--- Create our virtual tree
-local root = Roact.createElement(HelloComponent)
+-- Create our virtual tree describing a full-screen text label.
+local tree = Roact.createElement("ScreenGui", {
+	Label = Roact.createElement("TextLabel", {
+		Text = "Hello, world!",
+		Size = UDim2.new(1, 0, 1, 0),
+	}),
+})
 
 -- Turn our virtual tree into real instances and put them in PlayerGui
-Roact.reify(root, LocalPlayer.PlayerGui, "HelloWorld")
-```
-
-We can also write this example using a *stateful* component:
-
-```lua
-local LocalPlayer = game:GetService("Players").LocalPlayer
-
-local Roact = require(Roact)
-
--- Create our component type
-local HelloComponent = Roact.Component:extend("HelloComponent")
-
--- 'render' MUST be overridden.
-function HelloComponent:render()
-	-- createElement takes three arguments:
-	-- * The type of element to make
-	-- * Optionally, a list of properties to provide
-	-- * Optionally, a dictionary of children. The key is that child's Name
-
-	return Roact.createElement("ScreenGui", {
-	}, {
-		MainLabel = Roact.createElement("TextLabel", {
-			Text = "Hello, world!",
-			Size = UDim2.new(1, 0, 1, 0),
-		}),
-	})
-end
-
--- Create our virtual tree
-local root = Roact.createElement(HelloComponent)
-
--- Turn our virtual tree into real instances and put them in PlayerGui
-Roact.reify(root, LocalPlayer.PlayerGui, "HelloWorld")
+Roact.reify(tree, LocalPlayer.PlayerGui, "HelloWorld")
 ```
 
 ## License

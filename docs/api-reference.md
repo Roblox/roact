@@ -1,5 +1,99 @@
 # Roact API Reference
 
+## Methods
+
+### Roact.createElement
+```
+Roact.createElement(component, [props, [children]]) -> RoactElement
+```
+
+Creates a new Roact element representing the given `component`.
+
+The `children` argument is shorthand for adding a `Roact.Children` key to `props`. It should be specified as a dictionary of names to elements.
+
+`component` can be a string, a function, or a table created by `Component:extend`.
+
+!!! caution
+	Once `props` or `children` are passed into the `createElement`, make sure not to modify them!
+
+### Roact.reify
+```
+Roact.reify(element, [parent, [key]]) -> ComponentInstanceHandle
+```
+
+Creates a Roblox Instance given a Roact element, and optionally a `parent` to put it in, and a `key` to use as the instance's `Name`.
+
+The result is a `ComponentInstanceHandle`, which is an opaque handle that represents this specific instance of the root component. You can pass this to APIs like `Roact.teardown` and the future debug API.
+
+### Roact.reconcile
+```
+Roact.reconcile(instanceHandle, element) -> ComponentInstanceHandle
+```
+
+Updates an existing instance handle with a new element, returning a new handle.
+
+`reconcile` can be used to change the props of a component instance created with `reify` and is useful for putting Roact content into non-Roact applications.
+
+!!! warning
+	`Roact.reconcile` takes ownership of the `instanceHandle` passed into it and may tear it down and create a new tree!
+
+	Make sure to use the handle that `reconcile` returns in any operations after `reconcile`, including `teardown`.
+
+### Roact.teardown
+```
+Roact.teardown(instance) -> void
+```
+
+Destroys the given `ComponentInstanceHandle` and all of its descendents. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.reify`.
+
+### Roact.oneChild
+`Roact.oneChild(children) -> RoactElement | nil`
+
+Given a dictionary of children, returns a single child element.
+
+If `children` contains more than one child, `oneChild` function will throw an error. This is intended to denote an error when using the component using `oneChild`.
+
+If `children` is `nil` or contains no children, `oneChild` will return `nil`.
+
+## Constants
+
+### Roact.Children
+This is the key that Roact uses internally to store the children that are attached to a Roact element.
+
+If you're writing a new functional or stateful element that needs to be used like a primitive component, you can access `Roact.Children` in your props table.
+
+### Roact.Ref
+Use `Roact.Ref` as a key into the props of a primitive element to receive a handle to the underlying Roblox Instance.
+
+```lua
+Roact.createElement("Frame", {
+	[Roact.Ref] = function(rbx)
+		print("Roblox Instance", rbx)
+	end,
+})
+```
+
+!!! warning
+	`Roact.Ref` will be called with `nil` when the component instance is destroyed!
+
+See [the refs guide](/advanced/refs.html) for more details.
+
+### Roact.Event
+Index into `Roact.Event` to receive a key that can be used to connect to events when creating primitive elements:
+
+```lua
+Roact.createElement("ImageButton", {
+	[Roact.Event.MouseButton1Click] = function(rbx, x, y)
+		print(rbx, "clicked at position", x, y)
+	end,
+})
+```
+
+!!! info
+	Event callbacks receive the Roblox Instance as the first parameter, followed by any parameters yielded by the event.
+
+See [the events guide](/guide/events.md) for more details.
+
 ## Component Types
 
 ### Roact.Component
@@ -179,97 +273,3 @@ didUpdate(previousProps, previousState) -> void
 `didUpdate` is fired after at the end of an update. At this point, the reconciler has updated the properties of any Roblox Instances and the component instance's props and state are up to date.
 
 `didUpdate` is a good place to send network requests or dispatch Rodux actions, but make sure to compare `self.props` and `self.state` with `previousProps` and `previousState` to avoid triggering too many updates.
-
-## Constants
-
-### Roact.Children
-This is the key that Roact uses internally to store the children that are attached to a Roact element.
-
-If you're writing a new functional or stateful element that needs to be used like a primitive component, you can access `Roact.Children` in your props table.
-
-### Roact.Ref
-Use `Roact.Ref` as a key into the props of a primitive element to receive a handle to the underlying Roblox Instance.
-
-```lua
-Roact.createElement("Frame", {
-	[Roact.Ref] = function(rbx)
-		print("Roblox Instance", rbx)
-	end,
-})
-```
-
-!!! warning
-	`Roact.Ref` will be called with `nil` when the component instance is destroyed!
-
-See [the refs guide](/advanced/refs.html) for more details.
-
-### Roact.Event
-Index into `Roact.Event` to receive a key that can be used to connect to events when creating primitive elements:
-
-```lua
-Roact.createElement("ImageButton", {
-	[Roact.Event.MouseButton1Click] = function(rbx, x, y)
-		print(rbx, "clicked at position", x, y)
-	end,
-})
-```
-
-!!! info
-	Event callbacks receive the Roblox Instance as the first parameter, followed by any parameters yielded by the event.
-
-See [the events guide](/guide/events.md) for more details.
-
-## Methods
-
-### Roact.createElement
-```
-Roact.createElement(component, [props, [children]]) -> RoactElement
-```
-
-Creates a new Roact element representing the given `component`.
-
-The `children` argument is shorthand for adding a `Roact.Children` key to `props`. It should be specified as a dictionary of names to elements.
-
-`component` can be a string, a function, or a table created by `Component:extend`.
-
-!!! caution
-	Once `props` or `children` are passed into the `createElement`, make sure not to modify them!
-
-### Roact.reify
-```
-Roact.reify(element, [parent, [key]]) -> ComponentInstanceHandle
-```
-
-Creates a Roblox Instance given a Roact element, and optionally a `parent` to put it in, and a `key` to use as the instance's `Name`.
-
-The result is a `ComponentInstanceHandle`, which is an opaque handle that represents this specific instance of the root component. You can pass this to APIs like `Roact.teardown` and the future debug API.
-
-### Roact.reconcile
-```
-Roact.reconcile(instanceHandle, element) -> ComponentInstanceHandle
-```
-
-Updates an existing instance handle with a new element, returning a new handle.
-
-`reconcile` can be used to change the props of a component instance created with `reify` and is useful for putting Roact content into non-Roact applications.
-
-!!! warning
-	`Roact.reconcile` takes ownership of the `instanceHandle` passed into it and may tear it down and create a new tree!
-
-	Make sure to use the handle that `reconcile` returns in any operations after `reconcile`, including `teardown`.
-
-### Roact.teardown
-```
-Roact.teardown(instance) -> void
-```
-
-Destroys the given `ComponentInstanceHandle` and all of its descendents. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.reify`.
-
-### Roact.oneChild
-`Roact.oneChild(children) -> RoactElement | nil`
-
-Given a dictionary of children, returns a single child element.
-
-If `children` contains more than one child, `oneChild` function will throw an error. This is intended to denote an error when using the component using `oneChild`.
-
-If `children` is `nil` or contains no children, `oneChild` will return `nil`.

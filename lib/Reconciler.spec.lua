@@ -33,6 +33,8 @@ return function()
 			}))
 
 			expect(traceCount).to.equal(2)
+
+			Reconciler.teardown(handle)
 		end)
 
 		it("should print when events are connected", function()
@@ -54,6 +56,8 @@ return function()
 			}))
 
 			expect(traceCount).to.equal(2)
+
+			Reconciler.teardown(handle)
 		end)
 	end)
 end

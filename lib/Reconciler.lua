@@ -43,6 +43,7 @@ end
 
 local Reconciler = {}
 
+Reconciler._traceFunction = print
 Reconciler._singleEventManager = SingleEventManager.new()
 
 --[[
@@ -515,7 +516,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 				tostring(value)
 			)
 
-			print(message)
+			Reconciler._traceFunction(message)
 		end
 	elseif type(key) == "table" then
 		-- Special property with extra data attached.
@@ -530,7 +531,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 					rbx.ClassName
 				)
 
-				print(message)
+				Reconciler._traceFunction(message)
 			end
 		else
 			local source = element.source or DEFAULT_SOURCE

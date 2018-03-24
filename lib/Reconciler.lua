@@ -526,7 +526,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 
 			if GlobalConfig.getValue("logAllMutations") then
 				local message = ("<TRACE> Connecting function to event %s on %s of class %s"):format(
-					key,
+					key.name,
 					rbx:GetFullName(),
 					rbx.ClassName
 				)

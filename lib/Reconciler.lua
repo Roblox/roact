@@ -498,6 +498,17 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 
 		local success, err = pcall(set, rbx, key, value)
 
+		if GlobalConfig.getValue("logAllMutations") then
+			local message = ("<TRACE> Setting %s on %s of class %s to %s"):format(
+				key,
+				rbx:GetFullName(),
+				rbx.ClassName,
+				tostring(value)
+			)
+
+			Reconciler._traceFunction(message)
+		end
+
 		if not success then
 			local source = element.source or DEFAULT_SOURCE
 
@@ -509,15 +520,6 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 			)
 
 			error(message, 0)
-		elseif GlobalConfig.getValue("logAllMutations") then
-			local message = ("<TRACE> Setting %s on %s of class %s to %s"):format(
-				key,
-				rbx:GetFullName(),
-				rbx.ClassName,
-				tostring(value)
-			)
-
-			Reconciler._traceFunction(message)
 		end
 	elseif type(key) == "table" then
 		-- Special property with extra data attached.

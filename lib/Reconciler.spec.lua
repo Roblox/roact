@@ -2,6 +2,7 @@ return function()
 	local Reconciler = require(script.Parent.Reconciler)
 	local Core = require(script.Parent.Core)
 	local Event = require(script.Parent.Event)
+	local Change = require(script.Parent.Change)
 	local GlobalConfig = require(script.Parent.GlobalConfig)
 
 	it("should reify booleans as nil", function()
@@ -53,6 +54,29 @@ return function()
 
 			Reconciler.reconcile(handle, Core.createElement("IntValue", {
 				[Event.Changed] = function() end,
+			}))
+
+			expect(traceCount).to.equal(2)
+
+			Reconciler.teardown(handle)
+		end)
+
+		it("should print when property change listeners are connected", function()
+			local traceCount = 0
+
+			Reconciler._traceFunction = function()
+				traceCount = traceCount + 1
+			end
+
+			local element = Core.createElement("IntValue", {
+				[Change.Name] = function() end,
+			})
+
+			local handle = Reconciler.reify(element)
+			expect(traceCount).to.equal(1)
+
+			Reconciler.reconcile(handle, Core.createElement("IntValue", {
+				[Change.Name] = function() end,
 			}))
 
 			expect(traceCount).to.equal(2)

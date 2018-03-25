@@ -538,6 +538,16 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 			end
 		elseif key.type == Change then
 			Reconciler._singleEventManager:connectProperty(rbx, key.name, value)
+
+			if GlobalConfig.getValue("logAllMutations") then
+				local message = ("<TRACE> Connecting function to property change event %s on %s of class %s"):format(
+					key.name,
+					rbx:GetFullName(),
+					rbx.ClassName
+				)
+
+				Reconciler._traceFunction(message)
+			end
 		else
 			local source = element.source or DEFAULT_SOURCE
 

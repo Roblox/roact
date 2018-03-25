@@ -102,7 +102,7 @@ return function()
 				traceCount = traceCount + 1
 			end
 
-			local element = Core.createElement("IntValue", {
+			local element = Core.createElement("StringValue", {
 				Name = "Test",
 				[Event.Changed] = function() end,
 				[Change.Name] = function() end,
@@ -111,11 +111,13 @@ return function()
 			local handle = Reconciler.reify(element)
 			expect(traceCount).to.equal(0)
 
-			Reconciler.reconcile(handle, Core.createElement("IntValue", {
+			handle = Reconciler.reconcile(handle, Core.createElement("StringValue", {
 				[Change.Name] = function() end,
 			}))
 
 			expect(traceCount).to.equal(0)
+
+			Reconciler.teardown(handle)
 		end)
 	end)
 end

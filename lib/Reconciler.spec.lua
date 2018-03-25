@@ -11,11 +11,11 @@ return function()
 	end)
 
 	describe("tracing", function()
-		GlobalConfig.set({
-			logAllMutations = true
-		})
-
 		it("should print when properties are set", function()
+			GlobalConfig.set({
+				logAllMutations = true
+			})
+
 			local traceCount = 0
 
 			Reconciler._traceFunction = function()
@@ -36,9 +36,14 @@ return function()
 			expect(traceCount).to.equal(2)
 
 			Reconciler.teardown(handle)
+			GlobalConfig.reset()
 		end)
 
 		it("should print when events are connected", function()
+			GlobalConfig.set({
+				logAllMutations = true
+			})
+
 			local traceCount = 0
 
 			Reconciler._traceFunction = function()
@@ -59,9 +64,14 @@ return function()
 			expect(traceCount).to.equal(2)
 
 			Reconciler.teardown(handle)
+			GlobalConfig.reset()
 		end)
 
 		it("should print when property change listeners are connected", function()
+			GlobalConfig.set({
+				logAllMutations = true
+			})
+
 			local traceCount = 0
 
 			Reconciler._traceFunction = function()
@@ -82,6 +92,30 @@ return function()
 			expect(traceCount).to.equal(2)
 
 			Reconciler.teardown(handle)
+			GlobalConfig.reset()
+		end)
+
+		it("should not print when logAllMutations is not true", function()
+			local traceCount = 0
+
+			Reconciler._traceFunction = function()
+				traceCount = traceCount + 1
+			end
+
+			local element = Core.createElement("IntValue", {
+				Name = "Test",
+				[Event.Changed] = function() end,
+				[Change.Name] = function() end,
+			})
+
+			local handle = Reconciler.reify(element)
+			expect(traceCount).to.equal(0)
+
+			Reconciler.reconcile(handle, Core.createElement("IntValue", {
+				[Change.Name] = function() end,
+			}))
+
+			expect(traceCount).to.equal(0)
 		end)
 	end)
 end

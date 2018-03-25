@@ -31,6 +31,21 @@ local function createHook(rbx, key, method)
 	return hook
 end
 
+local function createChangeHook(rbx, key, method)
+	local hook = {
+		method = method,
+		connection = rbx:GetPropertyChangedSignal(key):Connect(function(...)
+			method(rbx, ...)
+		end)
+	}
+
+	return hook
+end
+
+local function formatChangeKey(key)
+	return ("!PropertyChangeEvent:%s"):format(key)
+end
+
 function SingleEventManager.new()
 	local self = {}
 
@@ -64,6 +79,30 @@ function SingleEventManager:connect(rbx, key, method)
 	end
 end
 
+function SingleEventManager:connectProperty(rbx, key, method)
+	local rbxHooks = self._hookCache[rbx]
+	local formattedKey = formatChangeKey(key)
+
+	if rbxHooks then
+		local existingHook = rbxHooks[formattedKey]
+
+		if existingHook then
+			if existingHook.method == method then
+				return
+			end
+
+			existingHook.connection:Disconnect()
+		end
+
+		rbxHooks[formattedKey] = createChangeHook(rbx, key, method)
+	else
+		rbxHooks = {}
+		rbxHooks[formattedKey] = createChangeHook(rbx, key, method)
+
+		self._hookCache[rbx] = rbxHooks
+	end
+end
+
 function SingleEventManager:disconnect(rbx, key)
 	local rbxHooks = self._hookCache[rbx]
 
@@ -83,6 +122,10 @@ function SingleEventManager:disconnect(rbx, key)
 	if next(rbxHooks) == nil then
 		self._hookCache[rbx] = nil
 	end
+end
+
+function SingleEventManager:disconnectProperty(rbx, key)
+	self:disconnect(rbx, formatChangeKey(key))
 end
 
 function SingleEventManager:disconnectAll(rbx)

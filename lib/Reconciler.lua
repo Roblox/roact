@@ -24,6 +24,7 @@
 
 local Core = require(script.Parent.Core)
 local Event = require(script.Parent.Event)
+local Change = require(script.Parent.Change)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local SingleEventManager = require(script.Parent.SingleEventManager)
 local Symbol = require(script.Parent.Symbol)
@@ -512,6 +513,8 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 
 		if key.type == Event then
 			Reconciler._singleEventManager:connect(rbx, key.name, value)
+		elseif key.type == Change then
+			Reconciler._singleEventManager:connectProperty(rbx, key.name, value)
 		else
 			local source = element.source or DEFAULT_SOURCE
 

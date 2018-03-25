@@ -5,6 +5,7 @@
 local Component = require(script.Component)
 local Core = require(script.Core)
 local Event = require(script.Event)
+local Change = require(script.Change)
 local GlobalConfig = require(script.GlobalConfig)
 local PureComponent = require(script.PureComponent)
 local Reconciler = require(script.Reconciler)
@@ -37,6 +38,7 @@ apply(Roact, {
 	Component = Component,
 	PureComponent = PureComponent,
 	Event = Event,
+	Change = Change,
 })
 
 apply(Roact, {

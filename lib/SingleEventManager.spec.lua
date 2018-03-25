@@ -83,6 +83,57 @@ return function()
 		end)
 	end)
 
+	describe("connectProperty", function()
+		it("should connect to property changes", function()
+			local target = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new()
+
+			local changeCount = 0
+
+			manager:connectProperty(target, "Name", function(rbx)
+				changeCount = changeCount + 1
+			end)
+
+			target.Name = "hi"
+			expect(changeCount).to.equal(1)
+		end)
+
+		it("should disconnect the existing connection if present", function()
+			local target = Instance.new("IntValue")
+			local manager = SingleEventManager.new()
+
+			local changeCountA = 0
+			local changeCountB = 0
+
+			manager:connectProperty(target, "Name", function(rbx)
+				changeCountA = changeCountA + 1
+			end)
+
+			manager:connectProperty(target, "Name", function(rbx)
+				changeCountB = changeCountB + 1
+			end)
+
+			target.Name = "hi"
+			expect(changeCountA).to.equal(0)
+			expect(changeCountB).to.equal(1)
+		end)
+
+		it("should only connect to the property specified", function()
+			local target = Instance.new("IntValue")
+			local manager = SingleEventManager.new()
+
+			local changeCount = 0
+
+			manager:connectProperty(target, "Name", function(rbx)
+				changeCount = changeCount + 1
+			end)
+
+			target.Name = "hi"
+			target.Value = 0
+			expect(changeCount).to.equal(1)
+		end)
+	end)
+
 	describe("disconnect", function()
 		it("should disconnect handlers on an object", function()
 			local target = Instance.new("BindableEvent")
@@ -146,6 +197,33 @@ return function()
 		end)
 	end)
 
+	describe("disconnectProperty", function()
+		it("should disconnect property change handlers on an object", function()
+			local target = Instance.new("IntValue")
+			local manager = SingleEventManager.new()
+
+			local changeCount = 0
+
+			manager:connectProperty(target, "Name", function(rbx)
+				changeCount = changeCount + 1
+			end)
+
+			target.Name = "hi"
+			expect(changeCount).to.equal(1)
+
+			manager:disconnectProperty(target, "Name")
+			target.Name = "test"
+			expect(changeCount).to.equal(1)
+		end)
+
+		it("should succeed even if no handler is attached", function()
+			local target = Instance.new("IntValue")
+			local manager = SingleEventManager.new()
+
+			manager:disconnectProperty(target, "Name")
+		end)
+	end)
+
 	describe("disconnectAll", function()
 		it("should disconnect all listeners on an object", function()
 			local target = Instance.new("BindableEvent")
@@ -153,6 +231,7 @@ return function()
 
 			local callCountEvent = 0
 			local callCountChanged = 0
+			local changeCount = 0
 
 			manager:connect(target, "Event", function(rbx)
 				expect(rbx).to.equal(target)
@@ -164,11 +243,17 @@ return function()
 				callCountChanged = callCountChanged + 1
 			end)
 
+			manager:connectProperty(target, "Name", function(rbx)
+				expect(rbx).to.equal(target)
+				changeCount = changeCount + 1
+			end)
+
 			target:Fire()
 			target.Name = "bar"
 
 			expect(callCountEvent).to.equal(1)
 			expect(callCountChanged).to.equal(1)
+			expect(changeCount).to.equal(1)
 
 			manager:disconnectAll(target)
 
@@ -177,6 +262,7 @@ return function()
 
 			expect(callCountEvent).to.equal(1)
 			expect(callCountChanged).to.equal(1)
+			expect(changeCount).to.equal(1)
 		end)
 
 		it("should succeed with no events attached", function()

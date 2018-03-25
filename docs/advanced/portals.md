@@ -1,7 +1,8 @@
 # Portals
 *Portals* are a special kind of component provided by Roact that enable components to render objects into a separate, non-Roact Instance.
 
-**(TODO: diagram of portals)**
+!!! info
+	Eventually, there will be a diagram of Roact portals here. For now, just imagine Valve's hit game, *Portal*.
 
 To create a portal, use the `Roact.Portal` component with `createElement`:
 
@@ -18,6 +19,9 @@ end
 ```
 
 When we create `PartInWorkspace`, even if it's deep into our Roact tree, a `Part` Instance named `SomePart` will be created in `Workspace`.
+
+!!! warning
+	Portals should only be created to objects that aren't managed by Roact!
 
 One particularly good use for portals is full-screen modal dialogs. When we render a modal dialog, we want it to take over the entire screen, but we want components deep in the tree to be able to create them!
 

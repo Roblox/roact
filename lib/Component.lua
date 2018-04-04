@@ -191,12 +191,15 @@ function Component:_forceUpdate(newProps, newState)
 	-- Get the class - getDerivedStateFromProps is static.
 	local class = getmetatable(self)
 
-	if class.getDerivedStateFromProps then
-		local derivedState = class.getDerivedStateFromProps(newProps, newState or self.state)
+	-- Only update if newProps are given!
+	if newProps then
+		if class.getDerivedStateFromProps then
+			local derivedState = class.getDerivedStateFromProps(newProps, newState or self.state)
 
-		-- getDerivedStateFromProps can return nil if no changes are necessary.
-		if derivedState ~= nil then
-			newState = mergeState(newState or self.state, derivedState)
+			-- getDerivedStateFromProps can return nil if no changes are necessary.
+			if derivedState ~= nil then
+				newState = mergeState(newState or self.state, derivedState)
+			end
 		end
 	end
 

@@ -177,6 +177,76 @@ return function()
 		Reconciler.teardown(instance)
 	end)
 
+	describe("getDerivedStateFromProps", function()
+		it("should be called when a component is initialized", function()
+			local TestComponent = Component:extend("TestComponent")
+			local getStateCallback
+
+			function TestComponent.getDerivedStateFromProps(newProps, oldState)
+				return {
+					visible = newProps.visible
+				}
+			end
+
+			function TestComponent:init(props)
+				self.state = {
+					visible = false
+				}
+
+				getStateCallback = function()
+					return self.state
+				end
+			end
+
+			function TestComponent:render() end
+
+			local handle = Reconciler.reify(Core.createElement(TestComponent, {
+				visible = true
+			}))
+
+			local state = getStateCallback()
+			expect(state.visible).to.equal(true)
+
+			Reconciler.teardown(handle)
+		end)
+
+		it("should be called on property updates", function()
+			local TestComponent = Component:extend("TestComponent")
+			local getStateCallback
+
+			function TestComponent.getDerivedStateFromProps(newProps, oldState)
+				return {
+					visible = newProps.visible
+				}
+			end
+
+			function TestComponent:init(props)
+				self.state = {
+					visible = false
+				}
+
+				getStateCallback = function()
+					return self.state
+				end
+			end
+
+			function TestComponent:render() end
+
+			local handle = Reconciler.reify(Core.createElement(TestComponent, {
+				visible = true
+			}))
+
+			Reconciler.reconcile(handle, Core.createElement(TestComponent, {
+				visible = 123,
+			}))
+
+			local state = getStateCallback()
+			expect(state.visible).to.equal(123)
+
+			Reconciler.teardown(handle)
+		end)
+	end)
+
 	describe("setState", function()
 		it("should throw when called in init", function()
 			local InitComponent = Component:extend("InitComponent")

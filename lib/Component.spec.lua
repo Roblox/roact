@@ -177,74 +177,43 @@ return function()
 		Reconciler.teardown(instance)
 	end)
 
-	describe("getDerivedStateFromProps", function()
-		it("should be called when a component is initialized", function()
-			local TestComponent = Component:extend("TestComponent")
-			local getStateCallback
+	it("should call getDerivedStateFromProps appropriately", function()
+		local TestComponent = Component:extend("TestComponent")
+		local getStateCallback
 
-			function TestComponent.getDerivedStateFromProps(newProps, oldState)
-				return {
-					visible = newProps.visible
-				}
+		function TestComponent.getDerivedStateFromProps(newProps, oldState)
+			return {
+				visible = newProps.visible
+			}
+		end
+
+		function TestComponent:init(props)
+			self.state = {
+				visible = false
+			}
+
+			getStateCallback = function()
+				return self.state
 			end
+		end
 
-			function TestComponent:init(props)
-				self.state = {
-					visible = false
-				}
+		function TestComponent:render() end
 
-				getStateCallback = function()
-					return self.state
-				end
-			end
+		local handle = Reconciler.reify(Core.createElement(TestComponent, {
+			visible = true
+		}))
 
-			function TestComponent:render() end
+		local state = getStateCallback()
+		expect(state.visible).to.equal(true)
 
-			local handle = Reconciler.reify(Core.createElement(TestComponent, {
-				visible = true
-			}))
+		handle = Reconciler.reconcile(handle, Core.createElement(TestComponent, {
+			visible = 123
+		}))
 
-			local state = getStateCallback()
-			expect(state.visible).to.equal(true)
+		state = getStateCallback()
+		expect(state.visible).to.equal(123)
 
-			Reconciler.teardown(handle)
-		end)
-
-		it("should be called on property updates", function()
-			local TestComponent = Component:extend("TestComponent")
-			local getStateCallback
-
-			function TestComponent.getDerivedStateFromProps(newProps, oldState)
-				return {
-					visible = newProps.visible
-				}
-			end
-
-			function TestComponent:init(props)
-				self.state = {
-					visible = false
-				}
-
-				getStateCallback = function()
-					return self.state
-				end
-			end
-
-			function TestComponent:render() end
-
-			local handle = Reconciler.reify(Core.createElement(TestComponent, {
-				visible = true
-			}))
-
-			Reconciler.reconcile(handle, Core.createElement(TestComponent, {
-				visible = 123,
-			}))
-
-			local state = getStateCallback()
-			expect(state.visible).to.equal(123)
-
-			Reconciler.teardown(handle)
-		end)
+		Reconciler.teardown(handle)
 	end)
 
 	describe("setState", function()

@@ -20,6 +20,24 @@ setState cannot be used currently, are you calling setState from any of:
 * the render function
 * the shouldUpdate function]]
 
+local function mergeState(currentState, partialState)
+	local newState = {}
+
+	for key, value in pairs(currentState) do
+		newState[key] = value
+	end
+
+	for key, value in pairs(partialState) do
+		if value == Core.None then
+			newState[key] = nil
+		else
+			newState[key] = value
+		end
+	end
+
+	return newState
+end
+
 --[[
 	Create a new Roact stateful component class.
 
@@ -74,6 +92,14 @@ function Component:extend(name)
 		-- The user constructer might not set state, so we can.
 		if not self.state then
 			self.state = {}
+		end
+
+		if class.getDerivedStateFromProps then
+			local partialState = class.getDerivedStateFromProps(props, self.state)
+
+			if partialState then
+				self.state = mergeState(self.state, partialState)
+			end
 		end
 
 		-- Now that state has definitely been set, we can now allow it to be changed.
@@ -133,20 +159,7 @@ function Component:setState(partialState)
 		partialState = partialState(self.state, self.props)
 	end
 
-	local newState = {}
-
-	for key, value in pairs(self.state) do
-		newState[key] = value
-	end
-
-	for key, value in pairs(partialState) do
-		if value == Core.None then
-			newState[key] = nil
-		else
-			newState[key] = value
-		end
-	end
-
+	local newState = mergeState(self.state, partialState)
 	self:_update(self.props, newState)
 end
 
@@ -173,6 +186,22 @@ end
 ]]
 function Component:_forceUpdate(newProps, newState)
 	self._canSetState = false
+
+	-- Compute new derived state.
+	-- Get the class - getDerivedStateFromProps is static.
+	local class = getmetatable(self)
+
+	-- Only update if newProps are given!
+	if newProps then
+		if class.getDerivedStateFromProps then
+			local derivedState = class.getDerivedStateFromProps(newProps, newState or self.state)
+
+			-- getDerivedStateFromProps can return nil if no changes are necessary.
+			if derivedState ~= nil then
+				newState = mergeState(newState or self.state, derivedState)
+			end
+		end
+	end
 
 	if self.willUpdate then
 		self:willUpdate(newProps or self.props, newState or self.state)

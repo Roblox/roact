@@ -500,7 +500,8 @@ end
 ]]
 local function computeFullName(handle, rbx)
 	-- If the instance is already parented, just use GetFullName.
-	if rbx.Parent then
+	-- Also use GetFullName if the handle is nil.
+	if rbx.Parent or handle == nil then
 		return rbx:GetFullName()
 	-- If the instance doesn't have a parent, it's still being reified, so we
 	-- need to build the full name manually.
@@ -508,10 +509,13 @@ local function computeFullName(handle, rbx)
 		local fullName = rbx.Name
 		local level = handle._parentHandle
 
-		-- For the case of root elements, they have no _parent element, but they
-		-- do have a _rbxParent, which is the parent that the root is being reified to.
+		-- For the case of root elements, they have no _parentHandle, but they
+		-- do have a _parent, which is the parent that the root is being reified to.
 		if not level then
-			fullName = handle._parent:GetFullName() .. "." .. fullName
+			-- We can reify components to nil.
+			if handle._parent then
+				fullName = handle._parent:GetFullName() .. "." .. fullName
+			end
 		end
 
 		while level do
@@ -519,13 +523,16 @@ local function computeFullName(handle, rbx)
 			fullName = rbx.Name .. "." .. fullName
 
 			local nextLevel = level._parentHandle
-			-- If there is a _parent element, travel through it.
+			-- If there is a _parentHandle element, travel through it.
 			if nextLevel then
 				level = nextLevel
 			-- Otherwise, we've reached the root element of this element tree.
-			-- Use the _rbxParent value and stop the loop.
+			-- Use the _parent value and stop the loop.
 			else
-				fullName = level._parent:GetFullName() .. "." .. fullName
+				if level._parent then
+					fullName = level._parent:GetFullName() .. "." .. fullName
+				end
+
 				break
 			end
 		end

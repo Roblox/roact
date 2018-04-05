@@ -46,6 +46,7 @@ local Reconciler = {}
 
 Reconciler._traceFunction = print
 Reconciler._singleEventManager = SingleEventManager.new()
+Reconciler._rbxParents = {}
 
 --[[
 	Is this element backed by a Roblox instance directly?
@@ -104,6 +105,7 @@ function Reconciler.teardown(instanceHandle)
 		Reconciler._singleEventManager:disconnectAll(instanceHandle._rbx)
 
 		instanceHandle._rbx:Destroy()
+		Reconciler._rbxParents[instanceHandle._rbx] = nil
 	elseif isFunctionalElement(element) then
 		-- Functional components can return nil
 		if instanceHandle._reified then
@@ -161,6 +163,15 @@ function Reconciler._reifyInternal(element, parent, key, context)
 
 		local rbx = Instance.new(element.component)
 
+		-- This name can be passed through multiple components.
+		-- What's important is the final Roblox Instance receives the name
+		-- It's solely for debugging purposes; Roact doesn't use it.
+		if key then
+			rbx.Name = key
+		end
+
+		Reconciler._rbxParents[rbx] = parent
+
 		-- Update Roblox properties
 		for key, value in pairs(element.props) do
 			Reconciler._setRbxProp(rbx, key, value, element)
@@ -175,13 +186,6 @@ function Reconciler._reifyInternal(element, parent, key, context)
 
 				reifiedChildren[key] = childInstance
 			end
-		end
-
-		-- This name can be passed through multiple components.
-		-- What's important is the final Roblox Instance receives the name
-		-- It's solely for debugging purposes; Roact doesn't use it.
-		if key then
-			rbx.Name = key
 		end
 
 		rbx.Parent = parent
@@ -482,6 +486,25 @@ local function set(rbx, key, value)
 end
 
 --[[
+	Computes a full name.
+]]
+local function computeFullName(rbx)
+	if rbx.Parent then
+		return rbx:GetFullName()
+	else
+		local fullName = rbx.Name
+		local level = Reconciler._rbxParents[rbx]
+
+		while level and level ~= game do
+			fullName = level.Name .. "." .. fullName
+			level = level.Parent or Reconciler._rbxParents[level]
+		end
+
+		return fullName
+	end
+end
+
+--[[
 	Sets a property on a Roblox object, following Roact's rules for special
 	case properties.
 
@@ -501,7 +524,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 		if GlobalConfig.getValue("logAllMutations") then
 			local message = ("<TRACE> Setting %s on %s of class %s to %s"):format(
 				key,
-				rbx:GetFullName(),
+				computeFullName(rbx),
 				rbx.ClassName,
 				tostring(value)
 			)
@@ -530,7 +553,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 			if GlobalConfig.getValue("logAllMutations") then
 				local message = ("<TRACE> Connecting function to event %s on %s of class %s"):format(
 					key.name,
-					rbx:GetFullName(),
+					computeFullName(rbx),
 					rbx.ClassName
 				)
 
@@ -542,7 +565,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 			if GlobalConfig.getValue("logAllMutations") then
 				local message = ("<TRACE> Connecting function to property change event %s on %s of class %s"):format(
 					key.name,
-					rbx:GetFullName(),
+					computeFullName(rbx),
 					rbx.ClassName
 				)
 

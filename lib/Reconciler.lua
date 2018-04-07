@@ -29,6 +29,9 @@ local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local SingleEventManager = require(script.Parent.SingleEventManager)
 local Symbol = require(script.Parent.Symbol)
 
+local GlobalConfig = require(script.Parent.GlobalConfig)
+local DebugTrackWastedRenders = require(script.Parent.DebugTrackWastedRenders)
+
 local isInstanceHandle = Symbol.named("isInstanceHandle")
 
 local DEFAULT_SOURCE = "\n\t<Use Roact.setGlobalConfig with the 'elementTracing' key to enable detailed tracebacks>\n"
@@ -138,6 +141,9 @@ end
 	component tree.
 ]]
 function Reconciler.reify(element, parent, key)
+	if GlobalConfig.getValue("trackWastedRenders") then
+		DebugTrackWastedRenders.startReporting()
+	end
 	return Reconciler._reifyInternal(element, parent, key)
 end
 
@@ -304,6 +310,22 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 		Reconciler.teardown(instanceHandle)
 
 		return nil
+	end
+
+	-- Check for wasted renders if the config is set
+	if GlobalConfig.getValue("trackWastedRenders") then
+		local type
+		if isPrimitiveElement(newElement) then
+			type = "Primitive"
+		elseif isFunctionalElement(newElement) then
+			type = "Functional"
+		elseif isStatefulElement(newElement) then
+			type = "Stateful"
+		else
+			type = "Portal"
+		end
+
+		DebugTrackWastedRenders.recordRender(type, newElement, oldElement)
 	end
 
 	-- If the element changes type, we assume its subtree will be substantially

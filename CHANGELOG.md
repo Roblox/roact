@@ -1,7 +1,8 @@
 # Roact Changelog
 
 ## Current `master` branch
-* *No changes*
+* Added `Roact.Change` for subscribing to `GetPropertyChangedSignal` ([#51](https://github.com/Roblox/roact/pull/51))
+* Added the static lifecycle method `getDerivedStateFromProps` ([#57](https://github.com/Roblox/roact/pull/57))
 
 ## 1.0.0 Prerelease 2 (March 22, 2018)
 * Removed `is*Element` methods, this is unlikely to affect anyone ([#50](https://github.com/Roblox/roact/pull/50))

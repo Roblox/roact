@@ -16,6 +16,8 @@
 local defaultConfig = {
 	-- Enables storage of `debug.traceback()` values on elements for debugging.
 	["elementTracing"] = false,
+	-- Determine extraneous renders that produce the same element as before (comes at a high performance cost)
+	["trackWastedRenders"] = false,
 }
 
 -- Build a list of valid configuration values up for debug messages.

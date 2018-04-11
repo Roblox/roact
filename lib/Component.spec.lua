@@ -400,12 +400,10 @@ return function()
 			expect(renderCount).to.equal(1)
 
 			setStateCallback(function(state, props)
-				return {
-					nil
-				}
+				return nil
 			end)
 
-			expect(renderCount).to.equal(2)
+			expect(renderCount).to.equal(1)
 
 			Reconciler.teardown(instance)
 		end)

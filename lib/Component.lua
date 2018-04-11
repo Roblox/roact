@@ -131,6 +131,11 @@ function Component:setState(partialState)
 	-- If the partial state is a function, invoke it to get the actual partial state.
 	if type(partialState) == "function" then
 		partialState = partialState(self.state, self.props)
+
+		-- If partialState is nil, abort the render.
+		if partialState == nil then
+			return
+		end
 	end
 
 	local newState = {}

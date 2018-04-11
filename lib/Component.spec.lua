@@ -413,5 +413,38 @@ return function()
 
 			Reconciler.teardown(instance)
 		end)
+
+		it("should cancel rendering if the function returns nil", function()
+			local TestComponent = Component:extend("TestComponent")
+			local setStateCallback
+			local renderCount = 0
+
+			function TestComponent:init()
+				setStateCallback = function(newState)
+					self:setState(newState)
+				end
+
+				self.state = {
+					value = 0
+				}
+			end
+
+			function TestComponent:render()
+				renderCount = renderCount + 1
+				return nil
+			end
+
+			local element = Core.createElement(TestComponent)
+			local instance = Reconciler.reify(element)
+			expect(renderCount).to.equal(1)
+
+			setStateCallback(function(state, props)
+				return nil
+			end)
+
+			expect(renderCount).to.equal(1)
+
+			Reconciler.teardown(instance)
+		end)
 	end)
 end

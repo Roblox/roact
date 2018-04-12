@@ -28,7 +28,13 @@ Check the definition of shouldUpdate in the component %q.]]
 
 invalidSetStateMessages["init"] = [[
 setState cannot be used in the init method.
-Consider using the didMount method instead.
+During init, the component hasn't initialized yet, and isn't ready to render.
+
+Instead, set the `state` value directly:
+
+	self.state = {
+		value = "foo"
+	}
 
 Check the definition of init in the component %q.]]
 
@@ -43,10 +49,10 @@ setState cannot be called while a component is being reified or reconciled.
 This is the step where Roact constructs Roblox instances, and starting another
 render here would introduce bugs.
 
-Check the component %q to see if:
-	* setState could be called by a child Ref
-	* setState could be called by a child Changed event
-	* setState could be called by a child's render method]]
+Check the component %q to see if setState is being called by:
+* a child Ref
+* a child Changed event
+* a child's render method]]
 
 invalidSetStateMessages["default"] = [[
 setState can not be used in the current situation, but Roact couldn't find a

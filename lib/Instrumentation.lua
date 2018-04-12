@@ -1,9 +1,7 @@
-local GlobalConfig = require(script.Parent.GlobalConfig)
-
 local Instrumentation = {}
 
-local ComponentStats = {}
--- Tracks HELLA stats, including:
+local componentStats = {}
+-- Tracks a number of stats, including:
 	-- Recorded stats:
 		-- Render count by component
 		-- Update request count by component
@@ -11,29 +9,17 @@ local ComponentStats = {}
 		-- shouldUpdate returned true count by component
 		-- Time taken to run shouldUpdate
 		-- Time taken to render by component
-	-- Derived stats:
+	-- Derivable stats (for profiling manually or with a future tool):
 		-- Average render time by component
 		-- Percent of total render time by component
-		-- Average shouldUpdate time by component
 		-- Percent of time shouldUpdate returns true
+		-- Average shouldUpdate time by component
 		-- Percent of total shouldUpdate time by component
 
-local function valuesByStat(t, f)
-	local a = {}
-	for _, obj in pairs(t) do table.insert(a, obj) end
-	table.sort(a, f)
-	local i = 0      -- iterator variable
-	local iter = function ()   -- iterator function
-		i = i + 1
-		if a[i] == nil then
-			return nil
-		else
-			return a[i]
-		end
-	end
-	return iter
-end
-
+--[[
+	Determines name of component from the given instance handle and returns a
+	stat object from the componentStats table, generating a new one if needed
+]]
 local function getStatEntry(handle)
 	local name
 	if handle and handle._element and handle._element.component then
@@ -42,15 +28,9 @@ local function getStatEntry(handle)
 		warn("Component name not valid for " .. tostring(handle._key))
 		return nil
 	end
-	local entry = ComponentStats[name]
+	local entry = componentStats[name]
 	if not entry then
-		-- Use shortened name for convenience; 
-		local shortName = name:gsub("Connection","Conn")
-		shortName = shortName:gsub("Localize","Loc")
-		shortName = shortName:gsub("FitChildren","FitCh")
 		entry = {
-			-- store semi-redundant name field for easier sorting
-			component = shortName,
 			-- update requests
 			updateReqCount = 0,
 			-- actual updates
@@ -62,122 +42,57 @@ local function getStatEntry(handle)
 			-- total render time spent
 			renderTime = 0,
 		}
-		ComponentStats[name] = entry
+		componentStats[name] = entry
 	end
 
 	return entry
 end
 
+--[[
+	Logs the time taken and resulting value of a Component's shouldUpdate function
+]]
 function Instrumentation.logShouldUpdate(handle, updateNeeded, shouldUpdateTime)
 	-- Make sure entry exists in stats object
 	local statEntry = getStatEntry(handle)
 	if statEntry then
-		-- Record result
+		-- Increment the total number of times update was invoked
 		statEntry.updateReqCount = statEntry.updateReqCount + 1
+
+		-- Increment total number of times shouldUpdate returned true (when applicable)
 		statEntry.didUpdateCount = statEntry.didUpdateCount + (updateNeeded and 1 or 0)
+
+		-- Add time spent checking if an update is needed to total time
 		statEntry.shouldUpdateTime = statEntry.shouldUpdateTime + shouldUpdateTime * 1000
 	end
 end
 
+--[[
+	Logs the time taken value of a Component's render function
+]]
 function Instrumentation.logRenderTime(handle, renderTime)
 	-- Make sure entry exists in stats object
 	local statEntry = getStatEntry(handle)
 	if statEntry then
-		-- Add the result to the collected stats
+		-- Increment total render count
 		statEntry.renderCount = statEntry.renderCount + 1
-		-- Render time should be in millis
+
+		-- Add render time (in millis) to total rendering time
 		statEntry.renderTime = statEntry.renderTime + renderTime * 1000
 	end
 end
 
-function Instrumentation.printStats(sortBy)
-	sortBy = sortBy or "component"
+--[[
+	Clears all the stats collected thus far. Useful for testing and for profiling in the future
+]]
+function Instrumentation.clearCollectedStats()
+	componentStats = {}
+end
 
-	local trackUpdates = GlobalConfig.getValue("shouldUpdateInstrumentation")
-	local trackRenders = GlobalConfig.getValue("renderInstrumentation")
-
-	if not trackUpdates and not trackRenders then
-		print("No stats are being tracked!  Enable with Roact.setConfig({...})")
-		return
-	end
-
-	local totalRenderTime, totalShouldUpdateTime = 0, 0
-
-	-- For each of the tracked stats, aggregate them into overall stats
-	for _, stat in pairs(ComponentStats) do
-		totalRenderTime = totalRenderTime + stat.renderTime
-		totalShouldUpdateTime = totalShouldUpdateTime + stat.shouldUpdateTime
-	end
-
-	-- Get derived stats
-	for _, stat in pairs(ComponentStats) do
-		stat.avgRenderTime = stat.renderTime / stat.renderCount
-		stat.avgShouldUpdateTime = (stat.updateReqCount > 0) and (stat.shouldUpdateTime / stat.updateReqCount) or 0
-		stat.renderPct = stat.renderTime / totalRenderTime * 100
-		stat.updateFreq = (stat.updateReqCount > 0) and (stat.didUpdateCount / stat.updateReqCount * 100) or 0
-		stat.updatePct = stat.shouldUpdateTime / totalShouldUpdateTime * 100
-	end
-
-	-- Set up sort function based on specified stat
-	local compare = function(a, b)
-		return a[sortBy] < b[sortBy]
-	end
-
-	-- Print column headers
-	local colHeaders = ("%-30s"):format("Component Name")
-	if trackUpdates then
-		colHeaders = colHeaders .. (
-			"%-12s%-12s%-12s%-12s%-12s"
-		):format(
-			"Update Reqs",
-			"Updates",
-			"Avg Time",
-			"Update %",
-			"U Time %"
-		)
-	end
-	if trackRenders then
-		colHeaders = colHeaders .. (
-			"%-12s%-12s%-12s"
-		):format(
-			"Renders",
-			"Avg Time",
-			"R Time %"
-		)
-	end
-	print(colHeaders)
-
-	-- Print stat rows
-	for stat in valuesByStat(ComponentStats, compare) do
-		local statsRow = ("%-30s"):format(stat.component)
-		if trackUpdates then
-			statsRow = statsRow .. (
-				"%-12d%-12d%-12.3f%-12.3f%-12.3f"
-			):format(
-				stat.updateReqCount,
-				stat.didUpdateCount,
-				stat.avgShouldUpdateTime,
-				stat.updateFreq,
-				stat.updatePct
-			)
-		end
-		if trackRenders then
-			statsRow = statsRow .. (
-				"%-12d%-12.3f%-12.3f"
-			):format(
-				stat.renderCount,
-				stat.avgRenderTime,
-				stat.renderPct
-			)
-		end
-		print(statsRow)
-	end
-	if trackUpdates then
-		print(("Total time shouldUpdating: %.2fms"):format(totalShouldUpdateTime))
-	end
-	if trackRenders then
-		print(("Total time rendering: %.2fms"):format(totalRenderTime))
-	end
+--[[
+	Returns all the stats collected thus far. Useful for testing and for profiling in the future
+]]
+function Instrumentation.getCollectedStats()
+	return componentStats
 end
 
 return Instrumentation

@@ -52,16 +52,16 @@ end
 	Logs the time taken and resulting value of a Component's shouldUpdate function
 ]]
 function Instrumentation.logShouldUpdate(handle, updateNeeded, shouldUpdateTime)
-	-- Make sure entry exists in stats object
+	-- Grab or create associated entry in stats table
 	local statEntry = getStatEntry(handle)
 	if statEntry then
 		-- Increment the total number of times update was invoked
 		statEntry.updateReqCount = statEntry.updateReqCount + 1
 
-		-- Increment total number of times shouldUpdate returned true (when applicable)
+		-- Increment (when applicable) total number of times shouldUpdate returned true
 		statEntry.didUpdateCount = statEntry.didUpdateCount + (updateNeeded and 1 or 0)
 
-		-- Add time spent checking if an update is needed to total time
+		-- Add time spent checking if an update is needed (in millis) to total time
 		statEntry.shouldUpdateTime = statEntry.shouldUpdateTime + shouldUpdateTime * 1000
 	end
 end
@@ -70,7 +70,7 @@ end
 	Logs the time taken value of a Component's render function
 ]]
 function Instrumentation.logRenderTime(handle, renderTime)
-	-- Make sure entry exists in stats object
+	-- Grab or create associated entry in stats table
 	local statEntry = getStatEntry(handle)
 	if statEntry then
 		-- Increment total render count

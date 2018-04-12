@@ -40,12 +40,16 @@ apply(Roact, {
 	PureComponent = PureComponent,
 	Event = Event,
 	Change = Change,
-	Instrumentation = Instrumentation,
 })
 
 apply(Roact, {
 	setGlobalConfig = GlobalConfig.set,
 	getGlobalConfigValue = GlobalConfig.getValue,
+})
+
+apply(Roact, {
+	getCollectedStats = Instrumentation.getCollectedStats,
+	clearCollectedStats = Instrumentation.clearCollectedStats,
 })
 
 return Roact

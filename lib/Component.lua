@@ -14,7 +14,7 @@ local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
 local Component = {}
 
 -- Locally cache tick so we can minimize impact of calling it for instrumentation
-local l_tick = tick
+local tick = tick
 
 Component.__index = Component
 
@@ -191,10 +191,10 @@ function Component:_update(newProps, newState)
 	local doUpdate
 	if GlobalConfig.getValue("shouldUpdateInstrumentation") then
 		-- Start timing
-		local time = l_tick()
+		local time = tick()
 		doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
 		-- Finish timing
-		time = l_tick() - time
+		time = tick() - time
 		-- Log result
 		Instrumentation.logShouldUpdate(self._handle, doUpdate, time)
 	else
@@ -252,10 +252,10 @@ function Component:_forceUpdate(newProps, newState)
 	local newChildElement
 	if GlobalConfig.getValue("renderInstrumentation") then
 		-- Start timing
-		local time = l_tick()
+		local time = tick()
 		newChildElement = self:render()
 		-- End timing
-		time = l_tick() - time
+		time = tick() - time
 		-- Log result
 		Instrumentation.logRenderTime(self._handle, time)
 	else
@@ -299,10 +299,10 @@ function Component:_reify(handle)
 	local virtualTree
 	if GlobalConfig.getValue("renderInstrumentation") then
 		-- Start timing
-		local time = l_tick()
+		local time = tick()
 		virtualTree = self:render()
 		-- End timing
-		time = l_tick() - time
+		time = tick() - time
 		-- Log result
 		Instrumentation.logRenderTime(self._handle, time)
 	else

@@ -6,19 +6,11 @@
 
 local Reconciler = require(script.Parent.Reconciler)
 local Core = require(script.Parent.Core)
+local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
 
 local Component = {}
 
 Component.__index = Component
-
--- The error message that is thrown when setState is called in the wrong place.
--- This is declared here to avoid really messy indentation.
-local INVALID_SETSTATE_MESSAGE = [[
-setState cannot be used currently, are you calling setState from any of:
-* the willUpdate or willUnmount lifecycle hooks
-* the init function
-* the render function
-* the shouldUpdate function]]
 
 local function mergeState(currentState, partialState)
 	local newState = {}
@@ -70,9 +62,12 @@ function Component:extend(name)
 	function class._new(props, context)
 		local self = {}
 
+		-- When set to a value, setState will fail, using the given reason to
+		-- create a detailed error message.
+		-- You can see a list of reasons in invalidSetStateMessages.
+		self._setStateBlockedReason = nil
+
 		self.props = props
-		-- Used for tracking whether the component is in a position to set state.
-		self._canSetState = false
 		self._context = {}
 
 		-- Shallow copy all context values from our parent element.
@@ -86,7 +81,9 @@ function Component:extend(name)
 
 		-- Call the user-provided initializer, where state and _props are set.
 		if class.init then
+			self._setStateBlockedReason = "init"
 			class.init(self, props)
+			self._setStateBlockedReason = nil
 		end
 
 		-- The user constructer might not set state, so we can.
@@ -101,9 +98,6 @@ function Component:extend(name)
 				self.state = mergeState(self.state, partialState)
 			end
 		end
-
-		-- Now that state has definitely been set, we can now allow it to be changed.
-		self._canSetState = true
 
 		return self
 	end
@@ -149,9 +143,19 @@ end
 	current state object.
 ]]
 function Component:setState(partialState)
-	-- State cannot be set in any lifecycle hooks.
-	if not self._canSetState then
-		error(INVALID_SETSTATE_MESSAGE, 0)
+	-- If setState was disabled, we should check for a detailed message and
+	-- display it.
+	if self._setStateBlockedReason ~= nil then
+		local messageSource = invalidSetStateMessages[self._setStateBlockedReason]
+
+		if messageSource == nil then
+			messageSource = invalidSetStateMessages["default"]
+		end
+
+		-- We assume that each message has a formatting placeholder for a component name.
+		local formattedMessage = string.format(messageSource, tostring(getmetatable(self)))
+
+		error(formattedMessage, 2)
 	end
 
 	-- If the partial state is a function, invoke it to get the actual partial state.
@@ -175,9 +179,9 @@ end
 	reconciliation step.
 ]]
 function Component:_update(newProps, newState)
-	self._canSetState = false
+	self._setStateBlockedReason = "shouldUpdate"
 	local doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
-	self._canSetState = true
+	self._setStateBlockedReason = nil
 
 	if doUpdate then
 		self:_forceUpdate(newProps, newState)
@@ -190,8 +194,6 @@ end
 	newProps and newState are optional.
 ]]
 function Component:_forceUpdate(newProps, newState)
-	self._canSetState = false
-
 	-- Compute new derived state.
 	-- Get the class - getDerivedStateFromProps is static.
 	local class = getmetatable(self)
@@ -209,7 +211,9 @@ function Component:_forceUpdate(newProps, newState)
 	end
 
 	if self.willUpdate then
+		self._setStateBlockedReason = "willUpdate"
 		self:willUpdate(newProps or self.props, newState or self.state)
+		self._setStateBlockedReason = nil
 	end
 
 	local oldProps = self.props
@@ -223,8 +227,11 @@ function Component:_forceUpdate(newProps, newState)
 		self.state = newState
 	end
 
+	self._setStateBlockedReason = "render"
 	local newChildElement = self:render()
+	self._setStateBlockedReason = nil
 
+	self._setStateBlockedReason = "reconcile"
 	if self._handle._reified ~= nil then
 		-- We returned an element before, update it.
 		self._handle._reified = Reconciler._reconcileInternal(
@@ -240,8 +247,7 @@ function Component:_forceUpdate(newProps, newState)
 			self._context
 		)
 	end
-
-	self._canSetState = true
+	self._setStateBlockedReason = nil
 
 	if self.didUpdate then
 		self:didUpdate(oldProps, oldState)
@@ -255,19 +261,44 @@ end
 function Component:_reify(handle)
 	self._handle = handle
 
+	self._setStateBlockedReason = "render"
 	local virtualTree = self:render()
+	self._setStateBlockedReason = nil
+
 	if virtualTree then
+		self._setStateBlockedReason = "reconcile"
 		handle._reified = Reconciler._reifyInternal(
 			virtualTree,
 			handle._parent,
 			handle._key,
 			self._context
 		)
+		self._setStateBlockedReason = nil
 	end
 
 	if self.didMount then
 		self:didMount()
 	end
+end
+
+--[[
+	Destructs the component and invokes all necessary lifecycle methods.
+]]
+function Component:_teardown()
+	local handle = self._handle
+
+	if self.willUnmount then
+		self._setStateBlockedReason = "willUnmount"
+		self:willUnmount()
+		self._setStateBlockedReason = nil
+	end
+
+	-- Stateful components can return nil from render()
+	if handle._reified then
+		Reconciler.teardown(handle._reified)
+	end
+
+	self._handle = nil
 end
 
 return Component

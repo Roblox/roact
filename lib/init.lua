@@ -7,6 +7,7 @@ local Core = require(script.Core)
 local Event = require(script.Event)
 local Change = require(script.Change)
 local GlobalConfig = require(script.GlobalConfig)
+local Instrumentation = require(script.Instrumentation)
 local PureComponent = require(script.PureComponent)
 local Reconciler = require(script.Reconciler)
 
@@ -44,6 +45,13 @@ apply(Roact, {
 apply(Roact, {
 	setGlobalConfig = GlobalConfig.set,
 	getGlobalConfigValue = GlobalConfig.getValue,
+})
+
+apply(Roact, {
+	Instrumentation = {
+		getCollectedStats = Instrumentation.getCollectedStats,
+		clearCollectedStats = Instrumentation.clearCollectedStats,
+	}
 })
 
 return Roact

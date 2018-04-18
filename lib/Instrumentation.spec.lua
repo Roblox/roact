@@ -9,9 +9,25 @@ return function()
 		GlobalConfig.set({
 			["renderInstrumentation"] = true,
 		})
+		local triggerUpdate
+
 		local TestComponent = Component:extend("TestComponent")
+		function TestComponent:init()
+			self.state = {
+				value = 0
+			}
+		end
+
 		function TestComponent:render()
 			return nil
+		end
+
+		function TestComponent:didMount()
+			triggerUpdate = function()
+				self:setState({
+					value = self.state.value + 1
+				})
+			end
 		end
 
 		local instance = Reconciler.reify(Core.createElement(TestComponent))
@@ -20,6 +36,9 @@ return function()
 		expect(stats.TestComponent).to.be.ok()
 		expect(stats.TestComponent.renderCount).to.equal(1)
 		expect(stats.TestComponent.renderTime).never.to.equal(0)
+
+		triggerUpdate()
+		expect(stats.TestComponent.renderCount).to.equal(2)
 
 		Reconciler.teardown(instance)
 		Instrumentation.clearCollectedStats()
@@ -41,7 +60,6 @@ return function()
 		end
 
 		function TestComponent:shouldUpdate()
-			print("Calling shouldUpdate: " .. tostring(willDoUpdate))
 			return willDoUpdate
 		end
 

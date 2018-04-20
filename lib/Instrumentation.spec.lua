@@ -7,7 +7,7 @@ return function()
 
 	it("should count and time renders when enabled", function()
 		GlobalConfig.set({
-			["renderInstrumentation"] = true,
+			["componentInstrumentation"] = true,
 		})
 		local triggerUpdate
 
@@ -44,11 +44,12 @@ return function()
 		Instrumentation.clearCollectedStats()
 		GlobalConfig.reset()
 	end)
-	it("should count and time shouldUpdate when enabled", function()
+
+	it("should count and time shouldUpdate calls when enabled", function()
 		GlobalConfig.set({
-			["shouldUpdateInstrumentation"] = true,
+			["componentInstrumentation"] = true,
 		})
-		local setValue
+		local triggerUpdate
 		local willDoUpdate = false
 
 		local TestComponent = Component:extend("TestComponent")
@@ -64,9 +65,9 @@ return function()
 		end
 
 		function TestComponent:didMount()
-			setValue = function(value)
+			triggerUpdate = function()
 				self:setState({
-					value = value,
+					value = self.state.value + 1,
 				})
 			end
 		end
@@ -76,17 +77,17 @@ return function()
 		local instance = Reconciler.reify(Core.createElement(TestComponent))
 
 		local stats = Instrumentation.getCollectedStats()
-		-- Not yet tracked, because only update processing is on
-		expect(stats.TestComponent).never.to.be.ok()
 
 		willDoUpdate = true
-		setValue("whatevs")
+		triggerUpdate()
+
 		expect(stats.TestComponent).to.be.ok()
 		expect(stats.TestComponent.updateReqCount).to.equal(1)
 		expect(stats.TestComponent.didUpdateCount).to.equal(1)
 
 		willDoUpdate = false
-		setValue("whatevs")
+		triggerUpdate()
+
 		expect(stats.TestComponent.updateReqCount).to.equal(2)
 		expect(stats.TestComponent.didUpdateCount).to.equal(1)
 		expect(stats.TestComponent.shouldUpdateTime).never.to.equal(0)

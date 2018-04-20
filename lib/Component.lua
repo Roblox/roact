@@ -187,9 +187,8 @@ end
 function Component:_update(newProps, newState)
 	self._setStateBlockedReason = "shouldUpdate"
 
-	-- TODO: Encapsulate the instrumentation more gracefully
 	local doUpdate
-	if GlobalConfig.getValue("shouldUpdateInstrumentation") then
+	if GlobalConfig.getValue("componentInstrumentation") then
 		-- Start timing
 		local time = tick()
 		doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
@@ -248,9 +247,9 @@ function Component:_forceUpdate(newProps, newState)
 	end
 
 	self._setStateBlockedReason = "render"
-	-- TODO: Encapsulate the instrumentation more gracefully
+
 	local newChildElement
-	if GlobalConfig.getValue("renderInstrumentation") then
+	if GlobalConfig.getValue("componentInstrumentation") then
 		-- Start timing
 		local time = tick()
 		newChildElement = self:render()
@@ -261,6 +260,7 @@ function Component:_forceUpdate(newProps, newState)
 	else
 		newChildElement = self:render()
 	end
+
 	self._setStateBlockedReason = nil
 
 	self._setStateBlockedReason = "reconcile"
@@ -295,9 +295,8 @@ function Component:_reify(handle)
 
 	self._setStateBlockedReason = "render"
 
-	-- TODO: Encapsulate the instrumentation more gracefully
 	local virtualTree
-	if GlobalConfig.getValue("renderInstrumentation") then
+	if GlobalConfig.getValue("componentInstrumentation") then
 		-- Start timing
 		local time = tick()
 		virtualTree = self:render()

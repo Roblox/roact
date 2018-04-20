@@ -28,9 +28,18 @@ local Roact = require(ReplicatedStorage.Roact)
 
 local Clock = Roact.Component:extend("Clock")
 
+function Clock:init()
+	-- In init, you should assign to 'state' directly.
+	-- Use this opportunity to set any initial values.
+	self.state = {
+		currentTime = 0
+	}
+end
+
 -- This render function is almost completely unchanged from the first example.
 function Clock:render()
-	local currentTime = self.props.currentTime
+	-- As a convention, we'll pull currentTime out of state right away.
+	local currentTime = self.state.currentTime
 
 	return Roact.createElement("ScreenGui", {}, {
 		TimeLabel = Roact.createElement("TextLabel", {

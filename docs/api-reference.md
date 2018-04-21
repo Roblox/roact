@@ -273,3 +273,25 @@ didUpdate(previousProps, previousState) -> void
 `didUpdate` is fired after at the end of an update. At this point, the reconciler has updated the properties of any Roblox Instances and the component instance's props and state are up to date.
 
 `didUpdate` is a good place to send network requests or dispatch Rodux actions, but make sure to compare `self.props` and `self.state` with `previousProps` and `previousState` to avoid triggering too many updates.
+
+### getDerivedStateFromProps
+```
+static getDerivedStateFromProps(nextProps, lastState) -> nextStateSlice
+```
+
+Used to recalculate any state that depends on being synchronized with `props`.
+
+Generally, you should use `didUpdate` to respond to props changing. If you find yourself copying props values to state as-is, consider using props or memoization instead.
+
+`getDerivedStateFromProps` should return a table that contains the part of the state that should be updated.
+
+```lua
+function MyComponent.getDerivedStateFromProps(nextProps, lastState)
+	return {
+		someValue = nextProps.someValue
+	}
+end
+```
+
+!!! note
+	`getDerivedStateFromProps` is a *static* lifecycle method. It does not have access to `self`, and must be a pure function.

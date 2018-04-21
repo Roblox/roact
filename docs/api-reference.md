@@ -92,7 +92,26 @@ Roact.createElement("ImageButton", {
 !!! info
 	Event callbacks receive the Roblox Instance as the first parameter, followed by any parameters yielded by the event.
 
+!!! warning
+	When connecting to the `Changed` event, be careful not to call `setState` or other functions that will trigger renders. This will cause Roact to re-render during a render, and errors will be thrown!
+
 See [the events guide](/guide/events.md) for more details.
+
+### Roact.Change
+Index into `Roact.Change` to receive a key that can be used to connect to [`GetPropertyChangedSignal`](http://wiki.roblox.com/index.php?title=API:Class/Instance/GetPropertyChangedSignal) events.
+
+It's similar to `Roact.Event`:
+
+```lua
+Roact.createElement("ScrollingFrame", {
+	[Roact.Change.CanvasPosition] = function(rbx, position)
+		print("ScrollingFrame scrolled to", position)
+	end,
+})
+```
+
+!!! warning
+	Property changed events are fired by Roact during the reconciliation phase. Be careful not to accidentally trigger a re-render in the middle of a re-render, or an error will be thrown!
 
 ## Component Types
 

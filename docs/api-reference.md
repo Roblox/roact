@@ -227,6 +227,8 @@ Updating:
 <div class="component-diagram" aria-role="presentation">
 	<span class="component-diagram-box">shouldUpdate?</span>
 	<span class="component-diagram-arrow">➝</span>
+	<span class="component-diagram-box">getDerivedStateFromProps</span>
+	<span class="component-diagram-arrow">➝</span>
 	<span class="component-diagram-box">willUpdate</span>
 	<span class="component-diagram-arrow">➝</span>
 	<span class="component-diagram-box">render</span>

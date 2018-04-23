@@ -18,6 +18,8 @@ local defaultConfig = {
 	["elementTracing"] = false,
 	-- Activates "trace mode", logging any and all mutations to Roblox objects that Roact does.
 	["logAllMutations"] = false,
+	-- Enables instrumentation of shouldUpdate and render methods for Roact components
+	["componentInstrumentation"] = false,
 }
 
 -- Build a list of valid configuration values up for debug messages.

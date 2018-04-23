@@ -92,7 +92,26 @@ Roact.createElement("ImageButton", {
 !!! info
 	Event callbacks receive the Roblox Instance as the first parameter, followed by any parameters yielded by the event.
 
+!!! warning
+	When connecting to the `Changed` event, be careful not to call `setState` or other functions that will trigger renders. This will cause Roact to re-render during a render, and errors will be thrown!
+
 See [the events guide](/guide/events.md) for more details.
+
+### Roact.Change
+Index into `Roact.Change` to receive a key that can be used to connect to [`GetPropertyChangedSignal`](http://wiki.roblox.com/index.php?title=API:Class/Instance/GetPropertyChangedSignal) events.
+
+It's similar to `Roact.Event`:
+
+```lua
+Roact.createElement("ScrollingFrame", {
+	[Roact.Change.CanvasPosition] = function(rbx, position)
+		print("ScrollingFrame scrolled to", position)
+	end,
+})
+```
+
+!!! warning
+	Property changed events are fired by Roact during the reconciliation phase. Be careful not to accidentally trigger a re-render in the middle of a re-render, or an error will be thrown!
 
 ## Component Types
 
@@ -227,6 +246,8 @@ Updating:
 <div class="component-diagram" aria-role="presentation">
 	<span class="component-diagram-box">shouldUpdate?</span>
 	<span class="component-diagram-arrow">➝</span>
+	<span class="component-diagram-box">getDerivedStateFromProps</span>
+	<span class="component-diagram-arrow">➝</span>
 	<span class="component-diagram-box">willUpdate</span>
 	<span class="component-diagram-arrow">➝</span>
 	<span class="component-diagram-box">render</span>
@@ -273,3 +294,25 @@ didUpdate(previousProps, previousState) -> void
 `didUpdate` is fired after at the end of an update. At this point, the reconciler has updated the properties of any Roblox Instances and the component instance's props and state are up to date.
 
 `didUpdate` is a good place to send network requests or dispatch Rodux actions, but make sure to compare `self.props` and `self.state` with `previousProps` and `previousState` to avoid triggering too many updates.
+
+### getDerivedStateFromProps
+```
+static getDerivedStateFromProps(nextProps, lastState) -> nextStateSlice
+```
+
+Used to recalculate any state that depends on being synchronized with `props`.
+
+Generally, you should use `didUpdate` to respond to props changing. If you find yourself copying props values to state as-is, consider using props or memoization instead.
+
+`getDerivedStateFromProps` should return a table that contains the part of the state that should be updated.
+
+```lua
+function MyComponent.getDerivedStateFromProps(nextProps, lastState)
+	return {
+		someValue = nextProps.someValue
+	}
+end
+```
+
+!!! note
+	`getDerivedStateFromProps` is a *static* lifecycle method. It does not have access to `self`, and must be a pure function.

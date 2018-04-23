@@ -2,25 +2,56 @@ return function()
 	local Roact = require(script.Parent)
 
 	it("should load with all public APIs", function()
+		local publicApi = {
+			createElement = "function",
+			reify = "function",
+			teardown = "function",
+			reconcile = "function",
+			oneChild = "function",
+			setGlobalConfig = "function",
+			getGlobalConfigValue = "function",
+
+			Component = true,
+			PureComponent = true,
+			Portal = true,
+			Children = true,
+			Event = true,
+			Change = true,
+			Ref = true,
+			None = true,
+			Element = true,
+			UNSTABLE = true,
+		}
+
 		expect(Roact).to.be.ok()
 
-		-- Public functions
-		expect(Roact.createElement).to.be.a("function")
-		expect(Roact.reify).to.be.a("function")
-		expect(Roact.reconcile).to.be.a("function")
-		expect(Roact.oneChild).to.be.a("function")
-		expect(Roact.setGlobalConfig).to.be.a("function")
-		expect(Roact.getGlobalConfigValue).to.be.a("function")
+		for key, valueType in pairs(publicApi) do
+			local success
+			if typeof(valueType) == "string" then
+				success = typeof(Roact[key]) == valueType
+			else
+				success = Roact[key] ~= nil
+			end
 
-		-- Objects
-		expect(Roact.Component).to.be.ok()
-		expect(Roact.PureComponent).to.be.ok()
-		expect(Roact.Portal).to.be.ok()
-		expect(Roact.Children).to.be.ok()
-		expect(Roact.Event).to.be.ok()
-		expect(Roact.Change).to.be.ok()
-		expect(Roact.Ref).to.be.ok()
-		expect(Roact.None).to.be.ok()
+			if not success then
+				local existence = typeof(valueType) == "boolean" and "present" or "of type " .. valueType
+				local message = (
+					"Expected public API member %q to be %s, but instead it was of type %s"
+				):format(tostring(key), existence, typeof(Roact[key]))
+
+				error(message)
+			end
+		end
+
+		for key in pairs(Roact) do
+			if publicApi[key] == nil then
+				local message = (
+					"Found unknown public API key %q!"
+				):format(tostring(key))
+
+				error(message)
+			end
+		end
 	end)
 
 	describe("Props", function()

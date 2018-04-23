@@ -110,22 +110,7 @@ function Reconciler.teardown(instanceHandle)
 			Reconciler.teardown(instanceHandle._reified)
 		end
 	elseif isStatefulElement(element) then
-		-- Stop the component from setting state in willUnmount or anywhere thereafter.
-		instanceHandle._instance._canSetState = false
-
-		-- Tell the component we're about to tear everything down.
-		-- This gives it some notice!
-		if instanceHandle._instance.willUnmount then
-			instanceHandle._instance:willUnmount()
-		end
-
-		-- Stateful components can return nil from render()
-		if instanceHandle._reified then
-			Reconciler.teardown(instanceHandle._reified)
-		end
-
-		-- Cut our circular reference between the instance and its handle
-		instanceHandle._instance = nil
+		instanceHandle._instance:_teardown()
 	elseif isPortal(element) then
 		for _, child in pairs(instanceHandle._reifiedChildren) do
 			Reconciler.teardown(child)

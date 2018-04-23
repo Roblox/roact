@@ -177,6 +177,45 @@ return function()
 		Reconciler.teardown(instance)
 	end)
 
+	it("should call getDerivedStateFromProps appropriately", function()
+		local TestComponent = Component:extend("TestComponent")
+		local getStateCallback
+
+		function TestComponent.getDerivedStateFromProps(newProps, oldState)
+			return {
+				visible = newProps.visible
+			}
+		end
+
+		function TestComponent:init(props)
+			self.state = {
+				visible = false
+			}
+
+			getStateCallback = function()
+				return self.state
+			end
+		end
+
+		function TestComponent:render() end
+
+		local handle = Reconciler.reify(Core.createElement(TestComponent, {
+			visible = true
+		}))
+
+		local state = getStateCallback()
+		expect(state.visible).to.equal(true)
+
+		handle = Reconciler.reconcile(handle, Core.createElement(TestComponent, {
+			visible = 123
+		}))
+
+		state = getStateCallback()
+		expect(state.visible).to.equal(123)
+
+		Reconciler.teardown(handle)
+	end)
+
 	describe("setState", function()
 		it("should throw when called in init", function()
 			local InitComponent = Component:extend("InitComponent")
@@ -371,6 +410,39 @@ return function()
 			end)
 
 			expect(getStateCallback().value).to.equal(1)
+
+			Reconciler.teardown(instance)
+		end)
+
+		it("should cancel rendering if the function returns nil", function()
+			local TestComponent = Component:extend("TestComponent")
+			local setStateCallback
+			local renderCount = 0
+
+			function TestComponent:init()
+				setStateCallback = function(newState)
+					self:setState(newState)
+				end
+
+				self.state = {
+					value = 0
+				}
+			end
+
+			function TestComponent:render()
+				renderCount = renderCount + 1
+				return nil
+			end
+
+			local element = Core.createElement(TestComponent)
+			local instance = Reconciler.reify(element)
+			expect(renderCount).to.equal(1)
+
+			setStateCallback(function(state, props)
+				return nil
+			end)
+
+			expect(renderCount).to.equal(1)
 
 			Reconciler.teardown(instance)
 		end)

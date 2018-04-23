@@ -9,15 +9,17 @@
 .component-diagram-box {
 	flex: 0 0 auto;
 
+	font-size: 0.85em;
+
 	background-color: rgba(0, 0, 0, 0.07);
 	border: 1px solid rgba(0, 0, 0, 0.12);
 	box-shadow: 1px 2px 2px 1px rgba(0, 0, 0, 0.2);
 	border-radius: 0.4rem;
-	padding: 1rem;
+	padding: 0.7rem;
 }
 
 .component-diagram-arrow {
-	font-size: 1.5em;
 	flex: 0 0 auto;
-	margin: 0 1rem;
+	font-size: 1.5em;
+	margin: 0 0.5rem;
 }

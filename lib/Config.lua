@@ -16,6 +16,8 @@
 local defaultConfig = {
 	-- Enables storage of `debug.traceback()` values on elements for debugging.
 	["elementTracing"] = false,
+	-- Enables instrumentation of shouldUpdate and render methods for Roact components
+	["componentInstrumentation"] = false,
 }
 
 -- Build a list of valid configuration values up for debug messages.

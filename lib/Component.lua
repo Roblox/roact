@@ -6,9 +6,15 @@
 
 local Reconciler = require(script.Parent.Reconciler)
 local Core = require(script.Parent.Core)
+local GlobalConfig = require(script.Parent.GlobalConfig)
+local Instrumentation = require(script.Parent.Instrumentation)
+
 local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
 
 local Component = {}
+
+-- Locally cache tick so we can minimize impact of calling it for instrumentation
+local tick = tick
 
 Component.__index = Component
 
@@ -180,7 +186,20 @@ end
 ]]
 function Component:_update(newProps, newState)
 	self._setStateBlockedReason = "shouldUpdate"
-	local doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
+
+	local doUpdate
+	if GlobalConfig.getValue("componentInstrumentation") then
+		-- Start timing
+		local time = tick()
+		doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
+		-- Finish timing
+		time = tick() - time
+		-- Log result
+		Instrumentation.logShouldUpdate(self._handle, doUpdate, time)
+	else
+		doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
+	end
+
 	self._setStateBlockedReason = nil
 
 	if doUpdate then
@@ -228,7 +247,20 @@ function Component:_forceUpdate(newProps, newState)
 	end
 
 	self._setStateBlockedReason = "render"
-	local newChildElement = self:render()
+
+	local newChildElement
+	if GlobalConfig.getValue("componentInstrumentation") then
+		-- Start timing
+		local time = tick()
+		newChildElement = self:render()
+		-- End timing
+		time = tick() - time
+		-- Log result
+		Instrumentation.logRenderTime(self._handle, time)
+	else
+		newChildElement = self:render()
+	end
+
 	self._setStateBlockedReason = nil
 
 	self._setStateBlockedReason = "reconcile"
@@ -262,7 +294,20 @@ function Component:_reify(handle)
 	self._handle = handle
 
 	self._setStateBlockedReason = "render"
-	local virtualTree = self:render()
+
+	local virtualTree
+	if GlobalConfig.getValue("componentInstrumentation") then
+		-- Start timing
+		local time = tick()
+		virtualTree = self:render()
+		-- End timing
+		time = tick() - time
+		-- Log result
+		Instrumentation.logRenderTime(self._handle, time)
+	else
+		virtualTree = self:render()
+	end
+
 	self._setStateBlockedReason = nil
 
 	if virtualTree then

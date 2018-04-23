@@ -48,7 +48,8 @@ apply(Roact, {
 })
 
 apply(Roact, {
-	Instrumentation = {
+	-- APIs that may change in the future
+	UNSTABLE = {
 		getCollectedStats = Instrumentation.getCollectedStats,
 		clearCollectedStats = Instrumentation.clearCollectedStats,
 	}

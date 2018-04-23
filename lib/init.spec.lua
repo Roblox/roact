@@ -20,6 +20,7 @@ return function()
 			Ref = true,
 			None = true,
 			Element = true,
+			UNSTABLE = true,
 		}
 
 		expect(Roact).to.be.ok()

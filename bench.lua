@@ -45,22 +45,22 @@ end
 local habitat = lemur.Habitat.new()
 
 -- We'll put all of our library code and dependencies here
-local Root = habitat.game:GetService("ReplicatedStorage")
+local root = habitat.game:GetService("ReplicatedStorage")
 
 -- Load all of the modules specified above
 for _, module in ipairs(LOAD_MODULES) do
-	local container = lemur.Instance.new("Folder", Root)
+	local container = habitat:loadFromFs(module[1])
 	container.Name = module[2]
-	habitat:loadFromFs(module[1], container)
+	container.Parent = root
 end
 
-local Benchmarks = lemur.Instance.new("Folder")
-Benchmarks.Parent = Root
-Benchmarks.Name = "Benchmarks"
+local benchmarks = habitat:loadFromFs("benchmarks")
+benchmarks.Name = "Benchmarks"
+benchmarks.Parent = root
 
-habitat:loadFromFs("benchmarks", Benchmarks)
-habitat:loadFromFs("benchmark-core.server.lua", Root)
+local benchmarkCore = habitat:loadFromFs("start-benchmarks.server.lua")
+benchmarkCore.Parent = root
 
-collapse(Root)
+collapse(root)
 
-habitat:require(Root:FindFirstChild("benchmark-core.server"))
+habitat:require(benchmarkCore)

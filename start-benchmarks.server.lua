@@ -30,13 +30,15 @@ local benchmarkModules = {}
 
 findBenchmarkModules(game.ReplicatedStorage.Benchmarks, benchmarkModules)
 
-print("Starting", #benchmarkModules, "benchmarks...")
+local message = (
+	"Starting %d benchmarks..."
+):format(
+	#benchmarkModules
+)
+print(message)
 
 for _, module in ipairs(benchmarkModules) do
 	local benchmark = require(module)
-
-	-- collectgarbage("collect")
-	-- collectgarbage("collect")
 
 	if benchmark.setup then
 		benchmark.setup()

@@ -51,9 +51,9 @@ Root.Name = "Root"
 
 -- Load all of the modules specified above
 for _, module in ipairs(LOAD_MODULES) do
-	local container = lemur.Instance.new("Folder", Root)
+	local container = habitat:loadFromFs(module[1])
 	container.Name = module[2]
-	habitat:loadFromFs(module[1], container)
+	container.Parent = Root
 end
 
 collapse(Root)

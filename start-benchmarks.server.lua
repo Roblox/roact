@@ -55,12 +55,12 @@ for _, module in ipairs(benchmarkModules) do
 	end
 
 	local message = (
-		"Benchmark %s:\n\t(%d iterations) took %f ms (%f ns/iteration)"
+		"Benchmark %s:\n\t(%d iterations) took %f s (%f ns/iteration)"
 	):format(
 		module.Name,
 		benchmark.iterations,
 		endTime - startTime,
-		1e6 * (endTime - startTime) / benchmark.iterations
+		1e9 * (endTime - startTime) / benchmark.iterations
 	)
 
 	print(message)

@@ -1,11 +1,10 @@
 --[[
-	Loads our library and all of its dependencies, then runs tests using TestEZ.
+	Loads our library and all of its dependencies, then run a set of benchmarks.
 ]]
 
 -- If you add any dependencies, add them to this table so they'll be loaded!
 local LOAD_MODULES = {
-	{"lib", "Library"},
-	{"modules/testez/lib", "TestEZ"},
+	{"lib", "Roact"},
 }
 
 -- This makes sure we can load Lemur and other libraries that depend on init.lua
@@ -46,24 +45,22 @@ end
 local habitat = lemur.Habitat.new()
 
 -- We'll put all of our library code and dependencies here
-local Root = lemur.Instance.new("Folder")
-Root.Name = "Root"
+local root = habitat.game:GetService("ReplicatedStorage")
 
 -- Load all of the modules specified above
 for _, module in ipairs(LOAD_MODULES) do
 	local container = habitat:loadFromFs(module[1])
 	container.Name = module[2]
-	container.Parent = Root
+	container.Parent = root
 end
 
-collapse(Root)
+local benchmarks = habitat:loadFromFs("benchmarks")
+benchmarks.Name = "Benchmarks"
+benchmarks.Parent = root
 
--- Load TestEZ and run our tests
-local TestEZ = habitat:require(Root.TestEZ)
+local benchmarkCore = habitat:loadFromFs("start-benchmarks.server.lua")
+benchmarkCore.Parent = root
 
-local results = TestEZ.TestBootstrap:run(Root.Library, TestEZ.Reporters.TextReporter)
+collapse(root)
 
--- Did something go wrong?
-if results.failureCount > 0 then
-	os.exit(1)
-end
+habitat:require(benchmarkCore)

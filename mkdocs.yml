@@ -25,6 +25,7 @@ pages:
     - Portals: advanced/portals.md
     - Refs: advanced/refs.md
     - Context: advanced/context.md
+    - Performance Guide: advanced/performance.md
   - API Reference: api-reference.md
 
 markdown_extensions:

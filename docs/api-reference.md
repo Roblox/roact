@@ -228,38 +228,10 @@ Right now, components are re-rendered any time a parent component updates, or wh
 
 `PureComponent` implements `shouldUpdate` to only trigger a re-render any time the props are different based on shallow equality. In a future Roact update, *all* components may implement this check by default.
 
-## Lifecycle Events
-Roact exposes a number of events that stateful components can hook into to be notified of various steps in the rendering process.
+## Lifecycle Methods
+In addition to the base Component API, Roact exposes additional lifecycle methods that stateful components can hook into to be notified of various steps in the rendering process.
 
-Mounting:
-
-<div class="component-diagram" aria-role="presentation">
-	<span class="component-diagram-box">init</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">render</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">didMount</span>
-</div>
-
-Updating:
-
-<div class="component-diagram" aria-role="presentation">
-	<span class="component-diagram-box">shouldUpdate?</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">getDerivedStateFromProps</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">willUpdate</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">render</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">didUpdate</span>
-</div>
-
-Unmounting:
-
-<div class="component-diagram" aria-role="presentation">
-	<span class="component-diagram-box">willUnmount</span>
-</div>
+A [diagram of Roact's lifecycle methods](/guide/state-and-lifecycle#lifecycle-methods) can be found in the guide.
 
 ### didMount
 ```

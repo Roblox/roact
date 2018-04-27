@@ -6,17 +6,19 @@
 
 ## Refs in Action
 
-To create a ref, pass a function prop with the key `Roact.Ref` when creating a primitive element.  Suppose we wanted to create a search bar that captured cursor focus when any part of it was clicked. We might use a component like this:
+To create a ref, pass a function prop with the key `Roact.Ref` when creating a primitive element.
+
+For example, suppose we wanted to create a search bar that captured cursor focus when any part of it was clicked. We might use a component like this:
 
 ```lua
 --[[ A search bar with an icon and a text box that captures focus for 
- its TextBox when it's icon is clicked ]]
+ its TextBox when its icon is clicked ]]
 local SearchBar = Roact.Component:extend("SearchBar")
 
 function SearchBar:render()
 	-- Render our icon and text box side by side in a Frame
 	return Roact.createElement("Frame", {
-			Size = UDim2.new(0, 200, 0, 20),
+		Size = UDim2.new(0, 200, 0, 20),
 	}, {
 
 		SearchIcon = Roact.createElement("ImageButton", {
@@ -34,7 +36,9 @@ function SearchBar:render()
 		SearchTextBox = Roact.createElement("TextBox", {
 			Size = UDim2.new(0, 180, 0, 20),
 			Position = UDim2.new(0, 20, 0, 0),
+			-- We use Roact.Ref to get a reference to the underlying object
 			[Roact.Ref] = function(rbx)
+
 				-- Set a callback function to give focus to the TextBox
 				self.captureTextboxFocus = function()
 					rbx:CaptureFocus()

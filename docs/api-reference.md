@@ -76,7 +76,7 @@ Roact.createElement("Frame", {
 !!! warning
 	`Roact.Ref` will be called with `nil` when the component instance is destroyed!
 
-See [the refs guide](/advanced/refs.html) for more details.
+See [the refs guide](/advanced/refs.md) for more details.
 
 ### Roact.Event
 Index into `Roact.Event` to receive a key that can be used to connect to events when creating primitive elements:

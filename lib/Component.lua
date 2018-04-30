@@ -134,7 +134,7 @@ end
 	reconciliation algorithms are not fast enough for specific cases. Poorly
 	written shouldUpdate methods *will* cause hard-to-trace bugs.
 
-	If you're thinking of writing a shouldComponent function, consider using
+	If you're thinking of writing a shouldUpdate function, consider using
 	PureComponent instead, which provides a good implementation.
 
 	This function must be faster than the render method in order to be a

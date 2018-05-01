@@ -18,22 +18,29 @@ local tick = tick
 
 Component.__index = Component
 
-local function mergeState(currentState, partialState)
-	local newState = {}
+--[[
+	Merge any number of dictionaries into a new dictionary, overwriting keys.
 
-	for key, value in pairs(currentState) do
-		newState[key] = value
-	end
+	If a value of `Core.None` is encountered, the key will be removed instead.
+	This is necessary because Lua doesn't differentiate between a key being
+	missing and a key being set to nil.
+]]
+local function merge(...)
+	local result = {}
 
-	for key, value in pairs(partialState) do
-		if value == Core.None then
-			newState[key] = nil
-		else
-			newState[key] = value
+	for i = 1, select("#", ...) do
+		local entry = select(i, ...)
+
+		for key, value in pairs(entry) do
+			if value == Core.None then
+				result[key] = nil
+			else
+				result[key] = value
+			end
 		end
 	end
 
-	return newState
+	return result
 end
 
 --[[
@@ -73,7 +80,12 @@ function Component:extend(name)
 		-- You can see a list of reasons in invalidSetStateMessages.
 		self._setStateBlockedReason = nil
 
-		self.props = props
+		if class.defaultProps == nil then
+			self.props = props
+		else
+			self.props = merge(class.defaultProps, props)
+		end
+
 		self._context = {}
 
 		-- Shallow copy all context values from our parent element.
@@ -101,7 +113,7 @@ function Component:extend(name)
 			local partialState = class.getDerivedStateFromProps(props, self.state)
 
 			if partialState then
-				self.state = mergeState(self.state, partialState)
+				self.state = merge(self.state, partialState)
 			end
 		end
 
@@ -174,7 +186,7 @@ function Component:setState(partialState)
 		end
 	end
 
-	local newState = mergeState(self.state, partialState)
+	local newState = merge(self.state, partialState)
 	self:_update(self.props, newState)
 end
 
@@ -224,7 +236,7 @@ function Component:_forceUpdate(newProps, newState)
 
 			-- getDerivedStateFromProps can return nil if no changes are necessary.
 			if derivedState ~= nil then
-				newState = mergeState(newState or self.state, derivedState)
+				newState = merge(newState or self.state, derivedState)
 			end
 		end
 	end

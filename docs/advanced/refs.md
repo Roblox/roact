@@ -5,14 +5,15 @@
 	Refs can only be used with primitive components.
 
 ## Refs in Action
-
 To create a ref, pass a function prop with the key `Roact.Ref` when creating a primitive element.
 
 For example, suppose we wanted to create a search bar that captured cursor focus when any part of it was clicked. We might use a component like this:
 
 ```lua
---[[ A search bar with an icon and a text box that captures focus for 
- its TextBox when its icon is clicked ]]
+--[[
+	A search bar with an icon and a text box that captures focus for its TextBox
+	when its icon is clicked
+ ]]
 local SearchBar = Roact.Component:extend("SearchBar")
 
 function SearchBar:render()
@@ -20,7 +21,6 @@ function SearchBar:render()
 	return Roact.createElement("Frame", {
 		Size = UDim2.new(0, 200, 0, 20),
 	}, {
-
 		SearchIcon = Roact.createElement("ImageButton", {
 			Size = UDim2.new(0, 20, 0, 20),
 			-- Handle click events on the icon
@@ -51,7 +51,6 @@ end
 When a user clicks on the outer `ImageButton`, the `captureTextboxFocus` callback will be triggered and the `TextBox` instance will get focus as if it had been clicked on directly.
 
 ## Refs During Teardown
-
 !!! warning
 	When a component instance is destroyed or the ref property changes, `nil` will be passed to the old ref function!
 

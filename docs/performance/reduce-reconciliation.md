@@ -95,15 +95,17 @@ For example, let's suppose our list of items is as follows:
 If we add a new item to the beginning, then we'll end up with a list like this:
 ```lua
 { 
-	{ id = "some_item", icon = someIcon } -- [1]
+	{ id = "potion", icon = potionIcon } -- [1]
 	{ id = "sword", icon = swordIcon }, -- [2]
 	{ id = "shield", icon = shieldIcon }, -- [3]
 }
 ```
 
-When Roact reconciles the underlying `ImageLabel`s, it will need to change their icons so that the item at `[2]` has the sword icon and the item at `[3]` has the shield icon. We'd like for it to just know that the sword and sheild moved, and adjust their LayoutOrder properties and let the Roblox UI system resolve the rest.
+When Roact reconciles the underlying `ImageLabel` objects, it will need to change their icons so that the item at `[1]` has the potion icon, the item at `[2]` has the sword icon, and a new `ImageLabel` is added at `[3]` with the shield icon.
 
-We can fix that! Let's make our list of `Item` elements use the item's id for its keys instead of just the indexes in the input list:
+We'd like for Roact to know that the new item was added at `[1]` and that the sword and sheild items simply moved down in the list. Then it can adjust their LayoutOrder properties and let the Roblox UI system resolve the rest.
+
+So let's fix it! We'll make our list of `Item` elements use the item's id for its keys instead of the indexes in the `items` list:
 
 ```lua hl_lines="11 12"
 function Inventory:render()
@@ -130,6 +132,7 @@ function Inventory:render()
 end
 ```
 
-Now the list of children is keyed by the stable, unique id of the item at that position. Their positions can change according to their LayoutOrder, but no other properties on the item need to be reconciled. If we add a third element to the list, Roact will set the `LayoutOrder` property on three `ImageLabel`s and the `Image` property on only one!
+Now the list of children is keyed by the stable, unique id of the item data. Their positions can change according to their LayoutOrder, but no other properties on the item need to be reconciled. When we add the third element to the list, Roact will set the `LayoutOrder` property on for each `ImageLabel` and only set the `Image` property on the newly added one!
 
-It's worth noting that this technique has a relatively minor effect in this particular example. However, it becomes a much bigger win if our `Item` component gets more complicated and needs more props that don't need to changef repeatedly.
+!!! info
+	Switching to static keys might seem insignificant for *this* example, but if our `Item` component becomes more complicated and our inventory gets bigger, it can make a significant difference!

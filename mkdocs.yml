@@ -25,6 +25,9 @@ pages:
     - Portals: advanced/portals.md
     - Refs: advanced/refs.md
     - Context: advanced/context.md
+  - Performance Optimization:
+    - Overview: performance/overview.md
+    - Reduce Reconcilation: performance/reduce-reconciliation.md
   - API Reference: api-reference.md
 
 markdown_extensions:

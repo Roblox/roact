@@ -11,9 +11,37 @@ Stateful components do everything that functional components do, but have the ad
 ## Lifecycle Methods
 Stateful components can provide methods to Roact that are called when certain things happen to a component instance.
 
-Lifecycle methods are a great place to send off network requests, measure UI ([with the help of refs](/advanced/refs)), wrap non-Roact components, and other side-effects.
+Lifecycle methods are a great place to send off network requests, measure UI ([with the help of refs](/advanced/refs)), wrap non-Roact components, and produce other side-effects.
 
-A [diagram of Roact's lifecycle methods](/api-reference#lifecycle-events) is available in the API reference.
+Mounting:
+
+<div class="component-diagram" aria-role="presentation">
+	<span class="component-diagram-box">init</span>
+	<span class="component-diagram-arrow">➝</span>
+	<span class="component-diagram-box">render</span>
+	<span class="component-diagram-arrow">➝</span>
+	<span class="component-diagram-box">didMount</span>
+</div>
+
+Updating:
+
+<div class="component-diagram" aria-role="presentation">
+	<span class="component-diagram-box">shouldUpdate?</span>
+	<span class="component-diagram-arrow">➝</span>
+	<span class="component-diagram-box">getDerivedStateFromProps</span>
+	<span class="component-diagram-arrow">➝</span>
+	<span class="component-diagram-box">willUpdate</span>
+	<span class="component-diagram-arrow">➝</span>
+	<span class="component-diagram-box">render</span>
+	<span class="component-diagram-arrow">➝</span>
+	<span class="component-diagram-box">didUpdate</span>
+</div>
+
+Unmounting:
+
+<div class="component-diagram" aria-role="presentation">
+	<span class="component-diagram-box">willUnmount</span>
+</div>
 
 ## Incrementing Counter, Part Three
 Building on the previous two examples, we can expand the incrementing counter to move the counter state and loop inside Roact, and use `setState` to trigger a re-render instead of `Roact.reconcile`.

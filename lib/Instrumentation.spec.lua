@@ -35,7 +35,6 @@ return function()
 		local stats = Instrumentation.getCollectedStats()
 		expect(stats.TestComponent).to.be.ok()
 		expect(stats.TestComponent.renderCount).to.equal(1)
-		expect(stats.TestComponent.renderTime).never.to.equal(0)
 
 		triggerUpdate()
 		expect(stats.TestComponent.renderCount).to.equal(2)
@@ -90,7 +89,6 @@ return function()
 
 		expect(stats.TestComponent.updateReqCount).to.equal(2)
 		expect(stats.TestComponent.didUpdateCount).to.equal(1)
-		expect(stats.TestComponent.shouldUpdateTime).never.to.equal(0)
 
 		Reconciler.teardown(instance)
 		Instrumentation.clearCollectedStats()

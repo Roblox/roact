@@ -248,6 +248,17 @@ return function()
 		expect(lastProps.bar).to.equal("world")
 
 		Reconciler.teardown(handle)
+
+		lastProps = nil
+		handle = Reconciler.reify(Core.createElement(TestComponent, {
+			bar = false,
+		}))
+
+		expect(lastProps).to.be.a("table")
+		expect(lastProps.foo).to.equal("hello")
+		expect(lastProps.bar).to.equal(false)
+
+		Reconciler.teardown(handle)
 	end)
 
 	describe("setState", function()

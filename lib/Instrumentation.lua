@@ -1,20 +1,26 @@
+--[[
+	An optional instrumentation layer that the reconciler calls into to record
+	various events.
+
+	Tracks a number of stats, including:
+		Recorded stats:
+		- Render count by component
+		- Update request count by component
+		- Actual update count by component
+		- shouldUpdate returned true count by component
+		- Time taken to run shouldUpdate
+		- Time taken to render by component
+		Derivable stats (for profiling manually or with a future tool):
+		- Average render time by component
+		- Percent of total render time by component
+		- Percent of time shouldUpdate returns true
+		- Average shouldUpdate time by component
+		- Percent of total shouldUpdate time by component
+]]
+
 local Instrumentation = {}
 
 local componentStats = {}
--- Tracks a number of stats, including:
-	-- Recorded stats:
-		-- Render count by component
-		-- Update request count by component
-		-- Actual update count by component
-		-- shouldUpdate returned true count by component
-		-- Time taken to run shouldUpdate
-		-- Time taken to render by component
-	-- Derivable stats (for profiling manually or with a future tool):
-		-- Average render time by component
-		-- Percent of total render time by component
-		-- Percent of time shouldUpdate returns true
-		-- Average shouldUpdate time by component
-		-- Percent of total shouldUpdate time by component
 
 --[[
 	Determines name of component from the given instance handle and returns a

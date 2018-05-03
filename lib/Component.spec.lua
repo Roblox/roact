@@ -261,7 +261,7 @@ return function()
 		Reconciler.teardown(handle)
 	end)
 
-	it("should fall back to correctly defaultProps after an update", function()
+	it("should fall back to defaultProps correctly after an update", function()
 		local lastProps
 		local TestComponent = Component:extend("TestComponent")
 

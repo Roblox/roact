@@ -1,5 +1,11 @@
 --[[
 	Attempts to get the default value of a given property on a Roblox instance.
+
+	This is used by the reconciler in cases where a prop was previously set on a
+	primitive component, but is no longer present in a component's new props.
+
+	Eventually, Roblox might provide a nicer API to query the default property
+	of an object without constructing an instance of it.
 ]]
 
 local Symbol = require(script.Parent.Symbol)

@@ -216,6 +216,82 @@ return function()
 		Reconciler.teardown(handle)
 	end)
 
+	it("should pull values from defaultProps where appropriate", function()
+		local lastProps
+		local TestComponent = Component:extend("TestComponent")
+
+		TestComponent.defaultProps = {
+			foo = "hello",
+			bar = "world",
+		}
+
+		function TestComponent:render()
+			lastProps = self.props
+			return nil
+		end
+
+		local handle = Reconciler.reify(Core.createElement(TestComponent))
+
+		expect(lastProps).to.be.a("table")
+		expect(lastProps.foo).to.equal("hello")
+		expect(lastProps.bar).to.equal("world")
+
+		Reconciler.teardown(handle)
+
+		lastProps = nil
+		handle = Reconciler.reify(Core.createElement(TestComponent, {
+			foo = 5,
+		}))
+
+		expect(lastProps).to.be.a("table")
+		expect(lastProps.foo).to.equal(5)
+		expect(lastProps.bar).to.equal("world")
+
+		Reconciler.teardown(handle)
+
+		lastProps = nil
+		handle = Reconciler.reify(Core.createElement(TestComponent, {
+			bar = false,
+		}))
+
+		expect(lastProps).to.be.a("table")
+		expect(lastProps.foo).to.equal("hello")
+		expect(lastProps.bar).to.equal(false)
+
+		Reconciler.teardown(handle)
+	end)
+
+	it("should fall back to defaultProps correctly after an update", function()
+		local lastProps
+		local TestComponent = Component:extend("TestComponent")
+
+		TestComponent.defaultProps = {
+			foo = "hello",
+			bar = "world",
+		}
+
+		function TestComponent:render()
+			lastProps = self.props
+			return nil
+		end
+
+		local handle = Reconciler.reify(Core.createElement(TestComponent, {
+			foo = "hey"
+		}))
+
+		expect(lastProps).to.be.a("table")
+		expect(lastProps.foo).to.equal("hey")
+		expect(lastProps.bar).to.equal("world")
+
+		handle = Reconciler.reconcile(handle, Core.createElement(TestComponent))
+
+		expect(lastProps).to.be.a("table")
+		expect(lastProps.foo).to.equal("hello")
+		expect(lastProps.bar).to.equal("world")
+
+		Reconciler.teardown(handle)
+	end)
+
 	describe("setState", function()
 		it("should throw when called in init", function()
 			local InitComponent = Component:extend("InitComponent")

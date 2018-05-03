@@ -4,6 +4,7 @@
 * Added `Roact.Change` for subscribing to `GetPropertyChangedSignal` ([#51](https://github.com/Roblox/roact/pull/51))
 * Added the static lifecycle method `getDerivedStateFromProps` ([#57](https://github.com/Roblox/roact/pull/57))
 * Allow canceling render by returning nil from setState callback ([#64](https://github.com/Roblox/roact/pull/64))
+* Added `defaultProps` value on stateful components to define values for props that aren't specified ([#79](https://github.com/Roblox/roact/pull/79))
 
 ## 1.0.0 Prerelease 2 (March 22, 2018)
 * Removed `is*Element` methods, this is unlikely to affect anyone ([#50](https://github.com/Roblox/roact/pull/50))

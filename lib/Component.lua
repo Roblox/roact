@@ -29,22 +29,29 @@ local tick = tick
 
 Component.__index = Component
 
-local function mergeState(currentState, partialState)
-	local newState = {}
+--[[
+	Merge any number of dictionaries into a new dictionary, overwriting keys.
 
-	for key, value in pairs(currentState) do
-		newState[key] = value
-	end
+	If a value of `Core.None` is encountered, the key will be removed instead.
+	This is necessary because Lua doesn't differentiate between a key being
+	missing and a key being set to nil.
+]]
+local function merge(...)
+	local result = {}
 
-	for key, value in pairs(partialState) do
-		if value == Core.None then
-			newState[key] = nil
-		else
-			newState[key] = value
+	for i = 1, select("#", ...) do
+		local entry = select(i, ...)
+
+		for key, value in pairs(entry) do
+			if value == Core.None then
+				result[key] = nil
+			else
+				result[key] = value
+			end
 		end
 	end
 
-	return newState
+	return result
 end
 
 --[[
@@ -85,7 +92,12 @@ function Component:extend(name)
 		-- You can see a list of reasons in invalidSetStateMessages.
 		self._setStateBlockedReason = nil
 
-		self.props = props
+		if class.defaultProps == nil then
+			self.props = props
+		else
+			self.props = merge(class.defaultProps, props)
+		end
+
 		self._context = {}
 
 		-- Shallow copy all context values from our parent element.
@@ -113,7 +125,7 @@ function Component:extend(name)
 			local partialState = class.getDerivedStateFromProps(props, self.state)
 
 			if partialState then
-				self.state = mergeState(self.state, partialState)
+				self.state = merge(self.state, partialState)
 			end
 		end
 
@@ -223,7 +235,7 @@ function Component:setState(partialState)
 		end
 	end
 
-	local newState = mergeState(self.state, partialState)
+	local newState = merge(self.state, partialState)
 	self:_update(self.props, newState)
 end
 
@@ -268,15 +280,31 @@ function Component:_forceUpdate(newProps, newState)
 	-- Get the class - getDerivedStateFromProps is static.
 	local class = getmetatable(self)
 
-	-- If newProps was provided, we should make sure any derived state we have
-	-- is updated before we continue.
+	-- If newProps are passed, compute derived state and default props
 	if newProps then
 		if class.getDerivedStateFromProps then
 			local derivedState = class.getDerivedStateFromProps(newProps, newState or self.state)
 
 			-- getDerivedStateFromProps can return nil if no changes are necessary.
 			if derivedState ~= nil then
-				newState = mergeState(newState or self.state, derivedState)
+				newState = merge(newState or self.state, derivedState)
+			end
+		end
+
+		if class.defaultProps then
+			-- We only allocate another prop table if there are props that are
+			-- falling back to their default.
+			local replacementProps
+
+			for key in pairs(class.defaultProps) do
+				if newProps[key] == nil then
+					replacementProps = merge(class.defaultProps, newProps)
+					break
+				end
+			end
+
+			if replacementProps then
+				newProps = replacementProps
 			end
 		end
 	end

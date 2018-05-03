@@ -138,6 +138,13 @@ See [the Portals guide](/advanced/portals.md) for a small tutorial and more deta
 
 ## Component API
 
+### defaultProps
+```
+static defaultProps: Dictionary<any, any>
+```
+
+If `defaultProps` is defined on a stateful component, any props that aren't specified when a component is created will be taken from there.
+
 ### init
 ```
 init(initialProps) -> void

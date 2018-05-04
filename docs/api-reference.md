@@ -239,8 +239,8 @@ Right now, components are re-rendered any time a parent component updates, or wh
 In addition to the base Component API, Roact exposes additional lifecycle methods that stateful components can hook into to be notified of various steps in the rendering process.
 
 <div align="center">
-	<a href="../../images/lifecycle.svg">
-		<img src="../../images/lifecycle.svg" alt="Diagram of Roact Lifecycle" />
+	<a href="../images/lifecycle.svg">
+		<img src="../images/lifecycle.svg" alt="Diagram of Roact Lifecycle" />
 	</a>
 </div>
 

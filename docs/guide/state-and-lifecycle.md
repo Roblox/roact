@@ -14,8 +14,8 @@ Stateful components can provide methods to Roact that are called when certain th
 Lifecycle methods are a great place to send off network requests, measure UI ([with the help of refs](/advanced/refs)), wrap non-Roact components, and produce other side-effects.
 
 <div align="center">
-	<a href="/images/lifecycle.svg">
-		<img src="/images/lifecycle.svg" alt="Diagram of Roact Lifecycle" />
+	<a href="../../images/lifecycle.svg">
+		<img src="../../images/lifecycle.svg" alt="Diagram of Roact Lifecycle" />
 	</a>
 </div>
 

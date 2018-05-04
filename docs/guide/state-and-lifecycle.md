@@ -13,34 +13,10 @@ Stateful components can provide methods to Roact that are called when certain th
 
 Lifecycle methods are a great place to send off network requests, measure UI ([with the help of refs](/advanced/refs)), wrap non-Roact components, and produce other side-effects.
 
-Mounting:
-
-<div class="component-diagram" aria-role="presentation">
-	<span class="component-diagram-box">init</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">render</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">didMount</span>
-</div>
-
-Updating:
-
-<div class="component-diagram" aria-role="presentation">
-	<span class="component-diagram-box">shouldUpdate?</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">getDerivedStateFromProps</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">willUpdate</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">render</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">didUpdate</span>
-</div>
-
-Unmounting:
-
-<div class="component-diagram" aria-role="presentation">
-	<span class="component-diagram-box">willUnmount</span>
+<div align="center">
+	<a href="/images/lifecycle.svg">
+		<img src="/images/lifecycle.svg" alt="Diagram of Roact Lifecycle" />
+	</a>
 </div>
 
 ## Incrementing Counter, Part Three

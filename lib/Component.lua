@@ -351,7 +351,7 @@ function Component:_forceUpdate(newProps, newState)
 		)
 	elseif newChildElement then
 		-- We returned nil during our last render, construct a new child.
-		self._handle._reified = Reconciler._reifyInternal(
+		self._handle._reified = Reconciler._mountInternal(
 			newChildElement,
 			self._handle._parent,
 			self._handle._key,
@@ -367,9 +367,9 @@ end
 
 --[[
 	Initializes the component instance and attaches it to the given
-	instance handle, created by Reconciler._reify.
+	instance handle, created by Reconciler._mount.
 ]]
-function Component:_reify(handle)
+function Component:_mount(handle)
 	self._handle = handle
 
 	self._setStateBlockedReason = "render"
@@ -390,7 +390,7 @@ function Component:_reify(handle)
 
 	if virtualTree then
 		self._setStateBlockedReason = "reconcile"
-		handle._reified = Reconciler._reifyInternal(
+		handle._reified = Reconciler._mountInternal(
 			virtualTree,
 			handle._parent,
 			handle._key,
@@ -407,7 +407,7 @@ end
 --[[
 	Destructs the component and invokes all necessary lifecycle methods.
 ]]
-function Component:_teardown()
+function Component:_unmount()
 	local handle = self._handle
 
 	if self.willUnmount then
@@ -418,7 +418,7 @@ function Component:_teardown()
 
 	-- Stateful components can return nil from render()
 	if handle._reified then
-		Reconciler.teardown(handle._reified)
+		Reconciler.unmount(handle._reified)
 	end
 
 	self._handle = nil

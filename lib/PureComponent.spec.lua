@@ -45,7 +45,7 @@ return function()
 		end
 
 		local element = Core.createElement(PureContainer)
-		local instance = Reconciler.reify(element)
+		local instance = Reconciler.mount(element)
 
 		expect(updateCount).to.equal(0)
 
@@ -65,6 +65,6 @@ return function()
 
 		expect(updateCount).to.equal(3)
 
-		Reconciler.teardown(instance)
+		Reconciler.unmount(instance)
 	end)
 end

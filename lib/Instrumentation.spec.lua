@@ -30,7 +30,7 @@ return function()
 			end
 		end
 
-		local instance = Reconciler.reify(Core.createElement(TestComponent))
+		local instance = Reconciler.mount(Core.createElement(TestComponent))
 
 		local stats = Instrumentation.getCollectedStats()
 		expect(stats.TestComponent).to.be.ok()
@@ -39,7 +39,7 @@ return function()
 		triggerUpdate()
 		expect(stats.TestComponent.renderCount).to.equal(2)
 
-		Reconciler.teardown(instance)
+		Reconciler.unmount(instance)
 		Instrumentation.clearCollectedStats()
 		GlobalConfig.reset()
 	end)
@@ -73,7 +73,7 @@ return function()
 
 		function TestComponent:render() end
 
-		local instance = Reconciler.reify(Core.createElement(TestComponent))
+		local instance = Reconciler.mount(Core.createElement(TestComponent))
 
 		local stats = Instrumentation.getCollectedStats()
 
@@ -90,7 +90,7 @@ return function()
 		expect(stats.TestComponent.updateReqCount).to.equal(2)
 		expect(stats.TestComponent.didUpdateCount).to.equal(1)
 
-		Reconciler.teardown(instance)
+		Reconciler.unmount(instance)
 		Instrumentation.clearCollectedStats()
 		GlobalConfig.reset()
 	end)

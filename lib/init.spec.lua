@@ -4,12 +4,16 @@ return function()
 	it("should load with all public APIs", function()
 		local publicApi = {
 			createElement = "function",
-			reify = "function",
-			teardown = "function",
+			mount = "function",
+			unmount = "function",
 			reconcile = "function",
 			oneChild = "function",
 			setGlobalConfig = "function",
 			getGlobalConfigValue = "function",
+
+			-- These functions are deprecated and will throw warnings soon!
+			reify = "function",
+			teardown = "function",
 
 			Component = true,
 			PureComponent = true,

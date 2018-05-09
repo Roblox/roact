@@ -10,6 +10,7 @@ local GlobalConfig = require(script.GlobalConfig)
 local Instrumentation = require(script.Instrumentation)
 local PureComponent = require(script.PureComponent)
 local Reconciler = require(script.Reconciler)
+local ReconcilerCompat = require(script.ReconcilerCompat)
 
 --[[
 	A utility to copy one module into another, erroring if there are
@@ -34,6 +35,7 @@ local Roact = {}
 
 apply(Roact, Core)
 apply(Roact, Reconciler)
+apply(Roact, ReconcilerCompat)
 
 apply(Roact, {
 	Component = Component,

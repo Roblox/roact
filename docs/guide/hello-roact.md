@@ -18,7 +18,7 @@ local app = Roact.createElement("ScreenGui", {}, {
 	})
 })
 
-Roact.reify(app, Players.LocalPlayer.PlayerGui)
+Roact.mount(app, Players.LocalPlayer.PlayerGui)
 ```
 
 When you run your game, you should see a large gray label with the phrase 'Hello, Roact!' appear on screen!

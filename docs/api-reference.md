@@ -16,14 +16,17 @@ The `children` argument is shorthand for adding a `Roact.Children` key to `props
 !!! caution
 	Once `props` or `children` are passed into the `createElement`, make sure not to modify them!
 
-### Roact.reify
+### Roact.mount
 ```
-Roact.reify(element, [parent, [key]]) -> ComponentInstanceHandle
+Roact.mount(element, [parent, [key]]) -> ComponentInstanceHandle
 ```
+
+!!! warning
+	`Roact.mount` is also available via the deprecated alias `Roact.reify`. It will be removed in a future release.
 
 Creates a Roblox Instance given a Roact element, and optionally a `parent` to put it in, and a `key` to use as the instance's `Name`.
 
-The result is a `ComponentInstanceHandle`, which is an opaque handle that represents this specific instance of the root component. You can pass this to APIs like `Roact.teardown` and the future debug API.
+The result is a `ComponentInstanceHandle`, which is an opaque handle that represents this specific instance of the root component. You can pass this to APIs like `Roact.unmount` and the future debug API.
 
 ### Roact.reconcile
 ```
@@ -32,19 +35,22 @@ Roact.reconcile(instanceHandle, element) -> ComponentInstanceHandle
 
 Updates an existing instance handle with a new element, returning a new handle.
 
-`reconcile` can be used to change the props of a component instance created with `reify` and is useful for putting Roact content into non-Roact applications.
+`reconcile` can be used to change the props of a component instance created with `mount` and is useful for putting Roact content into non-Roact applications.
 
 !!! warning
-	`Roact.reconcile` takes ownership of the `instanceHandle` passed into it and may tear it down and create a new tree!
+	`Roact.reconcile` takes ownership of the `instanceHandle` passed into it and may unmount it and mount a new tree!
 
-	Make sure to use the handle that `reconcile` returns in any operations after `reconcile`, including `teardown`.
+	Make sure to use the handle that `reconcile` returns in any operations after `reconcile`, including `unmount`.
 
-### Roact.teardown
+### Roact.unmount
 ```
-Roact.teardown(instance) -> void
+Roact.unmount(instance) -> void
 ```
 
-Destroys the given `ComponentInstanceHandle` and all of its descendents. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.reify`.
+!!! warning
+	`Roact.unmount` is also available via the deprecated alias `Roact.teardown`. It will be removed in a future release.
+
+Destroys the given `ComponentInstanceHandle` and all of its descendents. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.
 
 ### Roact.oneChild
 `Roact.oneChild(children) -> RoactElement | nil`
@@ -258,7 +264,7 @@ didMount() -> void
 willUnmount() -> void
 ```
 
-`willUnmount` is fired right before Roact begins tearing down a component instance's children.
+`willUnmount` is fired right before Roact begins unmounting a component instance's children.
 
 `willUnmount` acts like a component's destructor, and is a good place to disconnect any manually-connected events.
 

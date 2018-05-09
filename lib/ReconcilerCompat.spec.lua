@@ -3,7 +3,7 @@ return function()
 	local Reconciler = require(script.Parent.Reconciler)
 	local Core = require(script.Parent.Core)
 
-	it("reify should only warn once", function()
+	it("reify should only warn once per call site", function()
 		local callCount = 0
 		local lastMessage
 		ReconcilerCompat._warn = function(message)
@@ -21,10 +21,17 @@ return function()
 		expect(callCount).to.equal(1)
 		expect(lastMessage:find("ReconcilerCompat.spec")).to.be.ok()
 
+		-- This is a different call site, which should trigger another warning.
+		local handle = ReconcilerCompat.reify(Core.createElement("StringValue"))
+		Reconciler.unmount(handle)
+
+		expect(callCount).to.equal(2)
+		expect(lastMessage:find("ReconcilerCompat.spec")).to.be.ok()
+
 		ReconcilerCompat._warn = warn
 	end)
 
-	it("teardown should only warn once", function()
+	it("teardown should only warn once per call site", function()
 		local callCount = 0
 		local lastMessage
 		ReconcilerCompat._warn = function(message)
@@ -40,6 +47,13 @@ return function()
 		end
 
 		expect(callCount).to.equal(1)
+		expect(lastMessage:find("ReconcilerCompat.spec")).to.be.ok()
+
+		-- This is a different call site, which should trigger another warning.
+		local handle = Reconciler.mount(Core.createElement("StringValue"))
+		ReconcilerCompat.teardown(handle)
+
+		expect(callCount).to.equal(2)
 		expect(lastMessage:find("ReconcilerCompat.spec")).to.be.ok()
 
 		ReconcilerCompat._warn = warn

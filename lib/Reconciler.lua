@@ -97,7 +97,7 @@ function Reconciler.unmount(instanceHandle)
 			element.props[Core.Ref](nil)
 		end
 
-		for _, child in pairs(instanceHandle._reifiedChildren) do
+		for _, child in pairs(instanceHandle._children) do
 			Reconciler.unmount(child)
 		end
 
@@ -107,13 +107,13 @@ function Reconciler.unmount(instanceHandle)
 		instanceHandle._rbx:Destroy()
 	elseif isFunctionalElement(element) then
 		-- Functional components can return nil
-		if instanceHandle._reified then
-			Reconciler.unmount(instanceHandle._reified)
+		if instanceHandle._child then
+			Reconciler.unmount(instanceHandle._child)
 		end
 	elseif isStatefulElement(element) then
 		instanceHandle._instance:_unmount()
 	elseif isPortal(element) then
-		for _, child in pairs(instanceHandle._reifiedChildren) do
+		for _, child in pairs(instanceHandle._children) do
 			Reconciler.unmount(child)
 		end
 	else
@@ -153,13 +153,13 @@ function Reconciler._mountInternal(element, parent, key, context)
 		end
 
 		-- Create children!
-		local reifiedChildren = {}
+		local children = {}
 
 		if element.props[Core.Children] then
 			for key, childElement in pairs(element.props[Core.Children]) do
 				local childInstance = Reconciler._mountInternal(childElement, rbx, key, context)
 
-				reifiedChildren[key] = childInstance
+				children[key] = childInstance
 			end
 		end
 
@@ -183,7 +183,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 			_parent = parent,
 			_element = element,
 			_context = context,
-			_reifiedChildren = reifiedChildren,
+			_children = children,
 			_rbx = rbx,
 		}
 	elseif isFunctionalElement(element) then
@@ -199,7 +199,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 
 		local vdom = element.component(element.props)
 		if vdom then
-			instanceHandle._reified = Reconciler._mountInternal(vdom, parent, key, context)
+			instanceHandle._child = Reconciler._mountInternal(vdom, parent, key, context)
 		end
 
 		return instanceHandle
@@ -213,7 +213,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 			_key = key,
 			_parent = parent,
 			_element = element,
-			_reified = nil,
+			_child = nil,
 		}
 
 		local instance = element.component._new(element.props, context)
@@ -233,13 +233,13 @@ function Reconciler._mountInternal(element, parent, key, context)
 		end
 
 		-- Create children!
-		local reifiedChildren = {}
+		local children = {}
 
 		if element.props[Core.Children] then
 			for key, childElement in pairs(element.props[Core.Children]) do
 				local childInstance = Reconciler._mountInternal(childElement, target, key, context)
 
-				reifiedChildren[key] = childInstance
+				children[key] = childInstance
 			end
 		end
 
@@ -249,7 +249,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 			_parent = parent,
 			_element = element,
 			_context = context,
-			_reifiedChildren = reifiedChildren,
+			_children = children,
 			_rbx = target,
 		}
 	elseif typeof(element) == "boolean" then
@@ -344,9 +344,9 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 		local rendered = newElement.component(newElement.props)
 		local newChild
 
-		if instanceHandle._reified then
+		if instanceHandle._child then
 			-- Transition from tree to tree, even if 'rendered' is nil
-			newChild = Reconciler._reconcileInternal(instanceHandle._reified, rendered)
+			newChild = Reconciler._reconcileInternal(instanceHandle._child, rendered)
 		elseif rendered then
 			-- Transition from nil to new tree
 			newChild = Reconciler._mountInternal(
@@ -357,7 +357,7 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 			)
 		end
 
-		instanceHandle._reified = newChild
+		instanceHandle._child = newChild
 
 		return instanceHandle
 	elseif isStatefulElement(newElement) then
@@ -397,21 +397,21 @@ function Reconciler._reconcilePrimitiveChildren(instance, newElement)
 	local elementChildren = newElement.props[Core.Children]
 
 	-- Reconcile existing children that were changed or removed
-	for key, childInstance in pairs(instance._reifiedChildren) do
+	for key, childInstance in pairs(instance._children) do
 		local childElement = elementChildren and elementChildren[key]
 
 		childInstance = Reconciler._reconcileInternal(childInstance, childElement)
 
-		instance._reifiedChildren[key] = childInstance
+		instance._children[key] = childInstance
 	end
 
 	-- Create children that were just added!
 	if elementChildren then
 		for key, childElement in pairs(elementChildren) do
 			-- Update if we didn't hit the child in the previous loop
-			if not instance._reifiedChildren[key] then
+			if not instance._children[key] then
 				local childInstance = Reconciler._mountInternal(childElement, instance._rbx, key, instance._context)
-				instance._reifiedChildren[key] = childInstance
+				instance._children[key] = childInstance
 			end
 		end
 	end

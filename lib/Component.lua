@@ -1,7 +1,7 @@
 --[[
 	The base implementation of a stateful component in Roact.
 
-	Stateful components handle most of their own reification and reconciliation
+	Stateful components handle most of their own mounting and reconciliation
 	process. Many of the private methods here are invoked by the reconciler.
 
 	Stateful components expose a handful of lifecycle events:
@@ -343,15 +343,15 @@ function Component:_forceUpdate(newProps, newState)
 	self._setStateBlockedReason = nil
 
 	self._setStateBlockedReason = "reconcile"
-	if self._handle._reified ~= nil then
+	if self._handle._child ~= nil then
 		-- We returned an element during our last render, update it.
-		self._handle._reified = Reconciler._reconcileInternal(
-			self._handle._reified,
+		self._handle._child = Reconciler._reconcileInternal(
+			self._handle._child,
 			newChildElement
 		)
 	elseif newChildElement then
 		-- We returned nil during our last render, construct a new child.
-		self._handle._reified = Reconciler._mountInternal(
+		self._handle._child = Reconciler._mountInternal(
 			newChildElement,
 			self._handle._parent,
 			self._handle._key,
@@ -390,7 +390,7 @@ function Component:_mount(handle)
 
 	if virtualTree then
 		self._setStateBlockedReason = "reconcile"
-		handle._reified = Reconciler._mountInternal(
+		handle._child = Reconciler._mountInternal(
 			virtualTree,
 			handle._parent,
 			handle._key,
@@ -417,8 +417,8 @@ function Component:_unmount()
 	end
 
 	-- Stateful components can return nil from render()
-	if handle._reified then
-		Reconciler.unmount(handle._reified)
+	if handle._child then
+		Reconciler.unmount(handle._child)
 	end
 
 	self._handle = nil

@@ -85,9 +85,9 @@ end
 local PlayerGui = Players.LocalPlayer.PlayerGui
 
 -- Create our UI, which now runs on its own!
-local handle = Roact.reify(Roact.createElement(Clock), PlayerGui, "Clock UI")
+local handle = Roact.mount(Roact.createElement(Clock), PlayerGui, "Clock UI")
 
 -- Later, we can destroy our UI and disconnect everything correctly.
 wait(10)
-Roact.teardown(handle)
+Roact.unmount(handle)
 ```

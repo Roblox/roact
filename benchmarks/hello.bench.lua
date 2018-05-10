@@ -7,7 +7,7 @@ return {
 			Value = "Hello, world!",
 		})
 
-		local handle = Roact.reify(hello)
-		Roact.teardown(handle)
+		local handle = Roact.mount(hello)
+		Roact.unmount(handle)
 	end,
 }

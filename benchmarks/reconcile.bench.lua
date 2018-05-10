@@ -5,12 +5,12 @@ local handle
 return {
 	iterations = 100000,
 	setup = function()
-		handle = Roact.reify(Roact.createElement("StringValue", {
+		handle = Roact.mount(Roact.createElement("StringValue", {
 			Value = "Initial",
 		}))
 	end,
 	teardown = function()
-		Roact.teardown(handle)
+		Roact.unmount(handle)
 	end,
 	step = function(i)
 		handle = Roact.reconcile(handle, Roact.createElement("StringValue", {

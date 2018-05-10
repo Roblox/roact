@@ -45,7 +45,7 @@ local tree = Roact.createElement("ScreenGui", {}, {
 })
 
 -- Turn our virtual tree into real instances and put them in PlayerGui
-Roact.reify(tree, LocalPlayer.PlayerGui, "HelloWorld")
+Roact.mount(tree, LocalPlayer.PlayerGui, "HelloWorld")
 ```
 
 ## License

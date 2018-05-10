@@ -23,14 +23,16 @@ local myElement = Roact.createElement("Frame", {
 })
 ```
 
-Creating an element by itself doesn't do anything, however. In order to turn our description of an object into a real Roblox Instance, we can call `Roact.reify`:
+Creating an element by itself doesn't do anything, however. In order to turn our description of an object into a real Roblox Instance, we can call `Roact.mount`:
 
 ```lua
 -- Create a new Frame object in 'Workspace'
-local myHandle = Roact.reify(myElement, game.Workspace)
+local myHandle = Roact.mount(myElement, game.Workspace)
 ```
 
-`Roact.reify` returns a handle that we can later use to update or destroy that object with `Roact.reconcile` and `Roact.teardown`.
+Mounting is the process of creating a Roact component instance as well as any associated Roblox Instances.
+
+`Roact.mount` returns a handle that we can later use to update or destroy that object with `Roact.reconcile` and `Roact.unmount`.
 
 ## Changing What's Rendered
 In order to change the UI that we've created, we need to create a new set of elements and *reconcile* the existing tree to match it.
@@ -60,17 +62,17 @@ myHandle = Roact.reconcile(myHandle, myNewElement)
 
 Unlike many other UI systems, Roact doesn't let you directly set values on UI objects. Instead, describe what your UI should look like in the form of elements and Roact will handle changing the underlying Roblox Instances.
 
-## Destroying the Tree
-Roact provides a method called `Roact.teardown` that we can use when we're finished with our tree.
+## Unmounting the Tree
+Roact provides a method called `Roact.unmount` that we can use when we're finished with our tree.
 
 ```lua
-Roact.teardown(myHandle)
+Roact.unmount(myHandle)
 ```
 
-!!! warning
-	Once `teardown` is called, all Roblox Instances get destroyed!
+Unmounting destructs the given Roact component instance and destroys any associated Roblox Instances with it.
 
-	Trying to use a handle after it's been passed to `Roact.teardown` will result in errors!
+!!! warning
+	Trying to use a handle after it's been passed to `Roact.unmount` will result in errors!
 
 ## Incrementing Counter
 Using what's been covered so far, we can make a simple program that tells you how long it has been running.
@@ -98,7 +100,7 @@ local PlayerGui = Players.LocalPlayer.PlayerGui
 
 -- Create our initial UI.
 local currentTime = 0
-local handle = Roact.reify(clock(currentTime), PlayerGui, "Clock UI")
+local handle = Roact.mount(clock(currentTime), PlayerGui, "Clock UI")
 
 -- Every second, update the UI to show our new time.
 while true do

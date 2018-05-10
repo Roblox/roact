@@ -12,14 +12,26 @@ digraph G {
 
 	render1 [label="render"];
 	created [style="rounded", color="#000000", label=<<i>Instances created</i>>];
-	reify [style="rounded", color="#000000", label=<<b>Reification</b><br /><br />(Create)>];
-	reify -> init -> render1 -> created -> didMount;
+	mount [style="rounded", color="#000000", label=<
+		<b>Mounting</b>
+		<br /><br />
+		<font face="monospace">Roact.mount</font>
+	>];
+	mount -> init -> render1 -> created -> didMount;
 
 	updated [style="rounded", color="#000000", label=<<i>Instances updated</i>>];
-	reconcile [style="rounded", color="#000000", label=<<b>Reconciliation</b><br /><br />(Update)>];
+	reconcile [style="rounded", color="#000000", label=<
+		<b>Reconciliation</b>
+		<br /><br />
+		<font face="monospace">Roact.reconcile</font>
+	>];
 	reconcile -> shouldUpdate -> getDerivedStateFromProps -> willUpdate -> render -> updated -> didUpdate;
 
 	unmounted [style="rounded", color="#000000", label=<<i>Component Unmounted</i>>];
-	unmount [style="rounded", color="#000000", label=<<b>Unmounting</b><br /><br />(Destroy)>];
+	unmount [style="rounded", color="#000000", label=<
+		<b>Unmounting</b>
+		<br /><br />
+		<font face="monospace">Roact.unmount</font>
+	>];
 	unmount -> willUnmount -> unmounted;
 }

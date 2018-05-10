@@ -9,46 +9,6 @@ local exampleData = {
 		name = "clock",
 		label = "Clock",
 	},
-	{
-		name = "hello-roact",
-		label = "Hello, Roact!",
-	},
-	{
-		name = "clock",
-		label = "Clock",
-	},
-	{
-		name = "hello-roact",
-		label = "Hello, Roact!",
-	},
-	{
-		name = "clock",
-		label = "Clock",
-	},
-	{
-		name = "hello-roact",
-		label = "Hello, Roact!",
-	},
-	{
-		name = "clock",
-		label = "Clock",
-	},
-	{
-		name = "hello-roact",
-		label = "Hello, Roact!",
-	},
-	{
-		name = "clock",
-		label = "Clock",
-	},
-	{
-		name = "hello-roact",
-		label = "Hello, Roact!",
-	},
-	{
-		name = "clock",
-		label = "Clock",
-	},
 }
 
 for _, example in ipairs(exampleData) do

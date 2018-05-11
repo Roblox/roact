@@ -66,7 +66,7 @@ return function()
 				Value = "foo",
 			})
 
-			Roact.reify(element, container, "TestStringValue")
+			Roact.mount(element, container, "TestStringValue")
 
 			local rbx = container:FindFirstChild("TestStringValue")
 
@@ -88,7 +88,7 @@ return function()
 				testProp = testProp,
 			})
 
-			Roact.reify(element)
+			Roact.mount(element)
 
 			-- The only guarantee is that the function will be invoked at least once
 			expect(callCount > 0).to.equal(true)
@@ -113,7 +113,7 @@ return function()
 				testProp = testProp,
 			})
 
-			Roact.reify(element)
+			Roact.mount(element)
 
 			expect(callCount).to.equal(1)
 		end)
@@ -154,7 +154,7 @@ return function()
 			end
 
 			local element = Roact.createElement(TestParent)
-			Roact.reify(element)
+			Roact.mount(element)
 
 			expect(renderCount >= 1).to.equal(true)
 			expect(listener).to.be.a("function")
@@ -203,7 +203,7 @@ return function()
 				testValue = testValue,
 			})
 
-			Roact.reify(element)
+			Roact.mount(element)
 
 			expect(callCount).to.equal(1)
 		end)
@@ -230,7 +230,7 @@ return function()
 				TestChild = Roact.createElement("StringValue"),
 			})
 
-			Roact.reify(element, nil, "RefTest")
+			Roact.mount(element, nil, "RefTest")
 
 			expect(callCount).to.equal(1)
 		end)
@@ -248,13 +248,13 @@ return function()
 				[Roact.Ref] = ref,
 			})
 
-			local instance = Roact.reify(element, nil, "RefTest")
+			local instance = Roact.mount(element, nil, "RefTest")
 
 			expect(callCount).to.equal(1)
 			expect(currentRef).to.be.ok()
 			expect(currentRef.Name).to.equal("RefTest")
 
-			Roact.teardown(instance)
+			Roact.unmount(instance)
 
 			expect(callCount).to.equal(2)
 			expect(currentRef).to.equal(nil)
@@ -294,7 +294,7 @@ return function()
 			end
 
 			local element = Roact.createElement(Root)
-			Roact.reify(element)
+			Roact.mount(element)
 
 			expect(refCount).to.equal(0)
 			expect(currentRef).to.equal(nil)
@@ -332,7 +332,7 @@ return function()
 					value = 42,
 				}),
 			})
-			Roact.reify(portal)
+			Roact.mount(portal)
 
 			expect(target:FindFirstChild("folderOne")).to.be.ok()
 			expect(target:FindFirstChild("folderTwo")).to.be.ok()
@@ -347,7 +347,7 @@ return function()
 			})
 
 			expect(function()
-				Roact.reify(portal)
+				Roact.mount(portal)
 			end).to.throw()
 		end)
 
@@ -360,7 +360,7 @@ return function()
 			})
 
 			expect(function()
-				Roact.reify(portal)
+				Roact.mount(portal)
 			end).to.throw()
 		end)
 
@@ -407,7 +407,7 @@ return function()
 				end
 			end
 
-			Roact.reify(Roact.createElement(PortalContainer))
+			Roact.mount(Roact.createElement(PortalContainer))
 
 			expect(targetOne:FindFirstChild("folderOne")).to.be.ok()
 			expect(targetOne:FindFirstChild("folderTwo")).to.be.ok()
@@ -452,7 +452,7 @@ return function()
 				end
 			end
 
-			Roact.reify(Roact.createElement(PortalContainer))
+			Roact.mount(Roact.createElement(PortalContainer))
 
 			expect(target:FindFirstChild("TestStringValue")).to.be.ok()
 			expect(target:FindFirstChild("TestStringValue").Value).to.equal("initialStringValue")
@@ -474,7 +474,7 @@ return function()
 				folderOne = Roact.createElement("Folder"),
 				folderTwo = Roact.createElement("Folder"),
 			})
-			local instance = Roact.reify(portal)
+			local instance = Roact.mount(portal)
 
 			local folderThree = Instance.new("Folder")
 			folderThree.Name = "folderThree"
@@ -484,7 +484,7 @@ return function()
 			expect(target:FindFirstChild("folderTwo")).to.be.ok()
 			expect(target:FindFirstChild("folderThree")).to.be.ok()
 
-			Roact.teardown(instance)
+			Roact.unmount(instance)
 
 			expect(target:FindFirstChild("folderOne")).never.to.be.ok()
 			expect(target:FindFirstChild("folderTwo")).never.to.be.ok()

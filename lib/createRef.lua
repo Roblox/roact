@@ -7,8 +7,14 @@
 	* https://reactjs.org/blog/2018/03/29/react-v-16-3.html#createref-api
 ]]
 
+local refMetatable = {
+	__tostring = function(self)
+		return ("RoactReference(%q)"):format(tostring(self.current))
+	end,
+}
+
 return function()
-	return {
+	return setmetatable({
 		current = nil,
-	}
+	}, refMetatable)
 end

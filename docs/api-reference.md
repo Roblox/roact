@@ -61,6 +61,13 @@ If `children` contains more than one child, `oneChild` function will throw an er
 
 If `children` is `nil` or contains no children, `oneChild` will return `nil`.
 
+### Roact.createRef
+```
+Roact.createRef() -> Ref
+```
+
+Creates a new reference object that can be used with [Roact.Ref](#roactref).
+
 ## Constants
 
 ### Roact.Children
@@ -71,12 +78,32 @@ If you're writing a new functional or stateful element that needs to be used lik
 ### Roact.Ref
 Use `Roact.Ref` as a key into the props of a primitive element to receive a handle to the underlying Roblox Instance.
 
+`Ref` may either be a function:
 ```lua
 Roact.createElement("Frame", {
 	[Roact.Ref] = function(rbx)
 		print("Roblox Instance", rbx)
 	end,
 })
+```
+
+Or a reference object created with [createRef](#roactcreateref):
+```lua
+local ExampleComponent = Roact.Component:extend("ExampleComponent")
+
+function ExampleComponent:init()
+	self.ref = Roact.createRef()
+end
+
+function ExampleComponent:render()
+	return Roact.createElement("Frame", {
+		[Roact.Ref] = ref,
+	})
+end
+
+function ExampleComponent:didMount()
+	print("Roblox Instance", self.ref.current)
+end
 ```
 
 !!! warning

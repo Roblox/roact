@@ -4,3 +4,6 @@
 [submodule "modules/testez"]
 	path = modules/testez
 	url = https://github.com/Roblox/testez.git
+[submodule "modules/proptypes"]
+	path = modules/proptypes
+	url = https://github.com/AmaranthineCodices/rbx-prop-types

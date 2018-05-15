@@ -44,6 +44,18 @@ local function isPortal(element)
 	return element.component == Core.Portal
 end
 
+--[[
+	Sets the value of a reference to a new rendered object.
+	Correctly handles both function-style and object-style refs.
+]]
+local function applyRef(ref, newRbx)
+	if type(ref) == "table" then
+		ref.current = newRbx
+	else
+		ref(newRbx)
+	end
+end
+
 local Reconciler = {}
 
 Reconciler._singleEventManager = SingleEventManager.new()
@@ -93,8 +105,10 @@ function Reconciler.unmount(instanceHandle)
 
 		-- Kill refs before we make changes, since any mutations past this point
 		-- aren't relevant to components.
-		if element.props[Core.Ref] then
-			element.props[Core.Ref](nil)
+		local ref = element.props[Core.Ref]
+
+		if ref then
+			applyRef(ref, nil)
 		end
 
 		for _, child in pairs(instanceHandle._children) do
@@ -173,8 +187,9 @@ function Reconciler._mountInternal(element, parent, key, context)
 		rbx.Parent = parent
 
 		-- Attach ref values, since the instance is initialized now.
-		if element.props[Core.Ref] then
-			element.props[Core.Ref](rbx)
+		local ref = element.props[Core.Ref]
+		if ref then
+			applyRef(ref, rbx)
 		end
 
 		return {
@@ -323,7 +338,7 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 
 		-- Cancel the old ref before we make changes. Apply the new one after.
 		if refChanged and oldRef then
-			oldRef(nil)
+			applyRef(oldRef, nil)
 		end
 
 		-- Update properties and children of the Roblox object.

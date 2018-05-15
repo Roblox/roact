@@ -144,7 +144,7 @@ end
 	The structure created by this method is important to the functionality of
 	the reconciliation methods; they depend on this structure being well-formed.
 ]]
-function Reconciler._mountInternal(element, parent, key, context)
+function Reconciler._mountInternal(element, parent, key, context, parentHandle)
 	if isPrimitiveElement(element) then
 		-- Primitive elements are backed directly by Roblox Instances.
 
@@ -187,7 +187,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 
 		if element.props[Core.Children] then
 			for key, childElement in pairs(element.props[Core.Children]) do
-				local childInstance = Reconciler._mountInternal(childElement, rbx, key, context)
+				local childInstance = Reconciler._mountInternal(childElement, rbx, key, context, handle)
 
 				children[key] = childInstance
 			end

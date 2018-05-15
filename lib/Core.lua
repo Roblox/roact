@@ -2,8 +2,7 @@
 	Provides methods and data core to the implementation of the Roact
 	Virtual DOM.
 
-	This module doesn't interact with the Roblox hierarchy and should have no
-	dependencies on other Roact modules.
+	This module doesn't interact with the Roblox hierarchy.
 ]]
 
 local Symbol = require(script.Parent.Symbol)

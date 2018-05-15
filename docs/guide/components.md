@@ -99,7 +99,7 @@ local currentTime = 0
 local clockElement = Roact.createElement(Clock, {
 	currentTime = currentTime
 })
-local handle = Roact.reify(clockElement, PlayerGui, "Clock UI")
+local handle = Roact.mount(clockElement, PlayerGui, "Clock UI")
 
 -- Every second, update the UI to show our new time.
 while true do

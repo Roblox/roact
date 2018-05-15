@@ -11,9 +11,13 @@ Stateful components do everything that functional components do, but have the ad
 ## Lifecycle Methods
 Stateful components can provide methods to Roact that are called when certain things happen to a component instance.
 
-Lifecycle methods are a great place to send off network requests, measure UI ([with the help of refs](/advanced/refs)), wrap non-Roact components, and other side-effects.
+Lifecycle methods are a great place to send off network requests, measure UI ([with the help of refs](/advanced/refs)), wrap non-Roact components, and produce other side-effects.
 
-A [diagram of Roact's lifecycle methods](/api-reference#lifecycle-events) is available in the API reference.
+<div align="center">
+	<a href="../../images/lifecycle.svg">
+		<img src="../../images/lifecycle.svg" alt="Diagram of Roact Lifecycle" />
+	</a>
+</div>
 
 ## Incrementing Counter, Part Three
 Building on the previous two examples, we can expand the incrementing counter to move the counter state and loop inside Roact, and use `setState` to trigger a re-render instead of `Roact.reconcile`.
@@ -81,9 +85,9 @@ end
 local PlayerGui = Players.LocalPlayer.PlayerGui
 
 -- Create our UI, which now runs on its own!
-local handle = Roact.reify(Roact.createElement(Clock), PlayerGui, "Clock UI")
+local handle = Roact.mount(Roact.createElement(Clock), PlayerGui, "Clock UI")
 
 -- Later, we can destroy our UI and disconnect everything correctly.
 wait(10)
-Roact.teardown(handle)
+Roact.unmount(handle)
 ```

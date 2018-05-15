@@ -3,9 +3,6 @@ site_url: https://roblox.github.io/roact/
 repo_name: Roblox/roact
 repo_url: https://github.com/Roblox/roact
 
-extra_css:
-  - css/component-diagram.css
-
 theme:
   name: material
   palette:
@@ -25,6 +22,9 @@ pages:
     - Portals: advanced/portals.md
     - Refs: advanced/refs.md
     - Context: advanced/context.md
+  - Performance Optimization:
+    - Overview: performance/overview.md
+    - Reduce Reconcilation: performance/reduce-reconciliation.md
   - API Reference: api-reference.md
 
 markdown_extensions:

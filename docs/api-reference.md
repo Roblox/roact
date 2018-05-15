@@ -16,14 +16,17 @@ The `children` argument is shorthand for adding a `Roact.Children` key to `props
 !!! caution
 	Once `props` or `children` are passed into the `createElement`, make sure not to modify them!
 
-### Roact.reify
+### Roact.mount
 ```
-Roact.reify(element, [parent, [key]]) -> ComponentInstanceHandle
+Roact.mount(element, [parent, [key]]) -> ComponentInstanceHandle
 ```
+
+!!! warning
+	`Roact.mount` is also available via the deprecated alias `Roact.reify`. It will be removed in a future release.
 
 Creates a Roblox Instance given a Roact element, and optionally a `parent` to put it in, and a `key` to use as the instance's `Name`.
 
-The result is a `ComponentInstanceHandle`, which is an opaque handle that represents this specific instance of the root component. You can pass this to APIs like `Roact.teardown` and the future debug API.
+The result is a `ComponentInstanceHandle`, which is an opaque handle that represents this specific instance of the root component. You can pass this to APIs like `Roact.unmount` and the future debug API.
 
 ### Roact.reconcile
 ```
@@ -32,19 +35,22 @@ Roact.reconcile(instanceHandle, element) -> ComponentInstanceHandle
 
 Updates an existing instance handle with a new element, returning a new handle.
 
-`reconcile` can be used to change the props of a component instance created with `reify` and is useful for putting Roact content into non-Roact applications.
+`reconcile` can be used to change the props of a component instance created with `mount` and is useful for putting Roact content into non-Roact applications.
 
 !!! warning
-	`Roact.reconcile` takes ownership of the `instanceHandle` passed into it and may tear it down and create a new tree!
+	`Roact.reconcile` takes ownership of the `instanceHandle` passed into it and may unmount it and mount a new tree!
 
-	Make sure to use the handle that `reconcile` returns in any operations after `reconcile`, including `teardown`.
+	Make sure to use the handle that `reconcile` returns in any operations after `reconcile`, including `unmount`.
 
-### Roact.teardown
+### Roact.unmount
 ```
-Roact.teardown(instance) -> void
+Roact.unmount(instance) -> void
 ```
 
-Destroys the given `ComponentInstanceHandle` and all of its descendents. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.reify`.
+!!! warning
+	`Roact.unmount` is also available via the deprecated alias `Roact.teardown`. It will be removed in a future release.
+
+Destroys the given `ComponentInstanceHandle` and all of its descendents. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.
 
 ### Roact.oneChild
 `Roact.oneChild(children) -> RoactElement | nil`
@@ -76,7 +82,7 @@ Roact.createElement("Frame", {
 !!! warning
 	`Roact.Ref` will be called with `nil` when the component instance is destroyed!
 
-See [the refs guide](/advanced/refs.html) for more details.
+See [the refs guide](/advanced/refs.md) for more details.
 
 ### Roact.Event
 Index into `Roact.Event` to receive a key that can be used to connect to events when creating primitive elements:
@@ -137,6 +143,13 @@ Portals are useful for creating dialogs managed by deeply-nested UI components, 
 See [the Portals guide](/advanced/portals.md) for a small tutorial and more details about portals.
 
 ## Component API
+
+### defaultProps
+```
+static defaultProps: Dictionary<any, any>
+```
+
+If `defaultProps` is defined on a stateful component, any props that aren't specified when a component is created will be taken from there.
 
 ### init
 ```
@@ -228,37 +241,13 @@ Right now, components are re-rendered any time a parent component updates, or wh
 
 `PureComponent` implements `shouldUpdate` to only trigger a re-render any time the props are different based on shallow equality. In a future Roact update, *all* components may implement this check by default.
 
-## Lifecycle Events
-Roact exposes a number of events that stateful components can hook into to be notified of various steps in the rendering process.
+## Lifecycle Methods
+In addition to the base Component API, Roact exposes additional lifecycle methods that stateful components can hook into to be notified of various steps in the rendering process.
 
-Mounting:
-
-<div class="component-diagram" aria-role="presentation">
-	<span class="component-diagram-box">init</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">render</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">didMount</span>
-</div>
-
-Updating:
-
-<div class="component-diagram" aria-role="presentation">
-	<span class="component-diagram-box">shouldUpdate?</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">getDerivedStateFromProps</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">willUpdate</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">render</span>
-	<span class="component-diagram-arrow">➝</span>
-	<span class="component-diagram-box">didUpdate</span>
-</div>
-
-Unmounting:
-
-<div class="component-diagram" aria-role="presentation">
-	<span class="component-diagram-box">willUnmount</span>
+<div align="center">
+	<a href="../images/lifecycle.svg">
+		<img src="../images/lifecycle.svg" alt="Diagram of Roact Lifecycle" />
+	</a>
 </div>
 
 ### didMount
@@ -275,7 +264,7 @@ didMount() -> void
 willUnmount() -> void
 ```
 
-`willUnmount` is fired right before Roact begins tearing down a component instance's children.
+`willUnmount` is fired right before Roact begins unmounting a component instance's children.
 
 `willUnmount` acts like a component's destructor, and is a good place to disconnect any manually-connected events.
 

@@ -37,7 +37,7 @@ local LocalPlayer = game:GetService("Players").LocalPlayer
 local Roact = require(Roact)
 
 -- Create our virtual tree describing a full-screen text label.
-local tree = Roact.createElement("ScreenGui", {
+local tree = Roact.createElement("ScreenGui", {}, {
 	Label = Roact.createElement("TextLabel", {
 		Text = "Hello, world!",
 		Size = UDim2.new(1, 0, 1, 0),
@@ -45,7 +45,7 @@ local tree = Roact.createElement("ScreenGui", {
 })
 
 -- Turn our virtual tree into real instances and put them in PlayerGui
-Roact.reify(tree, LocalPlayer.PlayerGui, "HelloWorld")
+Roact.mount(tree, LocalPlayer.PlayerGui, "HelloWorld")
 ```
 
 ## License

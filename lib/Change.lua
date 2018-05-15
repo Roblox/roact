@@ -1,3 +1,16 @@
+--[[
+	Change is used to generate special prop keys that can be used to connect to
+	GetPropertyChangedSignal.
+
+	Generally, Change is indexed by a Roblox property name:
+
+		Roact.createElement("TextBox", {
+			[Roact.Change.Text] = function(rbx)
+				print("The TextBox", rbx, "changed text to", rbx.Text)
+			end,
+		})
+]]
+
 local Change = {}
 
 local changeMetatable = {

@@ -49,6 +49,8 @@ end
 	Correctly handles both function-style and object-style refs.
 ]]
 local function applyRef(ref, newRbx)
+	if not ref then return end
+
 	if type(ref) == "table" then
 		ref.current = newRbx
 	else
@@ -105,11 +107,7 @@ function Reconciler.unmount(instanceHandle)
 
 		-- Kill refs before we make changes, since any mutations past this point
 		-- aren't relevant to components.
-		local ref = element.props[Core.Ref]
-
-		if ref then
-			applyRef(ref, nil)
-		end
+		applyRef(element.props[Core.Ref], nil)
 
 		for _, child in pairs(instanceHandle._children) do
 			Reconciler.unmount(child)
@@ -187,10 +185,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 		rbx.Parent = parent
 
 		-- Attach ref values, since the instance is initialized now.
-		local ref = element.props[Core.Ref]
-		if ref then
-			applyRef(ref, rbx)
-		end
+		applyRef(element.props[Core.Ref], rbx)
 
 		return {
 			[isInstanceHandle] = true,

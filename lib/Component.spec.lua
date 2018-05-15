@@ -2,6 +2,7 @@ return function()
 	local Core = require(script.Parent.Core)
 	local Reconciler = require(script.Parent.Reconciler)
 	local Component = require(script.Parent.Component)
+	local PropTypes = require(script.Parent.Parent.PropTypes)
 
 	it("should be extendable", function()
 		local MyComponent = Component:extend("The Senate")
@@ -288,6 +289,51 @@ return function()
 		expect(lastProps).to.be.a("table")
 		expect(lastProps.foo).to.equal("hello")
 		expect(lastProps.bar).to.equal("world")
+
+		Reconciler.unmount(handle)
+	end)
+
+	it("should type check properties if propTypes is set", function()
+		local TestComponent = Component:extend("TestComponent")
+
+		TestComponent.propTypes = {
+			foo = PropTypes.string,
+			bar = PropTypes.number,
+		}
+
+		function TestComponent:render()
+			return nil
+		end
+
+		expect(function()
+			local handle = Reconciler.mount(Core.createElement(TestComponent, {
+				foo = "hey",
+				bar = 1
+			}))
+
+			Reconciler.unmount(handle)
+		end).to.never.throw()
+
+		expect(function()
+			local handle = Reconciler.mount(Core.createElement(TestComponent, {
+				foo = "hey",
+				bar = true
+			}))
+
+			Reconciler.unmount(handle)
+		end).to.throw()
+
+		local handle = Reconciler.mount(Core.createElement(TestComponent, {
+			foo = "hey",
+			bar = 1
+		}))
+
+		expect(function()
+			handle = Reconciler.reconcile(Core.createElement(TestComponent, {
+				foo = true,
+				bar = 2,
+			}))
+		end).to.throw()
 
 		Reconciler.unmount(handle)
 	end)

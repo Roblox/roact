@@ -15,6 +15,7 @@
 	information (and a diagram) is available in the Roact documentation.
 ]]
 
+local PropTypes = require(script.Parent.Parent.PropTypes)
 local Reconciler = require(script.Parent.Reconciler)
 local Core = require(script.Parent.Core)
 local GlobalConfig = require(script.Parent.GlobalConfig)
@@ -309,6 +310,10 @@ function Component:_forceUpdate(newProps, newState)
 		end
 	end
 
+	if newProps and self.propTypes then
+		assert(PropTypes.validate(newProps, self.propTypes))
+	end
+
 	if self.willUpdate then
 		self._setStateBlockedReason = "willUpdate"
 		self:willUpdate(newProps or self.props, newState or self.state)
@@ -373,6 +378,10 @@ function Component:_mount(handle)
 	self._handle = handle
 
 	self._setStateBlockedReason = "render"
+
+	if self.propTypes then
+		assert(PropTypes.validate(self.props, self.propTypes))
+	end
 
 	local virtualTree
 	if GlobalConfig.getValue("componentInstrumentation") then

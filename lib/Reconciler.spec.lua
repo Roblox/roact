@@ -26,7 +26,7 @@ return function()
 				Value = 0
 			})
 
-			local handle = Reconciler.reify(element)
+			local handle = Reconciler.mount(element)
 			expect(traceCount).to.equal(1)
 
 			Reconciler.reconcile(handle, Core.createElement("IntValue", {
@@ -35,7 +35,7 @@ return function()
 
 			expect(traceCount).to.equal(2)
 
-			Reconciler.teardown(handle)
+			Reconciler.unmount(handle)
 			GlobalConfig.reset()
 		end)
 
@@ -54,7 +54,7 @@ return function()
 				[Event.Changed] = function() end,
 			})
 
-			local handle = Reconciler.reify(element)
+			local handle = Reconciler.mount(element)
 			expect(traceCount).to.equal(1)
 
 			Reconciler.reconcile(handle, Core.createElement("IntValue", {
@@ -63,7 +63,7 @@ return function()
 
 			expect(traceCount).to.equal(2)
 
-			Reconciler.teardown(handle)
+			Reconciler.unmount(handle)
 			GlobalConfig.reset()
 		end)
 
@@ -82,7 +82,7 @@ return function()
 				[Change.Name] = function() end,
 			})
 
-			local handle = Reconciler.reify(element)
+			local handle = Reconciler.mount(element)
 			expect(traceCount).to.equal(1)
 
 			Reconciler.reconcile(handle, Core.createElement("IntValue", {
@@ -91,7 +91,7 @@ return function()
 
 			expect(traceCount).to.equal(2)
 
-			Reconciler.teardown(handle)
+			Reconciler.unmount(handle)
 			GlobalConfig.reset()
 		end)
 
@@ -108,7 +108,7 @@ return function()
 				[Change.Value] = function() end,
 			})
 
-			local handle = Reconciler.reify(element)
+			local handle = Reconciler.mount(element)
 			expect(traceCount).to.equal(0)
 
 			handle = Reconciler.reconcile(handle, Core.createElement("StringValue", {
@@ -117,7 +117,7 @@ return function()
 
 			expect(traceCount).to.equal(0)
 
-			Reconciler.teardown(handle)
+			Reconciler.unmount(handle)
 		end)
 	end)
 end

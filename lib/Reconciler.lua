@@ -200,7 +200,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 			element.props[Core.Ref](rbx)
 		end
 
-		handle._reifiedChildren = reifiedChildren
+		handle._children = children
 		return handle
 	elseif isFunctionalElement(element) then
 		-- Functional elements contain 0 or 1 children.

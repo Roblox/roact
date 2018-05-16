@@ -15,7 +15,6 @@
 	information (and a diagram) is available in the Roact documentation.
 ]]
 
-local PropTypes = require(script.Parent.Parent.PropTypes)
 local Reconciler = require(script.Parent.Reconciler)
 local Core = require(script.Parent.Core)
 local GlobalConfig = require(script.Parent.GlobalConfig)
@@ -78,6 +77,7 @@ function Component:extend(name)
 	end
 
 	class.__index = class
+	class._extendTraceback = debug.traceback()
 
 	setmetatable(class, {
 		__tostring = function(self)
@@ -310,8 +310,8 @@ function Component:_forceUpdate(newProps, newState)
 		end
 	end
 
-	if newProps and self.propTypes then
-		assert(PropTypes.validate(newProps, self.propTypes))
+	if newProps then
+		self:_typeCheck(newProps)
 	end
 
 	if self.willUpdate then
@@ -379,9 +379,7 @@ function Component:_mount(handle)
 
 	self._setStateBlockedReason = "render"
 
-	if self.propTypes then
-		assert(PropTypes.validate(self.props, self.propTypes))
-	end
+	self:_typeCheck(self.props)
 
 	local virtualTree
 	if GlobalConfig.getValue("componentInstrumentation") then
@@ -431,6 +429,33 @@ function Component:_unmount()
 	end
 
 	self._handle = nil
+end
+
+--[[
+	Performs type checking, if it is enabled.
+]]
+function Component:_typeCheck(props)
+	local validator = self.propTypes
+
+	if validator == nil then return end
+	if typeof(validator) ~= "function" then
+		-- Hide as much as possible about error location, since this message
+		-- occurs from several possible call sites with different stack traces.
+		-- luacheck: ignore 6
+		error(("The value of propTypes must be a function (is a %q). Check the definition of the component extended at:\n%s"):format(
+			typeof(validator),
+			self._extendTraceback),
+		0)
+	end
+
+	local success, failureReason = validator(props)
+
+	if not success then
+		error(("Property type checking failed:\n%s\n%s"):format(
+			failureReason,
+			self:rootElementTraceback() or Core.defaultSource
+		), 0)
+	end
 end
 
 return Component

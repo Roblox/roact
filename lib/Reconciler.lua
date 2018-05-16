@@ -329,8 +329,8 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 	if isPrimitiveElement(newElement) then
 		-- Roblox Instance change
 
-		local oldRef = oldElement[Core.Ref]
-		local newRef = newElement[Core.Ref]
+		local oldRef = oldElement.props[Core.Ref]
+		local newRef = newElement.props[Core.Ref]
 		local refChanged = (oldRef ~= newRef)
 
 		-- Cancel the old ref before we make changes. Apply the new one after.

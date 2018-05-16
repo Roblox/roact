@@ -455,8 +455,7 @@ function Component:_typeCheck(props)
 	if not success then
 		error(("Property type checking failed:\n%s\n%s"):format(
 			failureReason,
-			self:rootElementTraceback() or Core._defaultSource
-		), 0)
+			self:rootElementTraceback() or Core._defaultSource), 0)
 	end
 end
 

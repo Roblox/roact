@@ -347,6 +347,26 @@ return function()
 			GlobalConfig.reset()
 		end)
 
+		it("should throw if propTypes is not a function", function()
+			GlobalConfig.set({
+				typeChecking = true,
+			})
+
+			local TestComponent = Component:extend("TestComponent")
+
+			TestComponent.propTypes = false
+
+			function TestComponent:render()
+				return nil
+			end
+
+			expect(function()
+				Reconciler.mount(Core.createElement(TestComponent))
+			end).to.throw()
+
+			GlobalConfig.reset()
+		end)
+
 		it("should not be run if typeChecking is false", function()
 			local TestComponent = Component:extend("TestComponent")
 			local callCount = 0

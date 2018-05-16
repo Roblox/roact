@@ -34,8 +34,6 @@ local Symbol = require(script.Parent.Symbol)
 
 local isInstanceHandle = Symbol.named("isInstanceHandle")
 
-local DEFAULT_SOURCE = "\n\t<Use Roact.setGlobalConfig with the 'elementTracing' key to enable detailed tracebacks>\n"
-
 local function isPortal(element)
 	if type(element) ~= "table" then
 		return false
@@ -485,7 +483,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 		local success, err = pcall(set, rbx, key, value)
 
 		if not success then
-			local source = element.source or DEFAULT_SOURCE
+			local source = element.source or Core.defaultSource
 
 			local message = ("Failed to set property %s on primitive instance of class %s\n%s\n%s"):format(
 				key,
@@ -504,7 +502,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 		elseif key.type == Change then
 			Reconciler._singleEventManager:connectProperty(rbx, key.name, value)
 		else
-			local source = element.source or DEFAULT_SOURCE
+			local source = element.source or Core.defaultSource
 
 			-- luacheck: ignore 6
 			local message = ("Failed to set special property on primitive instance of class %s\nInvalid special property type %q\n%s"):format(
@@ -519,7 +517,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 		-- Userdata values are special markers, usually created by Symbol
 		-- They have no data attached other than being unique keys
 
-		local source = element.source or DEFAULT_SOURCE
+		local source = element.source or Core.defaultSource
 
 		local message = ("Properties with a key type of %q are not supported\n%s"):format(
 			type(key),

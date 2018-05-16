@@ -523,6 +523,45 @@ return function()
 
 			Reconciler.unmount(instance)
 		end)
+
+		it("should not call getDerivedStateFromProps on setState", function()
+			local TestComponent = Component:extend("TestComponent")
+			local setStateCallback
+			local getDerivedStateFromPropsCount = 0
+
+			function TestComponent:init()
+				setStateCallback = function(newState)
+					self:setState(newState)
+				end
+
+				self.state = {
+					value = 0
+				}
+			end
+
+			function TestComponent:render()
+				return nil
+			end
+
+			function TestComponent.getDerivedStateFromProps(nextProps, lastState)
+				getDerivedStateFromPropsCount = getDerivedStateFromPropsCount + 1
+			end
+
+			local element = Core.createElement(TestComponent, {
+				someProp = 1,
+			})
+
+			local instance = Reconciler.mount(element)
+			expect(getDerivedStateFromPropsCount).to.equal(1)
+
+			setStateCallback({
+				value = 1,
+			})
+			expect(getDerivedStateFromPropsCount).to.equal(1)
+
+
+			Reconciler.unmount(instance)
+		end)
 	end)
 
 	describe("getElementTraceback", function()

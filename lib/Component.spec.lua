@@ -2,6 +2,7 @@ return function()
 	local Core = require(script.Parent.Core)
 	local Reconciler = require(script.Parent.Reconciler)
 	local Component = require(script.Parent.Component)
+	local GlobalConfig = require(script.Parent.GlobalConfig)
 
 	it("should be extendable", function()
 		local MyComponent = Component:extend("The Senate")
@@ -521,6 +522,92 @@ return function()
 			expect(renderCount).to.equal(1)
 
 			Reconciler.unmount(instance)
+		end)
+
+		it("should not call getDerivedStateFromProps on setState", function()
+			local TestComponent = Component:extend("TestComponent")
+			local setStateCallback
+			local getDerivedStateFromPropsCount = 0
+
+			function TestComponent:init()
+				setStateCallback = function(newState)
+					self:setState(newState)
+				end
+
+				self.state = {
+					value = 0
+				}
+			end
+
+			function TestComponent:render()
+				return nil
+			end
+
+			function TestComponent.getDerivedStateFromProps(nextProps, lastState)
+				getDerivedStateFromPropsCount = getDerivedStateFromPropsCount + 1
+			end
+
+			local element = Core.createElement(TestComponent, {
+				someProp = 1,
+			})
+
+			local instance = Reconciler.mount(element)
+			expect(getDerivedStateFromPropsCount).to.equal(1)
+
+			setStateCallback({
+				value = 1,
+			})
+			expect(getDerivedStateFromPropsCount).to.equal(1)
+
+
+			Reconciler.unmount(instance)
+		end)
+	end)
+
+	describe("getElementTraceback", function()
+		it("should return stack traces", function()
+			local stackTraceCallback = nil
+
+			GlobalConfig.set({
+				elementTracing = true
+			})
+
+			local TestComponent = Component:extend("TestComponent")
+
+			function TestComponent:init()
+				stackTraceCallback = function()
+					return self:getElementTraceback()
+				end
+			end
+
+			function TestComponent:render()
+				return Core.createElement("StringValue")
+			end
+
+			local handle = Reconciler.mount(Core.createElement(TestComponent))
+			expect(stackTraceCallback()).to.be.ok()
+			Reconciler.unmount(handle)
+			GlobalConfig.reset()
+		end)
+
+		it("should return nil when elementTracing is off", function()
+			local stackTraceCallback = nil
+
+			local TestComponent = Component:extend("TestComponent")
+
+			function TestComponent:init()
+				stackTraceCallback = function()
+					return self:getElementTraceback()
+				end
+			end
+
+			function TestComponent:render()
+				return Core.createElement("StringValue")
+			end
+
+			local handle = Reconciler.mount(Core.createElement(TestComponent))
+			expect(stackTraceCallback()).to.never.be.ok()
+			Reconciler.unmount(handle)
 		end)
 	end)
 end

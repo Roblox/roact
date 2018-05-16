@@ -236,7 +236,15 @@ function Component:setState(partialState)
 	end
 
 	local newState = merge(self.state, partialState)
-	self:_update(self.props, newState)
+	self:_update(nil, newState)
+end
+
+--[[
+	Returns the current stack trace for this component, or nil if the
+	elementTracing configuration flag is set to false.
+]]
+function Component:getElementTraceback()
+	return self._handle._element.source
 end
 
 --[[

@@ -314,13 +314,62 @@ return function()
 			local handle = Reconciler.mount(Core.createElement(TestComponent))
 			expect(callCount).to.equal(1)
 
-			handle = Reconciler.mount(Core.createElement(TestComponent, {
+			handle = Reconciler.reconcile(handle, Core.createElement(TestComponent, {
 				foo = "bar",
 			}))
 			expect(callCount).to.equal(2)
 
 			Reconciler.unmount(handle)
 			expect(callCount).to.equal(2)
+
+			GlobalConfig.reset()
+		end)
+
+		it("should throw if the function returns false", function()
+			GlobalConfig.set({
+				typeChecking = true,
+			})
+
+			local TestComponent = Component:extend("TestComponent")
+
+			TestComponent.propTypes = function(props)
+				return false
+			end
+
+			function TestComponent:render()
+				return nil
+			end
+
+			expect(function()
+				Reconciler.mount(Core.createElement(TestComponent))
+			end).to.throw()
+
+			GlobalConfig.reset()
+		end)
+
+		it("should not be run if typeChecking is false", function()
+			local TestComponent = Component:extend("TestComponent")
+			local callCount = 0
+
+			TestComponent.propTypes = function(props)
+				callCount = callCount + 1
+				return true
+			end
+
+			function TestComponent:render()
+				return nil
+			end
+
+			local handle = Reconciler.mount(Core.createElement(TestComponent))
+			expect(callCount).to.equal(0)
+
+			handle = Reconciler.reconcile(handle, Core.createElement(TestComponent, {
+				foo = "bar",
+			}))
+			expect(callCount).to.equal(0)
+
+			Reconciler.unmount(handle)
+			expect(callCount).to.equal(0)
 		end)
 	end)
 

@@ -525,7 +525,7 @@ return function()
 		end)
 	end)
 
-	describe("rootElementTraceback", function()
+	describe("getElementTraceback", function()
 		it("should return stack traces", function()
 			local stackTraceCallback = nil
 
@@ -537,7 +537,7 @@ return function()
 
 			function TestComponent:init()
 				stackTraceCallback = function()
-					return self:rootElementTraceback()
+					return self:getElementTraceback()
 				end
 			end
 
@@ -558,7 +558,7 @@ return function()
 
 			function TestComponent:init()
 				stackTraceCallback = function()
-					return self:rootElementTraceback()
+					return self:getElementTraceback()
 				end
 			end
 

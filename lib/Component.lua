@@ -243,7 +243,7 @@ end
 	Returns the current stack trace for this component, or nil if the
 	elementTracing configuration flag is set to false.
 ]]
-function Component:rootElementTraceback()
+function Component:getElementTraceback()
 	return self._handle._element.source
 end
 

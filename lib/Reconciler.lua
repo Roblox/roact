@@ -346,7 +346,7 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 
 		-- Apply the new ref if there was a ref change.
 		if refChanged and newRef then
-			newRef(instanceHandle._rbx)
+			applyRef(newRef, instanceHandle._rbx)
 		end
 
 		return instanceHandle

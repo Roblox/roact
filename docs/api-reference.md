@@ -241,12 +241,12 @@ Right now, components are re-rendered any time a parent component updates, or wh
 
 `PureComponent` implements `shouldUpdate` to only trigger a re-render any time the props are different based on shallow equality. In a future Roact update, *all* components may implement this check by default.
 
-### stackTrace
+### rootElementTraceback
 ```
-stackTrace() -> string | nil
+rootElementTraceback() -> string | nil
 ```
 
-`stackTrace` gets the stack trace that the component was created in. This allows you to report error messages accurately.
+`rootElementTraceback` gets the stack trace that the component was created in. This allows you to report error messages accurately.
 
 ## Lifecycle Methods
 In addition to the base Component API, Roact exposes additional lifecycle methods that stateful components can hook into to be notified of various steps in the rendering process.

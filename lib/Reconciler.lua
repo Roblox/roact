@@ -150,14 +150,6 @@ function Reconciler._mountInternal(element, parent, key, context, parentHandle)
 
 		local rbx = Instance.new(element.component)
 
-		-- This name can be passed through multiple components.
-		-- What's important is the final Roblox Instance receives the name
-		-- It's solely for debugging purposes; Roact doesn't use it.
-		-- It must be set prior to children or property
-		if key then
-			rbx.Name = key
-		end
-
 		-- Start building the handle now, so it can be traced appropriately.
 		local handle = {
 			[isInstanceHandle] = true,
@@ -166,20 +158,12 @@ function Reconciler._mountInternal(element, parent, key, context, parentHandle)
 			_element = element,
 			_context = context,
 			_rbx = rbx,
+			_parentHandle = parentHandle,
 		}
-
-		-- Only set these properties if tracing is enabled, since that's what
-		-- these are used for.
-		if GlobalConfig.getValue("logAllMutations") then
-			handle._parentHandle = parentHandle
-		end
 
 		-- Update Roblox properties
 		for key, value in pairs(element.props) do
-			-- Skip the Name key; it was already set.
-			if key ~= "Name" then
-				Reconciler._setRbxProp(rbx, key, value, element, handle)
-			end
+			Reconciler._setRbxProp(rbx, key, value, element, handle)
 		end
 
 		-- Create children!
@@ -191,6 +175,13 @@ function Reconciler._mountInternal(element, parent, key, context, parentHandle)
 
 				children[key] = childInstance
 			end
+		end
+
+		-- This name can be passed through multiple components.
+		-- What's important is the final Roblox Instance receives the name
+		-- It's solely for debugging purposes; Roact doesn't use it.
+		if key then
+			rbx.Name = key
 		end
 
 		rbx.Parent = parent
@@ -343,7 +334,7 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 		end
 
 		-- Update properties and children of the Roblox object.
-		Reconciler._reconcilePrimitiveProps(oldElement, newElement, instanceHandle._rbx)
+		Reconciler._reconcilePrimitiveProps(oldElement, newElement, instanceHandle)
 		Reconciler._reconcilePrimitiveChildren(instanceHandle, newElement)
 
 		instanceHandle._element = newElement
@@ -437,7 +428,8 @@ end
 	Reconciles the properties between two primitive Roact elements and applies
 	the differences to the given Roblox object.
 ]]
-function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
+function Reconciler._reconcilePrimitiveProps(fromElement, toElement, handle)
+	local rbx = handle._rbx
 	local seenProps = {}
 
 	-- Set properties that were set with fromElement
@@ -458,7 +450,7 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 		-- Roblox does this check for normal values, but we have special
 		-- properties like events that warrant this.
 		if oldValue ~= newValue then
-			Reconciler._setRbxProp(rbx, key, newValue, toElement)
+			Reconciler._setRbxProp(rbx, key, newValue, toElement, handle)
 		end
 	end
 
@@ -470,7 +462,7 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 			local oldValue = fromElement.props[key]
 
 			if oldValue ~= newValue then
-				Reconciler._setRbxProp(rbx, key, newValue, toElement)
+				Reconciler._setRbxProp(rbx, key, newValue, toElement, handle)
 			end
 		end
 	end
@@ -486,47 +478,25 @@ end
 --[[
 	Computes a full name, even if the element is not parented to the DataModel yet.
 ]]
-local function computeFullName(handle, rbx)
-	-- If the instance is already parented, just use GetFullName.
-	-- Also use GetFullName if the handle is nil.
-	if rbx.Parent or handle == nil then
-		return rbx:GetFullName()
-	-- If the instance doesn't have a parent, it's still being reified, so we
-	-- need to build the full name manually.
-	else
-		local fullName = rbx.Name
-		local level = handle._parentHandle
+local function computeFullName(handle)
+	-- Assert that this is a primitve handle.
+	assert(handle._rbx, "computeFullName must be called with a primitive instance's handle")
+	local fullName = handle._key
 
-		-- For the case of root elements, they have no _parentHandle, but they
-		-- do have a _parent, which is the parent that the root is being reified to.
-		if not level then
-			-- We can reify components to nil.
-			if handle._parent then
-				fullName = handle._parent:GetFullName() .. "." .. fullName
-			end
-		end
-
-		while level do
-			local rbx = level._rbx
-			fullName = rbx.Name .. "." .. fullName
-
-			local nextLevel = level._parentHandle
-			-- If there is a _parentHandle element, travel through it.
-			if nextLevel then
-				level = nextLevel
-			-- Otherwise, we've reached the root element of this element tree.
-			-- Use the _parent value and stop the loop.
-			else
-				if level._parent then
-					fullName = level._parent:GetFullName() .. "." .. fullName
-				end
-
-				break
-			end
-		end
-
-		return fullName
+	if fullName == nil then
+		fullName = handle._rbx.Name
 	end
+
+	while handle._parentHandle do
+		handle = handle._parentHandle
+		fullName = handle._key .. "." .. fullName
+	end
+
+	if handle._parent then
+		fullName = handle._parent:GetFullName() .. "." .. fullName
+	end
+
+	return fullName
 end
 
 --[[

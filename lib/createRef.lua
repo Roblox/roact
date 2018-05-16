@@ -9,7 +9,7 @@
 
 local refMetatable = {
 	__tostring = function(self)
-		return ("RoactReference(%q)"):format(tostring(self.current))
+		return ("RoactReference(%s)"):format(tostring(self.current))
 	end,
 }
 

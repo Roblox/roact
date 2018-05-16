@@ -7,9 +7,9 @@ return function()
 
 	it("should support tostring on refs", function()
 		local ref = createRef()
-		expect(tostring(ref)).to.equal("RoactReference(\"nil\")")
+		expect(tostring(ref)).to.equal("RoactReference(nil)")
 
 		ref.current = "foo"
-		expect(tostring(ref)).to.equal("RoactReference(\"foo\")")
+		expect(tostring(ref)).to.equal("RoactReference(foo)")
 	end)
 end

@@ -36,4 +36,51 @@ return function()
 		Reconciler.unmount(handle)
 		expect(currentRbx).to.never.be.ok()
 	end)
+
+	it("should handle changing function references", function()
+		local aValue, bValue
+
+		local function aRef(rbx)
+			aValue = rbx
+		end
+
+		local function bRef(rbx)
+			bValue = rbx
+		end
+
+		local element = Core.createElement("StringValue", {
+			[Core.Ref] = aRef,
+		})
+
+		local handle = Reconciler.mount(element, game, "Test123")
+		expect(aValue).to.be.ok()
+		expect(bValue).to.never.be.ok()
+		handle = Reconciler.reconcile(handle, Core.createElement("StringValue", {
+			[Core.Ref] = bRef,
+		}))
+		expect(aValue).to.never.be.ok()
+		expect(bValue).to.be.ok()
+		Reconciler.unmount(handle)
+		expect(bValue).to.never.be.ok()
+	end)
+
+	it("should handle changing object references", function()
+		local aRef = createRef()
+		local bRef = createRef()
+
+		local element = Core.createElement("StringValue", {
+			[Core.Ref] = aRef,
+		})
+
+		local handle = Reconciler.mount(element, game, "Test123")
+		expect(aRef.current).to.be.ok()
+		expect(bRef.current).to.never.be.ok()
+		handle = Reconciler.reconcile(handle, Core.createElement("StringValue", {
+			[Core.Ref] = bRef,
+		}))
+		expect(aRef.current).to.never.be.ok()
+		expect(bRef.current).to.be.ok()
+		Reconciler.unmount(handle)
+		expect(bRef.current).to.never.be.ok()
+	end)
 end

@@ -205,10 +205,26 @@ end
 
 ### setState
 ```
-setState(newState) -> void
+setState(stateUpdater | stateChange) -> void
 ```
 
-`setState` merges a table of new state values (`newState`) onto the existing `state` and re-renders the component if necessary. Existing values are not affected.
+`setState` *requests* an update to the component's state. Roact may schedule this update for a later time or resolve it immediately.
+
+If a function is passed to `setState`, that function will be called with the current state and props as arguments:
+
+```lua
+function MyComponent:didMount()
+	self:setState(function(prevState, props)
+		return {
+			counter = prevState.counter + 1
+		}
+	end)
+end
+```
+
+If this function returns `nil`, Roact will not schedule a re-render and no state will be updated.
+
+If a table is passed to `setState`, the values in that table will be merged onto the existing state:
 
 ```lua
 function MyComponent:didMount()
@@ -219,16 +235,21 @@ end
 ```
 
 !!! warning
-	Calling `setState` from any of these places is not allowed and will throw an error:
+	**`setState` does not always resolve synchronously!** Roact may batch and reschedule state updates in order to reduce the number of total renders.
+
+	When depending on the previous value of state, like when incrementing a counter, use the functional form to guarantee that all state updates occur!
+
+	This behavior will be similar to the future behavior of React 17. See:
+
+	* [RFClarification: why is `setState` asynchronous?](https://github.com/facebook/react/issues/11527#issuecomment-360199710)
+	* [Does React keep the order for state updates?](https://stackoverflow.com/a/48610973/802794)
+
+!!! warning
+	Calling `setState` from any of these places is not allowed at this time and will throw an error:
 
 	* Lifecycle hooks: `willUpdate`, `willUnmount`
 	* Initialization: `init`
 	* Pure functions: `render`, `shouldUpdate`
-
-!!! info "Future API Changes"
-	Depending on current `state` in `setState` may cause subtle bugs when Roact starts supporting [asynchronous rendering](https://github.com/Roblox/roact/issues/18).
-
-	A new API similar to React [is being introduced](https://github.com/Roblox/roact/issues/33) to solve this problem. This documentation will be updated when that API is released.
 
 ### shouldUpdate
 ```

@@ -4,6 +4,7 @@
 
 local Component = require(script.Component)
 local Core = require(script.Core)
+local createRef = require(script.createRef)
 local Event = require(script.Event)
 local Change = require(script.Change)
 local GlobalConfig = require(script.GlobalConfig)
@@ -39,6 +40,7 @@ apply(Roact, ReconcilerCompat)
 
 apply(Roact, {
 	Component = Component,
+	createRef = createRef,
 	PureComponent = PureComponent,
 	Event = Event,
 	Change = Change,

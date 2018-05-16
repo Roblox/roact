@@ -44,6 +44,22 @@ local function isPortal(element)
 	return element.component == Core.Portal
 end
 
+--[[
+	Sets the value of a reference to a new rendered object.
+	Correctly handles both function-style and object-style refs.
+]]
+local function applyRef(ref, newRbx)
+	if ref == nil then
+		return
+	end
+
+	if type(ref) == "table" then
+		ref.current = newRbx
+	else
+		ref(newRbx)
+	end
+end
+
 local Reconciler = {}
 
 Reconciler._singleEventManager = SingleEventManager.new()
@@ -93,9 +109,7 @@ function Reconciler.unmount(instanceHandle)
 
 		-- Kill refs before we make changes, since any mutations past this point
 		-- aren't relevant to components.
-		if element.props[Core.Ref] then
-			element.props[Core.Ref](nil)
-		end
+		applyRef(element.props[Core.Ref], nil)
 
 		for _, child in pairs(instanceHandle._children) do
 			Reconciler.unmount(child)
@@ -173,9 +187,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 		rbx.Parent = parent
 
 		-- Attach ref values, since the instance is initialized now.
-		if element.props[Core.Ref] then
-			element.props[Core.Ref](rbx)
-		end
+		applyRef(element.props[Core.Ref], rbx)
 
 		return {
 			[isInstanceHandle] = true,
@@ -317,13 +329,13 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 	if isPrimitiveElement(newElement) then
 		-- Roblox Instance change
 
-		local oldRef = oldElement[Core.Ref]
-		local newRef = newElement[Core.Ref]
+		local oldRef = oldElement.props[Core.Ref]
+		local newRef = newElement.props[Core.Ref]
 		local refChanged = (oldRef ~= newRef)
 
 		-- Cancel the old ref before we make changes. Apply the new one after.
 		if refChanged and oldRef then
-			oldRef(nil)
+			applyRef(oldRef, nil)
 		end
 
 		-- Update properties and children of the Roblox object.
@@ -334,7 +346,7 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 
 		-- Apply the new ref if there was a ref change.
 		if refChanged and newRef then
-			newRef(instanceHandle._rbx)
+			applyRef(newRef, instanceHandle._rbx)
 		end
 
 		return instanceHandle

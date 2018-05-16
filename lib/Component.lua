@@ -240,6 +240,14 @@ function Component:setState(partialState)
 end
 
 --[[
+	Returns the current stack trace for this component, or nil if the
+	elementTracing configuration flag is set to false.
+]]
+function Component:getElementTraceback()
+	return self._handle._element.source
+end
+
+--[[
 	Notifies the component that new props and state are available. This function
 	is invoked by the reconciler.
 

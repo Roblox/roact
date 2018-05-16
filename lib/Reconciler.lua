@@ -49,7 +49,9 @@ end
 	Correctly handles both function-style and object-style refs.
 ]]
 local function applyRef(ref, newRbx)
-	if not ref then return end
+	if ref == nil then
+		return
+	end
 
 	if type(ref) == "table" then
 		ref.current = newRbx

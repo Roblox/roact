@@ -435,6 +435,8 @@ end
 	Performs type checking, if it is enabled.
 ]]
 function Component:_typeCheck(props)
+	if not GlobalConfig.getValue("typeChecking") then return end
+
 	local validator = self.propTypes
 
 	if validator == nil then return end

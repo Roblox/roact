@@ -18,6 +18,8 @@ local defaultConfig = {
 	["elementTracing"] = false,
 	-- Enables instrumentation of shouldUpdate and render methods for Roact components
 	["componentInstrumentation"] = false,
+	-- Enables type checking with the propTypes property on stateful components.
+	["typeChecking"] = false,
 }
 
 -- Build a list of valid configuration values up for debug messages.

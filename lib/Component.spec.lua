@@ -2,7 +2,7 @@ return function()
 	local Core = require(script.Parent.Core)
 	local Reconciler = require(script.Parent.Reconciler)
 	local Component = require(script.Parent.Component)
-	local PropTypes = require(script.Parent.Parent.PropTypes)
+	local GlobalConfig = require(script.Parent.GlobalConfig)
 
 	it("should be extendable", function()
 		local MyComponent = Component:extend("The Senate")
@@ -293,49 +293,35 @@ return function()
 		Reconciler.unmount(handle)
 	end)
 
-	it("should type check properties if propTypes is set", function()
-		local TestComponent = Component:extend("TestComponent")
+	describe("propTypes", function()
+		it("should be called if typeChecking is set", function()
+			GlobalConfig.set({
+				typeChecking = true,
+			})
 
-		TestComponent.propTypes = {
-			foo = PropTypes.string,
-			bar = PropTypes.number,
-		}
+			local TestComponent = Component:extend("TestComponent")
+			local callCount = 0
 
-		function TestComponent:render()
-			return nil
-		end
+			TestComponent.propTypes = function(props)
+				callCount = callCount + 1
+				return true
+			end
 
-		expect(function()
-			local handle = Reconciler.mount(Core.createElement(TestComponent, {
-				foo = "hey",
-				bar = 1
+			function TestComponent:render()
+				return nil
+			end
+
+			local handle = Reconciler.mount(Core.createElement(TestComponent))
+			expect(callCount).to.equal(1)
+
+			handle = Reconciler.mount(Core.createElement(TestComponent, {
+				foo = "bar",
 			}))
+			expect(callCount).to.equal(2)
 
 			Reconciler.unmount(handle)
-		end).to.never.throw()
-
-		expect(function()
-			local handle = Reconciler.mount(Core.createElement(TestComponent, {
-				foo = "hey",
-				bar = true
-			}))
-
-			Reconciler.unmount(handle)
-		end).to.throw()
-
-		local handle = Reconciler.mount(Core.createElement(TestComponent, {
-			foo = "hey",
-			bar = 1
-		}))
-
-		expect(function()
-			handle = Reconciler.reconcile(Core.createElement(TestComponent, {
-				foo = true,
-				bar = 2,
-			}))
-		end).to.throw()
-
-		Reconciler.unmount(handle)
+			expect(callCount).to.equal(2)
+		end)
 	end)
 
 	describe("setState", function()

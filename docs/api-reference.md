@@ -21,7 +21,7 @@ The `children` argument is shorthand for adding a `Roact.Children` key to `props
 Roact.mount(element, [parent, [key]]) -> ComponentInstanceHandle
 ```
 
-!!! warning
+!!! info
 	`Roact.mount` is also available via the deprecated alias `Roact.reify`. It will be removed in a future release.
 
 Creates a Roblox Instance given a Roact element, and optionally a `parent` to put it in, and a `key` to use as the instance's `Name`.
@@ -47,7 +47,7 @@ Updates an existing instance handle with a new element, returning a new handle.
 Roact.unmount(instance) -> void
 ```
 
-!!! warning
+!!! info
 	`Roact.unmount` is also available via the deprecated alias `Roact.teardown`. It will be removed in a future release.
 
 Destroys the given `ComponentInstanceHandle` and all of its descendents. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.

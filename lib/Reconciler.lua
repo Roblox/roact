@@ -491,7 +491,6 @@ end
 	Computes a full name, even if the element is not parented to the DataModel yet.
 ]]
 local function computeFullName(handle)
-	-- Assert that this is a primitve handle.
 	assert(handle._rbx, "computeFullName must be called with a primitive instance's handle")
 	local fullName = handle._key
 

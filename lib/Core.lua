@@ -63,6 +63,14 @@ function Core.createElement(elementType, props, children)
 	end
 
 	props = props or {}
+	
+	if props.Name then
+		warn("Name prop is unused. ")
+	end
+	
+	if props.Parent then
+		warn("Parent prop is unused. ")
+	end
 
 	if children then
 		if props[Core.Children] then

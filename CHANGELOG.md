@@ -9,6 +9,7 @@
 * Added `defaultProps` value on stateful components to define values for props that aren't specified ([#79](https://github.com/Roblox/roact/pull/79))
 * Added `getElementTraceback` ([#81](https://github.com/Roblox/roact/issues/81), [#93](https://github.com/Roblox/roact/pull/93))
 * Added `createRef` ([#70](https://github.com/Roblox/roact/issues/70), [#92](https://github.com/Roblox/roact/pull/92))
+* Having `Name` or `Parent` as a prop now logs a warning ([#58](https://github.com/Roblox/roact/issues/58), [#97](https://github.com/Roblox/roact/pull/97))
 
 ## 1.0.0 Prerelease 2 (March 22, 2018)
 * Removed `is*Element` methods, this is unlikely to affect anyone ([#50](https://github.com/Roblox/roact/pull/50))

@@ -161,6 +161,14 @@ function Reconciler._mountInternal(element, parent, key, context)
 
 		local rbx = Instance.new(element.component)
 
+		if element.props.Name then
+			warn("Name prop shouldn't be specified because Roact overwrites it. ")
+		end
+
+		if element.props.Parent then
+			warn("Parent prop shouldn't be specified because Roact overwrites it. ")
+		end
+
 		-- Update Roblox properties
 		for key, value in pairs(element.props) do
 			Reconciler._setRbxProp(rbx, key, value, element)

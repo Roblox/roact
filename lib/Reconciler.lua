@@ -331,11 +331,13 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 
 		local oldRef = oldElement.props[Core.Ref]
 		local newRef = newElement.props[Core.Ref]
-		local refChanged = (oldRef ~= newRef)
 
-		-- Cancel the old ref before we make changes. Apply the new one after.
-		if refChanged and oldRef then
+		-- Change the ref in one pass before applying any changes.
+		-- Roact doesn't provide any guarantees with regards to the sequencing
+		-- between refs and other changes in the commit phase.
+		if newRef ~= oldRef then
 			applyRef(oldRef, nil)
+			applyRef(newRef, instanceHandle._rbx)
 		end
 
 		-- Update properties and children of the Roblox object.
@@ -343,11 +345,6 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 		Reconciler._reconcilePrimitiveChildren(instanceHandle, newElement)
 
 		instanceHandle._element = newElement
-
-		-- Apply the new ref if there was a ref change.
-		if refChanged and newRef then
-			applyRef(newRef, instanceHandle._rbx)
-		end
 
 		return instanceHandle
 	elseif isFunctionalElement(newElement) then

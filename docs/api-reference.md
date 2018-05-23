@@ -305,3 +305,25 @@ end
 
 !!! note
 	`getDerivedStateFromProps` is a *static* lifecycle method. It does not have access to `self`, and must be a pure function.
+
+### validateProps
+```
+static validateProps(props) -> success, reason
+```
+
+Performs property validation. You can use this for type-checking properties.
+
+This function will only be called if the `propertyValidation` configuration option is set to `true`. If this function returns `false`, the error message it returns will be thrown in the output, along with a stack trace pointing to the current element.
+
+```lua
+function MyComponent.validateProps(props)
+	if props.requiredProperty == nil then
+		return false, "requiredProperty is required"
+	end
+
+	return false
+end
+```
+
+!!! note
+	`validateProps`, like `getDerivedStateFromProps`, is a *static* lifecycle method. It does not have access to `self`, and must be a pure function.

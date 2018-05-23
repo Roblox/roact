@@ -311,7 +311,7 @@ end
 static validateProps(props) -> success, reason
 ```
 
-Performs property validation. You can use this for type-checking properties.
+Performs property validation. You can use this for type-checking properties; there is a [PropTypes](https://github.com/AmaranthineCodices/rbx-prop-types) library to assist in this.
 
 This function will only be called if the `propertyValidation` configuration option is set to `true`. If this function returns `false`, the error message it returns will be thrown in the output, along with a stack trace pointing to the current element.
 

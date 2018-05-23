@@ -311,7 +311,7 @@ function Component:_forceUpdate(newProps, newState)
 	end
 
 	if newProps then
-		self:_typeCheck(newProps)
+		self:_validateProps(newProps)
 	end
 
 	if self.willUpdate then
@@ -379,7 +379,7 @@ function Component:_mount(handle)
 
 	self._setStateBlockedReason = "render"
 
-	self:_typeCheck(self.props)
+	self:_validateProps(self.props)
 
 	local virtualTree
 	if GlobalConfig.getValue("componentInstrumentation") then
@@ -432,19 +432,19 @@ function Component:_unmount()
 end
 
 --[[
-	Performs type checking, if it is enabled.
+	Performs property validation, if it is enabled.
 ]]
-function Component:_typeCheck(props)
-	if not GlobalConfig.getValue("typeChecking") then return end
+function Component:_validateProps(props)
+	if not GlobalConfig.getValue("propertyValidation") then return end
 
-	local validator = self.propTypes
+	local validator = self.validateProps
 
 	if validator == nil then return end
 	if typeof(validator) ~= "function" then
 		-- Hide as much as possible about error location, since this message
 		-- occurs from several possible call sites with different stack traces.
 		-- luacheck: ignore 6
-		error(("The value of propTypes must be a function (is a %q). Check the definition of the component extended at:\n%s"):format(
+		error(("The value of validateProps must be a function (is a %q). Check the definition of the component extended at:\n%s"):format(
 			typeof(validator),
 			self._extendTraceback),
 		0)
@@ -453,7 +453,7 @@ function Component:_typeCheck(props)
 	local success, failureReason = validator(props)
 
 	if not success then
-		error(("Property type checking failed:\n%s\n%s"):format(
+		error(("Property validation failed:\n%s\n%s"):format(
 			failureReason,
 			self:getElementTraceback() or Core._defaultSource), 0)
 	end

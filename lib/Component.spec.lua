@@ -293,16 +293,16 @@ return function()
 		Reconciler.unmount(handle)
 	end)
 
-	describe("propTypes", function()
-		it("should be called if typeChecking is set", function()
+	describe("validateProps", function()
+		it("should be called if propertyValidation is set", function()
 			GlobalConfig.set({
-				typeChecking = true,
+				propertyValidation = true,
 			})
 
 			local TestComponent = Component:extend("TestComponent")
 			local callCount = 0
 
-			TestComponent.propTypes = function(props)
+			TestComponent.validateProps = function(props)
 				callCount = callCount + 1
 				return true
 			end
@@ -327,12 +327,12 @@ return function()
 
 		it("should throw if the function returns false", function()
 			GlobalConfig.set({
-				typeChecking = true,
+				propertyValidation = true,
 			})
 
 			local TestComponent = Component:extend("TestComponent")
 
-			TestComponent.propTypes = function(props)
+			TestComponent.validateProps = function(props)
 				return false
 			end
 
@@ -347,14 +347,14 @@ return function()
 			GlobalConfig.reset()
 		end)
 
-		it("should throw if propTypes is not a function", function()
+		it("should throw if validateProps is not a function", function()
 			GlobalConfig.set({
-				typeChecking = true,
+				propertyValidation = true,
 			})
 
 			local TestComponent = Component:extend("TestComponent")
 
-			TestComponent.propTypes = false
+			TestComponent.validateProps = false
 
 			function TestComponent:render()
 				return nil
@@ -371,7 +371,7 @@ return function()
 			local TestComponent = Component:extend("TestComponent")
 			local callCount = 0
 
-			TestComponent.propTypes = function(props)
+			TestComponent.validateProps = function(props)
 				callCount = callCount + 1
 				return true
 			end

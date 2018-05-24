@@ -265,6 +265,16 @@ function MyComponent:didMount()
 end
 ```
 
+Since lua tables interpret a `nil` value as absence, removing a value from state is not possible by setting its value to `nil`. If a value needs to be removed from state, it can be set to `Roact.None` when calling `setState`:
+
+```lua
+function MyComponent:didMount()
+	self:setState({
+		keyToRemove = Roact.None
+	})
+end
+```
+
 !!! warning
 	**`setState` does not always resolve synchronously!** Roact may batch and reschedule state updates in order to reduce the number of total renders.
 
@@ -361,6 +371,8 @@ function MyComponent.getDerivedStateFromProps(nextProps, lastState)
 	}
 end
 ```
+
+As with `setState`, you can set a value to `Roact.None` to remove it from the state.
 
 !!! note
 	`getDerivedStateFromProps` is a *static* lifecycle method. It does not have access to `self`, and must be a pure function.

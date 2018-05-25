@@ -26,7 +26,7 @@ Core.None = Symbol.named("None")
 Core.Element = Symbol.named("Element")
 
 -- The default "stack traceback" if element tracing is not enabled.
-Core._defaultSource = "\n\t<Use Roact.setGlobalConfig with the 'elementTracing' key to enable detailed tracebacks>\n"
+Core._defaultElementTracebackMessage = "\n\t<Use Roact.setGlobalConfig with the 'elementTracing' key to enable detailed tracebacks>\n"
 
 --[[
 	Utility to retrieve one child out the children passed to a component.

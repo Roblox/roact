@@ -294,9 +294,9 @@ return function()
 	end)
 
 	describe("validateProps", function()
-		it("should be called if propertyValidation is set", function()
+		it("should be called if propValidation is set", function()
 			GlobalConfig.set({
-				propertyValidation = true,
+				propValidation = true,
 			})
 
 			local TestComponent = Component:extend("TestComponent")
@@ -327,7 +327,7 @@ return function()
 
 		it("should throw if the function returns false", function()
 			GlobalConfig.set({
-				propertyValidation = true,
+				propValidation = true,
 			})
 
 			local TestComponent = Component:extend("TestComponent")
@@ -349,7 +349,7 @@ return function()
 
 		it("should throw if validateProps is not a function", function()
 			GlobalConfig.set({
-				propertyValidation = true,
+				propValidation = true,
 			})
 
 			local TestComponent = Component:extend("TestComponent")

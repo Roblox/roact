@@ -19,7 +19,7 @@ local defaultConfig = {
 	-- Enables instrumentation of shouldUpdate and render methods for Roact components
 	["componentInstrumentation"] = false,
 	-- Enables type checking with the validateProps property on stateful components.
-	["propertyValidation"] = false,
+	["propValidation"] = false,
 }
 
 -- Build a list of valid configuration values up for debug messages.

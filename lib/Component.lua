@@ -435,7 +435,7 @@ end
 	Performs property validation, if it is enabled.
 ]]
 function Component:_validateProps(props)
-	if not GlobalConfig.getValue("propertyValidation") then return end
+	if not GlobalConfig.getValue("propValidation") then return end
 
 	local validator = self.validateProps
 

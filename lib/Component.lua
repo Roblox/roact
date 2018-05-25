@@ -455,7 +455,7 @@ function Component:_validateProps(props)
 	if not success then
 		failureReason = failureReason or "<No failure reason was given by the validation function>"
 		error(("Property validation failed:\n%s\n%s"):format(
-			failureReason,
+			tostring(failureReason),
 			self:getElementTraceback() or Core._defaultSource), 0)
 	end
 end

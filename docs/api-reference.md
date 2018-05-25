@@ -265,7 +265,7 @@ function MyComponent:didMount()
 end
 ```
 
-Since lua tables interpret a `nil` value as absence, removing a value from state is not possible by setting its value to `nil`. If a value needs to be removed from state, it can be set to `Roact.None` when calling `setState`:
+Note that removing a value from state is not possible by setting its value to `nil` because, in Lua tables, `nil` values mean the same thing as no value at all. If a value needs to be removed from state, it can be set to `Roact.None` when calling `setState`, which will ensure that the resulting state no longer contains it:
 
 ```lua
 function MyComponent:didMount()

@@ -445,8 +445,8 @@ function Component:_validateProps(props)
 	if typeof(validator) ~= "function" then
 		-- Hide as much as possible about error location, since this message
 		-- occurs from several possible call sites with different stack traces.
-		-- luacheck: ignore 6
-		error(("The value of validateProps must be a function (is a %q). Check the definition of the component extended at:\n%s"):format(
+		error(("The value of validateProps must be a function, but it is a %s.\n"..
+			"Check the definition of the component extended at:\n%s"):format(
 			typeof(validator),
 			self._extendTraceback),
 		0)

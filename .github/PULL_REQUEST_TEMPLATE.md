@@ -5,3 +5,4 @@ Closes (ISSUES HERE).
 Checklist before submitting:
 * [ ] Added entry to `CHANGELOG.md`
 * [ ] Added/updated relevant tests
+* [ ] Added/updated documentation

@@ -236,7 +236,10 @@ function Component:setState(partialState)
 	end
 
 	local newState = merge(self.state, partialState)
-	self:_update(nil, newState)
+
+	Reconciler._schedule(function()
+		self:_update(nil, newState)
+	end)
 end
 
 --[[

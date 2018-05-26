@@ -26,6 +26,7 @@ Core.None = Symbol.named("None")
 Core.Element = Symbol.named("Element")
 
 -- The default "stack traceback" if element tracing is not enabled.
+-- luacheck: ignore 6
 Core._defaultElementTracebackMessage = "\n\t<Use Roact.setGlobalConfig with the 'elementTracing' key to enable detailed tracebacks>\n"
 
 --[[

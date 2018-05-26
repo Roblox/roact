@@ -367,7 +367,7 @@ return function()
 			GlobalConfig.reset()
 		end)
 
-		it("should not be run if typeChecking is false", function()
+		it("should not be run if propValidation is false", function()
 			local TestComponent = Component:extend("TestComponent")
 			local callCount = 0
 

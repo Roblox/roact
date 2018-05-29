@@ -150,6 +150,19 @@ Roact.createElement("ScrollingFrame", {
 !!! warning
 	Property changed events are fired by Roact during the reconciliation phase. Be careful not to accidentally trigger a re-render in the middle of a re-render, or an error will be thrown!
 
+### Roact.None
+`Roact.None` is a special value that can be used to clear elements from your component state when calling `setState` or returning from `getDerivedStateFromProps`.
+
+In Lua tables, removing a field from state is not possible by setting its value to `nil` because `nil` values mean the same thing as no value at all. If a field needs to be removed from state, it can be set to `Roact.None` when calling `setState`, which will ensure that the resulting state no longer contains it:
+
+```lua
+function MyComponent:didMount()
+	self:setState({
+		fieldToRemove = Roact.None
+	})
+end
+```
+
 ## Component Types
 
 ### Roact.Component
@@ -265,15 +278,7 @@ function MyComponent:didMount()
 end
 ```
 
-Note that removing a value from state is not possible by setting its value to `nil` because, in Lua tables, `nil` values mean the same thing as no value at all. If a value needs to be removed from state, it can be set to `Roact.None` when calling `setState`, which will ensure that the resulting state no longer contains it:
-
-```lua
-function MyComponent:didMount()
-	self:setState({
-		keyToRemove = Roact.None
-	})
-end
-```
+Setting a field in the state to `Roact.None` will clear it from the state. This is the only way to remove a field from a component's state!
 
 !!! warning
 	**`setState` does not always resolve synchronously!** Roact may batch and reschedule state updates in order to reduce the number of total renders.
@@ -372,7 +377,7 @@ function MyComponent.getDerivedStateFromProps(nextProps, lastState)
 end
 ```
 
-As with `setState`, you can set a value to `Roact.None` to remove it from the state.
+As with `setState`, you can set use the constant `Roact.None` to remove a field from the state.
 
 !!! note
 	`getDerivedStateFromProps` is a *static* lifecycle method. It does not have access to `self`, and must be a pure function.

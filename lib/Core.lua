@@ -1,8 +1,5 @@
 --[[
-	Provides methods and data core to the implementation of the Roact
-	Virtual DOM.
-
-	This module doesn't interact with the Roblox hierarchy.
+	Provides a set of markers used for annotating data in Roact.
 ]]
 
 local Symbol = require(script.Parent.Symbol)

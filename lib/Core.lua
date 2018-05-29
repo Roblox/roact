@@ -65,7 +65,7 @@ function Core.createElement(elementType, props, children)
 	props = props or {}
 
 	if children then
-		if props[Core.Children] then
+		if props[Core.Children] ~= nil then
 			warn("props[Children] was defined but was overridden by third parameter to createElement!")
 		end
 
@@ -73,8 +73,8 @@ function Core.createElement(elementType, props, children)
 	end
 
 	local element = {
-		component = elementType,
 		type = Core.Element,
+		component = elementType,
 		props = props,
 	}
 

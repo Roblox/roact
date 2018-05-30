@@ -10,6 +10,7 @@
 * Added `getElementTraceback` ([#81](https://github.com/Roblox/roact/issues/81), [#93](https://github.com/Roblox/roact/pull/93))
 * Added `createRef` ([#70](https://github.com/Roblox/roact/issues/70), [#92](https://github.com/Roblox/roact/pull/92))
 * Having `Name` or `Parent` as a prop now logs a warning ([#58](https://github.com/Roblox/roact/issues/58), [#97](https://github.com/Roblox/roact/pull/97))
+* Ref switching now occurs in one pass, which should fix edge cases where the result of a ref is `nil`, especially in property changed events ([#98](https://github.com/Roblox/roact/pull/98))
 
 ## 1.0.0 Prerelease 2 (March 22, 2018)
 * Removed `is*Element` methods, this is unlikely to affect anyone ([#50](https://github.com/Roblox/roact/pull/50))

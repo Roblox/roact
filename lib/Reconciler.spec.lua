@@ -1,7 +1,9 @@
 return function()
 	local Core = require(script.Parent.Core)
-	local Reconciler = require(script.Parent.Reconciler)
 	local createRef = require(script.Parent.createRef)
+	local createElement = require(script.Parent.createElement)
+
+	local Reconciler = require(script.Parent.Reconciler)
 
 	it("should mount booleans as nil", function()
 		local booleanReified = Reconciler.mount(false)
@@ -10,7 +12,7 @@ return function()
 
 	it("should handle object references properly", function()
 		local objectRef = createRef()
-		local element = Core.createElement("StringValue", {
+		local element = createElement("StringValue", {
 			[Core.Ref] = objectRef,
 		})
 
@@ -27,7 +29,7 @@ return function()
 			currentRbx = rbx
 		end
 
-		local element = Core.createElement("StringValue", {
+		local element = createElement("StringValue", {
 			[Core.Ref] = ref,
 		})
 
@@ -48,14 +50,14 @@ return function()
 			bValue = rbx
 		end
 
-		local element = Core.createElement("StringValue", {
+		local element = createElement("StringValue", {
 			[Core.Ref] = aRef,
 		})
 
 		local handle = Reconciler.mount(element, game, "Test123")
 		expect(aValue).to.be.ok()
 		expect(bValue).to.never.be.ok()
-		handle = Reconciler.reconcile(handle, Core.createElement("StringValue", {
+		handle = Reconciler.reconcile(handle, createElement("StringValue", {
 			[Core.Ref] = bRef,
 		}))
 		expect(aValue).to.never.be.ok()
@@ -68,14 +70,14 @@ return function()
 		local aRef = createRef()
 		local bRef = createRef()
 
-		local element = Core.createElement("StringValue", {
+		local element = createElement("StringValue", {
 			[Core.Ref] = aRef,
 		})
 
 		local handle = Reconciler.mount(element, game, "Test123")
 		expect(aRef.current).to.be.ok()
 		expect(bRef.current).to.never.be.ok()
-		handle = Reconciler.reconcile(handle, Core.createElement("StringValue", {
+		handle = Reconciler.reconcile(handle, createElement("StringValue", {
 			[Core.Ref] = bRef,
 		}))
 		expect(aRef.current).to.never.be.ok()

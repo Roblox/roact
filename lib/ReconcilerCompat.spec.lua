@@ -1,7 +1,7 @@
 return function()
 	local ReconcilerCompat = require(script.Parent.ReconcilerCompat)
 	local Reconciler = require(script.Parent.Reconciler)
-	local Core = require(script.Parent.Core)
+	local createElement = require(script.Parent.createElement)
 
 	it("reify should only warn once per call site", function()
 		local callCount = 0
@@ -14,7 +14,7 @@ return function()
 		-- We're using a loop so that we get the same stack trace and only one
 		-- warning hopefully.
 		for _ = 1, 2 do
-			local handle = ReconcilerCompat.reify(Core.createElement("StringValue"))
+			local handle = ReconcilerCompat.reify(createElement("StringValue"))
 			Reconciler.unmount(handle)
 		end
 
@@ -22,7 +22,7 @@ return function()
 		expect(lastMessage:find("ReconcilerCompat.spec")).to.be.ok()
 
 		-- This is a different call site, which should trigger another warning.
-		local handle = ReconcilerCompat.reify(Core.createElement("StringValue"))
+		local handle = ReconcilerCompat.reify(createElement("StringValue"))
 		Reconciler.unmount(handle)
 
 		expect(callCount).to.equal(2)
@@ -42,7 +42,7 @@ return function()
 		-- We're using a loop so that we get the same stack trace and only one
 		-- warning hopefully.
 		for _ = 1, 2 do
-			local handle = Reconciler.mount(Core.createElement("StringValue"))
+			local handle = Reconciler.mount(createElement("StringValue"))
 			ReconcilerCompat.teardown(handle)
 		end
 
@@ -50,7 +50,7 @@ return function()
 		expect(lastMessage:find("ReconcilerCompat.spec")).to.be.ok()
 
 		-- This is a different call site, which should trigger another warning.
-		local handle = Reconciler.mount(Core.createElement("StringValue"))
+		local handle = Reconciler.mount(createElement("StringValue"))
 		ReconcilerCompat.teardown(handle)
 
 		expect(callCount).to.equal(2)

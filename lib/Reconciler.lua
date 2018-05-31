@@ -492,11 +492,11 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 		-- Regular property
 
 		if key == "Name" then
-			warn("Name prop shouldn't be specified because Roact overwrites it.")
+			warn("Name prop shouldn't be specified because Roact overwrites it. " .. element._source)
 		end
 
 		if key == "Parent" then
-			warn("Parent prop shouldn't be specified because Roact overwrites it.")
+			warn("Parent prop shouldn't be specified because Roact overwrites it. " .. element._source)
 		end
 
 		local success, err = pcall(set, rbx, key, value)

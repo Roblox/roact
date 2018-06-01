@@ -2,12 +2,26 @@ local Core = require(script.Parent.Core)
 
 local RunService = game:GetService("RunService")
 
+local DEBUG_LOGS = true
+
 local ASYNC_SCHEDULER = true
 local ASYNC_BUDGET_PER_FRAME = 0 -- 12 / 1000
 
 local TYPE = {}
 local TYPE_TREE = {}
 local TYPE_NODE = {}
+
+local function DEBUG_warn(...)
+	if DEBUG_LOGS then
+		warn(...)
+	end
+end
+
+local function DEBUG_print(...)
+	if DEBUG_LOGS then
+		print(...)
+	end
+end
 
 local processTreeTasksSync
 
@@ -22,7 +36,7 @@ local function DEBUG_showTask(task)
 end
 
 local function scheduleTask(tree, task)
-	print("Scheduling task", DEBUG_showTask(task))
+	DEBUG_print("Scheduling task", DEBUG_showTask(task))
 
 	tree.tasks[#tree.tasks + 1] = task
 
@@ -32,7 +46,7 @@ local function scheduleTask(tree, task)
 end
 
 local function runTask(tree, task)
-	print("Running task", DEBUG_showTask(task))
+	DEBUG_print("Running task", DEBUG_showTask(task))
 
 	if typeof(task) == "function" then
 		-- This is an escape hatch for informally specified tasks right now
@@ -80,13 +94,13 @@ local function runTask(tree, task)
 			visitedProps[prop] = true
 			local oldValue = fromElement.props[prop]
 
-			print("Checking prop", prop, oldValue, newValue)
+			DEBUG_print("Checking prop", prop, oldValue, newValue)
 
 			if newValue == oldValue then
-				print("\tProp is the same.")
+				DEBUG_print("\tProp is the same.")
 			else
 				if prop == Core.Children then
-					print("\tReconciling children...")
+					DEBUG_print("\tReconciling children...")
 
 					for key, newChildElement in pairs(newValue) do
 						local oldChildElement = oldValue[key]
@@ -97,7 +111,7 @@ local function runTask(tree, task)
 						if oldChildElement == nil then
 							warn("NYI: creating children in reconciler")
 						elseif newChildElement ~= oldChildElement then
-							print("\t\tScheduling reconcile of child", key)
+							DEBUG_print("\t\tScheduling reconcile of child", key)
 
 							scheduleTask(tree, {
 								type = "reconcile",
@@ -113,7 +127,7 @@ local function runTask(tree, task)
 						local DEBUG_childInstance = instance:FindFirstChild(key)
 
 						if newChildElement == nil then
-							print("\t\tScheduling unmount of child", key)
+							DEBUG_print("\t\tScheduling unmount of child", key)
 							scheduleTask(tree, {
 								type = "unmount",
 								instance = DEBUG_childInstance,
@@ -121,7 +135,7 @@ local function runTask(tree, task)
 						end
 					end
 				else
-					print("\tSetting", prop, newValue)
+					DEBUG_print("\tSetting", prop, newValue)
 					instance[prop] = newValue
 				end
 			end
@@ -148,8 +162,8 @@ local function processTreeTasksAsync(tree, timeBudget)
 		return
 	end
 
-	warn(("-"):rep(80))
-	print("Async frame:", #tree.tasks, "tasks in queue; marker at", tree.taskIndex)
+	DEBUG_warn(("-"):rep(80))
+	DEBUG_print("Async frame:", #tree.tasks, "tasks in queue; marker at", tree.taskIndex)
 
 	tree.tasksRunning = true
 
@@ -162,7 +176,7 @@ local function processTreeTasksAsync(tree, timeBudget)
 			tree.tasks = {}
 			tree.taskIndex = 1
 
-			print("Stopping async frame: ran out of tasks")
+			DEBUG_print("Stopping async frame: ran out of tasks")
 			break
 		end
 
@@ -173,7 +187,7 @@ local function processTreeTasksAsync(tree, timeBudget)
 		if tick() - startTime >= timeBudget then
 			tree.taskIndex = i
 
-			print("Stopping async frame: ran out of time")
+			DEBUG_print("Stopping async frame: ran out of time")
 			break
 		end
 	end
@@ -184,8 +198,8 @@ end
 function processTreeTasksSync(tree)
 	tree.tasksRunning = true
 
-	warn(("="):rep(80))
-	print("Sync frame:", #tree.tasks, "tasks in queue, marker at", tree.taskIndex)
+	DEBUG_warn(("="):rep(80))
+	DEBUG_print("Sync frame:", #tree.tasks, "tasks in queue, marker at", tree.taskIndex)
 
 	local i = tree.taskIndex
 	while true do
@@ -195,7 +209,7 @@ function processTreeTasksSync(tree)
 			tree.tasks = {}
 			tree.taskIndex = 1
 
-			print("Stopping sync frame: ran out of tasks")
+			DEBUG_print("Stopping sync frame: ran out of tasks")
 			break
 		end
 

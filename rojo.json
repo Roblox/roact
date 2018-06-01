@@ -6,13 +6,9 @@
       "path": "lib",
       "target": "ReplicatedStorage.Roact"
     },
-    "benches": {
-      "path": "benchmarks",
-      "target": "ReplicatedStorage.Benchmarks"
-    },
-    "start-benchmarks": {
-      "path": "start-benchmarks.server.lua",
-      "target": "ServerScriptStorage.start-benchmarks"
+    "client": {
+      "path": "client",
+      "target": "StarterPlayer.StarterPlayerScripts.Client"
     },
     "testez": {
       "path": "modules/testez/lib",

@@ -12,7 +12,7 @@
     },
     "start-benchmarks": {
       "path": "start-benchmarks.server.lua",
-      "target": "ServerScriptStorage.start-benchmarks"
+      "target": "ServerScriptService.start-benchmarks"
     },
     "testez": {
       "path": "modules/testez/lib",

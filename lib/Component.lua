@@ -87,6 +87,10 @@ function Component:extend(name)
 	function class._new(props, context)
 		local self = {}
 
+		function self.__setState(...)
+			return class.__setState(self, ...)
+		end
+
 		-- When set to a value, setState will fail, using the given reason to
 		-- create a detailed error message.
 		-- You can see a list of reasons in invalidSetStateMessages.
@@ -209,22 +213,7 @@ end
 	any state updates that depend on the current state should use the function
 	variant.
 ]]
-function Component:setState(partialState)
-	-- If setState was disabled, we should check for a detailed message and
-	-- display it.
-	if self._setStateBlockedReason ~= nil then
-		local messageSource = invalidSetStateMessages[self._setStateBlockedReason]
-
-		if messageSource == nil then
-			messageSource = invalidSetStateMessages["default"]
-		end
-
-		-- We assume that each message has a formatting placeholder for a component name.
-		local formattedMessage = string.format(messageSource, tostring(getmetatable(self)))
-
-		error(formattedMessage, 2)
-	end
-
+function Component:__setState(partialState)
 	-- If the partial state is a function, invoke it to get the actual partial state.
 	if type(partialState) == "function" then
 		partialState = partialState(self.state, self.props)
@@ -255,7 +244,6 @@ end
 	reconciliation step.
 ]]
 function Component:_update(newProps, newState)
-	self._setStateBlockedReason = "shouldUpdate"
 
 	local doUpdate
 	if GlobalConfig.getValue("componentInstrumentation") then
@@ -268,8 +256,6 @@ function Component:_update(newProps, newState)
 	else
 		doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
 	end
-
-	self._setStateBlockedReason = nil
 
 	if doUpdate then
 		self:_forceUpdate(newProps, newState)
@@ -318,9 +304,7 @@ function Component:_forceUpdate(newProps, newState)
 	end
 
 	if self.willUpdate then
-		self._setStateBlockedReason = "willUpdate"
 		self:willUpdate(newProps or self.props, newState or self.state)
-		self._setStateBlockedReason = nil
 	end
 
 	local oldProps = self.props
@@ -334,8 +318,6 @@ function Component:_forceUpdate(newProps, newState)
 		self.state = newState
 	end
 
-	self._setStateBlockedReason = "render"
-
 	local newChildElement
 	if GlobalConfig.getValue("componentInstrumentation") then
 		local startTime = tick()
@@ -348,9 +330,6 @@ function Component:_forceUpdate(newProps, newState)
 		newChildElement = self:render()
 	end
 
-	self._setStateBlockedReason = nil
-
-	self._setStateBlockedReason = "reconcile"
 	if self._handle._child ~= nil then
 		-- We returned an element during our last render, update it.
 		self._handle._child = Reconciler._reconcileInternal(
@@ -366,10 +345,9 @@ function Component:_forceUpdate(newProps, newState)
 			self._context
 		)
 	end
-	self._setStateBlockedReason = nil
 
 	if self.didUpdate then
-		self:didUpdate(oldProps, oldState)
+		self:didUpdate(oldProps, oldState, self.__setState)
 	end
 end
 
@@ -379,8 +357,6 @@ end
 ]]
 function Component:_mount(handle)
 	self._handle = handle
-
-	self._setStateBlockedReason = "render"
 
 	local virtualTree
 	if GlobalConfig.getValue("componentInstrumentation") then
@@ -394,21 +370,17 @@ function Component:_mount(handle)
 		virtualTree = self:render()
 	end
 
-	self._setStateBlockedReason = nil
-
 	if virtualTree then
-		self._setStateBlockedReason = "reconcile"
 		handle._child = Reconciler._mountInternal(
 			virtualTree,
 			handle._parent,
 			handle._key,
 			self._context
 		)
-		self._setStateBlockedReason = nil
 	end
 
 	if self.didMount then
-		self:didMount()
+		self:didMount(self.__setState)
 	end
 end
 
@@ -419,9 +391,7 @@ function Component:_unmount()
 	local handle = self._handle
 
 	if self.willUnmount then
-		self._setStateBlockedReason = "willUnmount"
 		self:willUnmount()
-		self._setStateBlockedReason = nil
 	end
 
 	-- Stateful components can return nil from render()

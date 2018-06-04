@@ -10,6 +10,18 @@
       "path": "client",
       "target": "StarterPlayer.StarterPlayerScripts.Client"
     },
+    "benches": {
+      "path": "benchmarks",
+      "target": "ReplicatedStorage.Benchmarks"
+    },
+    "start-benchmarks": {
+      "path": "start-benchmarks.server.lua",
+      "target": "ServerScriptStorage.start-benchmarks"
+    },
+    "examples": {
+      "path": "examples",
+      "target": "StarterPlayer.StarterPlayerScripts"
+    },
     "testez": {
       "path": "modules/testez/lib",
       "target": "ReplicatedStorage.TestEZ"

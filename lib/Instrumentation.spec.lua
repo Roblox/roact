@@ -1,9 +1,10 @@
 return function()
 	local Component = require(script.Parent.PureComponent)
-	local Core = require(script.Parent.Core)
 	local GlobalConfig = require(script.Parent.GlobalConfig)
-	local Instrumentation = require(script.Parent.Instrumentation)
 	local Reconciler = require(script.Parent.Reconciler)
+	local createElement = require(script.Parent.createElement)
+
+	local Instrumentation = require(script.Parent.Instrumentation)
 
 	it("should count and time renders when enabled", function()
 		GlobalConfig.set({
@@ -30,7 +31,7 @@ return function()
 			end
 		end
 
-		local instance = Reconciler.mount(Core.createElement(TestComponent))
+		local instance = Reconciler.mount(createElement(TestComponent))
 
 		local stats = Instrumentation.getCollectedStats()
 		expect(stats.TestComponent).to.be.ok()
@@ -73,7 +74,7 @@ return function()
 
 		function TestComponent:render() end
 
-		local instance = Reconciler.mount(Core.createElement(TestComponent))
+		local instance = Reconciler.mount(createElement(TestComponent))
 
 		local stats = Instrumentation.getCollectedStats()
 

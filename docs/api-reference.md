@@ -78,17 +78,7 @@ If you're writing a new functional or stateful element that needs to be used lik
 ### Roact.Ref
 Use `Roact.Ref` as a key into the props of a primitive element to receive a handle to the underlying Roblox Instance.
 
-`Ref` may either be a function:
-```lua
-Roact.createElement("Frame", {
-	-- The function given will be called whenever the rendered instance changes.
-	[Roact.Ref] = function(rbx)
-		print("Roblox Instance", rbx)
-	end,
-})
-```
-
-Or a reference object created with [createRef](#roactcreateref):
+Assign this key to a reference object created with [createRef](#roactcreateref):
 ```lua
 local ExampleComponent = Roact.Component:extend("ExampleComponent")
 
@@ -100,7 +90,7 @@ end
 function ExampleComponent:render()
 	return Roact.createElement("Frame", {
 		-- Use the reference object to point to this rendered instance.
-		[Roact.Ref] = ref,
+		[Roact.Ref] = self.ref,
 	})
 end
 
@@ -110,8 +100,21 @@ function ExampleComponent:didMount()
 end
 ```
 
+Alternatively, you can assign it to a function instead:
+```lua
+Roact.createElement("Frame", {
+	-- The provided function will be called whenever the rendered instance changes.
+	[Roact.Ref] = function(rbx)
+		print("Roblox Instance", rbx)
+	end,
+})
+```
+
 !!! warning
-	`Roact.Ref` will be called with `nil` when the component instance is destroyed!
+	When `Roact.Ref` is given a funciton, Roact does not guarantee when this function will be run relative to the reconciliation of other props. If you try to read a Roblox property that's being set via a Roact prop, you won't know if you're reading it before or after Roact reconciles that prop!
+
+!!! warning
+	When `Roact.Ref` is given a funciton, it will be called with `nil` when the component instance is destroyed!
 
 See [the refs guide](/advanced/refs.md) for more details.
 

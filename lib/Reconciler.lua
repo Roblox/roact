@@ -1,4 +1,6 @@
 local Core = require(script.Parent.Core)
+local Type = require(script.Parent.Type)
+local Symbol = require(script.Parent.Symbol)
 
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
@@ -8,9 +10,8 @@ local DEBUG_LOGS = true
 local ASYNC_SCHEDULER = true
 local ASYNC_BUDGET_PER_FRAME = 0 -- 12 / 1000
 
-local TYPE = {}
-local TYPE_TREE = {}
-local TYPE_NODE = {}
+-- Used to mark a child that is going to be mounted, but is not yet.
+local MountingNode = Symbol.named("MountingNode")
 
 local function DEBUG_warn(...)
 	if DEBUG_LOGS then
@@ -54,46 +55,109 @@ local function runTask(tree, task)
 	DEBUG_print("Running task", DEBUG_showTask(task))
 
 	if typeof(task) == "function" then
-		-- This is an escape hatch for informally specified tasks right now
+		-- This is an escape hatch for informally specified tasks right now.
+
+		-- Should this idea be avoided? You can't introspect into a task that's
+		-- just a function, but its much more pure and simpler to execute.
 		task()
-	elseif task.type == "mount" then
+	elseif task.type == "mountTree" then
 		local element = task.element
 		local key = task.key
 		local parentRbx = task.parentRbx
 
-		local instance = Instance.new(element.component)
-		instance.Name = key
+		assert(Type.is(element, Type.Element))
+		assert(typeof(key) == "string")
+		assert(typeof(parentRbx) == "Instance" or typeof(parentRbx) == "nil")
 
-		for prop, value in pairs(element.props) do
-			if prop == Core.Children then
-				for childKey, childElement in pairs(value) do
-					scheduleTask(tree, {
-						type = "mount",
-						element = childElement,
-						parentRbx = instance,
-						key = childKey,
-					})
+		scheduleTask(tree, {
+			type = "mountNode",
+			element = element,
+			key = key,
+			parentNode = nil,
+			parentRbx = parentRbx,
+			isTreeRoot = true,
+		})
+	elseif task.type == "mountNode" then
+		local element = task.element
+		local key = task.key
+		local parentNode = task.parentNode
+		local parentRbx = task.parentRbx
+		local isTreeRoot = task.isTreeRoot
+
+		assert(Type.is(element, Type.Element))
+		assert(typeof(key) == "string")
+		assert(Type.is(parentNode, Type.Node) or typeof(parentNode) == "nil")
+		assert(typeof(parentRbx) == "Instance" or typeof(parentRbx) == "nil")
+		assert(typeof(isTreeRoot) == "boolean")
+
+		local node = {
+			[Type] = Type.Node,
+			children = {},
+			element = element,
+		}
+
+		if typeof(element.component) == "string" then
+			local rbx = Instance.new(element.component)
+			rbx.Name = key
+
+			node.rbx = rbx
+
+			for prop, value in pairs(element.props) do
+				if prop == Core.Children then
+					for childKey, childElement in pairs(value) do
+						node.children[childKey] = MountingNode
+
+						scheduleTask(tree, {
+							type = "mountNode",
+							element = childElement,
+							key = childKey,
+							parentNode = node,
+							parentRbx = rbx,
+							isTreeRoot = false,
+						})
+					end
+				else
+					rbx[prop] = value
 				end
-			else
-				instance[prop] = value
 			end
+
+			scheduleTask(tree, function()
+				rbx.Parent = parentRbx
+
+				if isTreeRoot then
+					tree.rootNode = node
+				else
+					assert(parentNode.children[key] == MountingNode, "Expected parent node to be prepared for me to mount!")
+
+					parentNode.children[key] = node
+				end
+			end)
+		else
+			error("NYI: mounting non-string components")
 		end
-
-		scheduleTask(tree, function()
-			instance.Parent = parentRbx
-
-			if task.DEBUG_root then
-				tree.DEBUG_instance = instance
-			end
-		end)
-	elseif task.type == "reconcile" then
-		local instance = task.instance
-		local fromElement = task.fromElement
+	elseif task.type == "reconcileTree" then
 		local toElement = task.toElement
 
-		local visitedProps = {}
+		assert(Type.is(toElement, Type.Element))
 
-		-- TODO: toElement is nil?
+		scheduleTask(tree, {
+			type = "reconcileNode",
+			node = tree.rootNode,
+			toElement = toElement,
+		})
+	elseif task.type == "reconcileNode" then
+		local node = task.node
+		local toElement = task.toElement
+
+		assert(Type.is(node, Type.Node))
+		assert(Type.is(toElement, Type.Element))
+
+		local fromElement = node.element
+
+		-- TODO: Branch on kind of node
+		-- TODO: Check if component type changed
+
+		local visitedProps = {}
 
 		for prop, newValue in pairs(toElement.props) do
 			visitedProps[prop] = true
@@ -108,8 +172,9 @@ local function runTask(tree, task)
 					DEBUG_print("\tReconciling children...")
 
 					for key, newChildElement in pairs(newValue) do
+						local childNode = node.children[key]
+
 						local oldChildElement = oldValue[key]
-						local DEBUG_childInstance = instance:FindFirstChild(key)
 
 						-- TODO: What if oldValue[Core.Children] is nil?
 
@@ -119,44 +184,46 @@ local function runTask(tree, task)
 							DEBUG_print("\t\tScheduling reconcile of child", key)
 
 							scheduleTask(tree, {
-								type = "reconcile",
-								fromElement = oldChildElement,
+								type = "reconcileNode",
+								node = childNode,
 								toElement = newChildElement,
-								instance = DEBUG_childInstance,
 							})
 						end
 					end
 
 					for key in pairs(oldValue) do
 						local newChildElement = newValue[key]
-						local DEBUG_childInstance = instance:FindFirstChild(key)
+						local childNode = node.children[key]
 
 						if newChildElement == nil then
 							DEBUG_print("\t\tScheduling unmount of child", key)
 							scheduleTask(tree, {
-								type = "unmount",
-								instance = DEBUG_childInstance,
+								type = "unmountNode",
+								node = childNode,
 							})
 						end
 					end
 				else
 					DEBUG_print("\tSetting", prop, newValue)
-					instance[prop] = newValue
+					node.rbx[prop] = newValue
 				end
 			end
 		end
 
 		for prop in pairs(fromElement.props) do
 			if not visitedProps[prop] then
-				instance[prop] = nil
+				-- TODO: Use real mechanism for setting default values
+				node.rbx[prop] = nil
 			end
 		end
-	elseif task.type == "unmount" then
-		local instance = task.instance
+	elseif task.type == "unmountNode" then
+		local node = task.node
 
-		instance:Destroy()
+		assert(Type.is(node, Type.Node))
 
-		-- TODO: expand
+		node.rbx:Destroy()
+
+		-- TODO: Replace this idea
 	else
 		error("unknown task " .. task.type)
 	end
@@ -227,13 +294,17 @@ function processTreeTasksSync(tree)
 end
 
 local function mountTree(element, parentRbx)
+	assert(Type.is(element, Type.Element))
+	assert(typeof(parentRbx) == "Instance" or typeof(parentRbx) == "nil")
+
 	local tree = {
-		[TYPE] = TYPE_TREE,
+		[Type] = Type.Tree,
 		tasks = {},
 		taskIndex = 1,
 		tasksRunning = false,
 		connections = {},
 		mounted = true,
+		rootNode = nil,
 	}
 
 	if ASYNC_SCHEDULER then
@@ -244,7 +315,7 @@ local function mountTree(element, parentRbx)
 	end
 
 	scheduleTask(tree, {
-		type = "mount",
+		type = "mountTree",
 		element = element,
 		parentRbx = parentRbx,
 		key = "Roact Root",
@@ -255,7 +326,7 @@ local function mountTree(element, parentRbx)
 end
 
 local function unmountTree(tree)
-	assert(tree[TYPE] == TYPE_TREE, "not a tree")
+	assert(Type.is(tree, Type.Tree))
 	assert(tree.mounted, "not mounted")
 
 	tree.mounted = false
@@ -267,17 +338,25 @@ local function unmountTree(tree)
 	end
 end
 
-local function reconcileTree(tree, fromElement, toElement)
+local function reconcileTree(tree, toElement)
+	assert(Type.is(tree, Type.Tree))
+	assert(Type.is(toElement, Type.Element))
+
 	scheduleTask(tree, {
-		type = "reconcile",
-		instance = tree.DEBUG_instance,
-		fromElement = fromElement,
+		type = "reconcileTree",
 		toElement = toElement,
 	})
 end
 
-local function reconcileNode(node, fromElement, toElement)
-	assert(node[TYPE] == TYPE_NODE, "not a node")
+local function reconcileNode(node, toElement)
+	assert(Type.is(node, Type.Node))
+	assert(Type.is(toElement, Type.Element))
+
+	scheduleTask(node.tree, {
+		type = "reconcileNode",
+		node = node,
+		toElement = toElement,
+	})
 end
 
 return {

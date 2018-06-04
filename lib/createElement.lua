@@ -1,5 +1,6 @@
 local Core = require(script.Parent.Core)
 local GlobalConfig = require(script.Parent.GlobalConfig)
+local Type = require(script.Parent.Type)
 
 --[[
 	Creates a new Roact element of the given type.
@@ -22,7 +23,7 @@ local function createElement(elementType, props, children)
 	end
 
 	local element = {
-		type = Core.Element,
+		[Type] = Type.Element,
 		component = elementType,
 		props = props,
 	}

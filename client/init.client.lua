@@ -13,4 +13,4 @@ local tree = Roact.mount(body("Hello, world!"), game.Players.LocalPlayer.PlayerG
 
 wait(0.7)
 
-Roact.reconcileTree(tree, body("Hello, world!"), body("Hey!"))
+Roact.reconcileTree(tree, body("Hey!"))

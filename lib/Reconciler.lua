@@ -1,6 +1,7 @@
 local Core = require(script.Parent.Core)
 
 local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
 
 local DEBUG_LOGS = true
 
@@ -33,6 +34,10 @@ local function DEBUG_showTask(task)
 	else
 		return "<INVALID TASK>"
 	end
+end
+
+local function getGuid()
+	return HttpService:GenerateGUID(false)
 end
 
 local function scheduleTask(tree, task)
@@ -232,7 +237,8 @@ local function mountTree(element, parentRbx)
 	}
 
 	if ASYNC_SCHEDULER then
-		RunService:BindToRenderStep("ahhhh", Enum.RenderPriority.Last.Value, function()
+		tree.renderStepId = getGuid()
+		RunService:BindToRenderStep(tree.renderStepId, Enum.RenderPriority.Last.Value, function()
 			processTreeTasksAsync(tree, ASYNC_BUDGET_PER_FRAME)
 		end)
 	end
@@ -256,7 +262,9 @@ local function unmountTree(tree)
 
 	-- TODO: Flush/cancel existing tasks and tear down asynchronously
 
-	RunService:UnbindFromRenderStep("ahhhh")
+	if ASYNC_SCHEDULER then
+		RunService:UnbindFromRenderStep(tree.renderStepId)
+	end
 end
 
 local function reconcileTree(tree, fromElement, toElement)

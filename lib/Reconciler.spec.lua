@@ -85,4 +85,20 @@ return function()
 		Reconciler.unmount(handle)
 		expect(bRef.current).to.never.be.ok()
 	end)
+	it("should error if Name prop is specified", function()
+		local success, message = pcall(function()
+			createElement("StringValue", {
+				Name = "Test123"
+			})
+		end)
+		expect(message:find("Name")).to.be.ok()
+	end)
+	it("should error if Parent prop is specified", function()
+		local success, message = pcall(function()
+			createElement("StringValue", {
+				Parent = game.Workspace
+			})
+		end)
+		expect(message:find("Parent")).to.be.ok()
+	end)
 end

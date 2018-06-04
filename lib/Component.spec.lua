@@ -133,9 +133,9 @@ return function()
 			}
 		end
 
-		function Container:didMount()
+		function Container:didMount(setState)
 			setValue = function(value)
-				self:setState({
+				setState({
 					value = value,
 				})
 			end
@@ -417,9 +417,7 @@ return function()
 			local setStateCallback, getStateCallback
 
 			function TestComponent:init()
-				setStateCallback = function(newState)
-					self:setState(newState)
-				end
+				setStateCallback = self.__setState
 
 				getStateCallback = function()
 					return self.state
@@ -453,9 +451,7 @@ return function()
 			local setStateCallback, getStateCallback, getPropsCallback
 
 			function TestComponent:init()
-				setStateCallback = function(newState)
-					self:setState(newState)
-				end
+				setStateCallback = self.__setState
 
 				getStateCallback = function()
 					return self.state
@@ -499,9 +495,7 @@ return function()
 			local renderCount = 0
 
 			function TestComponent:init()
-				setStateCallback = function(newState)
-					self:setState(newState)
-				end
+				setStateCallback = self.__setState
 
 				self.state = {
 					value = 0
@@ -532,9 +526,7 @@ return function()
 			local getDerivedStateFromPropsCount = 0
 
 			function TestComponent:init()
-				setStateCallback = function(newState)
-					self:setState(newState)
-				end
+				setStateCallback = self.__setState
 
 				self.state = {
 					value = 0

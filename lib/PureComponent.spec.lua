@@ -31,9 +31,9 @@ return function()
 			}
 		end
 
-		function PureContainer:didMount()
+		function PureContainer:didMount(setState)
 			setValue = function(value)
-				self:setState({
+				setState({
 					value = value,
 				})
 			end

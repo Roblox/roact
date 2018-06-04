@@ -20,8 +20,6 @@ local Core = require(script.Parent.Core)
 local GlobalConfig = require(script.Parent.GlobalConfig)
 local Instrumentation = require(script.Parent.Instrumentation)
 
-local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
-
 local Component = {}
 
 -- Locally cache tick so we can minimize impact of calling it for instrumentation
@@ -91,11 +89,6 @@ function Component:extend(name)
 			return class.__setState(self, ...)
 		end
 
-		-- When set to a value, setState will fail, using the given reason to
-		-- create a detailed error message.
-		-- You can see a list of reasons in invalidSetStateMessages.
-		self._setStateBlockedReason = nil
-
 		if class.defaultProps == nil then
 			self.props = props
 		else
@@ -115,9 +108,7 @@ function Component:extend(name)
 
 		-- Call the user-provided initializer, where state and _props are set.
 		if class.init then
-			self._setStateBlockedReason = "init"
 			class.init(self, props)
-			self._setStateBlockedReason = nil
 		end
 
 		-- The user constructer might not set state, so we can.

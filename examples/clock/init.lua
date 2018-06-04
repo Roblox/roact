@@ -18,7 +18,7 @@ return function()
 
 	local running = true
 	local currentTime = 0
-	local handle = Roact.reify(Roact.createElement(ClockApp, {
+	local handle = Roact.mount(Roact.createElement(ClockApp, {
 		time = currentTime,
 	}), PlayerGui)
 
@@ -36,7 +36,7 @@ return function()
 
 	local function stop()
 		running = false
-		Roact.teardown(handle)
+		Roact.unmount(handle)
 	end
 
 	return stop

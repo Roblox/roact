@@ -12,10 +12,10 @@ return function()
 		}),
 	})
 
-	local handle = Roact.reify(app, PlayerGui)
+	local handle = Roact.mount(app, PlayerGui)
 
 	local function stop()
-		Roact.teardown(handle)
+		Roact.unmount(handle)
 	end
 
 	return stop

@@ -91,6 +91,9 @@ return function()
 				Name = "Test123"
 			})
 		end)
+
+		expect(success).to.equal(false)
+
 		expect(message:find("Name")).to.be.ok()
 	end)
 	it("should error if Parent prop is specified", function()
@@ -99,6 +102,9 @@ return function()
 				Parent = game.Workspace
 			})
 		end)
+
+		expect(success).to.equal(false)
+
 		expect(message:find("Parent")).to.be.ok()
 	end)
 end

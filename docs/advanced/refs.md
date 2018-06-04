@@ -61,12 +61,12 @@ local frame = Roact.createElement("Frame", {
 	end
 })
 
-local handle = Roact.reify(frame)
+local handle = Roact.mount(frame)
 
 -- Output:
 --     Ref was called with Frame of type Instance
 
-Roact.teardown(handle)
+Roact.unmount(handle)
 
 -- In the output:
 --     Ref was called with nil of type nil

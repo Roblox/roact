@@ -1,7 +1,7 @@
 --[[
 	The base implementation of a stateful component in Roact.
 
-	Stateful components handle most of their own reification and reconciliation
+	Stateful components handle most of their own mounting and reconciliation
 	process. Many of the private methods here are invoked by the reconciler.
 
 	Stateful components expose a handful of lifecycle events:
@@ -236,7 +236,15 @@ function Component:setState(partialState)
 	end
 
 	local newState = merge(self.state, partialState)
-	self:_update(self.props, newState)
+	self:_update(nil, newState)
+end
+
+--[[
+	Returns the current stack trace for this component, or nil if the
+	elementTracing configuration flag is set to false.
+]]
+function Component:getElementTraceback()
+	return self._handle._element.source
 end
 
 --[[
@@ -343,15 +351,15 @@ function Component:_forceUpdate(newProps, newState)
 	self._setStateBlockedReason = nil
 
 	self._setStateBlockedReason = "reconcile"
-	if self._handle._reified ~= nil then
+	if self._handle._child ~= nil then
 		-- We returned an element during our last render, update it.
-		self._handle._reified = Reconciler._reconcileInternal(
-			self._handle._reified,
+		self._handle._child = Reconciler._reconcileInternal(
+			self._handle._child,
 			newChildElement
 		)
 	elseif newChildElement then
 		-- We returned nil during our last render, construct a new child.
-		self._handle._reified = Reconciler._reifyInternal(
+		self._handle._child = Reconciler._mountInternal(
 			newChildElement,
 			self._handle._parent,
 			self._handle._key,
@@ -367,9 +375,9 @@ end
 
 --[[
 	Initializes the component instance and attaches it to the given
-	instance handle, created by Reconciler._reify.
+	instance handle, created by Reconciler._mount.
 ]]
-function Component:_reify(handle)
+function Component:_mount(handle)
 	self._handle = handle
 
 	self._setStateBlockedReason = "render"
@@ -390,7 +398,7 @@ function Component:_reify(handle)
 
 	if virtualTree then
 		self._setStateBlockedReason = "reconcile"
-		handle._reified = Reconciler._reifyInternal(
+		handle._child = Reconciler._mountInternal(
 			virtualTree,
 			handle._parent,
 			handle._key,
@@ -407,7 +415,7 @@ end
 --[[
 	Destructs the component and invokes all necessary lifecycle methods.
 ]]
-function Component:_teardown()
+function Component:_unmount()
 	local handle = self._handle
 
 	if self.willUnmount then
@@ -417,8 +425,8 @@ function Component:_teardown()
 	end
 
 	-- Stateful components can return nil from render()
-	if handle._reified then
-		Reconciler.teardown(handle._reified)
+	if handle._child then
+		Reconciler.unmount(handle._child)
 	end
 
 	self._handle = nil

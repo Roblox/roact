@@ -3,26 +3,26 @@
 	tree of Roblox instances.
 
 	The reonciler has three basic operations:
-	* reify
+	* mount (previously reify)
 	* reconcile
-	* teardown
+	* unmount (previously teardown)
 
-	Reification is the process of creating new components. This is first
-	triggered when the user calls `Roact.reify` on an element. This is where the
+	Mounting is the process of creating new components. This is first
+	triggered when the user calls `Roact.mount` on an element. This is where the
 	structure of the component tree is built, later used and modified by the
-	reconciliation and teardown steps.
+	reconciliation and unmounting steps.
 
-	Reconciliation accepts an existing concrete instance tree (created by reify)
+	Reconciliation accepts an existing concrete instance tree (created by mount)
 	along with a new element that describes the desired tree. The reconciler
 	will do the minimum amount of work required to update tree's components to
-	match the new element, sometimes invoking reify to create new branches.
+	match the new element, sometimes invoking mount to create new branches.
 
-	Teardown is the destructor for the tree. It will crawl through the tree,
+	Unmounting destructs for the tree. It will crawl through the tree,
 	destroying nodes from the bottom up.
 
 	Much of the reconciler's work is done by Component, which is the base for
 	all stateful components in Roact. Components can trigger reconciliation (and
-	implicitly, teardown) via state updates that come with their own caveats.
+	implicitly, unmounting) via state updates that come with their own caveats.
 ]]
 
 local Core = require(script.Parent.Core)
@@ -42,6 +42,22 @@ local function isPortal(element)
 	end
 
 	return element.component == Core.Portal
+end
+
+--[[
+	Sets the value of a reference to a new rendered object.
+	Correctly handles both function-style and object-style refs.
+]]
+local function applyRef(ref, newRbx)
+	if ref == nil then
+		return
+	end
+
+	if type(ref) == "table" then
+		ref.current = newRbx
+	else
+		ref(newRbx)
+	end
 end
 
 local Reconciler = {}
@@ -85,7 +101,7 @@ end
 	Destroy the given Roact instance, all of its descendants, and associated
 	Roblox instances owned by the components.
 ]]
-function Reconciler.teardown(instanceHandle)
+function Reconciler.unmount(instanceHandle)
 	local element = instanceHandle._element
 
 	if isPrimitiveElement(element) then
@@ -93,12 +109,10 @@ function Reconciler.teardown(instanceHandle)
 
 		-- Kill refs before we make changes, since any mutations past this point
 		-- aren't relevant to components.
-		if element.props[Core.Ref] then
-			element.props[Core.Ref](nil)
-		end
+		applyRef(element.props[Core.Ref], nil)
 
-		for _, child in pairs(instanceHandle._reifiedChildren) do
-			Reconciler.teardown(child)
+		for _, child in pairs(instanceHandle._children) do
+			Reconciler.unmount(child)
 		end
 
 		-- Necessary to make sure SingleEventManager doesn't leak references
@@ -107,17 +121,17 @@ function Reconciler.teardown(instanceHandle)
 		instanceHandle._rbx:Destroy()
 	elseif isFunctionalElement(element) then
 		-- Functional components can return nil
-		if instanceHandle._reified then
-			Reconciler.teardown(instanceHandle._reified)
+		if instanceHandle._child then
+			Reconciler.unmount(instanceHandle._child)
 		end
 	elseif isStatefulElement(element) then
-		instanceHandle._instance:_teardown()
+		instanceHandle._instance:_unmount()
 	elseif isPortal(element) then
-		for _, child in pairs(instanceHandle._reifiedChildren) do
-			Reconciler.teardown(child)
+		for _, child in pairs(instanceHandle._children) do
+			Reconciler.unmount(child)
 		end
 	else
-		error(("Cannot teardown invalid Roact instance %q"):format(tostring(element)))
+		error(("Cannot unmount invalid Roact instance %q"):format(tostring(element)))
 	end
 end
 
@@ -125,15 +139,15 @@ end
 	Public interface to reifier. Hides parameters used when recursing down the
 	component tree.
 ]]
-function Reconciler.reify(element, parent, key)
-	return Reconciler._reifyInternal(element, parent, key)
+function Reconciler.mount(element, parent, key)
+	return Reconciler._mountInternal(element, parent, key)
 end
 
 --[[
 	Instantiates components to represent the given element.
 
 	Parameters:
-		- `element`: The element to reify.
+		- `element`: The element to mount.
 		- `parent`: The Roblox object to contain the contained instances
 		- `key`: The Name to give the Roblox instance that gets created
 		- `context`: Used to pass Roact context values down the tree
@@ -141,7 +155,7 @@ end
 	The structure created by this method is important to the functionality of
 	the reconciliation methods; they depend on this structure being well-formed.
 ]]
-function Reconciler._reifyInternal(element, parent, key, context)
+function Reconciler._mountInternal(element, parent, key, context)
 	if isPrimitiveElement(element) then
 		-- Primitive elements are backed directly by Roblox Instances.
 
@@ -153,13 +167,13 @@ function Reconciler._reifyInternal(element, parent, key, context)
 		end
 
 		-- Create children!
-		local reifiedChildren = {}
+		local children = {}
 
 		if element.props[Core.Children] then
 			for key, childElement in pairs(element.props[Core.Children]) do
-				local childInstance = Reconciler._reifyInternal(childElement, rbx, key, context)
+				local childInstance = Reconciler._mountInternal(childElement, rbx, key, context)
 
-				reifiedChildren[key] = childInstance
+				children[key] = childInstance
 			end
 		end
 
@@ -173,9 +187,7 @@ function Reconciler._reifyInternal(element, parent, key, context)
 		rbx.Parent = parent
 
 		-- Attach ref values, since the instance is initialized now.
-		if element.props[Core.Ref] then
-			element.props[Core.Ref](rbx)
-		end
+		applyRef(element.props[Core.Ref], rbx)
 
 		return {
 			[isInstanceHandle] = true,
@@ -183,7 +195,7 @@ function Reconciler._reifyInternal(element, parent, key, context)
 			_parent = parent,
 			_element = element,
 			_context = context,
-			_reifiedChildren = reifiedChildren,
+			_children = children,
 			_rbx = rbx,
 		}
 	elseif isFunctionalElement(element) then
@@ -199,7 +211,7 @@ function Reconciler._reifyInternal(element, parent, key, context)
 
 		local vdom = element.component(element.props)
 		if vdom then
-			instanceHandle._reified = Reconciler._reifyInternal(vdom, parent, key, context)
+			instanceHandle._child = Reconciler._mountInternal(vdom, parent, key, context)
 		end
 
 		return instanceHandle
@@ -213,13 +225,13 @@ function Reconciler._reifyInternal(element, parent, key, context)
 			_key = key,
 			_parent = parent,
 			_element = element,
-			_reified = nil,
+			_child = nil,
 		}
 
 		local instance = element.component._new(element.props, context)
 
 		instanceHandle._instance = instance
-		instance:_reify(instanceHandle)
+		instance:_mount(instanceHandle)
 
 		return instanceHandle
 	elseif isPortal(element) then
@@ -227,19 +239,19 @@ function Reconciler._reifyInternal(element, parent, key, context)
 
 		local target = element.props.target
 		if not target then
-			error(("Cannot reify Portal without specifying a target."):format(tostring(element)))
+			error(("Cannot mount Portal without specifying a target."):format(tostring(element)))
 		elseif typeof(target) ~= "Instance" then
-			error(("Cannot reify Portal with target of type %q."):format(typeof(target)))
+			error(("Cannot mount Portal with target of type %q."):format(typeof(target)))
 		end
 
 		-- Create children!
-		local reifiedChildren = {}
+		local children = {}
 
 		if element.props[Core.Children] then
 			for key, childElement in pairs(element.props[Core.Children]) do
-				local childInstance = Reconciler._reifyInternal(childElement, target, key, context)
+				local childInstance = Reconciler._mountInternal(childElement, target, key, context)
 
-				reifiedChildren[key] = childInstance
+				children[key] = childInstance
 			end
 		end
 
@@ -249,7 +261,7 @@ function Reconciler._reifyInternal(element, parent, key, context)
 			_parent = parent,
 			_element = element,
 			_context = context,
-			_reifiedChildren = reifiedChildren,
+			_children = children,
 			_rbx = target,
 		}
 	elseif typeof(element) == "boolean" then
@@ -258,7 +270,7 @@ function Reconciler._reifyInternal(element, parent, key, context)
 		return nil
 	end
 
-	error(("Cannot reify invalid Roact element %q"):format(tostring(element)))
+	error(("Cannot mount invalid Roact element %q"):format(tostring(element)))
 end
 
 --[[
@@ -289,7 +301,7 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 
 	-- Instance was deleted!
 	if not newElement then
-		Reconciler.teardown(instanceHandle)
+		Reconciler.unmount(instanceHandle)
 
 		return nil
 	end
@@ -307,9 +319,9 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 			context = instanceHandle._context
 		end
 
-		Reconciler.teardown(instanceHandle)
+		Reconciler.unmount(instanceHandle)
 
-		local newInstance = Reconciler._reifyInternal(newElement, parent, key, context)
+		local newInstance = Reconciler._mountInternal(newElement, parent, key, context)
 
 		return newInstance
 	end
@@ -317,13 +329,15 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 	if isPrimitiveElement(newElement) then
 		-- Roblox Instance change
 
-		local oldRef = oldElement[Core.Ref]
-		local newRef = newElement[Core.Ref]
-		local refChanged = (oldRef ~= newRef)
+		local oldRef = oldElement.props[Core.Ref]
+		local newRef = newElement.props[Core.Ref]
 
-		-- Cancel the old ref before we make changes. Apply the new one after.
-		if refChanged and oldRef then
-			oldRef(nil)
+		-- Change the ref in one pass before applying any changes.
+		-- Roact doesn't provide any guarantees with regards to the sequencing
+		-- between refs and other changes in the commit phase.
+		if newRef ~= oldRef then
+			applyRef(oldRef, nil)
+			applyRef(newRef, instanceHandle._rbx)
 		end
 
 		-- Update properties and children of the Roblox object.
@@ -332,11 +346,6 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 
 		instanceHandle._element = newElement
 
-		-- Apply the new ref if there was a ref change.
-		if refChanged and newRef then
-			newRef(instanceHandle._rbx)
-		end
-
 		return instanceHandle
 	elseif isFunctionalElement(newElement) then
 		instanceHandle._element = newElement
@@ -344,12 +353,12 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 		local rendered = newElement.component(newElement.props)
 		local newChild
 
-		if instanceHandle._reified then
+		if instanceHandle._child then
 			-- Transition from tree to tree, even if 'rendered' is nil
-			newChild = Reconciler._reconcileInternal(instanceHandle._reified, rendered)
+			newChild = Reconciler._reconcileInternal(instanceHandle._child, rendered)
 		elseif rendered then
 			-- Transition from nil to new tree
-			newChild = Reconciler._reifyInternal(
+			newChild = Reconciler._mountInternal(
 				rendered,
 				instanceHandle._parent,
 				instanceHandle._key,
@@ -357,7 +366,7 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 			)
 		end
 
-		instanceHandle._reified = newChild
+		instanceHandle._child = newChild
 
 		return instanceHandle
 	elseif isStatefulElement(newElement) then
@@ -373,9 +382,9 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 			local key = instanceHandle._key
 			local context = instanceHandle._context
 
-			Reconciler.teardown(instanceHandle)
+			Reconciler.unmount(instanceHandle)
 
-			local newInstance = Reconciler._reifyInternal(newElement, parent, key, context)
+			local newInstance = Reconciler._mountInternal(newElement, parent, key, context)
 
 			return newInstance
 		end
@@ -397,21 +406,21 @@ function Reconciler._reconcilePrimitiveChildren(instance, newElement)
 	local elementChildren = newElement.props[Core.Children]
 
 	-- Reconcile existing children that were changed or removed
-	for key, childInstance in pairs(instance._reifiedChildren) do
+	for key, childInstance in pairs(instance._children) do
 		local childElement = elementChildren and elementChildren[key]
 
 		childInstance = Reconciler._reconcileInternal(childInstance, childElement)
 
-		instance._reifiedChildren[key] = childInstance
+		instance._children[key] = childInstance
 	end
 
 	-- Create children that were just added!
 	if elementChildren then
 		for key, childElement in pairs(elementChildren) do
 			-- Update if we didn't hit the child in the previous loop
-			if not instance._reifiedChildren[key] then
-				local childInstance = Reconciler._reifyInternal(childElement, instance._rbx, key, instance._context)
-				instance._reifiedChildren[key] = childInstance
+			if not instance._children[key] then
+				local childInstance = Reconciler._mountInternal(childElement, instance._rbx, key, instance._context)
+				instance._children[key] = childInstance
 			end
 		end
 	end

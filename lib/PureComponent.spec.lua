@@ -1,6 +1,7 @@
 return function()
-	local Core = require(script.Parent.Core)
+	local createElement = require(script.Parent.createElement)
 	local Reconciler = require(script.Parent.Reconciler)
+
 	local PureComponent = require(script.Parent.PureComponent)
 
 	it("should be extendable", function()
@@ -39,13 +40,13 @@ return function()
 		end
 
 		function PureContainer:render()
-			return Core.createElement(PureChild, {
+			return createElement(PureChild, {
 				value = self.state.value,
 			})
 		end
 
-		local element = Core.createElement(PureContainer)
-		local instance = Reconciler.reify(element)
+		local element = createElement(PureContainer)
+		local instance = Reconciler.mount(element)
 
 		expect(updateCount).to.equal(0)
 
@@ -65,6 +66,6 @@ return function()
 
 		expect(updateCount).to.equal(3)
 
-		Reconciler.teardown(instance)
+		Reconciler.unmount(instance)
 	end)
 end

@@ -1,10 +1,15 @@
 # Roact Changelog
 
 ## Current `master` branch
+* Renamed `Roact.reify` to `Roact.mount` and `Roact.teardown` to `Roact.unmount` ([#82](https://github.com/Roblox/roact/issues/82))
+	* The old methods are still present as aliases, but will output a warning when used.
 * Added `Roact.Change` for subscribing to `GetPropertyChangedSignal` ([#51](https://github.com/Roblox/roact/pull/51))
 * Added the static lifecycle method `getDerivedStateFromProps` ([#57](https://github.com/Roblox/roact/pull/57))
 * Allow canceling render by returning nil from setState callback ([#64](https://github.com/Roblox/roact/pull/64))
 * Added `defaultProps` value on stateful components to define values for props that aren't specified ([#79](https://github.com/Roblox/roact/pull/79))
+* Added `getElementTraceback` ([#81](https://github.com/Roblox/roact/issues/81), [#93](https://github.com/Roblox/roact/pull/93))
+* Added `createRef` ([#70](https://github.com/Roblox/roact/issues/70), [#92](https://github.com/Roblox/roact/pull/92))
+* Ref switching now occurs in one pass, which should fix edge cases where the result of a ref is `nil`, especially in property changed events ([#98](https://github.com/Roblox/roact/pull/98))
 
 ## 1.0.0 Prerelease 2 (March 22, 2018)
 * Removed `is*Element` methods, this is unlikely to affect anyone ([#50](https://github.com/Roblox/roact/pull/50))

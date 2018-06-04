@@ -23,9 +23,9 @@ return function()
 			return nil
 		end
 
-		function TestComponent:didMount()
+		function TestComponent:didMount(setState)
 			triggerUpdate = function()
-				self:setState({
+				setState({
 					value = self.state.value + 1
 				})
 			end
@@ -64,9 +64,9 @@ return function()
 			return willDoUpdate
 		end
 
-		function TestComponent:didMount()
+		function TestComponent:didMount(setState)
 			triggerUpdate = function()
-				self:setState({
+				setState({
 					value = self.state.value + 1,
 				})
 			end

@@ -140,9 +140,9 @@ return function()
 				}
 			end
 
-			function TestParent:didMount()
+			function TestParent:didMount(setState)
 				listener = function()
-					self:setState({
+					setState({
 						value = self.state.value + 1,
 					})
 				end
@@ -282,7 +282,7 @@ return function()
 
 			function Root:init()
 				updateMethod = function(show)
-					self:setState({
+					self.__setState({
 						show = show,
 					})
 				end
@@ -399,13 +399,11 @@ return function()
 				})
 			end
 
-			function PortalContainer:didMount()
+			function PortalContainer:didMount(setState)
 				expect(self.state.target:FindFirstChild("folderOne")).to.be.ok()
 				expect(self.state.target:FindFirstChild("folderTwo")).to.be.ok()
 
-				changeState = function(newState)
-					self:setState(newState)
-				end
+				changeState = setState
 			end
 
 			Roact.mount(Roact.createElement(PortalContainer))
@@ -447,10 +445,8 @@ return function()
 				})
 			end
 
-			function PortalContainer:didMount()
-				changeState = function(newState)
-					self:setState(newState)
-				end
+			function PortalContainer:didMount(setState)
+				changeState = setState
 			end
 
 			Roact.mount(Roact.createElement(PortalContainer))

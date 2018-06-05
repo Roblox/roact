@@ -86,25 +86,19 @@ return function()
 		expect(bRef.current).to.never.be.ok()
 	end)
 	it("should error if Name prop is specified", function()
-		local success, message = pcall(function()
-			createElement("StringValue", {
+		expect(function()
+			local element = createElement("StringValue", {
 				Name = "Test123"
 			})
-		end)
-
-		expect(success).to.equal(false)
-
-		expect(message:find("Name")).to.be.ok()
+			Reconciler.mount(element, game)
+		end).to.throw()
 	end)
 	it("should error if Parent prop is specified", function()
-		local success, message = pcall(function()
-			createElement("StringValue", {
+		expect(function()
+			local element = createElement("StringValue", {
 				Parent = game.Workspace
 			})
-		end)
-
-		expect(success).to.equal(false)
-
-		expect(message:find("Parent")).to.be.ok()
+			Reconciler.mount(element, game)
+		end).to.throw()
 	end)
 end

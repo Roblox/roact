@@ -9,7 +9,7 @@ local function body(text)
 	})
 end
 
-local tree = Roact.mount(body("Hello, world!"), game.Players.LocalPlayer.PlayerGui)
+local tree = Roact.mount(body("Hello, world!"), game.Players.LocalPlayer.PlayerGui, "Roact Root")
 
 wait(0.7)
 

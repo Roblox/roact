@@ -5,7 +5,7 @@ local Symbol = require(script.Parent.Symbol)
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 
-local DEBUG_LOGS = true
+local DEBUG_LOGS_ENABLED = true
 
 local ASYNC_SCHEDULER = true
 local ASYNC_BUDGET_PER_FRAME = 12 / 1000
@@ -13,15 +13,17 @@ local ASYNC_BUDGET_PER_FRAME = 12 / 1000
 -- Used to mark a child that is going to be mounted, but is not yet.
 local MountingNode = Symbol.named("MountingNode")
 
-local function DEBUG_warn(...)
-	if DEBUG_LOGS then
-		warn(...)
-	end
-end
+local DEBUG_warn
+local DEBUG_print
 
-local function DEBUG_print(...)
-	if DEBUG_LOGS then
-		print(...)
+if DEBUG_LOGS_ENABLED then
+	DEBUG_warn = warn
+	DEBUG_print = print
+else
+	DEBUG_warn = function()
+	end
+
+	DEBUG_print = function()
 	end
 end
 

@@ -51,45 +51,20 @@ local function scheduleTask(tree, task)
 	end
 end
 
-local function runTask(tree, task)
-	DEBUG_print("Running task", DEBUG_showTask(task))
+local function taskMountNode(details)
+	local element = details.element
+	local key = details.key
+	local parentNode = details.parentNode
+	local parentRbx = details.parentRbx
+	local isTreeRoot = details.isTreeRoot
 
-	if typeof(task) == "function" then
-		-- This is an escape hatch for informally specified tasks right now.
+	assert(Type.is(element, Type.Element))
+	assert(typeof(key) == "string")
+	assert(Type.is(parentNode, Type.Node) or typeof(parentNode) == "nil")
+	assert(typeof(parentRbx) == "Instance" or typeof(parentRbx) == "nil")
+	assert(typeof(isTreeRoot) == "boolean")
 
-		-- Should this idea be avoided? You can't introspect into a task that's
-		-- just a function, but its much more pure and simpler to execute.
-		task()
-	elseif task.type == "mountTree" then
-		local element = task.element
-		local key = task.key
-		local parentRbx = task.parentRbx
-
-		assert(Type.is(element, Type.Element))
-		assert(typeof(key) == "string")
-		assert(typeof(parentRbx) == "Instance" or typeof(parentRbx) == "nil")
-
-		scheduleTask(tree, {
-			type = "mountNode",
-			element = element,
-			key = key,
-			parentNode = nil,
-			parentRbx = parentRbx,
-			isTreeRoot = true,
-		})
-	elseif task.type == "mountNode" then
-		local element = task.element
-		local key = task.key
-		local parentNode = task.parentNode
-		local parentRbx = task.parentRbx
-		local isTreeRoot = task.isTreeRoot
-
-		assert(Type.is(element, Type.Element))
-		assert(typeof(key) == "string")
-		assert(Type.is(parentNode, Type.Node) or typeof(parentNode) == "nil")
-		assert(typeof(parentRbx) == "Instance" or typeof(parentRbx) == "nil")
-		assert(typeof(isTreeRoot) == "boolean")
-
+	return function(tree)
 		local node = {
 			[Type] = Type.Node,
 			children = {},
@@ -107,14 +82,13 @@ local function runTask(tree, task)
 					for childKey, childElement in pairs(value) do
 						node.children[childKey] = MountingNode
 
-						scheduleTask(tree, {
-							type = "mountNode",
+						scheduleTask(tree, taskMountNode({
 							element = childElement,
 							key = childKey,
 							parentNode = node,
 							parentRbx = rbx,
 							isTreeRoot = false,
-						})
+						}))
 					end
 				else
 					rbx[prop] = value
@@ -135,23 +109,56 @@ local function runTask(tree, task)
 		else
 			error("NYI: mounting non-string components")
 		end
-	elseif task.type == "reconcileTree" then
-		local toElement = task.toElement
+	end
+end
 
-		assert(Type.is(toElement, Type.Element))
+local function taskUnmountNode(details)
+	local node = details.node
 
-		scheduleTask(tree, {
-			type = "reconcileNode",
-			node = tree.rootNode,
-			toElement = toElement,
-		})
-	elseif task.type == "reconcileNode" then
-		local node = task.node
-		local toElement = task.toElement
+	assert(Type.is(node, Type.Node))
 
-		assert(Type.is(node, Type.Node))
-		assert(Type.is(toElement, Type.Element))
+	return function(tree)
+		local nodesToVisit = {node}
+		local visitIndex = 1
+		local nodesToDestroy = {}
 
+		while true do
+			local visitingNode = nodesToVisit[visitIndex]
+
+			if visitingNode == nil then
+				break
+			end
+
+			for _, childNode in pairs(node.children) do
+				table.insert(nodesToVisit, childNode)
+			end
+
+			table.insert(nodesToDestroy, visitingNode)
+
+			visitIndex = visitIndex + 1
+		end
+
+		-- Destroy from back-to-front in order to destroy the nodes deepest in
+		-- the tree first.
+		for i = #nodesToDestroy, 1, -1 do
+			local destroyNode = nodesToDestroy[i]
+
+			-- TODO: More complicated destruction logic with regards to non-
+			-- primitive components
+
+			destroyNode.rbx:Destroy()
+		end
+	end
+end
+
+local function taskReconcileNode(details)
+	local node = details.node
+	local toElement = details.toElement
+
+	assert(Type.is(node, Type.Node))
+	assert(Type.is(toElement, Type.Element))
+
+	return function(tree)
 		local fromElement = node.element
 
 		-- TODO: Branch on kind of node
@@ -183,11 +190,10 @@ local function runTask(tree, task)
 						elseif newChildElement ~= oldChildElement then
 							DEBUG_print("\t\tScheduling reconcile of child", key)
 
-							scheduleTask(tree, {
-								type = "reconcileNode",
+							scheduleTask(tree, taskReconcileNode({
 								node = childNode,
 								toElement = newChildElement,
-							})
+							}))
 						end
 					end
 
@@ -197,10 +203,9 @@ local function runTask(tree, task)
 
 						if newChildElement == nil then
 							DEBUG_print("\t\tScheduling unmount of child", key)
-							scheduleTask(tree, {
-								type = "unmountNode",
+							scheduleTask(tree, taskUnmountNode({
 								node = childNode,
-							})
+							}))
 						end
 					end
 				else
@@ -216,44 +221,13 @@ local function runTask(tree, task)
 				node.rbx[prop] = nil
 			end
 		end
-	elseif task.type == "unmountNode" then
-		local node = task.node
-
-		assert(Type.is(node, Type.Node))
-
-		local nodesToVisit = {node}
-		local visitIndex = 1
-		local nodesToDestroy = {}
-
-		while true do
-			local visitingNode = nodesToVisit[visitIndex]
-
-			if visitingNode == nil then
-				break
-			end
-
-			for _, childNode in pairs(node.children) do
-				table.insert(nodesToVisit, childNode)
-			end
-
-			table.insert(nodesToDestroy, visitingNode)
-
-			visitIndex = visitIndex + 1
-		end
-
-		-- Destroy from back-to-front in order to destroy the nodes deepest in
-		-- the tree first.
-		for i = #nodesToDestroy, 1, -1 do
-			local destroyNode = nodesToDestroy[i]
-
-			-- TODO: More complicated destruction logic with regards to non-
-			-- primitive components
-
-			destroyNode.rbx:Destroy()
-		end
-	else
-		error("unknown task " .. task.type)
 	end
+end
+
+local function runTask(tree, task)
+	DEBUG_print("Running task", DEBUG_showTask(task))
+
+	task(tree)
 end
 
 local function processTreeTasksAsync(tree, timeBudget)
@@ -343,13 +317,14 @@ local function mountTree(element, parentRbx)
 		end)
 	end
 
-	scheduleTask(tree, {
-		type = "mountTree",
+	scheduleTask(tree, taskMountNode({
+		type = "mountNode",
 		element = element,
-		parentRbx = parentRbx,
 		key = "Roact Root",
-		DEBUG_root = true,
-	})
+		parentNode = nil,
+		parentRbx = parentRbx,
+		isTreeRoot = true,
+	}))
 
 	return tree
 end
@@ -360,35 +335,32 @@ local function unmountTree(tree)
 
 	tree.mounted = false
 
-	-- TODO: Flush/cancel existing tasks and tear down asynchronously
-
 	if ASYNC_SCHEDULER then
 		RunService:UnbindFromRenderStep(tree.renderStepId)
 	end
+
+	-- TODO: Flush/cancel existing tasks and unmount asynchronously?
+
+	scheduleTask(tree, taskUnmountNode({
+		node = tree.rootNode,
+	}))
+
+	-- For now, flush the entire tree and unmount synchronously
+	processTreeTasksSync(tree)
 end
 
 local function reconcileTree(tree, toElement)
 	assert(Type.is(tree, Type.Tree))
 	assert(Type.is(toElement, Type.Element))
 
-	scheduleTask(tree, {
-		type = "reconcileTree",
+	scheduleTask(tree, taskReconcileNode({
+		node = tree.rootNode,
 		toElement = toElement,
-	})
-end
-
-local function reconcileNode(node, toElement)
-	assert(Type.is(node, Type.Node))
-	assert(Type.is(toElement, Type.Element))
-
-	scheduleTask(node.tree, {
-		type = "reconcileNode",
-		node = node,
-		toElement = toElement,
-	})
+	}))
 end
 
 return {
 	mount = mountTree,
+	unmount = unmountTree,
 	reconcileTree = reconcileTree
 }

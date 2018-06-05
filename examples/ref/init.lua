@@ -41,7 +41,6 @@ return function()
 		})
 	end
 
-
 	local app = Roact.createElement("ScreenGui", nil, {
 		SearchBar = Roact.createElement(SearchBar),
 	})

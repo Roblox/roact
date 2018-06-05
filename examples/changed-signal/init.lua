@@ -71,7 +71,6 @@ return function()
 		})
 	end
 
-
 	local app = Roact.createElement("ScreenGui", nil, {
 		TextReverser = Roact.createElement(TextReverser),
 	})

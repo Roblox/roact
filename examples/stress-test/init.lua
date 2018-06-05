@@ -70,7 +70,6 @@ return function()
 		self.connection:Disconnect()
 	end
 
-
 	local app = Roact.createElement("ScreenGui", nil, {
 		Main = Roact.createElement(App),
 	})

@@ -224,12 +224,6 @@ local function taskReconcileNode(details)
 	end
 end
 
-local function runTask(tree, task)
-	DEBUG_print("Running task", DEBUG_showTask(task))
-
-	task(tree)
-end
-
 local function processTreeTasksAsync(tree, timeBudget)
 	if #tree.tasks == 0 then
 		return
@@ -251,18 +245,19 @@ local function processTreeTasksAsync(tree, timeBudget)
 			tree.tasks = {}
 			tree.taskIndex = 1
 
-			DEBUG_print("Stopping async frame: ran out of tasks. Took", totalTimeElapsed * 1000, "ms")
+			print("Stopping async frame: ran out of tasks. Took", totalTimeElapsed * 1000, "ms")
 			break
 		end
 
-		runTask(tree, task)
+		DEBUG_print("Running task", DEBUG_showTask(task))
+		task(tree)
 
 		i = i + 1
 
 		if totalTimeElapsed >= timeBudget then
 			tree.taskIndex = i
 
-			DEBUG_print("Stopping async frame: ran out of time. Took", totalTimeElapsed * 1000, "ms")
+			print("Stopping async frame: ran out of time. Took", totalTimeElapsed * 1000, "ms")
 			break
 		end
 	end
@@ -288,7 +283,8 @@ function processTreeTasksSync(tree)
 			break
 		end
 
-		runTask(tree, task)
+		DEBUG_print("Running task", DEBUG_showTask(task))
+		task(tree)
 
 		i = i + 1
 	end
@@ -296,7 +292,7 @@ function processTreeTasksSync(tree)
 	tree.tasksRunning = false
 end
 
-local function mountTree(element, parentRbx)
+local function mountTree(element, parentRbx, key)
 	assert(Type.is(element, Type.Element))
 	assert(typeof(parentRbx) == "Instance" or typeof(parentRbx) == "nil")
 
@@ -318,9 +314,8 @@ local function mountTree(element, parentRbx)
 	end
 
 	scheduleTask(tree, taskMountNode({
-		type = "mountNode",
 		element = element,
-		key = "Roact Root",
+		key = key,
 		parentNode = nil,
 		parentRbx = parentRbx,
 		isTreeRoot = true,

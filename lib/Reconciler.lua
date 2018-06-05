@@ -8,7 +8,7 @@ local HttpService = game:GetService("HttpService")
 local DEBUG_LOGS = true
 
 local ASYNC_SCHEDULER = true
-local ASYNC_BUDGET_PER_FRAME = 0 -- 12 / 1000
+local ASYNC_BUDGET_PER_FRAME = 12 / 1000
 
 -- Used to mark a child that is going to be mounted, but is not yet.
 local MountingNode = Symbol.named("MountingNode")
@@ -221,9 +221,36 @@ local function runTask(tree, task)
 
 		assert(Type.is(node, Type.Node))
 
-		node.rbx:Destroy()
+		local nodesToVisit = {node}
+		local visitIndex = 1
+		local nodesToDestroy = {}
 
-		-- TODO: Replace this idea
+		while true do
+			local visitingNode = nodesToVisit[visitIndex]
+
+			if visitingNode == nil then
+				break
+			end
+
+			for _, childNode in pairs(node.children) do
+				table.insert(nodesToVisit, childNode)
+			end
+
+			table.insert(nodesToDestroy, visitingNode)
+
+			visitIndex = visitIndex + 1
+		end
+
+		-- Destroy from back-to-front in order to destroy the nodes deepest in
+		-- the tree first.
+		for i = #nodesToDestroy, 1, -1 do
+			local destroyNode = nodesToDestroy[i]
+
+			-- TODO: More complicated destruction logic with regards to non-
+			-- primitive components
+
+			destroyNode.rbx:Destroy()
+		end
 	else
 		error("unknown task " .. task.type)
 	end
@@ -244,11 +271,13 @@ local function processTreeTasksAsync(tree, timeBudget)
 	while true do
 		local task = tree.tasks[i]
 
+		local totalTimeElapsed = tick() - startTime
+
 		if task == nil then
 			tree.tasks = {}
 			tree.taskIndex = 1
 
-			DEBUG_print("Stopping async frame: ran out of tasks")
+			DEBUG_print("Stopping async frame: ran out of tasks. Took", totalTimeElapsed * 1000, "ms")
 			break
 		end
 
@@ -256,10 +285,10 @@ local function processTreeTasksAsync(tree, timeBudget)
 
 		i = i + 1
 
-		if tick() - startTime >= timeBudget then
+		if totalTimeElapsed >= timeBudget then
 			tree.taskIndex = i
 
-			DEBUG_print("Stopping async frame: ran out of time")
+			DEBUG_print("Stopping async frame: ran out of time. Took", totalTimeElapsed * 1000, "ms")
 			break
 		end
 	end

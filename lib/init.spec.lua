@@ -26,6 +26,8 @@ return function()
 			None = true,
 			Element = true,
 			UNSTABLE = true,
+			Type = true,
+			Source = true,
 		}
 
 		expect(Roact).to.be.ok()

@@ -34,7 +34,7 @@ local Symbol = require(script.Parent.Symbol)
 
 local isInstanceHandle = Symbol.named("isInstanceHandle")
 
-local DEFAULT_SOURCE = "\n\t<Use Roact.setGlobalConfig with the 'elementTracing' key to enable detailed tracebacks>\n"
+local DEFAULT_SOURCE = "\t<Use Roact.setGlobalConfig with the 'elementTracing' key to enable detailed tracebacks>"
 
 local function isPortal(element)
 	if type(element) ~= "table" then

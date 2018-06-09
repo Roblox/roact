@@ -178,8 +178,9 @@ function Reconciler._mountInternal(element, parent, key, context)
 		end
 
 		-- This name can be passed through multiple components.
-		-- What's important is the final Roblox Instance receives the name
-		-- It's solely for debugging purposes; Roact doesn't use it.
+		-- Elements with the same key will be treated as the same
+		-- element between reconciles; the old element will be
+		-- reconciled to the new element with the same key.
 		if key then
 			rbx.Name = key
 		end

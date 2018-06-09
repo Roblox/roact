@@ -21,4 +21,10 @@ Core.None = Symbol.named("None")
 -- Marker used to specify that the table it is present within is a component.
 Core.Element = Symbol.named("Element")
 
+-- Marker used to specify the component of an element.
+Core.Type = Symbol.named("Type")
+
+-- Marker used to specify stack trace of where an element was created.
+Core.Source = Symbol.named("Element")
+
 return Core

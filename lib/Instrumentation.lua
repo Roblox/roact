@@ -18,6 +18,8 @@
 		- Percent of total shouldUpdate time by component
 ]]
 
+local Core = require(script.Parent.Core)
+
 local Instrumentation = {}
 
 local componentStats = {}
@@ -28,8 +30,8 @@ local componentStats = {}
 ]]
 local function getStatEntry(handle)
 	local name
-	if handle and handle._element and handle._element.component then
-		name = tostring(handle._element.component)
+	if handle and handle._element and handle._element[Core.Type] then
+		name = tostring(handle._element[Core.Type])
 	else
 		warn("Component name not valid for " .. tostring(handle._key))
 		return nil

@@ -6,29 +6,27 @@ local GlobalConfig = require(script.Parent.GlobalConfig)
 
 	Does not create any concrete objects.
 ]]
-local function createElement(elementType, props, children)
-	if elementType == nil then
-		error(("Expected elementType as an argument to createElement!"), 2)
-	end
+local function createElement(elementType, element, children)
+	element = element or {}
 
-	props = props or {}
-
-	if children then
-		if props[Core.Children] ~= nil then
-			warn("props[Children] was defined but was overridden by third parameter to createElement!")
+	if elementType then
+		if element[Core.Type] then
+			warn("element[Type] was defined but was overriden by createElement!")
 		end
 
-		props[Core.Children] = children
+		element[Core.Type] = elementType
 	end
 
-	local element = {
-		type = Core.Element,
-		component = elementType,
-		props = props,
-	}
+	if children then
+		if element[Core.Children] then
+			warn("element[Children] was defined but was overridden by third parameter to createElement!")
+		end
+
+		element[Core.Children] = children
+	end
 
 	if GlobalConfig.getValue("elementTracing") then
-		element.source = ("\n%s\n"):format(debug.traceback())
+		element[Core.Source] = ("\n%s\n"):format(debug.traceback())
 	end
 
 	return element

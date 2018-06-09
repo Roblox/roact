@@ -244,7 +244,7 @@ end
 	elementTracing configuration flag is set to false.
 ]]
 function Component:getElementTraceback()
-	return self._handle._element.source
+	return self._handle._element[Core.Source]
 end
 
 --[[

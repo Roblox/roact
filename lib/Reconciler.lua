@@ -41,7 +41,7 @@ local function isPortal(element)
 		return false
 	end
 
-	return element.component == Core.Portal
+	return element[Core.Type] == Core.Portal
 end
 
 --[[
@@ -72,7 +72,7 @@ local function isPrimitiveElement(element)
 		return false
 	end
 
-	return type(element.component) == "string"
+	return type(element[Core.Type]) == "string"
 end
 
 --[[
@@ -83,7 +83,7 @@ local function isFunctionalElement(element)
 		return false
 	end
 
-	return type(element.component) == "function"
+	return type(element[Core.Type]) == "function"
 end
 
 --[[
@@ -94,7 +94,7 @@ local function isStatefulElement(element)
 		return false
 	end
 
-	return type(element.component) == "table"
+	return type(element[Core.Type]) == "table"
 end
 
 --[[
@@ -109,7 +109,7 @@ function Reconciler.unmount(instanceHandle)
 
 		-- Kill refs before we make changes, since any mutations past this point
 		-- aren't relevant to components.
-		applyRef(element.props[Core.Ref], nil)
+		applyRef(element[Core.Ref], nil)
 
 		for _, child in pairs(instanceHandle._children) do
 			Reconciler.unmount(child)
@@ -159,18 +159,18 @@ function Reconciler._mountInternal(element, parent, key, context)
 	if isPrimitiveElement(element) then
 		-- Primitive elements are backed directly by Roblox Instances.
 
-		local rbx = Instance.new(element.component)
+		local rbx = Instance.new(element[Core.Type])
 
 		-- Update Roblox properties
-		for key, value in pairs(element.props) do
+		for key, value in pairs(element) do
 			Reconciler._setRbxProp(rbx, key, value, element)
 		end
 
 		-- Create children!
 		local children = {}
 
-		if element.props[Core.Children] then
-			for key, childElement in pairs(element.props[Core.Children]) do
+		if element[Core.Children] then
+			for key, childElement in pairs(element[Core.Children]) do
 				local childInstance = Reconciler._mountInternal(childElement, rbx, key, context)
 
 				children[key] = childInstance
@@ -187,7 +187,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 		rbx.Parent = parent
 
 		-- Attach ref values, since the instance is initialized now.
-		applyRef(element.props[Core.Ref], rbx)
+		applyRef(element[Core.Ref], rbx)
 
 		return {
 			[isInstanceHandle] = true,
@@ -209,7 +209,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 			_context = context,
 		}
 
-		local vdom = element.component(element.props)
+		local vdom = element[Core.Type](element)
 		if vdom then
 			instanceHandle._child = Reconciler._mountInternal(vdom, parent, key, context)
 		end
@@ -228,7 +228,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 			_child = nil,
 		}
 
-		local instance = element.component._new(element.props, context)
+		local instance = element[Core.Type]._new(element, context)
 
 		instanceHandle._instance = instance
 		instance:_mount(instanceHandle)
@@ -237,7 +237,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 	elseif isPortal(element) then
 		-- Portal elements have one or more children.
 
-		local target = element.props.target
+		local target = element.target
 		if not target then
 			error(("Cannot mount Portal without specifying a target."):format(tostring(element)))
 		elseif typeof(target) ~= "Instance" then
@@ -247,8 +247,8 @@ function Reconciler._mountInternal(element, parent, key, context)
 		-- Create children!
 		local children = {}
 
-		if element.props[Core.Children] then
-			for key, childElement in pairs(element.props[Core.Children]) do
+		if element[Core.Children] then
+			for key, childElement in pairs(element[Core.Children]) do
 				local childInstance = Reconciler._mountInternal(childElement, target, key, context)
 
 				children[key] = childInstance
@@ -308,7 +308,7 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 
 	-- If the element changes type, we assume its subtree will be substantially
 	-- different. This lets us skip comparisons of a large swath of nodes.
-	if oldElement.component ~= newElement.component then
+	if oldElement[Core.Type] ~= newElement[Core.Type] then
 		local parent = instanceHandle._parent
 		local key = instanceHandle._key
 
@@ -329,8 +329,8 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 	if isPrimitiveElement(newElement) then
 		-- Roblox Instance change
 
-		local oldRef = oldElement.props[Core.Ref]
-		local newRef = newElement.props[Core.Ref]
+		local oldRef = oldElement[Core.Ref]
+		local newRef = newElement[Core.Ref]
 
 		-- Change the ref in one pass before applying any changes.
 		-- Roact doesn't provide any guarantees with regards to the sequencing
@@ -350,7 +350,7 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 	elseif isFunctionalElement(newElement) then
 		instanceHandle._element = newElement
 
-		local rendered = newElement.component(newElement.props)
+		local rendered = newElement[Core.Type](newElement)
 		local newChild
 
 		if instanceHandle._child then
@@ -373,11 +373,11 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 		instanceHandle._element = newElement
 
 		-- Stateful elements can take care of themselves.
-		instanceHandle._instance:_update(newElement.props)
+		instanceHandle._instance:_update(newElement)
 
 		return instanceHandle
 	elseif isPortal(newElement) then
-		if instanceHandle._rbx ~= newElement.props.target then
+		if instanceHandle._rbx ~= newElement.target then
 			local parent = instanceHandle._parent
 			local key = instanceHandle._key
 			local context = instanceHandle._context
@@ -403,7 +403,7 @@ end
 	Reconciles the children of an existing Roact instance and the given element.
 ]]
 function Reconciler._reconcilePrimitiveChildren(instance, newElement)
-	local elementChildren = newElement.props[Core.Children]
+	local elementChildren = newElement[Core.Children]
 
 	-- Reconcile existing children that were changed or removed
 	for key, childInstance in pairs(instance._children) do
@@ -434,10 +434,10 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 	local seenProps = {}
 
 	-- Set properties that were set with fromElement
-	for key, oldValue in pairs(fromElement.props) do
+	for key, oldValue in pairs(fromElement) do
 		seenProps[key] = true
 
-		local newValue = toElement.props[key]
+		local newValue = toElement[key]
 
 		-- Assume any property that can be set to nil has a default value of nil
 		if newValue == nil then
@@ -456,11 +456,11 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 	end
 
 	-- Set properties that are new in toElement
-	for key, newValue in pairs(toElement.props) do
+	for key, newValue in pairs(toElement) do
 		if not seenProps[key] then
 			seenProps[key] = true
 
-			local oldValue = fromElement.props[key]
+			local oldValue = fromElement[key]
 
 			if oldValue ~= newValue then
 				Reconciler._setRbxProp(rbx, key, newValue, toElement)
@@ -494,7 +494,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 		local success, err = pcall(set, rbx, key, value)
 
 		if not success then
-			local source = element.source or DEFAULT_SOURCE
+			local source = element[Core.Source] or DEFAULT_SOURCE
 
 			local message = ("Failed to set property %s on primitive instance of class %s\n%s\n%s"):format(
 				key,
@@ -513,7 +513,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 		elseif key.type == Change then
 			Reconciler._singleEventManager:connectProperty(rbx, key.name, value)
 		else
-			local source = element.source or DEFAULT_SOURCE
+			local source = element[Core.Source] or DEFAULT_SOURCE
 
 			-- luacheck: ignore 6
 			local message = ("Failed to set special property on primitive instance of class %s\nInvalid special property type %q\n%s"):format(
@@ -528,7 +528,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 		-- Userdata values are special markers, usually created by Symbol
 		-- They have no data attached other than being unique keys
 
-		local source = element.source or DEFAULT_SOURCE
+		local source = element[Core.Source] or DEFAULT_SOURCE
 
 		local message = ("Properties with a key type of %q are not supported\n%s"):format(
 			type(key),

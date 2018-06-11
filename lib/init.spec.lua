@@ -341,28 +341,15 @@ return function()
 			expect(target:FindFirstChild("intValueOne").Value).to.equal(42)
 		end)
 
-		it("should error if the target is nil", function()
+		it("should not mount if the target is nil", function()
+			local parent = Instance.new("Folder")
 			local portal = Roact.createElement(Roact.Portal, {}, {
 				folderOne = Roact.createElement("Folder"),
 				folderTwo = Roact.createElement("Folder"),
 			})
 
-			expect(function()
-				Roact.mount(portal)
-			end).to.throw()
-		end)
-
-		it("should error if the target is not a Roblox instance", function()
-			local portal = Roact.createElement(Roact.Portal, {
-					target = "NotARobloxInstance",
-				}, {
-				folderOne = Roact.createElement("Folder"),
-				folderTwo = Roact.createElement("Folder"),
-			})
-
-			expect(function()
-				Roact.mount(portal)
-			end).to.throw()
+			Roact.mount(portal, parent)
+			expect(#parent:GetChildren()).to.equal(0)
 		end)
 
 		it("should update if parent changes the target", function()

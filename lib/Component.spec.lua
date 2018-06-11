@@ -3,6 +3,7 @@ return function()
 	local createElement = require(script.Parent.createElement)
 	local Reconciler = require(script.Parent.Reconciler)
 	local GlobalConfig = require(script.Parent.GlobalConfig)
+	local Heapstack = require(script.Parent.Heapstack)
 
 	local Component = require(script.Parent.Component)
 
@@ -30,21 +31,6 @@ return function()
 		expect(name:find("FooBar")).to.be.ok()
 	end)
 
-	it("should throw on render with a useful message by default", function()
-		local MyComponent = Component:extend("Foo")
-
-		local instance = MyComponent._new({})
-
-		expect(instance).to.be.ok()
-
-		local ok, err = pcall(function()
-			instance:render()
-		end)
-
-		expect(ok).to.equal(false)
-		expect(err:find("Foo")).to.be.ok()
-	end)
-
 	it("should pass props to the initializer", function()
 		local MyComponent = Component:extend("Wazo")
 
@@ -56,7 +42,7 @@ return function()
 			callCount = callCount + 1
 		end
 
-		MyComponent._new(testProps)
+		Reconciler.mount(createElement(MyComponent, testProps))
 
 		expect(callCount).to.equal(1)
 	end)
@@ -296,7 +282,7 @@ return function()
 	end)
 
 	describe("setState", function()
-		it("should throw when called in init", function()
+		it("should not run when called in init", function()
 			local InitComponent = Component:extend("InitComponent")
 
 			function InitComponent:init()
@@ -310,13 +296,11 @@ return function()
 			end
 
 			local initElement = createElement(InitComponent)
-
-			expect(function()
-				Reconciler.mount(initElement)
-			end).to.throw()
+			local handle = Reconciler.mount(initElement)
+			expect(handle._instance.state.a).to.never.be.ok()
 		end)
 
-		it("should throw when called in render", function()
+		it("should not run when called in render", function()
 			local RenderComponent = Component:extend("RenderComponent")
 
 			function RenderComponent:render()
@@ -327,21 +311,18 @@ return function()
 
 			local renderElement = createElement(RenderComponent)
 
-			expect(function()
-				Reconciler.mount(renderElement)
-			end).to.throw()
+			local handle = Reconciler.mount(renderElement)
+			expect(handle._instance.state.a).to.never.be.ok()
 		end)
 
-		it("should throw when called in shouldUpdate", function()
+		it("should not run when called in shouldUpdate", function()
 			local TestComponent = Component:extend("TestComponent")
 
-			local triggerTest
+			local forceUpdate
 
 			function TestComponent:init()
-				triggerTest = function()
-					self:setState({
-						a = 1
-					})
+				forceUpdate = function()
+					self:_forceUpdate(Heapstack.new())
 				end
 			end
 
@@ -357,19 +338,18 @@ return function()
 
 			local testElement = createElement(TestComponent)
 
-			expect(function()
-				Reconciler.mount(testElement)
-				triggerTest()
-			end).to.throw()
+			local handle = Reconciler.mount(testElement)
+			forceUpdate()
+			expect(handle._instance.state.a).to.never.be.ok()
 		end)
 
-		it("should throw when called in willUpdate", function()
+		it("should not run when called in willUpdate", function()
 			local TestComponent = Component:extend("TestComponent")
 			local forceUpdate
 
 			function TestComponent:init()
 				forceUpdate = function()
-					self:_forceUpdate()
+					self:_forceUpdate(Heapstack.new())
 				end
 			end
 
@@ -385,17 +365,15 @@ return function()
 
 			local testElement = createElement(TestComponent)
 
-			expect(function()
-				Reconciler.mount(testElement)
-				forceUpdate()
-			end).to.throw()
+			local handle = Reconciler.mount(testElement)
+			forceUpdate()
+			expect(handle._instance.state.a).to.never.be.ok()
 		end)
 
-		it("should throw when called in willUnmount", function()
+		it("should not run when called in willUnmount", function()
 			local TestComponent = Component:extend("TestComponent")
 
 			function TestComponent:render()
-				return nil
 			end
 
 			function TestComponent:willUnmount()
@@ -405,11 +383,11 @@ return function()
 			end
 
 			local element = createElement(TestComponent)
-			local instance = Reconciler.mount(element)
+			local handle = Reconciler.mount(element)
 
-			expect(function()
-				Reconciler.unmount(instance)
-			end).to.throw()
+			local state = handle._instance.state
+			Reconciler.unmount(handle)
+			expect(state.a).to.never.be.ok()
 		end)
 
 		it("should remove values from state when the value is Core.None", function()
@@ -424,10 +402,6 @@ return function()
 				getStateCallback = function()
 					return self.state
 				end
-
-				self.state = {
-					value = 0
-				}
 			end
 
 			function TestComponent:render()
@@ -437,12 +411,15 @@ return function()
 			local element = createElement(TestComponent)
 			local instance = Reconciler.mount(element)
 
+			setStateCallback({
+				value = 0
+			})
+
 			expect(getStateCallback().value).to.equal(0)
 
 			setStateCallback({
 				value = Core.None
 			})
-
 			expect(getStateCallback().value).to.equal(nil)
 
 			Reconciler.unmount(instance)
@@ -552,15 +529,15 @@ return function()
 			local element = createElement(TestComponent, {
 				someProp = 1,
 			})
-
 			local instance = Reconciler.mount(element)
+
 			expect(getDerivedStateFromPropsCount).to.equal(1)
 
 			setStateCallback({
 				value = 1,
 			})
-			expect(getDerivedStateFromPropsCount).to.equal(1)
 
+			expect(getDerivedStateFromPropsCount).to.equal(1)
 
 			Reconciler.unmount(instance)
 		end)

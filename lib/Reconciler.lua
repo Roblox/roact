@@ -31,33 +31,37 @@ local Change = require(script.Parent.Change)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local SingleEventManager = require(script.Parent.SingleEventManager)
 local Symbol = require(script.Parent.Symbol)
+local Heapstack = require(script.Parent.Heapstack)
 
 local isInstanceHandle = Symbol.named("isInstanceHandle")
 
+local NO_CHILDREN = {}
 local DEFAULT_SOURCE = "\t<Use Roact.setGlobalConfig with the 'elementTracing' key to enable detailed tracebacks>"
-
-local function isPortal(element)
-	if type(element) ~= "table" then
-		return false
-	end
-
-	return element.component == Core.Portal
-end
 
 --[[
 	Sets the value of a reference to a new rendered object.
 	Correctly handles both function-style and object-style refs.
 ]]
-local function applyRef(ref, newRbx)
-	if ref == nil then
+local function applyRef(ref, rbx)
+	if not ref then
 		return
 	end
 
 	if type(ref) == "table" then
-		ref.current = newRbx
+		ref.current = rbx
 	else
-		ref(newRbx)
+		ref(rbx)
 	end
+end
+
+local function finalizeRbx(rbx, key, parent)
+	-- This name can be passed through multiple components.
+	-- What's important is the final Roblox Instance receives the name
+	-- It's solely for debugging purposes; Roact doesn't use it.
+	if type(key) == "string" then
+		rbx.Name = key
+	end
+	rbx.Parent = parent
 end
 
 local Reconciler = {}
@@ -65,73 +69,49 @@ local Reconciler = {}
 Reconciler._singleEventManager = SingleEventManager.new()
 
 --[[
-	Is this element backed by a Roblox instance directly?
-]]
-local function isPrimitiveElement(element)
-	if type(element) ~= "table" then
-		return false
-	end
-
-	return type(element.component) == "string"
-end
-
---[[
-	Is this element defined by a pure function?
-]]
-local function isFunctionalElement(element)
-	if type(element) ~= "table" then
-		return false
-	end
-
-	return type(element.component) == "function"
-end
-
---[[
-	Is this element defined by a component class?
-]]
-local function isStatefulElement(element)
-	if type(element) ~= "table" then
-		return false
-	end
-
-	return type(element.component) == "table"
-end
-
---[[
 	Destroy the given Roact instance, all of its descendants, and associated
 	Roblox instances owned by the components.
 ]]
-function Reconciler.unmount(instanceHandle)
-	local element = instanceHandle._element
+function Reconciler.unmount(handle)
+	local stack = Heapstack.new(true)
+	stack:push(Reconciler._unmountInternal, stack, handle)
+	stack:run()
+end
 
-	if isPrimitiveElement(element) then
+function Reconciler._unmountInternal(stack, handle)
+	local element = handle._element
+	local componentType = type(element.component)
+
+	if componentType == "string" then
 		-- We're destroying a Roblox Instance-based object
+
+		stack:push(handle._rbx.Destroy, handle._rbx)
+
+		for _, childHandle in pairs(handle._children or NO_CHILDREN) do
+			stack:push(Reconciler.unmount, childHandle)
+		end
 
 		-- Kill refs before we make changes, since any mutations past this point
 		-- aren't relevant to components.
-		applyRef(element.props[Core.Ref], nil)
-
-		for _, child in pairs(instanceHandle._children) do
-			Reconciler.unmount(child)
-		end
-
-		-- Necessary to make sure SingleEventManager doesn't leak references
-		Reconciler._singleEventManager:disconnectAll(instanceHandle._rbx)
-
-		instanceHandle._rbx:Destroy()
-	elseif isFunctionalElement(element) then
+		handle._rbx = nil
+		stack:push(applyRef, element.props[Core.Ref], nil)
+	elseif componentType == "function" then
 		-- Functional components can return nil
-		if instanceHandle._child then
-			Reconciler.unmount(instanceHandle._child)
+		if handle._child then
+			stack:push(Reconciler.unmount, handle._child)
 		end
-	elseif isStatefulElement(element) then
-		instanceHandle._instance:_unmount()
-	elseif isPortal(element) then
-		for _, child in pairs(instanceHandle._children) do
-			Reconciler.unmount(child)
+	elseif componentType == "table" then
+		if handle._child then
+			stack:push(Reconciler.unmount, handle._child)
 		end
+		handle._instance:_unmount(stack)
+	elseif element.component == Core.Portal then
+		for _, childHandle in pairs(handle._children or NO_CHILDREN) do
+			stack:push(Reconciler.unmount, childHandle)
+		end
+		handle._rbx = nil
 	else
-		error(("Cannot unmount invalid Roact instance %q"):format(tostring(element)))
+		error(("Cannot unmount invalid Roact component %q"):format(tostring(element.component)))
 	end
 end
 
@@ -140,100 +120,84 @@ end
 	component tree.
 ]]
 function Reconciler.mount(element, parent, key)
-	return Reconciler._mountInternal(element, parent, key)
+	if type(element) ~= "table" then
+		if element == true or element == false then
+			-- Ignore booleans of either value
+			-- See https://github.com/Roblox/roact/issues/14
+			return nil
+		end
+		error(("Cannot mount invalid Roact element %q"):format(tostring(element)))
+	end
+
+	local handle = {}
+	local stack = Heapstack.new(true)
+	stack:push(Reconciler._mountInternal, stack, handle, element, key, parent)
+	stack:run()
+	return handle._child
 end
 
 --[[
 	Instantiates components to represent the given element.
 
 	Parameters:
-		- `element`: The element to mount.
-		- `parent`: The Roblox object to contain the contained instances
+		- `parentHandle`: The handle of the parent so mount knows where to store the new child's handle
+		- `element`: The element to mount
 		- `key`: The Name to give the Roblox instance that gets created
-		- `context`: Used to pass Roact context values down the tree
+		- `parent`: The root Roblox instance for the instance subtree (only set by primitive components)
+		- `context`: Used to pass Roact context values down the tree (only set in reconcilation when mounting new elements)
+		- `stack`: The Heapstack which keeps the stack on the heap, allowing for error recovery
 
 	The structure created by this method is important to the functionality of
 	the reconciliation methods; they depend on this structure being well-formed.
 ]]
-function Reconciler._mountInternal(element, parent, key, context)
-	if isPrimitiveElement(element) then
-		-- Primitive elements are backed directly by Roblox Instances.
+function Reconciler._mountInternal(stack, parentHandle, element, key, parent, context)
+	local handle = {
+		[isInstanceHandle] = true,
+		_key = key,
+		_element = element,
+		_context = context,
+	}
 
+	local isValidComponent = false
+	local componentType = type(element.component)
+
+	if componentType == "string" then
+		isValidComponent = true
+
+		-- Primitive/Portal elements are backed directly by Roblox Instances.
 		local rbx = Instance.new(element.component)
+		handle._rbx = rbx
 
-		-- Update Roblox properties
-		Reconciler._setRbxProps(rbx, element.props, element.source)
+		-- Attach ref values, since the instance is initialized now.
+		stack:push(applyRef, element.props[Core.Ref], rbx)
+
+		stack:push(finalizeRbx, rbx, key, parent)
 
 		-- Create children!
-		local children = {}
-
 		if element.props[Core.Children] then
-			for key, childElement in pairs(element.props[Core.Children]) do
-				local childInstance = Reconciler._mountInternal(childElement, rbx, key, context)
-
-				children[key] = childInstance
+			handle._children = {}
+			for childKey, childElement in pairs(element.props[Core.Children]) do
+				stack:push(Reconciler._mountInternal, stack, handle, childElement, childKey, rbx, context)
 			end
 		end
 
-		-- This name can be passed through multiple components.
-		-- What's important is the final Roblox Instance receives the name
-		-- It's solely for debugging purposes; Roact doesn't use it.
-		if key then
-			rbx.Name = key
+		-- Update Roblox properties
+		stack:push(Reconciler._setRbxProps, rbx, element.props, element.source)
+	elseif componentType == "function" then
+		isValidComponent = true
+
+		-- Functional elements have 0 or 1 children
+		local childElement = element.component(element.props)
+		if childElement then
+			stack:push(Reconciler._mountInternal, stack, handle, childElement, key, parent, context)
 		end
+	elseif componentType == "table" then
+		isValidComponent = true
 
-		rbx.Parent = parent
-
-		-- Attach ref values, since the instance is initialized now.
-		applyRef(element.props[Core.Ref], rbx)
-
-		return {
-			[isInstanceHandle] = true,
-			_key = key,
-			_parent = parent,
-			_element = element,
-			_context = context,
-			_children = children,
-			_rbx = rbx,
-		}
-	elseif isFunctionalElement(element) then
-		-- Functional elements contain 0 or 1 children.
-
-		local instanceHandle = {
-			[isInstanceHandle] = true,
-			_key = key,
-			_parent = parent,
-			_element = element,
-			_context = context,
-		}
-
-		local vdom = element.component(element.props)
-		if vdom then
-			instanceHandle._child = Reconciler._mountInternal(vdom, parent, key, context)
-		end
-
-		return instanceHandle
-	elseif isStatefulElement(element) then
-		-- Stateful elements have 0 or 1 children, and also have a backing
-		-- instance that can keep state.
-
-		-- We separate the instance's implementation from our handle to it.
-		local instanceHandle = {
-			[isInstanceHandle] = true,
-			_key = key,
-			_parent = parent,
-			_element = element,
-			_child = nil,
-		}
-
-		local instance = element.component._new(element.props, context)
-
-		instanceHandle._instance = instance
-		instance:_mount(instanceHandle)
-
-		return instanceHandle
-	elseif isPortal(element) then
-		-- Portal elements have one or more children.
+		-- Stateful elements have 0 or 1 children
+		stack:push(element.component._new, stack, handle, context)
+	elseif element.component == Core.Portal then
+		isValidComponent = true
 
 		local target = element.props.target
 		if not target then
@@ -241,51 +205,51 @@ function Reconciler._mountInternal(element, parent, key, context)
 		elseif typeof(target) ~= "Instance" then
 			error(("Cannot mount Portal with target of type %q."):format(typeof(target)))
 		end
+		handle._rbx = target
+
+		-- Attach ref values, since the instance is initialized now.
+		stack:push(applyRef, handle)
 
 		-- Create children!
-		local children = {}
-
 		if element.props[Core.Children] then
-			for key, childElement in pairs(element.props[Core.Children]) do
-				local childInstance = Reconciler._mountInternal(childElement, target, key, context)
-
-				children[key] = childInstance
+			handle._children = {}
+			for childKey, childElement in pairs(element.props[Core.Children]) do
+				stack:push(Reconciler._mountInternal, stack, handle, childElement, childKey, target, context)
 			end
 		end
-
-		return {
-			[isInstanceHandle] = true,
-			_key = key,
-			_parent = parent,
-			_element = element,
-			_context = context,
-			_children = children,
-			_rbx = target,
-		}
-	elseif typeof(element) == "boolean" then
-		-- Ignore booleans of either value
-		-- See https://github.com/Roblox/roact/issues/14
-		return nil
 	end
 
-	error(("Cannot mount invalid Roact element %q"):format(tostring(element)))
+	if isValidComponent then
+		if parentHandle._children then
+			parentHandle._children[key] = handle
+		else
+			parentHandle._child = handle
+		end
+	else
+		error(("Cannot mount invalid Roact component %q"):format(tostring(element.component)))
+	end
 end
 
 --[[
 	A public interface around _reconcileInternal
 ]]
-function Reconciler.reconcile(instanceHandle, newElement)
-	if instanceHandle == nil or not instanceHandle[isInstanceHandle] then
-		local message = (
-			"Bad argument #1 to Reconciler.reconcile, expected component instance handle, found %s"
-		):format(
-			typeof(instanceHandle)
-		)
-
-		error(message, 2)
+function Reconciler.reconcile(handle, element)
+	if type(element) ~= "table" then
+		if element == true or element == false then
+			-- Ignore booleans of either value
+			-- See https://github.com/Roblox/roact/issues/14
+			return nil
+		end
+		error(("Cannot reconcile to match invalid Roact element %q"):format(tostring(element)))
+	elseif not (type(handle) == "table" and handle[isInstanceHandle]) then
+		-- elements must be a table with isInstanceHandle set to true
+		error(("Bad argument #1 to Reconciler.reconcile, expected component instance handle, found %s")
+			:format(typeof(handle)), 2)
 	end
 
-	return Reconciler._reconcileInternal(instanceHandle, newElement)
+	local stack = Heapstack.new(true)
+	stack:push(Reconciler._reconcileInternal, stack, handle, element)
+	stack:run()
 end
 
 --[[
@@ -294,132 +258,94 @@ end
 	reconcile will return the instance that should be used. This instance can
 	be different than the one that was passed in.
 ]]
-function Reconciler._reconcileInternal(instanceHandle, newElement)
-	local oldElement = instanceHandle._element
+function Reconciler._reconcileInternal(stack, parentHandle, handle, newElement)
+	local oldElement = handle._element
 
-	-- Instance was deleted!
-	if not newElement then
-		Reconciler.unmount(instanceHandle)
-
-		return nil
+	if newElement == nil then
+		return stack:push(Reconciler._unmountInternal, stack, handle)
 	end
 
 	-- If the element changes type, we assume its subtree will be substantially
 	-- different. This lets us skip comparisons of a large swath of nodes.
 	if oldElement.component ~= newElement.component then
-		local parent = instanceHandle._parent
-		local key = instanceHandle._key
-
 		local context
-		if isStatefulElement(oldElement) then
-			context = instanceHandle._instance._context
+		if type(oldElement.component) == "table" then
+			context = handle._instance._context
 		else
-			context = instanceHandle._context
+			context = handle._context
 		end
 
-		Reconciler.unmount(instanceHandle)
+		stack:push(Reconciler._mountInternal, stack, parentHandle, newElement, handle._key, handle._parent, context)
 
-		local newInstance = Reconciler._mountInternal(newElement, parent, key, context)
-
-		return newInstance
+		return stack:push(Reconciler._unmountInternal, stack, handle)
 	end
 
-	if isPrimitiveElement(newElement) then
-		-- Roblox Instance change
-
-		local oldRef = oldElement.props[Core.Ref]
-		local newRef = newElement.props[Core.Ref]
-
+	local newType = type(newElement.component)
+	if newType == "string" then
 		-- Change the ref in one pass before applying any changes.
 		-- Roact doesn't provide any guarantees with regards to the sequencing
 		-- between refs and other changes in the commit phase.
+		local oldRef = oldElement.props[Core.Ref]
+		local newRef = newElement.props[Core.Ref]
 		if newRef ~= oldRef then
-			applyRef(oldRef, nil)
-			applyRef(newRef, instanceHandle._rbx)
+			stack:push(applyRef, oldRef, nil)
+			stack:push(applyRef, newRef, handle._rbx)
 		end
 
+		-- Roblox Instance change
 		-- Update properties and children of the Roblox object.
-		Reconciler._reconcilePrimitiveProps(oldElement, newElement, instanceHandle._rbx)
-		Reconciler._reconcilePrimitiveChildren(instanceHandle, newElement)
+		stack:push(Reconciler._reconcilePrimitiveChildren, stack, handle, newElement)
+		stack:push(Reconciler._reconcilePrimitiveProps, oldElement, newElement, handle)
 
-		instanceHandle._element = newElement
-
-		return instanceHandle
-	elseif isFunctionalElement(newElement) then
-		instanceHandle._element = newElement
-
+	elseif newType == "function" then
 		local rendered = newElement.component(newElement.props)
-		local newChild
-
-		if instanceHandle._child then
+		if handle._child then
 			-- Transition from tree to tree, even if 'rendered' is nil
-			newChild = Reconciler._reconcileInternal(instanceHandle._child, rendered)
+			stack:push(Reconciler._reconcileInternal, stack, parentHandle, handle, rendered)
 		elseif rendered then
 			-- Transition from nil to new tree
-			newChild = Reconciler._mountInternal(
-				rendered,
-				instanceHandle._parent,
-				instanceHandle._key,
-				instanceHandle._context
-			)
+			stack:push(Reconciler._mountInternal, stack, parentHandle, rendered, handle._key, handle._parent, handle._context)
 		end
-
-		instanceHandle._child = newChild
-
-		return instanceHandle
-	elseif isStatefulElement(newElement) then
-		instanceHandle._element = newElement
-
+	elseif newType == "table" then
 		-- Stateful elements can take care of themselves.
-		instanceHandle._instance:_update(newElement.props)
-
-		return instanceHandle
-	elseif isPortal(newElement) then
-		if instanceHandle._rbx ~= newElement.props.target then
-			local parent = instanceHandle._parent
-			local key = instanceHandle._key
-			local context = instanceHandle._context
-
-			Reconciler.unmount(instanceHandle)
-
-			local newInstance = Reconciler._mountInternal(newElement, parent, key, context)
-
-			return newInstance
+		stack:push(handle._instance._update, handle._instance, stack, newElement.props)
+	elseif newElement.component == Core.Portal then
+		stack:push(Reconciler._reconcilePrimitiveChildren, stack, handle, newElement)
+		if handle._rbx ~= newElement.props.target then
+			stack:push(Reconciler._unmountInternal, stack, handle)
+			stack:push(Reconciler._mountInternal, stack, parentHandle, newElement, handle._parent, handle._key, handle._context)
 		end
-
-		Reconciler._reconcilePrimitiveChildren(instanceHandle, newElement)
-
-		instanceHandle._element = newElement
-
-		return instanceHandle
+	else
+		error(("Cannot reconcile to match invalid Roact component %q"):format(tostring(newElement.component)))
 	end
 
-	error(("Cannot reconcile to match invalid Roact element %q"):format(tostring(newElement)))
+	handle._element = newElement
 end
 
 --[[
 	Reconciles the children of an existing Roact instance and the given element.
 ]]
-function Reconciler._reconcilePrimitiveChildren(instance, newElement)
-	local elementChildren = newElement.props[Core.Children]
+function Reconciler._reconcilePrimitiveChildren(stack, handle, newElement)
+	local childrenElements = newElement.props[Core.Children] or NO_CHILDREN
+	local childrenHandles = handle._children or NO_CHILDREN
+
+	if #childrenElements > 0 and not handle._children then
+		childrenHandles = {}
+		handle._children = childrenHandles
+	elseif #childrenElements == 0 then
+		handle._children = nil
+	end
 
 	-- Reconcile existing children that were changed or removed
-	for key, childInstance in pairs(instance._children) do
-		local childElement = elementChildren and elementChildren[key]
-
-		childInstance = Reconciler._reconcileInternal(childInstance, childElement)
-
-		instance._children[key] = childInstance
+	for key, childHandle in pairs(childrenHandles) do
+		stack:push(Reconciler._reconcileInternal, stack, handle, childHandle, childrenElements[key])
 	end
 
 	-- Create children that were just added!
-	if elementChildren then
-		for key, childElement in pairs(elementChildren) do
-			-- Update if we didn't hit the child in the previous loop
-			if not instance._children[key] then
-				local childInstance = Reconciler._mountInternal(childElement, instance._rbx, key, instance._context)
-				instance._children[key] = childInstance
-			end
+	for key, childElement in pairs(childrenElements) do
+		-- Update if we didn't hit the child in the previous loop
+		if not childrenHandles[key] then
+			stack:push(Reconciler._mountInternal, handle, childElement, key, handle._rbx, handle._context)
 		end
 	end
 end
@@ -483,12 +409,12 @@ local function _setRbxProps(rbx, props, state)
 			elseif key.type == Change then
 				Reconciler._singleEventManager:connectProperty(rbx, key.name, value)
 			else
-				error(("Invalid special property type %q"):format(tostring(key.type)), 0)
+				error(("Invalid special property type %q"):format(tostring(key.type)))
 			end
 		elseif keyType ~= "userdata" then
 			-- Userdata values are special markers, usually created by Symbol
 			-- They have no data attached other than being unique keys
-			error(("Properties with a key type of %q are not supported"):format(keyType), 0)
+			error(("Properties with a key type of %q are not supported"):format(keyType))
 		end
 		key, value = next(props, key)
 		state.key = key

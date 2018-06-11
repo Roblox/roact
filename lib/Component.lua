@@ -19,6 +19,7 @@ local Reconciler = require(script.Parent.Reconciler)
 local Core = require(script.Parent.Core)
 local GlobalConfig = require(script.Parent.GlobalConfig)
 local Instrumentation = require(script.Parent.Instrumentation)
+local Heapstack = require(script.Parent.Heapstack)
 
 local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
 
@@ -54,6 +55,83 @@ local function merge(...)
 	return result
 end
 
+local function setLock(component, value)
+	component._setStateBlockedReason = value
+end
+
+local function initState(component, class, props)
+	-- The user constructer might not set state, so we can.
+	if not component.state then
+		component.state = {}
+	end
+
+	if class.getDerivedStateFromProps then
+		local partialState = class.getDerivedStateFromProps(props, component.state)
+
+		if partialState then
+			component.state = merge(component.state, partialState)
+		end
+	end
+end
+
+local function updateDerivedState(getDerivedStateFromProps, newValues)
+	local derivedState = getDerivedStateFromProps(newValues.newProps, newValues.newState)
+
+	-- getDerivedStateFromProps can return nil if no changes are necessary.
+	if derivedState ~= nil then
+		newValues.newState = merge(newValues.newState, derivedState)
+	end
+end
+
+local function updateDefaultProps(defaultProps, newValues)
+	-- We only allocate another prop table if there are props that are
+	-- falling back to their default.
+	for key in pairs(defaultProps) do
+		if newValues.newProps[key] == nil then
+			newValues.newProps = merge(defaultProps, newValues.newProps)
+			return
+		end
+	end
+end
+
+local function callWillUpdate(component, newValues)
+	component._setStateBlockedReason = "willUpdate"
+	component:willUpdate(newValues.newProps, newValues.newState)
+end
+
+local function callRender(component, stack, newValues)
+	if newValues then
+		component.props = newValues.newProps
+		component.state = newValues.newState
+	end
+
+	local handle = component._handle
+
+	component._setStateBlockedReason = "render"
+	local newChildElement
+	if GlobalConfig.getValue("componentInstrumentation") then
+		local startTime = tick()
+
+		newChildElement = component:render()
+
+		local elapsed = tick() - startTime
+		Instrumentation.logRenderTime(handle, elapsed)
+	else
+		newChildElement = component:render()
+	end
+
+	-- Reconcilation doesn't take place unless render completed successfully. Otherwise we
+	-- are doing work that we know is incorrect and we could get way without doing.
+	if handle._child ~= nil then
+		component._setStateBlockedReason = "reconcile"
+		-- We returned an element during our last render, update it.
+		stack:push(Reconciler._reconcileInternal, stack, handle, handle._child, newChildElement)
+	elseif newChildElement then
+		component._setStateBlockedReason = "reconcile"
+		-- We returned nil during our last render, construct a new child.
+		stack:push(Reconciler._mountInternal, stack, handle, newChildElement, handle._parent, handle._key, component._context)
+	end
+end
 --[[
 	Create a new stateful component.
 
@@ -84,8 +162,12 @@ function Component:extend(name)
 		end
 	})
 
-	function class._new(props, context)
+	function class._new(stack, handle, context)
 		local self = {}
+		handle._instance = self
+		self._handle = handle
+
+		local props = handle._element.props
 
 		-- When set to a value, setState will fail, using the given reason to
 		-- create a detailed error message.
@@ -109,27 +191,20 @@ function Component:extend(name)
 
 		setmetatable(self, class)
 
+		if self.didMount then
+			stack:push(self.didMount, self)
+		end
+
+		stack:push(setLock, self, nil)
+		stack:push(callRender, self, stack)
+		stack:push(initState, self, class, props)
+
 		-- Call the user-provided initializer, where state and _props are set.
 		if class.init then
+			stack:push(setLock, self, nil)
 			self._setStateBlockedReason = "init"
 			class.init(self, props)
-			self._setStateBlockedReason = nil
 		end
-
-		-- The user constructer might not set state, so we can.
-		if not self.state then
-			self.state = {}
-		end
-
-		if class.getDerivedStateFromProps then
-			local partialState = class.getDerivedStateFromProps(props, self.state)
-
-			if partialState then
-				self.state = merge(self.state, partialState)
-			end
-		end
-
-		return self
 	end
 
 	return class
@@ -236,7 +311,10 @@ function Component:setState(partialState)
 	end
 
 	local newState = merge(self.state, partialState)
-	self:_update(nil, newState)
+
+	local stack = Heapstack.new(true)
+	stack:push(self._update, self, stack, nil, newState)
+	stack:run()
 end
 
 --[[
@@ -254,10 +332,13 @@ end
 	If shouldUpdate returns true, this method will trigger a re-render and
 	reconciliation step.
 ]]
-function Component:_update(newProps, newState)
+function Component:_update(stack, newProps, newState)
+	stack:push(self._forceUpdate, self, stack, newProps, newState)
+	stack:push(setLock, self, nil)
 	self._setStateBlockedReason = "shouldUpdate"
 
 	local doUpdate
+
 	if GlobalConfig.getValue("componentInstrumentation") then
 		local startTime = tick()
 
@@ -269,10 +350,13 @@ function Component:_update(newProps, newState)
 		doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
 	end
 
-	self._setStateBlockedReason = nil
-
-	if doUpdate then
-		self:_forceUpdate(newProps, newState)
+	if not doUpdate then
+		self._setStateBlockedReason = nil
+		stack:pop()
+		-- Prevents _forceUpdate from running after this
+		-- But if this code isn't reached because shouldUpdate threw,
+		-- the component will still update.
+		stack:pop()
 	end
 end
 
@@ -283,153 +367,43 @@ end
 
 	newProps and newState are optional.
 ]]
-function Component:_forceUpdate(newProps, newState)
-	-- Compute new derived state.
-	-- Get the class - getDerivedStateFromProps is static.
-	local class = getmetatable(self)
+function Component:_forceUpdate(stack, newProps, newState)
+	if self.didUpdate then
+		stack:push(self.didUpdate, self, self.props, self.state)
+	end
 
+	local newValues = {
+		newProps = newProps or self.props,
+		newState = newState or self.state,
+	}
+
+	stack:push(setLock, self, nil)
+	stack:push(callRender, self, stack, newValues)
+	if self.willUpdate then
+		stack:push(callWillUpdate, self, newValues)
+	end
 	-- If newProps are passed, compute derived state and default props
 	if newProps then
+		local class = getmetatable(self)
 		if class.getDerivedStateFromProps then
-			local derivedState = class.getDerivedStateFromProps(newProps, newState or self.state)
-
-			-- getDerivedStateFromProps can return nil if no changes are necessary.
-			if derivedState ~= nil then
-				newState = merge(newState or self.state, derivedState)
-			end
+			stack:push(updateDerivedState, class.getDerivedStateFromProps, newValues)
 		end
-
 		if class.defaultProps then
-			-- We only allocate another prop table if there are props that are
-			-- falling back to their default.
-			local replacementProps
-
-			for key in pairs(class.defaultProps) do
-				if newProps[key] == nil then
-					replacementProps = merge(class.defaultProps, newProps)
-					break
-				end
-			end
-
-			if replacementProps then
-				newProps = replacementProps
-			end
+			stack:push(updateDefaultProps, class.defaultProps, newValues)
 		end
-	end
-
-	if self.willUpdate then
-		self._setStateBlockedReason = "willUpdate"
-		self:willUpdate(newProps or self.props, newState or self.state)
-		self._setStateBlockedReason = nil
-	end
-
-	local oldProps = self.props
-	local oldState = self.state
-
-	if newProps then
-		self.props = newProps
-	end
-
-	if newState then
-		self.state = newState
-	end
-
-	self._setStateBlockedReason = "render"
-
-	local newChildElement
-	if GlobalConfig.getValue("componentInstrumentation") then
-		local startTime = tick()
-
-		newChildElement = self:render()
-
-		local elapsed = tick() - startTime
-		Instrumentation.logRenderTime(self._handle, elapsed)
-	else
-		newChildElement = self:render()
-	end
-
-	self._setStateBlockedReason = nil
-
-	self._setStateBlockedReason = "reconcile"
-	if self._handle._child ~= nil then
-		-- We returned an element during our last render, update it.
-		self._handle._child = Reconciler._reconcileInternal(
-			self._handle._child,
-			newChildElement
-		)
-	elseif newChildElement then
-		-- We returned nil during our last render, construct a new child.
-		self._handle._child = Reconciler._mountInternal(
-			newChildElement,
-			self._handle._parent,
-			self._handle._key,
-			self._context
-		)
-	end
-	self._setStateBlockedReason = nil
-
-	if self.didUpdate then
-		self:didUpdate(oldProps, oldState)
-	end
-end
-
---[[
-	Initializes the component instance and attaches it to the given
-	instance handle, created by Reconciler._mount.
-]]
-function Component:_mount(handle)
-	self._handle = handle
-
-	self._setStateBlockedReason = "render"
-
-	local virtualTree
-	if GlobalConfig.getValue("componentInstrumentation") then
-		local startTime = tick()
-
-		virtualTree = self:render()
-
-		local elapsed = tick() - startTime
-		Instrumentation.logRenderTime(self._handle, elapsed)
-	else
-		virtualTree = self:render()
-	end
-
-	self._setStateBlockedReason = nil
-
-	if virtualTree then
-		self._setStateBlockedReason = "reconcile"
-		handle._child = Reconciler._mountInternal(
-			virtualTree,
-			handle._parent,
-			handle._key,
-			self._context
-		)
-		self._setStateBlockedReason = nil
-	end
-
-	if self.didMount then
-		self:didMount()
 	end
 end
 
 --[[
 	Destructs the component and invokes all necessary lifecycle methods.
 ]]
-function Component:_unmount()
-	local handle = self._handle
-
-	if self.willUnmount then
-		self._setStateBlockedReason = "willUnmount"
-		self:willUnmount()
-		self._setStateBlockedReason = nil
-	end
-
-	-- Stateful components can return nil from render()
-	if handle._child then
-		Reconciler.unmount(handle._child)
-	end
-
+function Component:_unmount(stack)
 	self._handle = nil
+	if self.willUnmount then
+		stack:push(setLock, self, nil)
+		self._setStateBlockedReason = "willUnmount"
+		stack:push(self.willUnmount, self)
+	end
 end
 
 return Component

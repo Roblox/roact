@@ -49,7 +49,7 @@ end
 function SingleEventManager.new()
 	local self = {}
 
-	self._hookCache = {}
+	self._hookCache = setmetatable({}, {_key="k"})
 
 	setmetatable(self, SingleEventManager)
 

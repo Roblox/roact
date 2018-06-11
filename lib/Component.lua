@@ -257,6 +257,39 @@ end
 function Component:_update(newProps, newState)
 	self._setStateBlockedReason = "shouldUpdate"
 
+	-- Compute new derived state.
+	-- Get the class - getDerivedStateFromProps is static.
+	local class = getmetatable(self)
+
+	-- If newProps are passed, compute derived state and default props
+	if newProps then
+		if class.getDerivedStateFromProps then
+			local derivedState = class.getDerivedStateFromProps(newProps, newState or self.state)
+
+			-- getDerivedStateFromProps can return nil if no changes are necessary.
+			if derivedState ~= nil then
+				newState = merge(newState or self.state, derivedState)
+			end
+		end
+
+		if class.defaultProps then
+			-- We only allocate another prop table if there are props that are
+			-- falling back to their default.
+			local replacementProps
+
+			for key in pairs(class.defaultProps) do
+				if newProps[key] == nil then
+					replacementProps = merge(class.defaultProps, newProps)
+					break
+				end
+			end
+
+			if replacementProps then
+				newProps = replacementProps
+			end
+		end
+	end
+
 	local doUpdate
 	if GlobalConfig.getValue("componentInstrumentation") then
 		local startTime = tick()
@@ -284,22 +317,6 @@ end
 	newProps and newState are optional.
 ]]
 function Component:_forceUpdate(newProps, newState)
-	-- Compute new derived state.
-	-- Get the class - getDerivedStateFromProps is static.
-	local class = getmetatable(self)
-
-	-- If newProps are passed, compute derived state and default props
-	if newProps then
-		if class.getDerivedStateFromProps then
-			local derivedState = class.getDerivedStateFromProps(newProps, newState or self.state)
-
-			-- getDerivedStateFromProps can return nil if no changes are necessary.
-			if derivedState ~= nil then
-				newState = merge(newState or self.state, derivedState)
-			end
-		end
-	end
-
 	if self.willUpdate then
 		self._setStateBlockedReason = "willUpdate"
 		self:willUpdate(newProps or self.props, newState or self.state)

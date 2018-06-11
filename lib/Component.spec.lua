@@ -228,6 +228,11 @@ return function()
 			bar = "world",
 		}
 
+		function TestComponent:shouldUpdate(newProps)
+			lastProps = newProps
+			return true
+		end
+
 		function TestComponent:render()
 			lastProps = self.props
 			return nil
@@ -260,6 +265,19 @@ return function()
 		expect(lastProps).to.be.a("table")
 		expect(lastProps.foo).to.equal("hello")
 		expect(lastProps.bar).to.equal(false)
+
+		Reconciler.unmount(handle)
+
+		lastProps = nil;
+		handle = Reconciler.mount(createElement(TestComponent, {}))
+		Reconciler.reconcile(handle, createElement(TestComponent, {
+			baz = "!",
+		}))
+
+		expect(lastProps).to.be.a("table")
+		expect(lastProps.foo).to.equal("hello")
+		expect(lastProps.bar).to.equal("world")
+		expect(lastProps.baz).to.equal("!")
 
 		Reconciler.unmount(handle)
 	end)

@@ -78,23 +78,21 @@ function Reconciler.unmount(instanceHandle)
 		-- Necessary to make sure SingleEventManager doesn't leak references
 		Reconciler._singleEventManager:disconnectAll(instanceHandle._rbx)
 
-		return instanceHandle._rbx:Destroy()
+		instanceHandle._rbx:Destroy()
 	elseif elementType == "function" then
 		-- Functional components can return nil
 		if instanceHandle._child then
 			Reconciler.unmount(instanceHandle._child)
 		end
-		return
 	elseif elementType == "table" then
-		return instanceHandle._instance:_unmount()
+		instanceHandle._instance:_unmount()
 	elseif element.component == Core.Portal then
 		for _, child in pairs(instanceHandle._children) do
 			Reconciler.unmount(child)
 		end
-		return
+	else
+		error(("Cannot unmount invalid Roact instance %q"):format(tostring(element)))
 	end
-
-	error(("Cannot unmount invalid Roact instance %q"):format(tostring(element)))
 end
 
 --[[

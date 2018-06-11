@@ -32,6 +32,9 @@ local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local SingleEventManager = require(script.Parent.SingleEventManager)
 local Symbol = require(script.Parent.Symbol)
 
+local AsyncScheduler = require(script.Parent.AsyncScheduler)
+local SyncScheduler = require(script.Parent.SyncScheduler)
+
 local isInstanceHandle = Symbol.named("isInstanceHandle")
 
 local DEFAULT_SOURCE = "\n\t<Use Roact.setGlobalConfig with the 'elementTracing' key to enable detailed tracebacks>\n"
@@ -60,8 +63,14 @@ local function applyRef(ref, newRbx)
 	end
 end
 
+local scheduler = AsyncScheduler.new(12 / 1000)
+local function schedule(task)
+	scheduler:schedule(task)
+end
+
 local Reconciler = {}
 
+Reconciler._schedule = schedule
 Reconciler._singleEventManager = SingleEventManager.new()
 
 --[[
@@ -104,35 +113,37 @@ end
 function Reconciler.unmount(instanceHandle)
 	local element = instanceHandle._element
 
-	if isPrimitiveElement(element) then
-		-- We're destroying a Roblox Instance-based object
+	schedule(function()
+		if isPrimitiveElement(element) then
+			-- We're destroying a Roblox Instance-based object
 
-		-- Kill refs before we make changes, since any mutations past this point
-		-- aren't relevant to components.
-		applyRef(element.props[Core.Ref], nil)
+			-- Kill refs before we make changes, since any mutations past this point
+			-- aren't relevant to components.
+			applyRef(element.props[Core.Ref], nil)
 
-		for _, child in pairs(instanceHandle._children) do
-			Reconciler.unmount(child)
+			for _, child in pairs(instanceHandle._children) do
+				Reconciler.unmount(child)
+			end
+
+			-- Necessary to make sure SingleEventManager doesn't leak references
+			Reconciler._singleEventManager:disconnectAll(instanceHandle._rbx)
+
+			instanceHandle._rbx:Destroy()
+		elseif isFunctionalElement(element) then
+			-- Functional components can return nil
+			if instanceHandle._child then
+				Reconciler.unmount(instanceHandle._child)
+			end
+		elseif isStatefulElement(element) then
+			instanceHandle._instance:_unmount()
+		elseif isPortal(element) then
+			for _, child in pairs(instanceHandle._children) do
+				Reconciler.unmount(child)
+			end
+		else
+			error(("Cannot unmount invalid Roact instance %q"):format(tostring(element)))
 		end
-
-		-- Necessary to make sure SingleEventManager doesn't leak references
-		Reconciler._singleEventManager:disconnectAll(instanceHandle._rbx)
-
-		instanceHandle._rbx:Destroy()
-	elseif isFunctionalElement(element) then
-		-- Functional components can return nil
-		if instanceHandle._child then
-			Reconciler.unmount(instanceHandle._child)
-		end
-	elseif isStatefulElement(element) then
-		instanceHandle._instance:_unmount()
-	elseif isPortal(element) then
-		for _, child in pairs(instanceHandle._children) do
-			Reconciler.unmount(child)
-		end
-	else
-		error(("Cannot unmount invalid Roact instance %q"):format(tostring(element)))
-	end
+	end)
 end
 
 --[[
@@ -159,7 +170,16 @@ function Reconciler._mountInternal(element, parent, key, context)
 	if isPrimitiveElement(element) then
 		-- Primitive elements are backed directly by Roblox Instances.
 
+		local handle = {
+			[isInstanceHandle] = true,
+			_key = key,
+			_parent = parent,
+			_element = element,
+			_context = context,
+		}
+
 		local rbx = Instance.new(element.component)
+		handle._rbx = rbx
 
 		-- Update Roblox properties
 		for key, value in pairs(element.props) do
@@ -168,6 +188,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 
 		-- Create children!
 		local children = {}
+		handle._children = children
 
 		if element.props[Core.Children] then
 			for key, childElement in pairs(element.props[Core.Children]) do
@@ -190,15 +211,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 		-- Attach ref values, since the instance is initialized now.
 		applyRef(element.props[Core.Ref], rbx)
 
-		return {
-			[isInstanceHandle] = true,
-			_key = key,
-			_parent = parent,
-			_element = element,
-			_context = context,
-			_children = children,
-			_rbx = rbx,
-		}
+		return handle
 	elseif isFunctionalElement(element) then
 		-- Functional elements contain 0 or 1 children.
 
@@ -232,7 +245,10 @@ function Reconciler._mountInternal(element, parent, key, context)
 		local instance = element.component._new(element.props, context)
 
 		instanceHandle._instance = instance
-		instance:_mount(instanceHandle)
+
+		schedule(function()
+			instance:_mount(instanceHandle)
+		end)
 
 		return instanceHandle
 	elseif isPortal(element) then
@@ -340,7 +356,6 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 			applyRef(oldRef, nil)
 			applyRef(newRef, instanceHandle._rbx)
 		end
-
 		-- Update properties and children of the Roblox object.
 		Reconciler._reconcilePrimitiveProps(oldElement, newElement, instanceHandle._rbx)
 		Reconciler._reconcilePrimitiveChildren(instanceHandle, newElement)
@@ -373,8 +388,10 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 	elseif isStatefulElement(newElement) then
 		instanceHandle._element = newElement
 
-		-- Stateful elements can take care of themselves.
-		instanceHandle._instance:_update(newElement.props)
+		schedule(function()
+			-- Stateful elements can take care of themselves.
+			instanceHandle._instance:_update(newElement.props)
+		end)
 
 		return instanceHandle
 	elseif isPortal(newElement) then

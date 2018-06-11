@@ -236,7 +236,10 @@ function Component:setState(partialState)
 	end
 
 	local newState = merge(self.state, partialState)
-	self:_update(nil, newState)
+
+	Reconciler._schedule(function()
+		self:_update(nil, newState)
+	end)
 end
 
 --[[
@@ -257,17 +260,7 @@ end
 function Component:_update(newProps, newState)
 	self._setStateBlockedReason = "shouldUpdate"
 
-	local doUpdate
-	if GlobalConfig.getValue("componentInstrumentation") then
-		local startTime = tick()
-
-		doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
-
-		local elapsed = tick() - startTime
-		Instrumentation.logShouldUpdate(self._handle, doUpdate, elapsed)
-	else
-		doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
-	end
+	local doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
 
 	self._setStateBlockedReason = nil
 
@@ -336,17 +329,7 @@ function Component:_forceUpdate(newProps, newState)
 
 	self._setStateBlockedReason = "render"
 
-	local newChildElement
-	if GlobalConfig.getValue("componentInstrumentation") then
-		local startTime = tick()
-
-		newChildElement = self:render()
-
-		local elapsed = tick() - startTime
-		Instrumentation.logRenderTime(self._handle, elapsed)
-	else
-		newChildElement = self:render()
-	end
+	local newChildElement = self:render()
 
 	self._setStateBlockedReason = nil
 
@@ -369,7 +352,9 @@ function Component:_forceUpdate(newProps, newState)
 	self._setStateBlockedReason = nil
 
 	if self.didUpdate then
-		self:didUpdate(oldProps, oldState)
+		Reconciler._schedule(function()
+			self:didUpdate(oldProps, oldState)
+		end)
 	end
 end
 
@@ -382,17 +367,7 @@ function Component:_mount(handle)
 
 	self._setStateBlockedReason = "render"
 
-	local virtualTree
-	if GlobalConfig.getValue("componentInstrumentation") then
-		local startTime = tick()
-
-		virtualTree = self:render()
-
-		local elapsed = tick() - startTime
-		Instrumentation.logRenderTime(self._handle, elapsed)
-	else
-		virtualTree = self:render()
-	end
+	local virtualTree = self:render()
 
 	self._setStateBlockedReason = nil
 
@@ -408,7 +383,9 @@ function Component:_mount(handle)
 	end
 
 	if self.didMount then
-		self:didMount()
+		Reconciler._schedule(function()
+			self:didMount()
+		end)
 	end
 end
 

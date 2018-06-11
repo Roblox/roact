@@ -298,23 +298,6 @@ function Component:_forceUpdate(newProps, newState)
 				newState = merge(newState or self.state, derivedState)
 			end
 		end
-
-		if class.defaultProps then
-			-- We only allocate another prop table if there are props that are
-			-- falling back to their default.
-			local replacementProps
-
-			for key in pairs(class.defaultProps) do
-				if newProps[key] == nil then
-					replacementProps = merge(class.defaultProps, newProps)
-					break
-				end
-			end
-
-			if replacementProps then
-				newProps = replacementProps
-			end
-		end
 	end
 
 	if self.willUpdate then

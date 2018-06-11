@@ -228,11 +228,6 @@ return function()
 			bar = "world",
 		}
 
-		function TestComponent:shouldUpdate(newProps)
-			lastProps = newProps
-			return true
-		end
-
 		function TestComponent:render()
 			lastProps = self.props
 			return nil
@@ -267,6 +262,15 @@ return function()
 		expect(lastProps.bar).to.equal(false)
 
 		Reconciler.unmount(handle)
+
+		function TestComponent:shouldUpdate(newProps)
+			lastProps = newProps
+			return true
+		end
+
+		function TestComponent:render()
+			return nil
+		end
 
 		lastProps = nil;
 		handle = Reconciler.mount(createElement(TestComponent, {}))

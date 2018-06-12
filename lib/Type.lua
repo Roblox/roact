@@ -17,6 +17,10 @@ local TypeInternal = {
 	Tree = Symbol.named("RoactTree"),
 	Node = Symbol.named("RoactNode"),
 	Element = Symbol.named("RoactElement"),
+
+	-- Too verbose?
+	StatefulComponentClass = Symbol.named("StatefulComponentClass"),
+	StatefulComponentInstance = Symbol.named("StatefulComponentInstance"),
 }
 
 function TypeInternal.of(value)
@@ -34,5 +38,11 @@ function TypeInternal.is(value, typeMarker)
 end
 
 getmetatable(Type).__index = TypeInternal
+
+setmetatable(TypeInternal, {
+	__index = function(self, key)
+		error(("Invalid Type key %q"):format(tostring(key)))
+	end,
+})
 
 return Type

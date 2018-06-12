@@ -1,8 +1,12 @@
+local Type = require(script.Parent.Type)
+
 local Component = {}
+Component[Type] = Type.StatefulComponentClass
 Component.__index = Component
 
 function Component:extend()
 	local class = {}
+	class[Type] = Type.StatefulComponentInstance
 	class.__index = class
 
 	for key, value in pairs(Component) do

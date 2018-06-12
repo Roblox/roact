@@ -5,10 +5,12 @@ local Symbol = require(script.Parent.Symbol)
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 
-local DEBUG_LOGS_ENABLED = true
+local DEFAULT_TREE_CONFIG = {
+	useAsyncScheduler = true,
+	asyncSchedulerBudgetPerFrameMs = 12 / 1000
+}
 
-local ASYNC_SCHEDULER = true
-local ASYNC_BUDGET_PER_FRAME = 12 / 1000
+local DEBUG_LOGS_ENABLED = true
 
 -- Used to mark a child that is going to be mounted, but is not yet.
 local MountingNode = Symbol.named("MountingNode")
@@ -39,6 +41,25 @@ local function DEBUG_showTask(task)
 	end
 end
 
+local function makeConfigObject(source)
+	local config = {}
+
+	for key, value in pairs(source) do
+		config[key] = value
+	end
+
+	setmetatable(config, {
+		__index = function(_, key)
+			error(("Invalid config key %q"):format(key))
+		end,
+		__newindex = function()
+			error("Cannot mutate config!")
+		end,
+	})
+
+	return config
+end
+
 local function getGuid()
 	return HttpService:GenerateGUID(false)
 end
@@ -48,7 +69,7 @@ local function scheduleTask(tree, task)
 
 	tree.tasks[#tree.tasks + 1] = task
 
-	if not ASYNC_SCHEDULER and not tree.tasksRunning then
+	if not tree.config.useAsyncScheduler and not tree.tasksRunning then
 		processTreeTasksSync(tree)
 	end
 end
@@ -59,12 +80,14 @@ local function taskMountNode(details)
 	local parentNode = details.parentNode
 	local parentRbx = details.parentRbx
 	local isTreeRoot = details.isTreeRoot
+	local nodeDepth = details.nodeDepth
 
 	assert(Type.is(element, Type.Element))
 	assert(typeof(key) == "string")
 	assert(Type.is(parentNode, Type.Node) or typeof(parentNode) == "nil")
 	assert(typeof(parentRbx) == "Instance" or typeof(parentRbx) == "nil")
 	assert(typeof(isTreeRoot) == "boolean")
+	assert(typeof(nodeDepth) == "number")
 
 	return function(tree)
 		local node = {
@@ -90,6 +113,7 @@ local function taskMountNode(details)
 							parentNode = node,
 							parentRbx = rbx,
 							isTreeRoot = false,
+							nodeDepth = nodeDepth + 1,
 						}))
 					end
 				else
@@ -296,7 +320,11 @@ end
 
 local function mountTree(element, parentRbx, key)
 	assert(Type.is(element, Type.Element))
-	assert(typeof(parentRbx) == "Instance" or typeof(parentRbx) == "nil")
+	assert(typeof(parentRbx) == "Instance" or parentRbx == nil)
+	assert(typeof(key) == "string")
+
+	-- TODO: Accept config parameter and typecheck values
+	local config = makeConfigObject(DEFAULT_TREE_CONFIG)
 
 	local tree = {
 		[Type] = Type.Tree,
@@ -306,12 +334,15 @@ local function mountTree(element, parentRbx, key)
 		connections = {},
 		mounted = true,
 		rootNode = nil,
+		config = config,
 	}
 
-	if ASYNC_SCHEDULER then
+	if tree.config.useAsyncScheduler then
+		local budget = tree.config.asyncSchedulerBudgetPerFrameMs
+
 		tree.renderStepId = getGuid()
 		RunService:BindToRenderStep(tree.renderStepId, Enum.RenderPriority.Last.Value, function()
-			processTreeTasksAsync(tree, ASYNC_BUDGET_PER_FRAME)
+			processTreeTasksAsync(tree, budget)
 		end)
 	end
 
@@ -321,6 +352,7 @@ local function mountTree(element, parentRbx, key)
 		parentNode = nil,
 		parentRbx = parentRbx,
 		isTreeRoot = true,
+		nodeDepth = 1,
 	}))
 
 	return tree
@@ -332,7 +364,7 @@ local function unmountTree(tree)
 
 	tree.mounted = false
 
-	if ASYNC_SCHEDULER then
+	if tree.config.useAsyncScheduler then
 		RunService:UnbindFromRenderStep(tree.renderStepId)
 	end
 
@@ -359,5 +391,5 @@ end
 return {
 	mount = mountTree,
 	unmount = unmountTree,
-	reconcileTree = reconcileTree
+	reconcile = reconcileTree,
 }

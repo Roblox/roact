@@ -15,6 +15,10 @@ local benchmarkModules = {}
 
 findBenchmarkModules(game.ReplicatedStorage.Benchmarks, benchmarkModules)
 
+table.sort(benchmarkModules, function(a, b)
+	return a.Name < b.Name
+end)
+
 local message = (
 	"Starting %d benchmarks..."
 ):format(
@@ -29,9 +33,10 @@ for _, module in ipairs(benchmarkModules) do
 		benchmark.setup()
 	end
 	local startTime = tick()
+	local step = benchmark.step
 
 	for i = 1, benchmark.iterations do
-		benchmark.step(i)
+		step(i)
 	end
 
 	local endTime = tick()

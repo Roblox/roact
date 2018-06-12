@@ -19,6 +19,14 @@ local TypeInternal = {
 	Element = Symbol.named("RoactElement"),
 }
 
+function TypeInternal.of(value)
+	if typeof(value) ~= "table" then
+		return nil
+	end
+
+	return value[Type]
+end
+
 function TypeInternal.is(value, typeMarker)
 	assert(typeof(typeMarker) == "userdata")
 

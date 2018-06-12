@@ -4,6 +4,8 @@ return function()
 
 	local PureComponent = require(script.Parent.PureComponent)
 
+	SKIP()
+
 	it("should be extendable", function()
 		local MyComponent = PureComponent:extend("MyComponent")
 

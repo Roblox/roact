@@ -3,6 +3,8 @@ return function()
 	local Reconciler = require(script.Parent.Reconciler)
 	local createElement = require(script.Parent.createElement)
 
+	SKIP()
+
 	it("reify should only warn once per call site", function()
 		local callCount = 0
 		local lastMessage

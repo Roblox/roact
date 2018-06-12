@@ -1,16 +1,29 @@
 local Roact = require(game.ReplicatedStorage.Roact)
 
-local function body(text)
-	return Roact.createElement("ScreenGui", nil, {
-		Label = text == "Hello, world!" and Roact.createElement("TextLabel", {
-			Size = UDim2.new(1, 0, 1, 0),
-			Text = text,
-		}) or nil,
+local e = Roact.createElement
+
+local function body()
+	return e("ScreenGui", nil, {
+		A = e("TextLabel", {
+			Text = "A",
+		}, {
+			B = e("TextLabel", {
+				Text = "B",
+			}),
+
+			C = e("TextLabel", {
+				Text = "C",
+			}, {
+				D = e("TextLabel", {
+					Text = "D",
+				}),
+
+				E = e("TextLabel", {
+					Text = "E",
+				}),
+			}),
+		}),
 	})
 end
 
-local tree = Roact.mount(body("Hello, world!"), game.Players.LocalPlayer.PlayerGui, "Roact Root")
-
-wait(0.7)
-
-Roact.reconcileTree(tree, body("Hey!"))
+local tree = Roact.mount(body(), game.Players.LocalPlayer.PlayerGui, "Roact Root")

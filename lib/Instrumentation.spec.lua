@@ -6,6 +6,8 @@ return function()
 
 	local Instrumentation = require(script.Parent.Instrumentation)
 
+	SKIP()
+
 	it("should count and time renders when enabled", function()
 		GlobalConfig.set({
 			["componentInstrumentation"] = true,

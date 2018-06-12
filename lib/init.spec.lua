@@ -1,6 +1,8 @@
 return function()
 	local Roact = require(script.Parent)
 
+	SKIP()
+
 	it("should load with all public APIs", function()
 		local publicApi = {
 			createElement = "function",

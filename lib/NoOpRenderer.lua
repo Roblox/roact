@@ -1,0 +1,3 @@
+local NoOpRenderer = {}
+
+return NoOpRenderer

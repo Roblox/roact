@@ -1,4 +1,3 @@
-# Refs
 *Refs* grant access to the actual Instance objects that are created by Roact. They're an escape hatch for when something is difficult or impossible to correctly express with the Roact API.
 
 !!! info

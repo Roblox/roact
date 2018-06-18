@@ -1,5 +1,3 @@
-# Roact API Reference
-
 ## Methods
 
 ### Roact.createElement

@@ -1,5 +1,3 @@
-# Hello, Roact!
-
 !!! info
 	These examples asssumes that you've successfully [installed Roact](installation.md) into `ReplicatedStorage`!
 

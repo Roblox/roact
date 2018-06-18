@@ -1,4 +1,3 @@
-# Events
 Roact manages Instance event connections automatically as part of rendering.
 
 To connect to an event, pass a prop with `Roact.Event.EVENT_NAME` as the key and a function as the value.

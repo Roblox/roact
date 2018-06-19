@@ -62,9 +62,9 @@ Reconciler._singleEventManager = SingleEventManager.new()
 ]]
 function Reconciler.unmount(instanceHandle)
 	local element = instanceHandle._element
-	local elementType = type(element.component)
+	local componentType = type(element.component)
 
-	if elementType == "string" then
+	if componentType == "string" then
 		-- We're destroying a Roblox Instance-based object
 
 		-- Kill refs before we make changes, since any mutations past this point
@@ -79,12 +79,12 @@ function Reconciler.unmount(instanceHandle)
 		Reconciler._singleEventManager:disconnectAll(instanceHandle._rbx)
 
 		instanceHandle._rbx:Destroy()
-	elseif elementType == "function" then
+	elseif componentType == "function" then
 		-- Functional components can return nil
 		if instanceHandle._child then
 			Reconciler.unmount(instanceHandle._child)
 		end
-	elseif elementType == "table" then
+	elseif componentType == "table" then
 		instanceHandle._instance:_unmount()
 	elseif element.component == Core.Portal then
 		for _, child in pairs(instanceHandle._children) do
@@ -100,22 +100,6 @@ end
 	component tree.
 ]]
 function Reconciler.mount(element, parent, key)
-	if type(element) ~= "table" then
-		if type(element) == "boolean" then
-			-- Ignore booleans of either value
-			-- See https://github.com/Roblox/roact/issues/14
-			return nil
-		end
-
-		local message = (
-			"Bad argument #1 to Reconciler.mount, expected a table representing an element, found a %s"
-		):format(
-			typeof(element)
-		)
-
-		error(message, 2)
-	end
-
 	return Reconciler._mountInternal(element, parent, key)
 end
 
@@ -132,9 +116,25 @@ end
 	the reconciliation methods; they depend on this structure being well-formed.
 ]]
 function Reconciler._mountInternal(element, parent, key, context)
-	local elementType = type(element.component)
+	if type(element) ~= "table" then
+		if type(element) == "boolean" then
+			-- Ignore booleans of either value
+			-- See https://github.com/Roblox/roact/issues/14
+			return nil
+		end
 
-	if elementType == "string" then
+		local message = (
+			"Bad argument #1 to Reconciler.mount, expected a table representing an element, found a %s"
+		):format(
+			typeof(element)
+		)
+
+		error(message, 2)
+	end
+
+	local componentType = type(element.component)
+
+	if componentType == "string" then
 		-- Primitive elements are backed directly by Roblox Instances.
 		local rbx = Instance.new(element.component)
 
@@ -175,7 +175,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 			_children = children,
 			_rbx = rbx,
 		}
-	elseif elementType == "function" then
+	elseif componentType == "function" then
 		-- Functional elements contain 0 or 1 children.
 
 		local instanceHandle = {
@@ -192,7 +192,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 		end
 
 		return instanceHandle
-	elseif elementType == "table" then
+	elseif componentType == "table" then
 		-- Stateful elements have 0 or 1 children, and also have a backing
 		-- instance that can keep state.
 

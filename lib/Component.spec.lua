@@ -262,6 +262,16 @@ return function()
 		expect(lastProps.bar).to.equal(false)
 
 		Reconciler.unmount(handle)
+	end)
+
+	it("should include defaultProps in props passed to shouldUpdate", function()
+		local lastProps
+		local TestComponent = Component:extend("TestComponent")
+
+		TestComponent.defaultProps = {
+			foo = "hello",
+			bar = "world",
+		}
 
 		function TestComponent:shouldUpdate(newProps)
 			lastProps = newProps
@@ -272,8 +282,7 @@ return function()
 			return nil
 		end
 
-		lastProps = nil;
-		handle = Reconciler.mount(createElement(TestComponent, {}))
+		local handle = Reconciler.mount(createElement(TestComponent, {}))
 		Reconciler.reconcile(handle, createElement(TestComponent, {
 			baz = "!",
 		}))

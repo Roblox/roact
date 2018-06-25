@@ -3,9 +3,7 @@ return function()
 	local createElement = require(script.Parent.createElement)
 	local Reconciler = require(script.Parent.Reconciler)
 	local GlobalConfig = require(script.Parent.GlobalConfig)
-
 	local Component = require(script.Parent.Component)
-	local GlobalConfig = require(script.Parent.GlobalConfig)
 
 	it("should be extendable", function()
 		local MyComponent = Component:extend("The Senate")
@@ -345,10 +343,10 @@ return function()
 				return nil
 			end
 
-			local handle = Reconciler.mount(Core.createElement(TestComponent))
+			local handle = Reconciler.mount(createElement(TestComponent))
 			expect(callCount).to.equal(1)
 
-			handle = Reconciler.reconcile(handle, Core.createElement(TestComponent, {
+			handle = Reconciler.reconcile(handle, createElement(TestComponent, {
 				foo = "bar",
 			}))
 			expect(callCount).to.equal(2)
@@ -375,7 +373,7 @@ return function()
 			end
 
 			expect(function()
-				Reconciler.mount(Core.createElement(TestComponent))
+				Reconciler.mount(createElement(TestComponent))
 			end).to.throw()
 
 			GlobalConfig.reset()
@@ -395,7 +393,7 @@ return function()
 			end
 
 			expect(function()
-				Reconciler.mount(Core.createElement(TestComponent))
+				Reconciler.mount(createElement(TestComponent))
 			end).to.throw()
 
 			GlobalConfig.reset()
@@ -414,10 +412,10 @@ return function()
 				return nil
 			end
 
-			local handle = Reconciler.mount(Core.createElement(TestComponent))
+			local handle = Reconciler.mount(createElement(TestComponent))
 			expect(callCount).to.equal(0)
 
-			handle = Reconciler.reconcile(handle, Core.createElement(TestComponent, {
+			handle = Reconciler.reconcile(handle, createElement(TestComponent, {
 				foo = "bar",
 			}))
 			expect(callCount).to.equal(0)

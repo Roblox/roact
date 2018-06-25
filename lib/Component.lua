@@ -441,7 +441,10 @@ function Component:_validateProps(props)
 
 	local validator = self.validateProps
 
-	if validator == nil then return end
+	if validator == nil then
+		return
+	end
+
 	if typeof(validator) ~= "function" then
 		-- Hide as much as possible about error location, since this message
 		-- occurs from several possible call sites with different stack traces.

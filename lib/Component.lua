@@ -290,16 +290,12 @@ function Component:_update(newProps, newState)
 		end
 	end
 
-	local doUpdate
+	local startTime = tick()
+	local doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
+	local elapsed = tick() - startTime
+
 	if GlobalConfig.getValue("componentInstrumentation") then
-		local startTime = tick()
-
-		doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
-
-		local elapsed = tick() - startTime
 		Instrumentation.logShouldUpdate(self._handle, doUpdate, elapsed)
-	else
-		doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
 	end
 
 	self._setStateBlockedReason = nil
@@ -382,16 +378,12 @@ function Component:_mount(handle)
 
 	self._setStateBlockedReason = "render"
 
-	local virtualTree
+	local startTime = tick()
+	local virtualTree = self:render()
+	local elapsed = tick() - startTime
+
 	if GlobalConfig.getValue("componentInstrumentation") then
-		local startTime = tick()
-
-		virtualTree = self:render()
-
-		local elapsed = tick() - startTime
 		Instrumentation.logRenderTime(self._handle, elapsed)
-	else
-		virtualTree = self:render()
 	end
 
 	self._setStateBlockedReason = nil

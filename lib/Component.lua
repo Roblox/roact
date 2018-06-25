@@ -237,7 +237,15 @@ function Component:setState(partialState)
 	end
 
 	local newState = merge(self.state, partialState)
-	self:_update(self.props, newState)
+	self:_update(nil, newState)
+end
+
+--[[
+	Returns the current stack trace for this component, or nil if the
+	elementTracing configuration flag is set to false.
+]]
+function Component:getElementTraceback()
+	return self._handle._element.source
 end
 
 --[[
@@ -250,33 +258,6 @@ end
 function Component:_update(newProps, newState)
 	self._setStateBlockedReason = "shouldUpdate"
 
-	local doUpdate
-	if GlobalConfig.getValue("componentInstrumentation") then
-		local startTime = tick()
-
-		doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
-
-		local elapsed = tick() - startTime
-		Instrumentation.logShouldUpdate(self._handle, doUpdate, elapsed)
-	else
-		doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
-	end
-
-	self._setStateBlockedReason = nil
-
-	if doUpdate then
-		self:_forceUpdate(newProps, newState)
-	end
-end
-
---[[
-	Forces the component to re-render itself and its children.
-
-	This is essentially the inner portion of _update.
-
-	newProps and newState are optional.
-]]
-function Component:_forceUpdate(newProps, newState)
 	-- Compute new derived state.
 	-- Get the class - getDerivedStateFromProps is static.
 	local class = getmetatable(self)
@@ -314,6 +295,29 @@ function Component:_forceUpdate(newProps, newState)
 		self:_validateProps(newProps)
 	end
 
+	local startTime = tick()
+	local doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
+	local elapsed = tick() - startTime
+
+	if GlobalConfig.getValue("componentInstrumentation") then
+		Instrumentation.logShouldUpdate(self._handle, doUpdate, elapsed)
+	end
+
+	self._setStateBlockedReason = nil
+
+	if doUpdate then
+		self:_forceUpdate(newProps, newState)
+	end
+end
+
+--[[
+	Forces the component to re-render itself and its children.
+
+	This is essentially the inner portion of _update.
+
+	newProps and newState are optional.
+]]
+function Component:_forceUpdate(newProps, newState)
 	if self.willUpdate then
 		self._setStateBlockedReason = "willUpdate"
 		self:willUpdate(newProps or self.props, newState or self.state)
@@ -381,16 +385,12 @@ function Component:_mount(handle)
 
 	self:_validateProps(self.props)
 
-	local virtualTree
+	local startTime = tick()
+	local virtualTree = self:render()
+	local elapsed = tick() - startTime
+
 	if GlobalConfig.getValue("componentInstrumentation") then
-		local startTime = tick()
-
-		virtualTree = self:render()
-
-		local elapsed = tick() - startTime
 		Instrumentation.logRenderTime(self._handle, elapsed)
-	else
-		virtualTree = self:render()
 	end
 
 	self._setStateBlockedReason = nil

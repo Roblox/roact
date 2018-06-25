@@ -1,4 +1,3 @@
-# Elements
 Like React, everything in Roact is built out of elements. Elements are the smallest building blocks for creating UI.
 
 Elements describe what you want your UI to look like at a single point in time. They're [immutable](https://en.wikipedia.org/wiki/Immutable_object): you can't change elements once they're created, but you can create new ones. Because creating elements is fast, this is no big deal.

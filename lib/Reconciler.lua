@@ -42,6 +42,22 @@ local function isPortal(element)
 	return element.component == Core.Portal
 end
 
+--[[
+	Sets the value of a reference to a new rendered object.
+	Correctly handles both function-style and object-style refs.
+]]
+local function applyRef(ref, newRbx)
+	if ref == nil then
+		return
+	end
+
+	if type(ref) == "table" then
+		ref.current = newRbx
+	else
+		ref(newRbx)
+	end
+end
+
 local Reconciler = {}
 
 Reconciler._singleEventManager = SingleEventManager.new()
@@ -91,9 +107,7 @@ function Reconciler.unmount(instanceHandle)
 
 		-- Kill refs before we make changes, since any mutations past this point
 		-- aren't relevant to components.
-		if element.props[Core.Ref] then
-			element.props[Core.Ref](nil)
-		end
+		applyRef(element.props[Core.Ref], nil)
 
 		for _, child in pairs(instanceHandle._children) do
 			Reconciler.unmount(child)
@@ -162,8 +176,9 @@ function Reconciler._mountInternal(element, parent, key, context)
 		end
 
 		-- This name can be passed through multiple components.
-		-- What's important is the final Roblox Instance receives the name
-		-- It's solely for debugging purposes; Roact doesn't use it.
+		-- Elements with the same key will be treated as the same
+		-- element between reconciles; the old element will be
+		-- reconciled to the new element with the same key.
 		if key then
 			rbx.Name = key
 		end
@@ -171,9 +186,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 		rbx.Parent = parent
 
 		-- Attach ref values, since the instance is initialized now.
-		if element.props[Core.Ref] then
-			element.props[Core.Ref](rbx)
-		end
+		applyRef(element.props[Core.Ref], rbx)
 
 		return {
 			[isInstanceHandle] = true,
@@ -315,13 +328,15 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 	if isPrimitiveElement(newElement) then
 		-- Roblox Instance change
 
-		local oldRef = oldElement[Core.Ref]
-		local newRef = newElement[Core.Ref]
-		local refChanged = (oldRef ~= newRef)
+		local oldRef = oldElement.props[Core.Ref]
+		local newRef = newElement.props[Core.Ref]
 
-		-- Cancel the old ref before we make changes. Apply the new one after.
-		if refChanged and oldRef then
-			oldRef(nil)
+		-- Change the ref in one pass before applying any changes.
+		-- Roact doesn't provide any guarantees with regards to the sequencing
+		-- between refs and other changes in the commit phase.
+		if newRef ~= oldRef then
+			applyRef(oldRef, nil)
+			applyRef(newRef, instanceHandle._rbx)
 		end
 
 		-- Update properties and children of the Roblox object.
@@ -329,11 +344,6 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 		Reconciler._reconcilePrimitiveChildren(instanceHandle, newElement)
 
 		instanceHandle._element = newElement
-
-		-- Apply the new ref if there was a ref change.
-		if refChanged and newRef then
-			newRef(instanceHandle._rbx)
-		end
 
 		return instanceHandle
 	elseif isFunctionalElement(newElement) then

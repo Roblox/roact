@@ -1,6 +1,9 @@
 return function()
 	local Core = require(script.Parent.Core)
+	local createElement = require(script.Parent.createElement)
 	local Reconciler = require(script.Parent.Reconciler)
+	local GlobalConfig = require(script.Parent.GlobalConfig)
+
 	local Component = require(script.Parent.Component)
 	local GlobalConfig = require(script.Parent.GlobalConfig)
 
@@ -79,7 +82,7 @@ return function()
 		expect(mounts).to.equal(0)
 		expect(unmounts).to.equal(0)
 
-		local instance = Reconciler.mount(Core.createElement(MyComponent))
+		local instance = Reconciler.mount(createElement(MyComponent))
 
 		expect(mounts).to.equal(1)
 		expect(unmounts).to.equal(0)
@@ -144,12 +147,12 @@ return function()
 		end
 
 		function Container:render()
-			return Core.createElement(Child, {
+			return createElement(Child, {
 				value = self.state.value,
 			})
 		end
 
-		local element = Core.createElement(Container)
+		local element = createElement(Container)
 		local instance = Reconciler.mount(element)
 
 		expect(willUpdateCount).to.equal(0)
@@ -200,14 +203,14 @@ return function()
 
 		function TestComponent:render() end
 
-		local handle = Reconciler.mount(Core.createElement(TestComponent, {
+		local handle = Reconciler.mount(createElement(TestComponent, {
 			visible = true
 		}))
 
 		local state = getStateCallback()
 		expect(state.visible).to.equal(true)
 
-		handle = Reconciler.reconcile(handle, Core.createElement(TestComponent, {
+		handle = Reconciler.reconcile(handle, createElement(TestComponent, {
 			visible = 123
 		}))
 
@@ -231,7 +234,7 @@ return function()
 			return nil
 		end
 
-		local handle = Reconciler.mount(Core.createElement(TestComponent))
+		local handle = Reconciler.mount(createElement(TestComponent))
 
 		expect(lastProps).to.be.a("table")
 		expect(lastProps.foo).to.equal("hello")
@@ -240,7 +243,7 @@ return function()
 		Reconciler.unmount(handle)
 
 		lastProps = nil
-		handle = Reconciler.mount(Core.createElement(TestComponent, {
+		handle = Reconciler.mount(createElement(TestComponent, {
 			foo = 5,
 		}))
 
@@ -251,13 +254,44 @@ return function()
 		Reconciler.unmount(handle)
 
 		lastProps = nil
-		handle = Reconciler.mount(Core.createElement(TestComponent, {
+		handle = Reconciler.mount(createElement(TestComponent, {
 			bar = false,
 		}))
 
 		expect(lastProps).to.be.a("table")
 		expect(lastProps.foo).to.equal("hello")
 		expect(lastProps.bar).to.equal(false)
+
+		Reconciler.unmount(handle)
+	end)
+
+	it("should include defaultProps in props passed to shouldUpdate", function()
+		local lastProps
+		local TestComponent = Component:extend("TestComponent")
+
+		TestComponent.defaultProps = {
+			foo = "hello",
+			bar = "world",
+		}
+
+		function TestComponent:shouldUpdate(newProps)
+			lastProps = newProps
+			return true
+		end
+
+		function TestComponent:render()
+			return nil
+		end
+
+		local handle = Reconciler.mount(createElement(TestComponent, {}))
+		Reconciler.reconcile(handle, createElement(TestComponent, {
+			baz = "!",
+		}))
+
+		expect(lastProps).to.be.a("table")
+		expect(lastProps.foo).to.equal("hello")
+		expect(lastProps.bar).to.equal("world")
+		expect(lastProps.baz).to.equal("!")
 
 		Reconciler.unmount(handle)
 	end)
@@ -276,7 +310,7 @@ return function()
 			return nil
 		end
 
-		local handle = Reconciler.mount(Core.createElement(TestComponent, {
+		local handle = Reconciler.mount(createElement(TestComponent, {
 			foo = "hey"
 		}))
 
@@ -284,7 +318,7 @@ return function()
 		expect(lastProps.foo).to.equal("hey")
 		expect(lastProps.bar).to.equal("world")
 
-		handle = Reconciler.reconcile(handle, Core.createElement(TestComponent))
+		handle = Reconciler.reconcile(handle, createElement(TestComponent))
 
 		expect(lastProps).to.be.a("table")
 		expect(lastProps.foo).to.equal("hello")
@@ -407,7 +441,7 @@ return function()
 				return nil
 			end
 
-			local initElement = Core.createElement(InitComponent)
+			local initElement = createElement(InitComponent)
 
 			expect(function()
 				Reconciler.mount(initElement)
@@ -423,7 +457,7 @@ return function()
 				})
 			end
 
-			local renderElement = Core.createElement(RenderComponent)
+			local renderElement = createElement(RenderComponent)
 
 			expect(function()
 				Reconciler.mount(renderElement)
@@ -453,7 +487,7 @@ return function()
 				})
 			end
 
-			local testElement = Core.createElement(TestComponent)
+			local testElement = createElement(TestComponent)
 
 			expect(function()
 				Reconciler.mount(testElement)
@@ -481,7 +515,7 @@ return function()
 				})
 			end
 
-			local testElement = Core.createElement(TestComponent)
+			local testElement = createElement(TestComponent)
 
 			expect(function()
 				Reconciler.mount(testElement)
@@ -502,7 +536,7 @@ return function()
 				})
 			end
 
-			local element = Core.createElement(TestComponent)
+			local element = createElement(TestComponent)
 			local instance = Reconciler.mount(element)
 
 			expect(function()
@@ -532,7 +566,7 @@ return function()
 				return nil
 			end
 
-			local element = Core.createElement(TestComponent)
+			local element = createElement(TestComponent)
 			local instance = Reconciler.mount(element)
 
 			expect(getStateCallback().value).to.equal(0)
@@ -572,7 +606,7 @@ return function()
 				return nil
 			end
 
-			local element = Core.createElement(TestComponent)
+			local element = createElement(TestComponent)
 			local instance = Reconciler.mount(element)
 
 			expect(getStateCallback().value).to.equal(0)
@@ -611,7 +645,7 @@ return function()
 				return nil
 			end
 
-			local element = Core.createElement(TestComponent)
+			local element = createElement(TestComponent)
 			local instance = Reconciler.mount(element)
 			expect(renderCount).to.equal(1)
 
@@ -622,6 +656,92 @@ return function()
 			expect(renderCount).to.equal(1)
 
 			Reconciler.unmount(instance)
+		end)
+
+		it("should not call getDerivedStateFromProps on setState", function()
+			local TestComponent = Component:extend("TestComponent")
+			local setStateCallback
+			local getDerivedStateFromPropsCount = 0
+
+			function TestComponent:init()
+				setStateCallback = function(newState)
+					self:setState(newState)
+				end
+
+				self.state = {
+					value = 0
+				}
+			end
+
+			function TestComponent:render()
+				return nil
+			end
+
+			function TestComponent.getDerivedStateFromProps(nextProps, lastState)
+				getDerivedStateFromPropsCount = getDerivedStateFromPropsCount + 1
+			end
+
+			local element = createElement(TestComponent, {
+				someProp = 1,
+			})
+
+			local instance = Reconciler.mount(element)
+			expect(getDerivedStateFromPropsCount).to.equal(1)
+
+			setStateCallback({
+				value = 1,
+			})
+			expect(getDerivedStateFromPropsCount).to.equal(1)
+
+
+			Reconciler.unmount(instance)
+		end)
+	end)
+
+	describe("getElementTraceback", function()
+		it("should return stack traces", function()
+			local stackTraceCallback = nil
+
+			GlobalConfig.set({
+				elementTracing = true
+			})
+
+			local TestComponent = Component:extend("TestComponent")
+
+			function TestComponent:init()
+				stackTraceCallback = function()
+					return self:getElementTraceback()
+				end
+			end
+
+			function TestComponent:render()
+				return createElement("StringValue")
+			end
+
+			local handle = Reconciler.mount(createElement(TestComponent))
+			expect(stackTraceCallback()).to.be.ok()
+			Reconciler.unmount(handle)
+			GlobalConfig.reset()
+		end)
+
+		it("should return nil when elementTracing is off", function()
+			local stackTraceCallback = nil
+
+			local TestComponent = Component:extend("TestComponent")
+
+			function TestComponent:init()
+				stackTraceCallback = function()
+					return self:getElementTraceback()
+				end
+			end
+
+			function TestComponent:render()
+				return createElement("StringValue")
+			end
+
+			local handle = Reconciler.mount(createElement(TestComponent))
+			expect(stackTraceCallback()).to.never.be.ok()
+			Reconciler.unmount(handle)
 		end)
 	end)
 end

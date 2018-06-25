@@ -1,5 +1,3 @@
-# Roact API Reference
-
 ## Methods
 
 ### Roact.createElement
@@ -21,7 +19,7 @@ The `children` argument is shorthand for adding a `Roact.Children` key to `props
 Roact.mount(element, [parent, [key]]) -> ComponentInstanceHandle
 ```
 
-!!! warning
+!!! info
 	`Roact.mount` is also available via the deprecated alias `Roact.reify`. It will be removed in a future release.
 
 Creates a Roblox Instance given a Roact element, and optionally a `parent` to put it in, and a `key` to use as the instance's `Name`.
@@ -47,7 +45,7 @@ Updates an existing instance handle with a new element, returning a new handle.
 Roact.unmount(instance) -> void
 ```
 
-!!! warning
+!!! info
 	`Roact.unmount` is also available via the deprecated alias `Roact.teardown`. It will be removed in a future release.
 
 Destroys the given `ComponentInstanceHandle` and all of its descendents. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.
@@ -61,6 +59,13 @@ If `children` contains more than one child, `oneChild` function will throw an er
 
 If `children` is `nil` or contains no children, `oneChild` will return `nil`.
 
+### Roact.createRef
+```
+Roact.createRef() -> Ref
+```
+
+Creates a new reference object that can be used with [Roact.Ref](#roactref).
+
 ## Constants
 
 ### Roact.Children
@@ -71,8 +76,32 @@ If you're writing a new functional or stateful element that needs to be used lik
 ### Roact.Ref
 Use `Roact.Ref` as a key into the props of a primitive element to receive a handle to the underlying Roblox Instance.
 
+Assign this key to a reference object created with [createRef](#roactcreateref):
+```lua
+local ExampleComponent = Roact.Component:extend("ExampleComponent")
+
+function ExampleComponent:init()
+	-- Create a reference object.
+	self.ref = Roact.createRef()
+end
+
+function ExampleComponent:render()
+	return Roact.createElement("Frame", {
+		-- Use the reference object to point to this rendered instance.
+		[Roact.Ref] = self.ref,
+	})
+end
+
+function ExampleComponent:didMount()
+	-- Access the current value of a reference object using its current property.
+	print("Roblox Instance", self.ref.current)
+end
+```
+
+Alternatively, you can assign it to a function instead:
 ```lua
 Roact.createElement("Frame", {
+	-- The provided function will be called whenever the rendered instance changes.
 	[Roact.Ref] = function(rbx)
 		print("Roblox Instance", rbx)
 	end,
@@ -80,7 +109,10 @@ Roact.createElement("Frame", {
 ```
 
 !!! warning
-	`Roact.Ref` will be called with `nil` when the component instance is destroyed!
+	When `Roact.Ref` is given a funciton, Roact does not guarantee when this function will be run relative to the reconciliation of other props. If you try to read a Roblox property that's being set via a Roact prop, you won't know if you're reading it before or after Roact reconciles that prop!
+
+!!! warning
+	When `Roact.Ref` is given a funciton, it will be called with `nil` when the component instance is destroyed!
 
 See [the refs guide](/advanced/refs.md) for more details.
 
@@ -118,6 +150,19 @@ Roact.createElement("ScrollingFrame", {
 
 !!! warning
 	Property changed events are fired by Roact during the reconciliation phase. Be careful not to accidentally trigger a re-render in the middle of a re-render, or an error will be thrown!
+
+### Roact.None
+`Roact.None` is a special value that can be used to clear elements from your component state when calling `setState` or returning from `getDerivedStateFromProps`.
+
+In Lua tables, removing a field from state is not possible by setting its value to `nil` because `nil` values mean the same thing as no value at all. If a field needs to be removed from state, it can be set to `Roact.None` when calling `setState`, which will ensure that the resulting state no longer contains it:
+
+```lua
+function MyComponent:didMount()
+	self:setState({
+		fieldToRemove = Roact.None
+	})
+end
+```
 
 ## Component Types
 
@@ -205,10 +250,26 @@ end
 
 ### setState
 ```
-setState(newState) -> void
+setState(stateUpdater | stateChange) -> void
 ```
 
-`setState` merges a table of new state values (`newState`) onto the existing `state` and re-renders the component if necessary. Existing values are not affected.
+`setState` *requests* an update to the component's state. Roact may schedule this update for a later time or resolve it immediately.
+
+If a function is passed to `setState`, that function will be called with the current state and props as arguments:
+
+```lua
+function MyComponent:didMount()
+	self:setState(function(prevState, props)
+		return {
+			counter = prevState.counter + 1
+		}
+	end)
+end
+```
+
+If this function returns `nil`, Roact will not schedule a re-render and no state will be updated.
+
+If a table is passed to `setState`, the values in that table will be merged onto the existing state:
 
 ```lua
 function MyComponent:didMount()
@@ -218,17 +279,24 @@ function MyComponent:didMount()
 end
 ```
 
+Setting a field in the state to `Roact.None` will clear it from the state. This is the only way to remove a field from a component's state!
+
 !!! warning
-	Calling `setState` from any of these places is not allowed and will throw an error:
+	**`setState` does not always resolve synchronously!** Roact may batch and reschedule state updates in order to reduce the number of total renders.
+
+	When depending on the previous value of state, like when incrementing a counter, use the functional form to guarantee that all state updates occur!
+
+	This behavior will be similar to the future behavior of React 17. See:
+
+	* [RFClarification: why is `setState` asynchronous?](https://github.com/facebook/react/issues/11527#issuecomment-360199710)
+	* [Does React keep the order for state updates?](https://stackoverflow.com/a/48610973/802794)
+
+!!! warning
+	Calling `setState` from any of these places is not allowed at this time and will throw an error:
 
 	* Lifecycle hooks: `willUpdate`, `willUnmount`
 	* Initialization: `init`
 	* Pure functions: `render`, `shouldUpdate`
-
-!!! info "Future API Changes"
-	Depending on current `state` in `setState` may cause subtle bugs when Roact starts supporting [asynchronous rendering](https://github.com/Roblox/roact/issues/18).
-
-	A new API similar to React [is being introduced](https://github.com/Roblox/roact/issues/33) to solve this problem. This documentation will be updated when that API is released.
 
 ### shouldUpdate
 ```
@@ -240,6 +308,13 @@ shouldUpdate(nextProps, nextState) -> bool
 Right now, components are re-rendered any time a parent component updates, or when state is updated via `setState`.
 
 `PureComponent` implements `shouldUpdate` to only trigger a re-render any time the props are different based on shallow equality. In a future Roact update, *all* components may implement this check by default.
+
+### getElementTraceback
+```
+getElementTraceback() -> string | nil
+```
+
+`getElementTraceback` gets the stack trace that the component was created in. This allows you to report error messages accurately.
 
 ## Lifecycle Methods
 In addition to the base Component API, Roact exposes additional lifecycle methods that stateful components can hook into to be notified of various steps in the rendering process.
@@ -302,6 +377,8 @@ function MyComponent.getDerivedStateFromProps(nextProps, lastState)
 	}
 end
 ```
+
+As with `setState`, you can set use the constant `Roact.None` to remove a field from the state.
 
 !!! note
 	`getDerivedStateFromProps` is a *static* lifecycle method. It does not have access to `self`, and must be a pure function.

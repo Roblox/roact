@@ -1,18 +1,3 @@
--- Get the current time in seconds.
--- This will be folded into Lemur eventually (LPGhatguy/lemur#30)
-local getCurrentTime
-if tick then
-	-- Roblox's 'tick' implementation
-	getCurrentTime = tick
-else
-	-- LuaSocket's 'socket.gettime'
-	local ok, socket = pcall(require, "socket")
-
-	assert(ok, "LuaSocket is required to run benchmarks on non-Roblox platforms.")
-
-	getCurrentTime = socket.gettime
-end
-
 --[[
 	Locate all .bench.lua files in the given Roblox tree.
 ]]
@@ -30,6 +15,10 @@ local benchmarkModules = {}
 
 findBenchmarkModules(game.ReplicatedStorage.Benchmarks, benchmarkModules)
 
+table.sort(benchmarkModules, function(a, b)
+	return a.Name < b.Name
+end)
+
 local message = (
 	"Starting %d benchmarks..."
 ):format(
@@ -43,13 +32,14 @@ for _, module in ipairs(benchmarkModules) do
 	if benchmark.setup then
 		benchmark.setup()
 	end
-	local startTime = getCurrentTime()
+	local startTime = tick()
+	local step = benchmark.step
 
 	for i = 1, benchmark.iterations do
-		benchmark.step(i)
+		step(i)
 	end
 
-	local endTime = getCurrentTime()
+	local endTime = tick()
 	if benchmark.teardown then
 		benchmark.teardown()
 	end

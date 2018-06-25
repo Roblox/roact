@@ -257,33 +257,6 @@ end
 function Component:_update(newProps, newState)
 	self._setStateBlockedReason = "shouldUpdate"
 
-	local doUpdate
-	if GlobalConfig.getValue("componentInstrumentation") then
-		local startTime = tick()
-
-		doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
-
-		local elapsed = tick() - startTime
-		Instrumentation.logShouldUpdate(self._handle, doUpdate, elapsed)
-	else
-		doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
-	end
-
-	self._setStateBlockedReason = nil
-
-	if doUpdate then
-		self:_forceUpdate(newProps, newState)
-	end
-end
-
---[[
-	Forces the component to re-render itself and its children.
-
-	This is essentially the inner portion of _update.
-
-	newProps and newState are optional.
-]]
-function Component:_forceUpdate(newProps, newState)
 	-- Compute new derived state.
 	-- Get the class - getDerivedStateFromProps is static.
 	local class = getmetatable(self)
@@ -317,6 +290,33 @@ function Component:_forceUpdate(newProps, newState)
 		end
 	end
 
+	local doUpdate
+	if GlobalConfig.getValue("componentInstrumentation") then
+		local startTime = tick()
+
+		doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
+
+		local elapsed = tick() - startTime
+		Instrumentation.logShouldUpdate(self._handle, doUpdate, elapsed)
+	else
+		doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
+	end
+
+	self._setStateBlockedReason = nil
+
+	if doUpdate then
+		self:_forceUpdate(newProps, newState)
+	end
+end
+
+--[[
+	Forces the component to re-render itself and its children.
+
+	This is essentially the inner portion of _update.
+
+	newProps and newState are optional.
+]]
+function Component:_forceUpdate(newProps, newState)
 	if self.willUpdate then
 		self._setStateBlockedReason = "willUpdate"
 		self:willUpdate(newProps or self.props, newState or self.state)

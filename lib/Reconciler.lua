@@ -328,12 +328,36 @@ local function mountTree(element, parentRbx, key)
 
 	local tree = {
 		[Type] = Type.Tree,
+
+		-- A list of tasks pending to be executed in the tree. The task list
+		-- takes the form of a double-ended queue, with 'push back' and 'pop
+		-- front' as the only operations.
 		tasks = {},
 		taskIndex = 1,
+
+		-- Denotes whether tasks are currently being processed, whether
+		-- synchronously or asynchronously.
 		tasksRunning = false,
+
+		-- A map from component instances to data about the render, like the
+		-- props, state, and context. This data can be modified up until the
+		-- actual render occurs, and then it should be removed from this map.
+		scheduledRenders = {},
+
+		-- A list of all signal connections, intended to be cleaned up all at
+		-- once when the tree is unmounted.
 		connections = {},
+
+		-- Tracks whether the tree is currently mounted. Scheduling new tasks
+		-- against a tree that has been unmounted should be an error.
 		mounted = true,
+
+		-- The root node of the tree, which starts into the hierarchy of Roact
+		-- component instances.
 		rootNode = nil,
+
+		-- A static configuration, denoting values like which scheduler and
+		-- renderer to use.
 		config = config,
 	}
 

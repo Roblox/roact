@@ -6,6 +6,8 @@ return function()
 
 	local Component = require(script.Parent.Component)
 
+	SKIP()
+
 	it("should be extendable", function()
 		local MyComponent = Component:extend("The Senate")
 

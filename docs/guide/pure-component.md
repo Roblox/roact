@@ -1,2 +1,1 @@
-# PureComponent
 **TODO**

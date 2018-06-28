@@ -1,4 +1,3 @@
-# Home
 Roact is a *declarative* Lua UI library similar to Facebook's [React](https://reactjs.org). It exposes a very similar API and implements nearly identical semantics.
 
 This documentation is based on the structure of React's documentation, but is a work in progress. Many things from React also apply to Roact, but if you find anything missing or incorrect, [open an issue on GitHub](https://github.com/Roblox/roact/issues)!

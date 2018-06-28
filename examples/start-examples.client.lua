@@ -9,6 +9,22 @@ local exampleData = {
 		name = "clock",
 		label = "Clock",
 	},
+	{
+		name = "changed-signal",
+		label = "Changed Signal",
+	},
+	{
+		name = "stress-test",
+		label = "Stress Test",
+	},
+	{
+		name = "event",
+		label = "Event",
+	},
+	{
+		name = "ref",
+		label = "Ref",
+	},
 }
 
 for _, example in ipairs(exampleData) do

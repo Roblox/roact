@@ -1,4 +1,3 @@
-# Performance Guide
 Roact operates on the principle that it's much easier to build UI declaratively. When something changes, the UI is rebuilt virtually and then the minimal necessary changes are made to the actual UI elements.
 
 For simple projects, performance is unlikely to be an issue. But Roact is built in Lua, and Lua can be slow. The following pages provide a number of techniques and best practices that you can employ to avoid performance strain with your Roact apps.

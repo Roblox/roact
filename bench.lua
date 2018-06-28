@@ -13,34 +13,6 @@ package.path = package.path .. ";?/init.lua"
 -- If this fails, make sure you've run `lua bin/install-dependencies.lua` first!
 local lemur = require("modules.lemur")
 
---[[
-	Collapses ModuleScripts named 'init' into their parent folders.
-
-	This is the same behavior as the collapsing mechanism from rbxpacker.
-]]
-local function collapse(root)
-	local init = root:FindFirstChild("init")
-	if init then
-		init.Name = root.Name
-		init.Parent = root.Parent
-
-		for _, child in ipairs(root:GetChildren()) do
-			child.Parent = init
-		end
-
-		root:Destroy()
-		root = init
-	end
-
-	for _, child in ipairs(root:GetChildren()) do
-		if child:IsA("Folder") then
-			collapse(child)
-		end
-	end
-
-	return root
-end
-
 -- Create a virtual Roblox tree
 local habitat = lemur.Habitat.new()
 
@@ -60,7 +32,5 @@ benchmarks.Parent = root
 
 local benchmarkCore = habitat:loadFromFs("start-benchmarks.server.lua")
 benchmarkCore.Parent = root
-
-collapse(root)
 
 habitat:require(benchmarkCore)

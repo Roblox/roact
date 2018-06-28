@@ -1,4 +1,3 @@
-# Components
 Components are encapsulated, reusable pieces of UI that you can combine to build a complete UI.
 
 Components accept inputs, known as *props*, and return elements to describe the UI that should represent those inputs.

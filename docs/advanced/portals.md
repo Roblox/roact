@@ -1,4 +1,3 @@
-# Portals
 *Portals* are a special kind of component provided by Roact that enable components to render objects into a separate, non-Roact Instance.
 
 !!! info

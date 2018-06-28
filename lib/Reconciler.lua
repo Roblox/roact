@@ -34,8 +34,6 @@ local Symbol = require(script.Parent.Symbol)
 
 local isInstanceHandle = Symbol.named("isInstanceHandle")
 
-local DEFAULT_SOURCE = "\n\t<Use Roact.setGlobalConfig with the 'elementTracing' key to enable detailed tracebacks>\n"
-
 local ElementKind = {
 	None = Symbol.named("ElementKind.None"),
 	Portal = Symbol.named("ElementKind.Portal"),

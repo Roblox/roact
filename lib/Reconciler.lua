@@ -1,45 +1,17 @@
 local Core = require(script.Parent.Core)
 local Type = require(script.Parent.Type)
 local Symbol = require(script.Parent.Symbol)
+local TaskScheduler = require(script.Parent.TaskScheduler)
 
 local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
 
 local DEFAULT_TREE_CONFIG = {
 	useAsyncScheduler = true,
 	asyncSchedulerBudgetPerFrameMs = 12 / 1000
 }
 
-local DEBUG_LOGS_ENABLED = true
-
 -- Used to mark a child that is going to be mounted, but is not yet.
 local MountingNode = Symbol.named("MountingNode")
-
-local DEBUG_warn
-local DEBUG_print
-
-if DEBUG_LOGS_ENABLED then
-	DEBUG_warn = warn
-	DEBUG_print = print
-else
-	DEBUG_warn = function()
-	end
-
-	DEBUG_print = function()
-	end
-end
-
-local processTreeTasksSync
-
-local function DEBUG_showTask(task)
-	if typeof(task) == "function" then
-		return "<Task function>"
-	elseif typeof(task) == "table" then
-		return ("<Task %q>"):format(task.type)
-	else
-		return "<INVALID TASK>"
-	end
-end
 
 local function makeConfigObject(source)
 	local config = {}
@@ -58,20 +30,6 @@ local function makeConfigObject(source)
 	})
 
 	return config
-end
-
-local function getGuid()
-	return HttpService:GenerateGUID(false)
-end
-
-local function scheduleTask(tree, task)
-	DEBUG_print("Scheduling task", DEBUG_showTask(task))
-
-	tree.tasks[#tree.tasks + 1] = task
-
-	if not tree.config.useAsyncScheduler and not tree.tasksRunning then
-		processTreeTasksSync(tree)
-	end
 end
 
 local function taskMountNode(details)
@@ -107,7 +65,7 @@ local function taskMountNode(details)
 					for childKey, childElement in pairs(value) do
 						node.children[childKey] = MountingNode
 
-						scheduleTask(tree, taskMountNode({
+						tree.scheduler:schedule(taskMountNode({
 							element = childElement,
 							key = childKey,
 							parentNode = node,
@@ -121,7 +79,7 @@ local function taskMountNode(details)
 				end
 			end
 
-			scheduleTask(tree, function()
+			tree.scheduler:schedule(function()
 				rbx.Parent = parentRbx
 
 				if isTreeRoot then
@@ -196,13 +154,13 @@ local function taskReconcileNode(details)
 			visitedProps[prop] = true
 			local oldValue = fromElement.props[prop]
 
-			DEBUG_print("Checking prop", prop, oldValue, newValue)
+			print("Checking prop", prop, oldValue, newValue)
 
 			if newValue == oldValue then
-				DEBUG_print("\tProp is the same.")
+				print("\tProp is the same.")
 			else
 				if prop == Core.Children then
-					DEBUG_print("\tReconciling children...")
+					print("\tReconciling children...")
 
 					for key, newChildElement in pairs(newValue) do
 						local childNode = node.children[key]
@@ -214,9 +172,9 @@ local function taskReconcileNode(details)
 						if oldChildElement == nil then
 							warn("NYI: creating children in reconciler")
 						elseif newChildElement ~= oldChildElement then
-							DEBUG_print("\t\tScheduling reconcile of child", key)
+							print("\t\tScheduling reconcile of child", key)
 
-							scheduleTask(tree, taskReconcileNode({
+							tree.scheduler:schedule(taskReconcileNode({
 								node = childNode,
 								toElement = newChildElement,
 							}))
@@ -228,14 +186,14 @@ local function taskReconcileNode(details)
 						local childNode = node.children[key]
 
 						if newChildElement == nil then
-							DEBUG_print("\t\tScheduling unmount of child", key)
-							scheduleTask(tree, taskUnmountNode({
+							print("\t\tScheduling unmount of child", key)
+							tree.scheduler:schedule(taskUnmountNode({
 								node = childNode,
 							}))
 						end
 					end
 				else
-					DEBUG_print("\tSetting", prop, newValue)
+					print("\tSetting", prop, newValue)
 					node.rbx[prop] = newValue
 				end
 			end
@@ -250,74 +208,6 @@ local function taskReconcileNode(details)
 	end
 end
 
-local function processTreeTasksAsync(tree, timeBudget)
-	if #tree.tasks == 0 then
-		return
-	end
-
-	DEBUG_warn(("-"):rep(80))
-	DEBUG_print("Async frame:", #tree.tasks, "tasks in queue; marker at", tree.taskIndex)
-
-	tree.tasksRunning = true
-
-	local startTime = tick()
-	local i = tree.taskIndex
-	while true do
-		local task = tree.tasks[i]
-
-		local totalTimeElapsed = tick() - startTime
-
-		if task == nil then
-			tree.tasks = {}
-			tree.taskIndex = 1
-
-			print("Stopping async frame: ran out of tasks. Took", totalTimeElapsed * 1000, "ms")
-			break
-		end
-
-		DEBUG_print("Running task", DEBUG_showTask(task))
-		task(tree)
-
-		i = i + 1
-
-		if totalTimeElapsed >= timeBudget then
-			tree.taskIndex = i
-
-			print("Stopping async frame: ran out of time. Took", totalTimeElapsed * 1000, "ms")
-			break
-		end
-	end
-
-	tree.tasksRunning = false
-end
-
-function processTreeTasksSync(tree)
-	tree.tasksRunning = true
-
-	DEBUG_warn(("="):rep(80))
-	DEBUG_print("Sync frame:", #tree.tasks, "tasks in queue, marker at", tree.taskIndex)
-
-	local i = tree.taskIndex
-	while true do
-		local task = tree.tasks[i]
-
-		if task == nil then
-			tree.tasks = {}
-			tree.taskIndex = 1
-
-			DEBUG_print("Stopping sync frame: ran out of tasks")
-			break
-		end
-
-		DEBUG_print("Running task", DEBUG_showTask(task))
-		task(tree)
-
-		i = i + 1
-	end
-
-	tree.tasksRunning = false
-end
-
 local function mountTree(element, parentRbx, key)
 	assert(Type.is(element, Type.Element))
 	assert(typeof(parentRbx) == "Instance" or parentRbx == nil)
@@ -328,16 +218,6 @@ local function mountTree(element, parentRbx, key)
 
 	local tree = {
 		[Type] = Type.Tree,
-
-		-- A list of tasks pending to be executed in the tree. The task list
-		-- takes the form of a double-ended queue, with 'push back' and 'pop
-		-- front' as the only operations.
-		tasks = {},
-		taskIndex = 1,
-
-		-- Denotes whether tasks are currently being processed, whether
-		-- synchronously or asynchronously.
-		tasksRunning = false,
 
 		-- A map from component instances to data about the render, like the
 		-- props, state, and context. This data can be modified up until the
@@ -361,16 +241,11 @@ local function mountTree(element, parentRbx, key)
 		config = config,
 	}
 
-	if tree.config.useAsyncScheduler then
-		local budget = tree.config.asyncSchedulerBudgetPerFrameMs
+	local scheduler = TaskScheduler.new(tree, config.useAsyncScheduler, config.asyncSchedulerBudgetPerFrameMs)
 
-		tree.renderStepId = getGuid()
-		RunService:BindToRenderStep(tree.renderStepId, Enum.RenderPriority.Last.Value, function()
-			processTreeTasksAsync(tree, budget)
-		end)
-	end
+	tree.scheduler = scheduler
 
-	scheduleTask(tree, taskMountNode({
+	scheduler:schedule(taskMountNode({
 		element = element,
 		key = key,
 		parentNode = nil,
@@ -394,19 +269,19 @@ local function unmountTree(tree)
 
 	-- TODO: Flush/cancel existing tasks and unmount asynchronously?
 
-	scheduleTask(tree, taskUnmountNode({
+	tree.scheduler:schedule(taskUnmountNode({
 		node = tree.rootNode,
 	}))
 
 	-- For now, flush the entire tree and unmount synchronously
-	processTreeTasksSync(tree)
+	tree.scheduler:processSync()
 end
 
 local function reconcileTree(tree, toElement)
 	assert(Type.is(tree, Type.Tree))
 	assert(Type.is(toElement, Type.Element))
 
-	scheduleTask(tree, taskReconcileNode({
+	tree.scheduler:schedule(taskReconcileNode({
 		node = tree.rootNode,
 		toElement = toElement,
 	}))

@@ -32,8 +32,7 @@ local function makeConfigObject(source)
 	return config
 end
 
-local function makeTaskKind(options)
-	local name = options.name
+local function makeTaskKind(name, options)
 	local validate = options.validate
 	local perform = options.perform
 
@@ -56,9 +55,7 @@ local function makeTaskKind(options)
 end
 
 local taskMountNode
-taskMountNode = makeTaskKind({
-	name = "MountNode",
-
+taskMountNode = makeTaskKind("MountNode", {
 	validate = function(task)
 		assert(Type.is(task.element, Type.Element))
 		assert(typeof(task.key) == "string")
@@ -124,12 +121,15 @@ taskMountNode = makeTaskKind({
 	end,
 })
 
-local function taskUnmountNode(details)
-	local node = details.node
+local taskUnmountNode
+taskUnmountNode = makeTaskKind("UnmountNode", {
+	validate = function(task)
+		assert(Type.is(task.node, Type.Node))
+	end,
 
-	assert(Type.is(node, Type.Node))
+	perform = function(task, tree)
+		local node = task.node
 
-	return function(tree)
 		local nodesToVisit = {node}
 		local visitIndex = 1
 		local nodesToDestroy = {}
@@ -160,17 +160,20 @@ local function taskUnmountNode(details)
 
 			destroyNode.rbx:Destroy()
 		end
-	end
-end
+	end,
+})
 
-local function taskReconcileNode(details)
-	local node = details.node
-	local toElement = details.toElement
+local taskReconcileNode
+taskReconcileNode = makeTaskKind("ReconcileNode", {
+	validate = function(task)
+		assert(Type.is(task.node, Type.Node))
+		assert(Type.is(task.toElement, Type.Element))
+	end,
 
-	assert(Type.is(node, Type.Node))
-	assert(Type.is(toElement, Type.Element))
+	perform = function(task, tree)
+		local node = task.node
+		local toElement = task.toElement
 
-	return function(tree)
 		local fromElement = node.element
 
 		-- TODO: Branch on kind of node
@@ -233,8 +236,8 @@ local function taskReconcileNode(details)
 				node.rbx[prop] = nil
 			end
 		end
-	end
-end
+	end,
+})
 
 local function mountTree(element, parentRbx, key)
 	assert(Type.is(element, Type.Element))

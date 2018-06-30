@@ -42,3 +42,7 @@ local function body()
 end
 
 local tree = Roact.mount(body(), game.Players.LocalPlayer.PlayerGui, "Roact Root")
+
+wait(1)
+
+Roact.reconcile(tree, body())

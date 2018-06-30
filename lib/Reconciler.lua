@@ -32,22 +32,50 @@ local function makeConfigObject(source)
 	return config
 end
 
-local function taskMountNode(details)
-	local element = details.element
-	local key = details.key
-	local parentNode = details.parentNode
-	local parentRbx = details.parentRbx
-	local isTreeRoot = details.isTreeRoot
-	local nodeDepth = details.nodeDepth
+local function makeTaskKind(options)
+	local name = options.name
+	local validate = options.validate
+	local perform = options.perform
 
-	assert(Type.is(element, Type.Element))
-	assert(typeof(key) == "string")
-	assert(Type.is(parentNode, Type.Node) or typeof(parentNode) == "nil")
-	assert(typeof(parentRbx) == "Instance" or typeof(parentRbx) == "nil")
-	assert(typeof(isTreeRoot) == "boolean")
-	assert(typeof(nodeDepth) == "number")
+	assert(typeof(name) == "string")
+	assert(typeof(validate) == "function")
+	assert(typeof(perform) == "function")
 
-	return function(tree)
+	return function(details)
+		-- We want to minimize the chance that these fields will collide with
+		-- values put into the task details, since they share a namespace.
+		details.taskName = name
+		details.taskPerform = perform
+
+		-- Validation is separated so that it can be gated in the future.
+		-- It should only ever fail when working on Roact itself.
+		validate(details)
+
+		return details
+	end
+end
+
+local taskMountNode
+taskMountNode = makeTaskKind({
+	name = "MountNode",
+
+	validate = function(task)
+		assert(Type.is(task.element, Type.Element))
+		assert(typeof(task.key) == "string")
+		assert(Type.is(task.parentNode, Type.Node) or typeof(task.parentNode) == "nil")
+		assert(typeof(task.parentRbx) == "Instance" or typeof(task.parentRbx) == "nil")
+		assert(typeof(task.isTreeRoot) == "boolean")
+		assert(typeof(task.nodeDepth) == "number")
+	end,
+
+	perform = function(task, tree)
+		local element = task.element
+		local key = task.key
+		local parentNode = task.parentNode
+		local parentRbx = task.parentRbx
+		local isTreeRoot = task.isTreeRoot
+		local nodeDepth = task.nodeDepth
+
 		local node = {
 			[Type] = Type.Node,
 			children = {},
@@ -93,8 +121,8 @@ local function taskMountNode(details)
 		else
 			error("NYI: mounting non-string components")
 		end
-	end
-end
+	end,
+})
 
 local function taskUnmountNode(details)
 	local node = details.node

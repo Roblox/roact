@@ -7,7 +7,7 @@ local function DEBUG_showTask(task)
 	if typeof(task) == "function" then
 		return "<Task function>"
 	elseif typeof(task) == "table" then
-		return ("<Task %q>"):format(task.type)
+		return ("<Task %q>"):format(tostring(task.taskName))
 	else
 		return "<INVALID TASK>"
 	end
@@ -48,7 +48,7 @@ function TaskScheduler.new(tree, isAsync, asyncBudgetMs)
 end
 
 function TaskScheduler.prototype:schedule(task)
-	assert(typeof(task) == "function")
+	assert(typeof(task) == "function" or typeof(task) == "table")
 
 	self.tasks[#self.tasks + 1] = task
 
@@ -76,7 +76,12 @@ function TaskScheduler.prototype:processSync()
 		end
 
 		print("Running task", DEBUG_showTask(task))
-		task(self.tree)
+
+		if typeof(task) == "function" then
+			task(self.tree)
+		else
+			task:taskPerform(self.tree)
+		end
 
 		i = i + 1
 	end
@@ -110,7 +115,12 @@ function TaskScheduler.prototype:processAsync()
 		end
 
 		print("Running task", DEBUG_showTask(task))
-		task(self.tree)
+
+		if typeof(task) == "function" then
+			task(self.tree)
+		else
+			task:taskPerform(self.tree)
+		end
 
 		i = i + 1
 

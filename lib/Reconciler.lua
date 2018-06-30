@@ -3,8 +3,6 @@ local Type = require(script.Parent.Type)
 local Symbol = require(script.Parent.Symbol)
 local TaskScheduler = require(script.Parent.TaskScheduler)
 
-local RunService = game:GetService("RunService")
-
 local DEFAULT_TREE_CONFIG = {
 	useAsyncScheduler = true,
 	asyncSchedulerBudgetPerFrameMs = 12 / 1000
@@ -250,11 +248,6 @@ local function mountTree(element, parentRbx, key)
 	local tree = {
 		[Type] = Type.Tree,
 
-		-- A map from component instances to data about the render, like the
-		-- props, state, and context. This data can be modified up until the
-		-- actual render occurs, and then it should be removed from this map.
-		scheduledRenders = {},
-
 		-- A list of all signal connections, intended to be cleaned up all at
 		-- once when the tree is unmounted.
 		connections = {},
@@ -294,10 +287,6 @@ local function unmountTree(tree)
 
 	tree.mounted = false
 
-	if tree.config.useAsyncScheduler then
-		RunService:UnbindFromRenderStep(tree.renderStepId)
-	end
-
 	-- TODO: Flush/cancel existing tasks and unmount asynchronously?
 
 	tree.scheduler:schedule(taskUnmountNode({
@@ -306,6 +295,7 @@ local function unmountTree(tree)
 
 	-- For now, flush the entire tree and unmount synchronously
 	tree.scheduler:processSync()
+	tree.scheduler:destroy()
 end
 
 local function reconcileTree(tree, toElement)

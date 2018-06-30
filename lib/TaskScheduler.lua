@@ -47,6 +47,12 @@ function TaskScheduler.new(tree, isAsync, asyncBudgetMs)
 	return self
 end
 
+function TaskScheduler.prototype:destroy()
+	if self.isAsync then
+		RunService:UnbindFromRenderStep(self.renderStepId)
+	end
+end
+
 function TaskScheduler.prototype:schedule(task)
 	assert(typeof(task) == "function" or typeof(task) == "table")
 

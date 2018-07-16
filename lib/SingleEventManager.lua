@@ -20,36 +20,23 @@ local SingleEventManager = {}
 
 SingleEventManager.__index = SingleEventManager
 
-local function createHook(rbx, key, method)
+local function createHook(rbx, event, method)
 	local hook = {
 		method = method,
-		connection = rbx[key]:Connect(function(...)
-			method(rbx, ...)
-		end)
 	}
 
-	return hook
-end
-
-local function createChangeHook(rbx, key, method)
-	local hook = {
-		method = method,
-		connection = rbx:GetPropertyChangedSignal(key):Connect(function(...)
-			method(rbx, ...)
-		end)
-	}
+	hook.connection = event:Connect(function(...)
+		hook.method(rbx, ...)
+	end)
 
 	return hook
-end
-
-local function formatChangeKey(key)
-	return ("!PropertyChangeEvent:%s"):format(key)
 end
 
 function SingleEventManager.new()
 	local self = {}
 
-	self._hookCache = {}
+	self._eventHooks = {}
+	self._propertyHooks = {}
 
 	setmetatable(self, SingleEventManager)
 
@@ -57,75 +44,79 @@ function SingleEventManager.new()
 end
 
 function SingleEventManager:connect(rbx, key, method)
-	local rbxHooks = self._hookCache[rbx]
+	local hooks = self._eventHooks[rbx]
 
-	if rbxHooks then
-		local existingHook = rbxHooks[key]
+	if hooks == nil then
+		hooks = {}
+		self._eventHooks[rbx] = hooks
+	end
 
-		if existingHook then
-			if existingHook.method == method then
-				return
-			end
+	local existingHook = hooks[key]
 
-			existingHook.connection:Disconnect()
-		end
-
-		rbxHooks[key] = createHook(rbx, key, method)
+	if existingHook ~= nil then
+		existingHook.method = method
 	else
-		rbxHooks = {}
-		rbxHooks[key] = createHook(rbx, key, method)
-
-		self._hookCache[rbx] = rbxHooks
+		hooks[key] = createHook(rbx, rbx[key], method)
 	end
 end
 
 function SingleEventManager:connectProperty(rbx, key, method)
-	local rbxHooks = self._hookCache[rbx]
-	local formattedKey = formatChangeKey(key)
+	local hooks = self._propertyHooks[key]
 
-	if rbxHooks then
-		local existingHook = rbxHooks[formattedKey]
+	if hooks == nil then
+		hooks = {}
+		self._propertyHooks[rbx] = hooks
+	end
 
-		if existingHook then
-			if existingHook.method == method then
-				return
-			end
+	local existingHook = hooks[key]
 
-			existingHook.connection:Disconnect()
-		end
-
-		rbxHooks[formattedKey] = createChangeHook(rbx, key, method)
+	if existingHook ~= nil then
+		existingHook.method = method
 	else
-		rbxHooks = {}
-		rbxHooks[formattedKey] = createChangeHook(rbx, key, method)
-
-		self._hookCache[rbx] = rbxHooks
+		hooks[key] = createHook(rbx, rbx:GetPropertyChangedSignal(key), method)
 	end
 end
 
 function SingleEventManager:disconnect(rbx, key)
-	local rbxHooks = self._hookCache[rbx]
+	local hooks = self._eventHooks[rbx]
 
-	if not rbxHooks then
+	if hooks == nil then
 		return
 	end
 
-	local existingHook = rbxHooks[key]
+	local existingHook = hooks[key]
 
-	if not existingHook then
+	if existingHook == nil then
 		return
 	end
 
 	existingHook.connection:Disconnect()
-	rbxHooks[key] = nil
+	hooks[key] = nil
 
-	if next(rbxHooks) == nil then
-		self._hookCache[rbx] = nil
+	if next(hooks) == nil then
+		self._eventHooks[rbx] = nil
 	end
 end
 
 function SingleEventManager:disconnectProperty(rbx, key)
-	self:disconnect(rbx, formatChangeKey(key))
+	local hooks = self._propertyHooks[rbx]
+
+	if hooks == nil then
+		return
+	end
+
+	local existingHook = hooks[key]
+
+	if existingHook == nil then
+		return
+	end
+
+	existingHook.connection:Disconnect()
+	hooks[key] = nil
+
+	if next(hooks) == nil then
+		self._propertyHooks[rbx] = nil
+	end
 end
 
 function SingleEventManager:disconnectAll(rbx)

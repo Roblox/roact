@@ -112,7 +112,7 @@ function Component:extend(name)
 		-- Call the user-provided initializer, where state and _props are set.
 		if class.init then
 			self._setStateBlockedReason = "init"
-			class.init(self, props)
+			class.init(self, self.props)
 			self._setStateBlockedReason = nil
 		end
 
@@ -122,7 +122,7 @@ function Component:extend(name)
 		end
 
 		if class.getDerivedStateFromProps then
-			local partialState = class.getDerivedStateFromProps(props, self.state)
+			local partialState = class.getDerivedStateFromProps(self.props, self.state)
 
 			if partialState then
 				self.state = merge(self.state, partialState)

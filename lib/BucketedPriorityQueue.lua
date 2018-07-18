@@ -36,6 +36,9 @@ function BucketedPriorityQueue.new()
 end
 
 function BucketedPriorityQueue.prototype:insert(priority, item)
+	assert(typeof(priority) == "number")
+	assert(item ~= nil)
+
 	if priority > #self._buckets then
 		for i = #self._buckets + 1, priority do
 			self._buckets[i] = {}

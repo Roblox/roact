@@ -2,6 +2,7 @@ local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 
 local Type = require(script.Parent.Type)
+local BucketedPriorityQueue = require(script.Parent.BucketedPriorityQueue)
 
 local function getGuid()
 	return HttpService:GenerateGUID(false)
@@ -22,22 +23,17 @@ function RenderScheduler.new(tree, isAsync, asyncBudgetPerFrameMs)
 		asyncBudgetPerFrameMs = asyncBudgetPerFrameMs,
 		renderStepId = getGuid(),
 
-		-- A map from component instances to data about the render, like the
-		-- props, state, and context. This data can be modified up until the
-		-- actual render occurs, and then it should be removed from this map.
+		-- A map from nodes to data about the render, like the props, state, and
+		-- context. This data can be modified up until the actual render occurs,
+		-- and then it should be removed from this map.
 		scheduledRenderData = {},
 
-		-- A list of lists of 'render tasks', which can be performed to render
-		-- and then commit an update to a node.
+		-- A priority queue of 'render tasks' which can be performed to render
+		-- and commit an update to a node.
 		--
-		-- We generally want to iterate through the tasks by depth, only
-		-- performing tasks deeper in the tree after ones higher in the tree
-		-- have already been performed, since data changes always flow down the
-		-- tree in Roact.
-		--
-		-- Care has to be taken to keep this table from becoming a sparse array,
-		-- which can cause strange bugs.
-		scheduledRenderTasksByDepth = {},
+		-- The priority of a task is equal to its depth in the tree so that
+		-- shallower nodes will always be rendered first.
+		scheduledRenderTasksByDepth = BucketedPriorityQueue.new(),
 	}
 
 	setmetatable(self, RenderScheduler)
@@ -57,6 +53,9 @@ function RenderScheduler.prototype:destroy()
 	end
 end
 
+function RenderScheduler.prototype:scheduleMount()
+end
+
 function RenderScheduler.prototype:schedule(node, newData)
 	assert(Type.of(node) == Type.Node)
 	assert(typeof(newData) == "table")
@@ -70,7 +69,20 @@ function RenderScheduler.prototype:schedule(node, newData)
 	assert(typeof(newContext) == "table" or newContext == nil)
 end
 
-function RenderScheduler.prototype:process()
+function RenderScheduler.prototype:processSync()
+	while true do
+		local task = self.scheduledRenderTasksByDepth:pop()
+
+		if task == nil then
+			break
+		end
+
+		task()
+	end
+end
+
+function RenderScheduler.prototype:processAsync()
+	error("NYI")
 end
 
 return RenderScheduler

@@ -9,6 +9,14 @@ local Reconciler = require(script.Reconciler)
 local ReconcilerCompat = require(script.ReconcilerCompat)
 
 local Roact = {
+	Change = require(script.Change),
+	Component = require(script.Component),
+	createElement = require(script.createElement),
+	createRef = require(script.createRef),
+	Event = require(script.Event),
+	oneChild = require(script.oneChild),
+	PureComponent = require(script.PureComponent),
+
 	Children = Core.Children,
 	Element = Core.Element,
 	None = Core.None,
@@ -24,14 +32,6 @@ local Roact = {
 
 	setGlobalConfig = GlobalConfig.set,
 	getGlobalConfigValue = GlobalConfig.getValue,
-
-	Change = require(script.Change),
-	Component = require(script.Component),
-	createElement = require(script.createElement),
-	createRef = require(script.createRef),
-	Event = require(script.Event),
-	oneChild = require(script.oneChild),
-	PureComponent = require(script.PureComponent),
 
 	-- APIs that may change in the future without warning
 	UNSTABLE = {

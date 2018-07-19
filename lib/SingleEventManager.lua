@@ -32,22 +32,43 @@ local function createHook(instance, event, method)
 	return hook
 end
 
-local function disconnectAllForInstance(hooks, instance)
-	local instanceHooks = hooks[instance]
+function SingleEventManager.new()
+	local self = {}
 
-	if instanceHooks == nil then
-		return
-	end
+	self._hooks = {}
 
-	for _, hook in pairs(instanceHooks) do
-		hook.connection:Disconnect()
-	end
+	setmetatable(self, SingleEventManager)
 
-	hooks[instance] = nil
+	return self
 end
 
-local function disconnectEventForInstance(hooks, instance, event)
-	local instanceHooks = hooks[instance]
+function SingleEventManager:_connectInternal(instance, event, method)
+	local instanceHooks = self._hooks[instance]
+
+	if instanceHooks == nil then
+		instanceHooks = {}
+		self._hooks[instance] = instanceHooks
+	end
+
+	local existingHook = instanceHooks[event]
+
+	if existingHook ~= nil then
+		existingHook.method = method
+	else
+		instanceHooks[event] = createHook(instance, event, method)
+	end
+end
+
+function SingleEventManager:connect(instance, key, method)
+	self:_connectInternal(instance, instance[key], method)
+end
+
+function SingleEventManager:connectProperty(instance, key, method)
+	self:_connectInternal(instance, instance:GetPropertyChangedSignal(key), method)
+end
+
+function SingleEventManager:_disconnectInternal(instance, event)
+	local instanceHooks = self._hooks[instance]
 
 	if instanceHooks == nil then
 		return
@@ -64,57 +85,30 @@ local function disconnectEventForInstance(hooks, instance, event)
 
 	-- If there are no hooks left for this instance, we don't need this record.
 	if next(instanceHooks) == nil then
-		hooks[instance] = nil
+		self._hooks[instance] = nil
 	end
-end
-
-local function connect(hooks, instance, event, method)
-	local instanceHooks = hooks[instance]
-
-	if instanceHooks == nil then
-		instanceHooks = {}
-		hooks[instance] = instanceHooks
-	end
-
-	local existingHook = instanceHooks[event]
-
-	if existingHook ~= nil then
-		existingHook.method = method
-	else
-		instanceHooks[event] = createHook(instance, event, method)
-	end
-end
-
-function SingleEventManager.new()
-	local self = {}
-
-	self._eventHooks = {}
-	self._propertyHooks = {}
-
-	setmetatable(self, SingleEventManager)
-
-	return self
-end
-
-function SingleEventManager:connect(instance, key, method)
-	connect(self._eventHooks, instance, instance[key], method)
-end
-
-function SingleEventManager:connectProperty(instance, key, method)
-	connect(self._propertyHooks, instance, instance:GetPropertyChangedSignal(key), method)
 end
 
 function SingleEventManager:disconnect(instance, key)
-	disconnectEventForInstance(self._eventHooks, instance, instance[key])
+	self:_disconnectInternal(instance, instance[key])
 end
 
 function SingleEventManager:disconnectProperty(instance, key)
-	disconnectEventForInstance(self._propertyHooks, instance, instance:GetPropertyChangedSignal(key))
+	self:_disconnectInternal(instance, instance:GetPropertyChangedSignal(key))
 end
 
 function SingleEventManager:disconnectAll(instance)
-	disconnectAllForInstance(self._eventHooks, instance)
-	disconnectAllForInstance(self._propertyHooks, instance)
+	local instanceHooks = self._hooks[instance]
+
+	if instanceHooks == nil then
+		return
+	end
+
+	for _, hook in pairs(instanceHooks) do
+		hook.connection:Disconnect()
+	end
+
+	self._hooks[instance] = nil
 end
 
 return SingleEventManager

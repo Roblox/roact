@@ -20,16 +20,69 @@ local SingleEventManager = {}
 
 SingleEventManager.__index = SingleEventManager
 
-local function createHook(rbx, event, method)
+local function createHook(instance, event, method)
 	local hook = {
 		method = method,
 	}
 
 	hook.connection = event:Connect(function(...)
-		hook.method(rbx, ...)
+		hook.method(instance, ...)
 	end)
 
 	return hook
+end
+
+local function disconnectAllForInstance(hooks, instance)
+	local instanceHooks = hooks[instance]
+
+	if instanceHooks == nil then
+		return
+	end
+
+	for _, hook in pairs(instanceHooks) do
+		hook.connection:Disconnect()
+	end
+
+	hooks[instance] = nil
+end
+
+local function disconnectEventForInstance(hooks, instance, event)
+	local instanceHooks = hooks[instance]
+
+	if instanceHooks == nil then
+		return
+	end
+
+	local hook = instanceHooks[event]
+
+	if hook == nil then
+		return
+	end
+
+	hook.connection:Disconnect()
+	instanceHooks[event] = nil
+
+	-- If there are no hooks left for this instance, we don't need this record.
+	if next(instanceHooks) == nil then
+		hooks[instance] = nil
+	end
+end
+
+local function connect(hooks, instance, event, method)
+	local instanceHooks = hooks[instance]
+
+	if instanceHooks == nil then
+		instanceHooks = {}
+		hooks[instance] = instanceHooks
+	end
+
+	local existingHook = instanceHooks[event]
+
+	if existingHook ~= nil then
+		existingHook.method = method
+	else
+		instanceHooks[event] = createHook(instance, event, method)
+	end
 end
 
 function SingleEventManager.new()
@@ -43,94 +96,25 @@ function SingleEventManager.new()
 	return self
 end
 
-function SingleEventManager:connect(rbx, key, method)
-	local hooks = self._eventHooks[rbx]
-
-	if hooks == nil then
-		hooks = {}
-		self._eventHooks[rbx] = hooks
-	end
-
-	local existingHook = hooks[key]
-
-	if existingHook ~= nil then
-		existingHook.method = method
-	else
-		hooks[key] = createHook(rbx, rbx[key], method)
-	end
+function SingleEventManager:connect(instance, key, method)
+	connect(self._eventHooks, instance, instance[key], method)
 end
 
-function SingleEventManager:connectProperty(rbx, key, method)
-	local hooks = self._propertyHooks[key]
-
-	if hooks == nil then
-		hooks = {}
-		self._propertyHooks[rbx] = hooks
-	end
-
-	local existingHook = hooks[key]
-
-	if existingHook ~= nil then
-		existingHook.method = method
-	else
-		hooks[key] = createHook(rbx, rbx:GetPropertyChangedSignal(key), method)
-	end
+function SingleEventManager:connectProperty(instance, key, method)
+	connect(self._propertyHooks, instance, instance:GetPropertyChangedSignal(key), method)
 end
 
-function SingleEventManager:disconnect(rbx, key)
-	local hooks = self._eventHooks[rbx]
-
-	if hooks == nil then
-		return
-	end
-
-	local existingHook = hooks[key]
-
-	if existingHook == nil then
-		return
-	end
-
-	existingHook.connection:Disconnect()
-	hooks[key] = nil
-
-	if next(hooks) == nil then
-		self._eventHooks[rbx] = nil
-	end
+function SingleEventManager:disconnect(instance, key)
+	disconnectEventForInstance(self._eventHooks, instance, instance[key])
 end
 
-function SingleEventManager:disconnectProperty(rbx, key)
-	local hooks = self._propertyHooks[rbx]
-
-	if hooks == nil then
-		return
-	end
-
-	local existingHook = hooks[key]
-
-	if existingHook == nil then
-		return
-	end
-
-	existingHook.connection:Disconnect()
-	hooks[key] = nil
-
-	if next(hooks) == nil then
-		self._propertyHooks[rbx] = nil
-	end
+function SingleEventManager:disconnectProperty(instance, key)
+	disconnectEventForInstance(self._propertyHooks, instance, instance:GetPropertyChangedSignal(key))
 end
 
-function SingleEventManager:disconnectAll(rbx)
-	local rbxHooks = self._hookCache[rbx]
-
-	if not rbxHooks then
-		return
-	end
-
-	for _, hook in pairs(rbxHooks) do
-		hook.connection:Disconnect()
-	end
-
-	self._hookCache[rbx] = nil
+function SingleEventManager:disconnectAll(instance)
+	disconnectAllForInstance(self._eventHooks, instance)
+	disconnectAllForInstance(self._propertyHooks, instance)
 end
 
 return SingleEventManager

@@ -191,7 +191,7 @@ return function()
 
 		it("should succeed with no events attached", function()
 			local manager = SingleEventManager.new()
-			local target = Instance.new("StringValue")
+			local target = Instance.new("BindableEvent")
 
 			manager:disconnect(target, "Event")
 		end)

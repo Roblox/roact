@@ -8,15 +8,11 @@
     },
     "examples": {
       "path": "examples",
-      "target": "StarterPlayer.StarterPlayerScripts"
+      "target": "StarterPlayer.StarterPlayerScripts.RoactExamples"
     },
     "benchmarks": {
       "path": "benchmarks",
-      "target": "ReplicatedStorage.Benchmarks"
-    },
-    "benchmark-server": {
-      "path": "start-benchmarks.server.lua",
-      "target": "ServerScriptService.StartBenchmarks"
+      "target": "ServerScriptService.RoactBenchmark"
     },
     "testez": {
       "path": "modules/testez/lib",

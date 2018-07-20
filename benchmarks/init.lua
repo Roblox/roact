@@ -11,9 +11,32 @@ local function findBenchmarkModules(root, moduleList)
 	end
 end
 
+local function noop()
+end
+
+local emptyTimes = {}
+local function getEmptyTime(iterations)
+	if emptyTimes[iterations] ~= nil then
+		return emptyTimes[iterations]
+	end
+
+	local startTime = tick()
+
+	for _ = 1, iterations do
+		noop()
+	end
+
+	local endTime = tick()
+
+	local result = endTime - startTime
+	emptyTimes[iterations] = result
+
+	return result
+end
+
 local benchmarkModules = {}
 
-findBenchmarkModules(game.ReplicatedStorage.Benchmarks, benchmarkModules)
+findBenchmarkModules(script, benchmarkModules)
 
 table.sort(benchmarkModules, function(a, b)
 	return a.Name < b.Name
@@ -25,11 +48,12 @@ local message = (
 	#benchmarkModules
 )
 print(message)
+print()
 
 for _, module in ipairs(benchmarkModules) do
 	local benchmark = require(module)
 
-	if benchmark.setup then
+	if benchmark.setup ~= nil then
 		benchmark.setup()
 	end
 	local startTime = tick()
@@ -40,20 +64,23 @@ for _, module in ipairs(benchmarkModules) do
 	end
 
 	local endTime = tick()
-	if benchmark.teardown then
+	if benchmark.teardown ~= nil then
 		benchmark.teardown()
 	end
+
+	local totalTime = (endTime - startTime) - getEmptyTime(benchmark.iterations)
 
 	local message = (
 		"Benchmark %s:\n\t(%d iterations) took %f s (%f ns/iteration)"
 	):format(
 		module.Name,
 		benchmark.iterations,
-		endTime - startTime,
-		1e9 * (endTime - startTime) / benchmark.iterations
+		totalTime,
+		1e9 * totalTime / benchmark.iterations
 	)
 
 	print(message)
+	print()
 end
 
 print("Benchmarks complete!")

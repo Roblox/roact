@@ -84,7 +84,7 @@ function Component:extend(name)
 		end
 	})
 
-	function class._new(props, context)
+	function class._new(passedProps, context)
 		local self = {}
 
 		-- When set to a value, setState will fail, using the given reason to
@@ -93,9 +93,9 @@ function Component:extend(name)
 		self._setStateBlockedReason = nil
 
 		if class.defaultProps == nil then
-			self.props = props
+			self.props = passedProps
 		else
-			self.props = merge(class.defaultProps, props)
+			self.props = merge(class.defaultProps, passedProps)
 		end
 
 		self._context = {}

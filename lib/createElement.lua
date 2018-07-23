@@ -1,15 +1,26 @@
 local Core = require(script.Parent.Core)
 local GlobalConfig = require(script.Parent.GlobalConfig)
 local Type = require(script.Parent.Type)
+local ElementKind = require(script.Parent.ElementKind)
+
+local componentTypesToKinds = {
+	["string"] = ElementKind.Primitive,
+	["function"] = ElementKind.Functional,
+	["table"] = ElementKind.Stateful,
+}
 
 --[[
-	Creates a new Roact element of the given type.
+	Creates a new element representing the given component.
 
-	Does not create any concrete objects.
+	Elements are lightweight representations of what a component instance should
+	look like.
+
+	Children is a shorthand for specifying `Roact.Children` as a key inside
+	props. If specified, the passed `props` table is mutated!
 ]]
-local function createElement(elementType, props, children)
-	if elementType == nil then
-		error(("Expected elementType as an argument to createElement!"), 2)
+local function createElement(component, props, children)
+	if component == nil then
+		error(("Expected component as an argument to createElement!"), 2)
 	end
 
 	props = props or {}
@@ -22,9 +33,18 @@ local function createElement(elementType, props, children)
 		props[Core.Children] = children
 	end
 
+	local elementKind
+
+	if component == Core.Portal then
+		elementKind = ElementKind.Portal
+	else
+		elementKind = componentTypesToKinds[typeof(component)]
+	end
+
 	local element = {
 		[Type] = Type.Element,
-		component = elementType,
+		[ElementKind] = elementKind,
+		component = component,
 		props = props,
 	}
 

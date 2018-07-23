@@ -55,10 +55,10 @@ end
 local taskMountNode
 taskMountNode = makeTaskKind("MountNode", {
 	validate = function(task)
-		assert(Type.is(task.element, Type.Element))
+		assert(Type.of(task.element) == Type.Element)
 		assert(typeof(task.key) == "string")
-		assert(Type.is(task.parentNode, Type.Node) or typeof(task.parentNode) == "nil")
-		assert(typeof(task.parentRbx) == "Instance" or typeof(task.parentRbx) == "nil")
+		assert(Type.of(task.parentNode) == Type.Node or task.parentNode == nil)
+		assert(typeof(task.parentRbx) == "Instance" or task.parentRbx == nil)
 		assert(typeof(task.isTreeRoot) == "boolean")
 		assert(typeof(task.nodeDepth) == "number")
 	end,
@@ -122,7 +122,7 @@ taskMountNode = makeTaskKind("MountNode", {
 local taskUnmountNode
 taskUnmountNode = makeTaskKind("UnmountNode", {
 	validate = function(task)
-		assert(Type.is(task.node, Type.Node))
+		assert(Type.of(task.node) == Type.Node)
 	end,
 
 	perform = function(task, tree)
@@ -164,8 +164,8 @@ taskUnmountNode = makeTaskKind("UnmountNode", {
 local taskReconcileNode
 taskReconcileNode = makeTaskKind("ReconcileNode", {
 	validate = function(task)
-		assert(Type.is(task.node, Type.Node))
-		assert(Type.is(task.toElement, Type.Element))
+		assert(Type.of(task.node) == Type.Node)
+		assert(Type.of(task.toElement) == Type.Element)
 	end,
 
 	perform = function(task, tree)
@@ -238,7 +238,7 @@ taskReconcileNode = makeTaskKind("ReconcileNode", {
 })
 
 local function mountTree(element, parentRbx, key)
-	assert(Type.is(element, Type.Element))
+	assert(Type.of(element) == Type.Element)
 	assert(typeof(parentRbx) == "Instance" or parentRbx == nil)
 	assert(typeof(key) == "string")
 
@@ -282,7 +282,7 @@ local function mountTree(element, parentRbx, key)
 end
 
 local function unmountTree(tree)
-	assert(Type.is(tree, Type.Tree))
+	assert(Type.of(tree) == Type.Tree)
 	assert(tree.mounted, "not mounted")
 
 	tree.mounted = false
@@ -299,8 +299,8 @@ local function unmountTree(tree)
 end
 
 local function reconcileTree(tree, toElement)
-	assert(Type.is(tree, Type.Tree))
-	assert(Type.is(toElement, Type.Element))
+	assert(Type.of(tree) == Type.Tree)
+	assert(Type.of(toElement) == Type.Element)
 
 	tree.scheduler:schedule(taskReconcileNode({
 		node = tree.rootNode,

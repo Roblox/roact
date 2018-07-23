@@ -31,12 +31,6 @@ function TypeInternal.of(value)
 	return value[Type]
 end
 
-function TypeInternal.is(value, typeMarker)
-	assert(typeof(typeMarker) == "userdata")
-
-	return typeof(value) == "table" and value[Type] == typeMarker
-end
-
 getmetatable(Type).__index = TypeInternal
 
 setmetatable(TypeInternal, {

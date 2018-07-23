@@ -22,7 +22,7 @@ local function getGuid()
 end
 
 function TaskScheduler.new(tree, isAsync, asyncBudgetMs)
-	assert(Type.is(tree, Type.Tree))
+	assert(Type.of(tree) == Type.Tree)
 	assert(typeof(isAsync) == "boolean")
 	assert(typeof(asyncBudgetMs) == "number")
 

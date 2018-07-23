@@ -7,8 +7,9 @@ local GlobalConfig = require(script.GlobalConfig)
 local Instrumentation = require(script.Instrumentation)
 local Reconciler = require(script.Reconciler)
 local ReconcilerCompat = require(script.ReconcilerCompat)
+local strict = require(script.strict)
 
-local Roact = {
+local Roact = strict {
 	Change = require(script.Change),
 	Component = require(script.Component),
 	createElement = require(script.createElement),

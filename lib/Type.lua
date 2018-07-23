@@ -10,6 +10,7 @@
 ]]
 
 local Symbol = require(script.Parent.Symbol)
+local strict = require(script.Parent.strict)
 
 local Type = newproxy(true)
 
@@ -33,10 +34,6 @@ end
 
 getmetatable(Type).__index = TypeInternal
 
-setmetatable(TypeInternal, {
-	__index = function(self, key)
-		error(("Invalid Type key %q"):format(tostring(key)))
-	end,
-})
+strict(TypeInternal, "Type")
 
 return Type

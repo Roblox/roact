@@ -3,12 +3,6 @@ local GlobalConfig = require(script.Parent.GlobalConfig)
 local Type = require(script.Parent.Type)
 local ElementKind = require(script.Parent.ElementKind)
 
-local componentTypesToKinds = {
-	["string"] = ElementKind.Primitive,
-	["function"] = ElementKind.Functional,
-	["table"] = ElementKind.Stateful,
-}
-
 --[[
 	Creates a new element representing the given component.
 
@@ -33,13 +27,7 @@ local function createElement(component, props, children)
 		props[Core.Children] = children
 	end
 
-	local elementKind
-
-	if component == Core.Portal then
-		elementKind = ElementKind.Portal
-	else
-		elementKind = componentTypesToKinds[typeof(component)]
-	end
+	local elementKind = ElementKind.fromComponent(component)
 
 	local element = {
 		[Type] = Type.Element,

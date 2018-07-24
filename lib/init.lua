@@ -4,7 +4,6 @@
 
 local Core = require(script.Core)
 local GlobalConfig = require(script.GlobalConfig)
-local Instrumentation = require(script.Instrumentation)
 local Reconciler = require(script.Reconciler)
 local ReconcilerCompat = require(script.ReconcilerCompat)
 local strict = require(script.strict)
@@ -36,8 +35,6 @@ local Roact = strict {
 
 	-- APIs that may change in the future without warning
 	UNSTABLE = {
-		getCollectedStats = Instrumentation.getCollectedStats,
-		clearCollectedStats = Instrumentation.clearCollectedStats,
 	},
 }
 

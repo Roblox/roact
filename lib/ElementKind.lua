@@ -4,7 +4,7 @@
 	Use `ElementKind` as a key, and values from it as the value.
 
 		local element = {
-			[ElementKind] = ElementKind.Primitive,
+			[ElementKind] = ElementKind.Host,
 		}
 ]]
 
@@ -16,7 +16,7 @@ local ElementKind = newproxy(true)
 
 local ElementKindInternal = {
 	Portal = Symbol.named("Portal"),
-	Primitive = Symbol.named("Primitive"),
+	Host = Symbol.named("Host"),
 	Functional = Symbol.named("Functional"),
 	Stateful = Symbol.named("Stateful"),
 }
@@ -30,7 +30,7 @@ function ElementKindInternal.of(value)
 end
 
 local componentTypesToKinds = {
-	["string"] = ElementKindInternal.Primitive,
+	["string"] = ElementKindInternal.Host,
 	["function"] = ElementKindInternal.Functional,
 	["table"] = ElementKindInternal.Stateful,
 }

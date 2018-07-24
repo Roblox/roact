@@ -1,15 +1,8 @@
-local Core = require(script.Parent.Core)
 local Type = require(script.Parent.Type)
-local Symbol = require(script.Parent.Symbol)
-local TaskScheduler = require(script.Parent.TaskScheduler)
+local RobloxRenderer = require(script.Parent.RobloxRenderer)
+local ElementKind = require(script.Parent.ElementKind)
 
-local DEFAULT_TREE_CONFIG = {
-	useAsyncScheduler = true,
-	asyncSchedulerBudgetPerFrameMs = 12 / 1000
-}
-
--- Used to mark a child that is going to be mounted, but is not yet.
-local MountingNode = Symbol.named("MountingNode")
+local DEFAULT_TREE_CONFIG = {}
 
 local function makeConfigObject(source)
 	local config = {}
@@ -20,226 +13,163 @@ local function makeConfigObject(source)
 
 	setmetatable(config, {
 		__index = function(_, key)
-			error(("Invalid config key %q"):format(key))
+			error(("Invalid config key %q"):format(key), 2)
 		end,
 		__newindex = function()
-			error("Cannot mutate config!")
+			error("Cannot mutate config!", 2)
 		end,
 	})
 
 	return config
 end
 
-local function makeTaskKind(name, options)
-	local validate = options.validate
-	local perform = options.perform
+local function noop()
+	return nil
+end
 
-	assert(typeof(name) == "string")
-	assert(typeof(validate) == "function")
-	assert(typeof(perform) == "function")
+local function iterateElements(childOrChildren)
+	local richType = Type.of(childOrChildren)
 
-	return function(details)
-		-- We want to minimize the chance that these fields will collide with
-		-- values put into the task details, since they share a namespace.
-		details.taskName = name
-		details.taskPerform = perform
+	-- Single child, the simplest case!
+	if richType == Type.Element then
+		local called = false
 
-		-- Validation is separated so that it can be gated in the future.
-		-- It should only ever fail when working on Roact itself.
-		validate(details)
+		return function()
+			if called then
+				return nil
+			else
+				called = true
+				return 1, childOrChildren
+			end
+		end
+	end
 
-		return details
+	-- This is a Roact-speciifc object, and it's the wrong kind.
+	if richType ~= nil then
+		error("Invalid children")
+	end
+
+	local regularType = typeof(childOrChildren)
+
+	-- A dictionary of children, hopefully!
+	-- TODO: Is this too flaky? Should we introduce a Fragment type like React?
+	if regularType == "table" then
+		return pairs(childOrChildren)
+	end
+
+	if childOrChildren == nil or regularType == "boolean" then
+		return noop
+	end
+
+	error("Invalid children")
+end
+
+local function unmountNode(node)
+	assert(Type.of(node) == Type.Node)
+
+	local kind = ElementKind.of(node.currentElement)
+
+	if kind == ElementKind.Host then
+		RobloxRenderer.unmountHostNode(node, unmountNode)
+	elseif kind == ElementKind.Functional then
+		error("NYI")
+	elseif kind == ElementKind.Stateful then
+		error("NYI")
+	elseif kind == ElementKind.Portal then
+		error("NYI")
+	else
+		error(("Unknown ElementKind %q"):format(tostring(kind), 2))
 	end
 end
 
-local taskMountNode
-taskMountNode = makeTaskKind("MountNode", {
-	validate = function(task)
-		assert(Type.of(task.element) == Type.Element)
-		assert(typeof(task.key) == "string")
-		assert(Type.of(task.parentNode) == Type.Node or task.parentNode == nil)
-		assert(typeof(task.parentRbx) == "Instance" or task.parentRbx == nil)
-		assert(typeof(task.isTreeRoot) == "boolean")
-		assert(typeof(task.nodeDepth) == "number")
-	end,
+local function reconcileNode(node, newElement)
+	assert(Type.of(node) == Type.Node)
+	assert(Type.of(newElement) == Type.Element or typeof(newElement) == "boolean" or newElement == nil)
 
-	perform = function(task, tree)
-		local element = task.element
-		local key = task.key
-		local parentNode = task.parentNode
-		local parentRbx = task.parentRbx
-		local isTreeRoot = task.isTreeRoot
-		local nodeDepth = task.nodeDepth
+	if typeof(newElement) == "boolean" or newElement == nil then
+		return unmountNode(node)
+	end
 
-		local node = {
-			[Type] = Type.Node,
-			children = {},
-			element = element,
-		}
+	if node.currentElement.component ~= newElement.component then
+		error("don't do that")
+	end
 
-		if typeof(element.component) == "string" then
-			local rbx = Instance.new(element.component)
-			rbx.Name = key
+	local kind = ElementKind.of(newElement)
 
-			node.rbx = rbx
+	if kind == ElementKind.Host then
+		return RobloxRenderer.reconcileHostNode(node, newElement)
+	elseif kind == ElementKind.Functional then
+		error("NYI")
+	elseif kind == ElementKind.Stateful then
+		error("NYI")
+	elseif kind == ElementKind.Portal then
+		error("NYI")
+	else
+		error(("Unknown ElementKind %q"):format(tostring(kind), 2))
+	end
+end
 
-			for prop, value in pairs(element.props) do
-				if prop == Core.Children then
-					for childKey, childElement in pairs(value) do
-						node.children[childKey] = MountingNode
+local function mountNode(element, hostParent, key, context)
+	assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
+	assert(typeof(hostParent) == "Instance" or hostParent == nil)
+	assert(typeof(key) == "string")
+	assert(typeof(context) == "table")
 
-						tree.scheduler:schedule(taskMountNode({
-							element = childElement,
-							key = childKey,
-							parentNode = node,
-							parentRbx = rbx,
-							isTreeRoot = false,
-							nodeDepth = nodeDepth + 1,
-						}))
-					end
-				else
-					rbx[prop] = value
-				end
-			end
+	-- Boolean values reconcile as nil to enable terse conditional rendering.
+	if typeof(element) == "boolean" then
+		return nil
+	end
 
-			tree.scheduler:schedule(function()
-				rbx.Parent = parentRbx
+	local kind = ElementKind.of(element)
 
-				if isTreeRoot then
-					tree.rootNode = node
-				else
-					assert(parentNode.children[key] == MountingNode, "Expected parent node to be prepared for me to mount!")
+	local node = {
+		[Type] = Type.Node,
+		currentElement = element,
+		children = {},
+	}
 
-					parentNode.children[key] = node
-				end
-			end)
-		else
-			error("NYI: mounting non-string components")
-		end
-	end,
-})
+	if kind == ElementKind.Host then
+		-- TODO: Create a real interface for Renderer <-> Reconciler
+		RobloxRenderer.mountHostNode(node, element, hostParent, key, mountNode)
 
-local taskUnmountNode
-taskUnmountNode = makeTaskKind("UnmountNode", {
-	validate = function(task)
-		assert(Type.of(task.node) == Type.Node)
-	end,
+		return node
+	elseif kind == ElementKind.Functional then
+		local renderResult = element.component(element.props)
 
-	perform = function(task, tree)
-		local node = task.node
+		for childKey, childElement in iterateElements(renderResult) do
+			local childNode = mountNode(childElement, hostParent, childKey, context)
 
-		local nodesToVisit = {node}
-		local visitIndex = 1
-		local nodesToDestroy = {}
-
-		while true do
-			local visitingNode = nodesToVisit[visitIndex]
-
-			if visitingNode == nil then
-				break
-			end
-
-			for _, childNode in pairs(node.children) do
-				table.insert(nodesToVisit, childNode)
-			end
-
-			table.insert(nodesToDestroy, visitingNode)
-
-			visitIndex = visitIndex + 1
+			node.children[childKey] = childNode
 		end
 
-		-- Destroy from back-to-front in order to destroy the nodes deepest in
-		-- the tree first.
-		for i = #nodesToDestroy, 1, -1 do
-			local destroyNode = nodesToDestroy[i]
+		return node
+	elseif kind == ElementKind.Stateful then
+		local instance = element.component:__new(element.props)
+		node.instance = instance
 
-			-- TODO: More complicated destruction logic with regards to non-
-			-- primitive components
+		local renderResult = instance:render()
 
-			destroyNode.rbx:Destroy()
-		end
-	end,
-})
+		-- TODO: Move logic into Component?
+		-- Maybe component should become logicless?
+		for childKey, childElement in iterateElements(renderResult) do
+			local childNode = mountNode(childElement, hostParent, childKey, context)
 
-local taskReconcileNode
-taskReconcileNode = makeTaskKind("ReconcileNode", {
-	validate = function(task)
-		assert(Type.of(task.node) == Type.Node)
-		assert(Type.of(task.toElement) == Type.Element)
-	end,
-
-	perform = function(task, tree)
-		local node = task.node
-		local toElement = task.toElement
-
-		local fromElement = node.element
-
-		-- TODO: Branch on kind of node
-		-- TODO: Check if component type changed
-
-		local visitedProps = {}
-
-		for prop, newValue in pairs(toElement.props) do
-			visitedProps[prop] = true
-			local oldValue = fromElement.props[prop]
-
-			print("Checking prop", prop, oldValue, newValue)
-
-			if newValue == oldValue then
-				print("\tProp is the same.")
-			else
-				if prop == Core.Children then
-					print("\tReconciling children...")
-
-					for key, newChildElement in pairs(newValue) do
-						local childNode = node.children[key]
-
-						local oldChildElement = oldValue[key]
-
-						-- TODO: What if oldValue[Core.Children] is nil?
-
-						if oldChildElement == nil then
-							warn("NYI: creating children in reconciler")
-						elseif newChildElement ~= oldChildElement then
-							print("\t\tScheduling reconcile of child", key)
-
-							tree.scheduler:schedule(taskReconcileNode({
-								node = childNode,
-								toElement = newChildElement,
-							}))
-						end
-					end
-
-					for key in pairs(oldValue) do
-						local newChildElement = newValue[key]
-						local childNode = node.children[key]
-
-						if newChildElement == nil then
-							print("\t\tScheduling unmount of child", key)
-							tree.scheduler:schedule(taskUnmountNode({
-								node = childNode,
-							}))
-						end
-					end
-				else
-					print("\tSetting", prop, newValue)
-					node.rbx[prop] = newValue
-				end
-			end
+			node.children[childKey] = childNode
 		end
 
-		for prop in pairs(fromElement.props) do
-			if not visitedProps[prop] then
-				-- TODO: Use real mechanism for setting default values
-				node.rbx[prop] = nil
-			end
-		end
-	end,
-})
+		-- TODO: Fire didMount
 
-local function mountTree(element, parentRbx, key)
+		return node
+	elseif kind == ElementKind.Portal then
+		error("NYI")
+	else
+		error(("Unknown ElementKind %q"):format(tostring(kind), 2))
+	end
+end
+
+local function mountTree(element, hostParent, key)
 	assert(Type.of(element) == Type.Element)
-	assert(typeof(parentRbx) == "Instance" or parentRbx == nil)
+	assert(typeof(hostParent) == "Instance" or hostParent == nil)
 	assert(typeof(key) == "string")
 
 	-- TODO: Accept config parameter and typecheck values
@@ -247,14 +177,6 @@ local function mountTree(element, parentRbx, key)
 
 	local tree = {
 		[Type] = Type.Tree,
-
-		-- A list of all signal connections, intended to be cleaned up all at
-		-- once when the tree is unmounted.
-		connections = {},
-
-		-- Tracks whether the tree is currently mounted. Scheduling new tasks
-		-- against a tree that has been unmounted should be an error.
-		mounted = true,
 
 		-- The root node of the tree, which starts into the hierarchy of Roact
 		-- component instances.
@@ -265,18 +187,9 @@ local function mountTree(element, parentRbx, key)
 		config = config,
 	}
 
-	local scheduler = TaskScheduler.new(tree, config.useAsyncScheduler, config.asyncSchedulerBudgetPerFrameMs)
+	local context = {}
 
-	tree.scheduler = scheduler
-
-	scheduler:schedule(taskMountNode({
-		element = element,
-		key = key,
-		parentNode = nil,
-		parentRbx = parentRbx,
-		isTreeRoot = true,
-		nodeDepth = 1,
-	}))
+	tree.rootNode = mountNode(element, hostParent, context)
 
 	return tree
 end
@@ -287,25 +200,18 @@ local function unmountTree(tree)
 
 	tree.mounted = false
 
-	-- TODO: Flush/cancel existing tasks and unmount asynchronously?
-
-	tree.scheduler:schedule(taskUnmountNode({
-		node = tree.rootNode,
-	}))
-
-	-- For now, flush the entire tree and unmount synchronously
-	tree.scheduler:processSync()
-	tree.scheduler:destroy()
+	unmountNode(tree.rootNode)
 end
 
-local function reconcileTree(tree, toElement)
+local function reconcileTree(tree, newElement)
 	assert(Type.of(tree) == Type.Tree)
-	assert(Type.of(toElement) == Type.Element)
+	assert(Type.of(newElement) == Type.Element)
 
-	tree.scheduler:schedule(taskReconcileNode({
-		node = tree.rootNode,
-		toElement = toElement,
-	}))
+	local newRoot = reconcileNode(tree.rootNode, newElement)
+
+	tree.rootNode = newRoot
+
+	return tree
 end
 
 return {

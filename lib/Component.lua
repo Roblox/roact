@@ -4,7 +4,9 @@ local Component = {}
 Component[Type] = Type.StatefulComponentClass
 Component.__index = Component
 
-function Component:extend()
+function Component:extend(name)
+	assert(typeof(name) == "string")
+
 	local class = {}
 	class[Type] = Type.StatefulComponentInstance
 	class.__index = class
@@ -18,9 +20,10 @@ function Component:extend()
 	return class
 end
 
-function Component:__new(tree)
+function Component:__new(props)
+	assert(typeof(props) == "table")
+
 	local internal = {
-		tree = tree,
 	}
 
 	local instance = {
@@ -34,12 +37,6 @@ end
 
 function Component:render()
 	error("overwrite render please")
-end
-
-function Component:DEBUG_scheduleRender()
-	local internal = self.__internal
-
-	-- TODO: access internal.tree to schedule a render
 end
 
 return Component

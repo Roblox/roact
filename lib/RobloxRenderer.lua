@@ -8,13 +8,16 @@ function RobloxRenderer.mountHostNode(node, element, hostParent, key, mountNode)
 	assert(Type.of(element) == Type.Element)
 	assert(ElementKind.of(element) == ElementKind.Host)
 
-	local rbx = Instance.new(element.component)
+	assert(element.props.Name == nil)
+	assert(element.props.Parent == nil)
 
-	rbx.Name = key
+	local rbx = Instance.new(element.component)
 
 	for name, value in pairs(element.props) do
 		rbx[name] = value
 	end
+
+	rbx.Name = key
 
 	local children = element.props[Core.Children]
 

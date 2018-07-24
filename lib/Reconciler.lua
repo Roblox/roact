@@ -165,9 +165,22 @@ function Reconciler._mountInternal(element, parent, key, context)
 
 		local rbx = Instance.new(element.component)
 
+		local bindings = {}
+
 		-- Update Roblox properties
 		for key, value in pairs(element.props) do
-			Reconciler._setRbxProp(rbx, key, value, element)
+			if type(key) == "string" and type(value) == "table" and value.isBinding then
+				-- HACK: This is a data binding!
+				rbx[key] = value.current
+
+				local binding = value:subscribe(function()
+					rbx[key] = value.current
+				end)
+
+				bindings[key] = binding
+			else
+				Reconciler._setRbxProp(rbx, key, value, element)
+			end
 		end
 
 		-- Create children!
@@ -202,6 +215,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 			_context = context,
 			_children = children,
 			_rbx = rbx,
+			_bindings = bindings,
 		}
 	elseif elementKind == ElementKind.Functional then
 		-- Functional elements contain 0 or 1 children.
@@ -347,7 +361,7 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 		end
 
 		-- Update properties and children of the Roblox object.
-		Reconciler._reconcilePrimitiveProps(oldElement, newElement, instanceHandle._rbx)
+		Reconciler._reconcilePrimitiveProps(instanceHandle, oldElement, newElement, instanceHandle._rbx)
 		Reconciler._reconcilePrimitiveChildren(instanceHandle, newElement)
 
 		instanceHandle._element = newElement
@@ -436,7 +450,7 @@ end
 	Reconciles the properties between two primitive Roact elements and applies
 	the differences to the given Roblox object.
 ]]
-function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
+function Reconciler._reconcilePrimitiveProps(instanceHandle, fromElement, toElement, rbx)
 	local seenProps = {}
 
 	-- Set properties that were set with fromElement
@@ -447,6 +461,11 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 
 		-- Assume any property that can be set to nil has a default value of nil
 		if newValue == nil then
+			if instanceHandle._bindings[key] then
+				instanceHandle._bindings[key]()
+				instanceHandle._bindings[key] = nil
+			end
+
 			local _, value = getDefaultPropertyValue(rbx.ClassName, key)
 
 			-- We don't care if getDefaultPropertyValue fails, because
@@ -457,7 +476,20 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 		-- Roblox does this check for normal values, but we have special
 		-- properties like events that warrant this.
 		if oldValue ~= newValue then
-			Reconciler._setRbxProp(rbx, key, newValue, toElement)
+			if instanceHandle._bindings[key] then
+				instanceHandle._bindings[key]()
+				instanceHandle._bindings[key] = nil
+			end
+
+			if type(newValue) == "table" and newValue.isBinding then
+				rbx[key] = newValue.current
+
+				instanceHandle._bindings[key] = newValue:subscribe(function()
+					rbx[key] = newValue.current
+				end)
+			else
+				Reconciler._setRbxProp(rbx, key, newValue, toElement)
+			end
 		end
 	end
 
@@ -469,7 +501,15 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 			local oldValue = fromElement.props[key]
 
 			if oldValue ~= newValue then
-				Reconciler._setRbxProp(rbx, key, newValue, toElement)
+				if type(newValue) == "table" and newValue.isBinding then
+					rbx[key] = newValue.current
+
+					instanceHandle._bindings[key] = newValue:subscribe(function()
+						rbx[key] = newValue.current
+					end)
+				else
+					Reconciler._setRbxProp(rbx, key, newValue, toElement)
+				end
 			end
 		end
 	end

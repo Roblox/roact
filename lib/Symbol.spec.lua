@@ -21,25 +21,4 @@ return function()
 			expect(symbolA).never.to.equal(symbolB)
 		end)
 	end)
-
-	describe("unnamed", function()
-		it("should give an opaque object", function()
-			local symbol = Symbol.unnamed()
-
-			expect(symbol).to.be.a("userdata")
-		end)
-
-		it("should coerce to some string", function()
-			local symbol = Symbol.unnamed()
-
-			expect(tostring(symbol)).to.be.a("string")
-		end)
-
-		it("should be unique when constructed", function()
-			local symbolA = Symbol.unnamed()
-			local symbolB = Symbol.unnamed()
-
-			expect(symbolA).never.to.equal(symbolB)
-		end)
-	end)
 end

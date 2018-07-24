@@ -116,6 +116,10 @@ function Reconciler.unmount(instanceHandle)
 		-- Necessary to make sure SingleEventManager doesn't leak references
 		Reconciler._singleEventManager:disconnectAll(instanceHandle._rbx)
 
+		for _, binding in ipairs(instanceHandle._bindings) do
+			binding()
+		end
+
 		instanceHandle._rbx:Destroy()
 	elseif elementKind == ElementKind.Functional then
 		-- Functional components can return nil

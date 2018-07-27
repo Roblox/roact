@@ -20,9 +20,11 @@ local function createElement(component, props, children)
 		error(("Expected component as an argument to createElement!"), 2)
 	end
 
-	props = props or {}
+	if props == nil then
+		props = {}
+	end
 
-	if children then
+	if children ~= nil then
 		if props[Core.Children] ~= nil then
 			warn("props[Children] was defined but was overridden by third parameter to createElement!")
 		end

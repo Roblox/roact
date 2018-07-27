@@ -13,6 +13,9 @@ local ElementKind = require(script.Parent.ElementKind)
 	props. If specified, the passed `props` table is mutated!
 ]]
 local function createElement(component, props, children)
+	assert(typeof(props) == "table" or props == nil, "`props` must be a table or nil")
+	assert(typeof(children) == "table" or children == nil, "`children` must be a table or nil")
+
 	if component == nil then
 		error(("Expected component as an argument to createElement!"), 2)
 	end

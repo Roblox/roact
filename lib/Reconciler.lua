@@ -64,6 +64,8 @@ local function iterateElements(childOrChildren)
 	error("Invalid children")
 end
 
+local Reconciler
+
 local function unmountNode(node)
 	assert(Type.of(node) == Type.Node)
 
@@ -109,11 +111,10 @@ local function reconcileNode(node, newElement)
 	end
 end
 
-local function mountNode(element, hostParent, key, context)
+local function mountNode(element, hostParent, key)
 	assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
 	assert(typeof(hostParent) == "Instance" or hostParent == nil)
 	assert(typeof(key) == "string")
-	assert(typeof(context) == "table")
 
 	-- Boolean values reconcile as nil to enable terse conditional rendering.
 	if typeof(element) == "boolean" then
@@ -137,7 +138,7 @@ local function mountNode(element, hostParent, key, context)
 		local renderResult = element.component(element.props)
 
 		for childKey, childElement in iterateElements(renderResult) do
-			local childNode = mountNode(childElement, hostParent, childKey, context)
+			local childNode = mountNode(childElement, hostParent, childKey)
 
 			node.children[childKey] = childNode
 		end
@@ -152,7 +153,7 @@ local function mountNode(element, hostParent, key, context)
 		-- TODO: Move logic into Component?
 		-- Maybe component should become logicless?
 		for childKey, childElement in iterateElements(renderResult) do
-			local childNode = mountNode(childElement, hostParent, childKey, context)
+			local childNode = mountNode(childElement, hostParent, childKey)
 
 			node.children[childKey] = childNode
 		end
@@ -170,7 +171,11 @@ end
 local function mountTree(element, hostParent, key)
 	assert(Type.of(element) == Type.Element)
 	assert(typeof(hostParent) == "Instance" or hostParent == nil)
-	assert(typeof(key) == "string")
+	assert(typeof(key) == "string" or key == nil)
+
+	if key == nil then
+		key = "Foo"
+	end
 
 	-- TODO: Accept config parameter and typecheck values
 	local config = makeConfigObject(DEFAULT_TREE_CONFIG)
@@ -185,18 +190,18 @@ local function mountTree(element, hostParent, key)
 		-- A static configuration, denoting values like which scheduler and
 		-- renderer to use.
 		config = config,
+
+		mounted = true,
 	}
 
-	local context = {}
-
-	tree.rootNode = mountNode(element, hostParent, context)
+	tree.rootNode = mountNode(element, hostParent, key)
 
 	return tree
 end
 
 local function unmountTree(tree)
 	assert(Type.of(tree) == Type.Tree)
-	assert(tree.mounted, "not mounted")
+	assert(tree.mounted, "Cannot unmounted a Roact tree that has already been unmounted")
 
 	tree.mounted = false
 
@@ -207,15 +212,18 @@ local function reconcileTree(tree, newElement)
 	assert(Type.of(tree) == Type.Tree)
 	assert(Type.of(newElement) == Type.Element)
 
-	local newRoot = reconcileNode(tree.rootNode, newElement)
-
-	tree.rootNode = newRoot
+	tree.rootNode = reconcileNode(tree.rootNode, newElement)
 
 	return tree
 end
 
-return {
-	mount = mountTree,
-	unmount = unmountTree,
-	reconcile = reconcileTree,
+Reconciler = {
+	mountTree = mountTree,
+	unmountTree = unmountTree,
+	reconcileTree = reconcileTree,
+	mountNode = mountNode,
+	unmountNode = unmountNode,
+	reconcileNode = reconcileNode,
 }
+
+return Reconciler

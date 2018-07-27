@@ -42,7 +42,9 @@ function RobloxRenderer.unmountHostNode(node, unmountNode)
 end
 
 function RobloxRenderer.reconcileHostNode(node, newElement)
-	error("NYI")
+	-- error("NYI")
+
+	return node
 end
 
 return RobloxRenderer

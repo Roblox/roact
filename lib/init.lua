@@ -23,9 +23,9 @@ local Roact = strict {
 	Portal = Core.Portal,
 	Ref = Core.Ref,
 
-	mount = Reconciler.mount,
-	unmount = Reconciler.unmount,
-	reconcile = Reconciler.reconcile,
+	mount = Reconciler.mountTree,
+	unmount = Reconciler.unmountTree,
+	reconcile = Reconciler.reconcileTree,
 
 	reify = ReconcilerCompat.reify,
 	teardown = ReconcilerCompat.teardown,

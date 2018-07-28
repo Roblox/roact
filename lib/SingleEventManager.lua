@@ -56,11 +56,11 @@ function SingleEventManager.new()
 end
 
 function SingleEventManager:connect(instance, key, method)
-	self:_connectInternal(instance, instance[key], method)
+	self:_connectInternal(instance, instance[key], key, method)
 end
 
 function SingleEventManager:connectProperty(instance, key, method)
-	self:_connectInternal(instance, instance:GetPropertyChangedSignal(key), method)
+	self:_connectInternal(instance, instance:GetPropertyChangedSignal(key), "Property:" .. key, method)
 end
 
 --[[
@@ -71,7 +71,7 @@ end
 	will throw.
 ]]
 function SingleEventManager:disconnect(instance, key)
-	self:_disconnectInternal(instance, instance[key])
+	self:_disconnectInternal(instance, key)
 end
 
 --[[
@@ -82,7 +82,7 @@ end
 	will throw.
 ]]
 function SingleEventManager:disconnectProperty(instance, key)
-	self:_disconnectInternal(instance, instance:GetPropertyChangedSignal(key))
+	self:_disconnectInternal(instance, "Property:" .. key)
 end
 
 --[[
@@ -112,7 +112,7 @@ end
 	Generally, `event` should directly associated with `instance`, but that's
 	unchecked in this code.
 ]]
-function SingleEventManager:_connectInternal(instance, event, method)
+function SingleEventManager:_connectInternal(instance, event, key, method)
 	local instanceHooks = self._hooks[instance]
 
 	if instanceHooks == nil then
@@ -120,12 +120,12 @@ function SingleEventManager:_connectInternal(instance, event, method)
 		self._hooks[instance] = instanceHooks
 	end
 
-	local existingHook = instanceHooks[event]
+	local existingHook = instanceHooks[key]
 
 	if existingHook ~= nil then
 		existingHook.method = method
 	else
-		instanceHooks[event] = createHook(instance, event, method)
+		instanceHooks[key] = createHook(instance, event, method)
 	end
 end
 
@@ -133,21 +133,21 @@ end
 	Disconnects a hook associated with the given instance and event if it's
 	present, otherwise does nothing.
 ]]
-function SingleEventManager:_disconnectInternal(instance, event)
+function SingleEventManager:_disconnectInternal(instance, key)
 	local instanceHooks = self._hooks[instance]
 
 	if instanceHooks == nil then
 		return
 	end
 
-	local hook = instanceHooks[event]
+	local hook = instanceHooks[key]
 
 	if hook == nil then
 		return
 	end
 
 	hook.connection:Disconnect()
-	instanceHooks[event] = nil
+	instanceHooks[key] = nil
 
 	-- If there are no hooks left for this instance, we don't need this record.
 	if next(instanceHooks) == nil then

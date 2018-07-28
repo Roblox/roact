@@ -317,6 +317,16 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 	-- If the element changes type, we assume its subtree will be substantially
 	-- different. This lets us skip comparisons of a large swath of nodes.
 	if oldElement.component ~= newElement.component then
+		warn(("A Roact component is changing type from %s to %s during reconciliation! This can cause performance issues; see issue #88 for details."):format(
+			tostring(oldElement.component),
+			tostring(newElement.component)
+		))
+
+		print(("Old element source: %s\nNew element source: %s"):format(
+			oldElement.source or DEFAULT_SOURCE,
+			newElement.source or DEFAULT_SOURCE
+		))
+
 		local parent = instanceHandle._parent
 		local key = instanceHandle._key
 

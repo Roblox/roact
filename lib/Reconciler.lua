@@ -319,7 +319,8 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 	-- different. This lets us skip comparisons of a large swath of nodes.
 	if oldElement.component ~= newElement.component then
 		if GlobalConfig.getValue("warnOnTypeChange") then
-			warn(("A Roact component is changing type from %s to %s during reconciliation! This can cause performance issues; see issue #88 for details."):format(
+			warn(("A Roact component is changing type from %s to %s during reconciliation!\n"
+				.. "This can cause performance issues; see issue #88 for details."):format(
 				tostring(oldElement.component),
 				tostring(newElement.component)
 			))

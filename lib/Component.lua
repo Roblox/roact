@@ -92,6 +92,11 @@ function Component:extend(name)
 		-- You can see a list of reasons in invalidSetStateMessages.
 		self._setStateBlockedReason = nil
 
+		-- When set to true, setState should not trigger an update, but should
+		-- instead just update self.state. Lifecycle events like `willUpdate`
+		-- can set this to change the behavior of setState slightly.
+		self._setStateWithoutUpdate = false
+
 		if class.defaultProps == nil then
 			self.props = props
 		else
@@ -236,7 +241,12 @@ function Component:setState(partialState)
 	end
 
 	local newState = merge(self.state, partialState)
-	self:_update(nil, newState)
+
+	if self._setStateWithoutUpdate then
+		self.state = newState
+	else
+		self:_update(nil, newState)
+	end
 end
 
 --[[
@@ -314,9 +324,9 @@ end
 ]]
 function Component:_forceUpdate(newProps, newState)
 	if self.willUpdate then
-		self._setStateBlockedReason = "willUpdate"
+		self._setStateWithoutUpdate = true
 		self:willUpdate(newProps or self.props, newState or self.state)
-		self._setStateBlockedReason = nil
+		self._setStateWithoutUpdate = false
 	end
 
 	local oldProps = self.props

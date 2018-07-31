@@ -3,7 +3,7 @@
 Refs are intended to be used in cases where Roact cannot solve a problem directly, or its solution might not be performant enough, like:
 
 * Resizing a box to fit its contents dynamically
-* Handling gamepad selection
+* Gamepad selection
 * Animations
 
 Refs can only be attached to primitive components. This is different than React, where refs can be used to call members of composite components.

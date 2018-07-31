@@ -1,69 +1,68 @@
-*Refs* grant access to the actual Instance objects that are created by Roact. They're an escape hatch for when something is difficult or impossible to correctly express with the Roact API.
+*Refs* grant access to the Roblox Instance objects that are created by Roact. They're an escape hatch for when something is difficult or impossible to correctly express with the Roact API.
 
-!!! info
-	Refs can only be used with primitive components.
+Refs are intended to be used in cases where Roact cannot solve a problem directly, or its solution might not be performant enough, like:
+
+* Resizing a box to fit its contents dynamically
+* Handling gamepad selection
+* Animations
+
+Refs can only be attached to primitive components. This is different than React, where refs can be used to call members of composite components.
 
 ## Refs in Action
-To create a ref, pass a function prop with the key `Roact.Ref` when creating a primitive element.
-
-For example, suppose we wanted to create a search bar that captured cursor focus when any part of it was clicked. We might use a component like this:
+To use a ref, call `Roact.createRef()` and put the result somewhere persistent. Generally, that means that refs are only used inside stateful components.
 
 ```lua
---[[
-	A search bar with an icon and a text box that captures focus for its TextBox
-	when its icon is clicked
- ]]
-local SearchBar = Roact.Component:extend("SearchBar")
+local Foo = Roact.Component:extend("Foo")
 
-function SearchBar:init()
+function Foo:init()
 	self.textBoxRef = Roact.createRef()
 end
+```
 
-function SearchBar:render()
-	-- Render our icon and text box side by side in a Frame
-	return Roact.createElement("Frame", {
-		Size = UDim2.new(0, 200, 0, 20),
-	}, {
-		SearchIcon = Roact.createElement("ImageButton", {
-			Size = UDim2.new(0, 20, 0, 20),
+Next, use the ref inside of `render` by creating a primitive component. Refs use the special key `Roact.Ref`.
 
-			-- Handle click events on the icon
-			[Roact.Event.Activated] = function()
-				self.textBoxRef.current:CaptureFocus()
-			end
-		}),
-
-		SearchTextBox = Roact.createElement("TextBox", {
-			Size = UDim2.new(0, 180, 0, 20),
-			Position = UDim2.new(0, 20, 0, 0),
-
-			-- Use Roact.Ref to get a reference to the underlying object
-			[Roact.Ref] = self.textBoxRef
-		}),
+```lua
+function Foo:render()
+	return Roact.createElement("TextBox", {
+		[Roact.Ref] = self.textBoxRef,
 	})
 end
 ```
-When a user clicks on the outer `ImageButton`, the `captureTextboxFocus` callback will be triggered and the `TextBox` instance will get focus as if it had been clicked on directly.
 
-## Refs During Unmount
-
-!!! warning
-	When using the function version of refs, any time a component instance is destroyed or the ref property changes, `nil` will be passed to the old ref function!
+Finally, we can use the value of the ref at any point after our component is mounted.
 
 ```lua
-local frame = Roact.createElement("Frame", {
-	[Roact.Ref] = function(rbx)
-		print("Ref was called with", rbx, "of type", typeof(rbx))
-	end
-})
+function Foo:didMount()
+	-- The actual Instance is stored in the 'current' property of a ref object.
+	local textBox = self.textBoxRef.current
 
-local handle = Roact.mount(frame)
-
--- Output:
---     Ref was called with Frame of type Instance
-
-Roact.unmount(handle)
-
--- In the output:
---     Ref was called with nil of type nil
+	print("TextBox has this text:", textBox.Text)
+end
 ```
+
+## Function Refs
+The original ref API was based on functions instead of objects. Its use is not recommended for most cases anymore, but it can still be useful in some cases.
+
+This style of ref involves passing a function as the `Roact.Ref` prop as opposed to a dedicated ref object:
+
+```lua
+local function Bar(props)
+	return Roact.createElement("TextBox", {
+		[Roact.Ref] = function(instance)
+			-- Be careful to guard against nil refs; this is a gotcha of
+			-- function refs.
+			if instance ~= nil then
+				print("TextBox has this text:", instance.Text)
+			else
+				print("TextBox ref removed.")
+			end
+		end,
+	})
+end
+```
+
+!!! warning
+	When a function ref is called, it's not guaranteed that its sibling or parent components have finished mounting. Causing side effects here can cause difficult-to-trace bugs.
+
+!!! warning
+	When a component with a function ref unmounts, or when the ref value changes, the component's ref is passed `nil`.

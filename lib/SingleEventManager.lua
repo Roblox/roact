@@ -14,132 +14,145 @@
 	The hooks provided by SingleEventManager pass the associated Roblox object
 	as the first parameter to the callback. This differs from normal
 	Roblox events.
+
+	SingleEventManager's public methods operate in terms of instances and string
+	keys, differentiating between regular events and property changed signals
+	by calling different methods.
+
+	In the internal implementation, everything is handled via indexing by
+	instances and event objects themselves. This allows the code to use the same
+	structures for both kinds of instance event.
 ]]
 
 local SingleEventManager = {}
 
 SingleEventManager.__index = SingleEventManager
 
-local function createHook(rbx, key, method)
+--[[
+	Constructs a `Hook`, which is a bundle containing a method that can be
+	updated, as well as the signal connection.
+]]
+local function createHook(instance, event, method)
 	local hook = {
 		method = method,
-		connection = rbx[key]:Connect(function(...)
-			method(rbx, ...)
-		end)
 	}
 
-	return hook
-end
-
-local function createChangeHook(rbx, key, method)
-	local hook = {
-		method = method,
-		connection = rbx:GetPropertyChangedSignal(key):Connect(function(...)
-			method(rbx, ...)
-		end)
-	}
+	hook.connection = event:Connect(function(...)
+		hook.method(instance, ...)
+	end)
 
 	return hook
-end
-
-local function formatChangeKey(key)
-	return ("!PropertyChangeEvent:%s"):format(key)
 end
 
 function SingleEventManager.new()
-	local self = {}
-
-	self._hookCache = {}
+	local self = {
+		-- Map<Instance, Map<Event, Hook>>
+		_hooks = {},
+	}
 
 	setmetatable(self, SingleEventManager)
 
 	return self
 end
 
-function SingleEventManager:connect(rbx, key, method)
-	local rbxHooks = self._hookCache[rbx]
-
-	if rbxHooks then
-		local existingHook = rbxHooks[key]
-
-		if existingHook then
-			if existingHook.method == method then
-				return
-			end
-
-			existingHook.connection:Disconnect()
-		end
-
-		rbxHooks[key] = createHook(rbx, key, method)
-	else
-		rbxHooks = {}
-		rbxHooks[key] = createHook(rbx, key, method)
-
-		self._hookCache[rbx] = rbxHooks
-	end
+function SingleEventManager:connect(instance, key, method)
+	self:_connectInternal(instance, instance[key], key, method)
 end
 
-function SingleEventManager:connectProperty(rbx, key, method)
-	local rbxHooks = self._hookCache[rbx]
-	local formattedKey = formatChangeKey(key)
-
-	if rbxHooks then
-		local existingHook = rbxHooks[formattedKey]
-
-		if existingHook then
-			if existingHook.method == method then
-				return
-			end
-
-			existingHook.connection:Disconnect()
-		end
-
-		rbxHooks[formattedKey] = createChangeHook(rbx, key, method)
-	else
-		rbxHooks = {}
-		rbxHooks[formattedKey] = createChangeHook(rbx, key, method)
-
-		self._hookCache[rbx] = rbxHooks
-	end
+function SingleEventManager:connectProperty(instance, key, method)
+	self:_connectInternal(instance, instance:GetPropertyChangedSignal(key), "Property:" .. key, method)
 end
 
-function SingleEventManager:disconnect(rbx, key)
-	local rbxHooks = self._hookCache[rbx]
+--[[
+	Disconnects the hook attached to the event named `key` on the given
+	`instance` if there is one, otherwise does nothing.
 
-	if not rbxHooks then
+	Note that `key` must identify a valid property on `instance`, or this method
+	will throw.
+]]
+function SingleEventManager:disconnect(instance, key)
+	self:_disconnectInternal(instance, key)
+end
+
+--[[
+	Disconnects the hook attached to the property changed signal on `instance`
+	with the name `key` if there is one, otherwise does nothing.
+
+	Note that `key` must identify a valid property on `instance`, or this method
+	will throw.
+]]
+function SingleEventManager:disconnectProperty(instance, key)
+	self:_disconnectInternal(instance, "Property:" .. key)
+end
+
+--[[
+	Disconnects any hooks managed by SingleEventManager associated with
+	`instance`.
+
+	Calling disconnectAll with an untracked instance won't do anything.
+]]
+function SingleEventManager:disconnectAll(instance)
+	local instanceHooks = self._hooks[instance]
+
+	if instanceHooks == nil then
 		return
 	end
 
-	local existingHook = rbxHooks[key]
-
-	if not existingHook then
-		return
-	end
-
-	existingHook.connection:Disconnect()
-	rbxHooks[key] = nil
-
-	if next(rbxHooks) == nil then
-		self._hookCache[rbx] = nil
-	end
-end
-
-function SingleEventManager:disconnectProperty(rbx, key)
-	self:disconnect(rbx, formatChangeKey(key))
-end
-
-function SingleEventManager:disconnectAll(rbx)
-	local rbxHooks = self._hookCache[rbx]
-
-	if not rbxHooks then
-		return
-	end
-
-	for _, hook in pairs(rbxHooks) do
+	for _, hook in pairs(instanceHooks) do
 		hook.connection:Disconnect()
 	end
 
-	self._hookCache[rbx] = nil
+	self._hooks[instance] = nil
+end
+
+--[[
+	Creates a hook using the given event and method and associates it with the
+	given instance.
+
+	Generally, `event` should directly associated with `instance`, but that's
+	unchecked in this code.
+]]
+function SingleEventManager:_connectInternal(instance, event, key, method)
+	local instanceHooks = self._hooks[instance]
+
+	if instanceHooks == nil then
+		instanceHooks = {}
+		self._hooks[instance] = instanceHooks
+	end
+
+	local existingHook = instanceHooks[key]
+
+	if existingHook ~= nil then
+		existingHook.method = method
+	else
+		instanceHooks[key] = createHook(instance, event, method)
+	end
+end
+
+--[[
+	Disconnects a hook associated with the given instance and event if it's
+	present, otherwise does nothing.
+]]
+function SingleEventManager:_disconnectInternal(instance, key)
+	local instanceHooks = self._hooks[instance]
+
+	if instanceHooks == nil then
+		return
+	end
+
+	local hook = instanceHooks[key]
+
+	if hook == nil then
+		return
+	end
+
+	hook.connection:Disconnect()
+	instanceHooks[key] = nil
+
+	-- If there are no hooks left for this instance, we don't need this record.
+	if next(instanceHooks) == nil then
+		self._hooks[instance] = nil
+	end
 end
 
 return SingleEventManager

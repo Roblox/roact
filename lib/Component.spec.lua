@@ -328,6 +328,45 @@ return function()
 		Reconciler.unmount(handle)
 	end)
 
+	it("should pass defaultProps in init and first getDerivedStateFromProps", function()
+		local derivedProps = nil
+		local initProps = nil
+		local initSelfProps = nil
+
+		local TestComponent = Component:extend("TestComponent")
+
+		TestComponent.defaultProps = {
+			heyNow = "get your game on",
+		}
+
+		function TestComponent:init(props)
+			initProps = props
+			initSelfProps = self.props
+		end
+
+		function TestComponent:render()
+			return nil
+		end
+
+		function TestComponent.getDerivedStateFromProps(nextProps, lastState)
+			derivedProps = nextProps
+		end
+
+		local tree = createElement(TestComponent)
+		local handle = Reconciler.mount(tree)
+
+		expect(derivedProps).to.be.ok()
+		expect(initProps).to.be.ok()
+		expect(initSelfProps).to.be.ok()
+
+		expect(derivedProps.heyNow).to.equal(TestComponent.defaultProps.heyNow)
+		expect(initProps.heyNow).to.equal(TestComponent.defaultProps.heyNow)
+
+		expect(initProps).to.equal(initSelfProps)
+
+		Reconciler.unmount(handle)
+	end)
+
 	describe("setState", function()
 		it("should throw when called in init", function()
 			local InitComponent = Component:extend("InitComponent")

@@ -4,7 +4,7 @@ local Core = require(script.Parent.Core)
 
 local RobloxRenderer = {}
 
-function RobloxRenderer.mountHostNode(node, element, hostParent, key, mountNode)
+function RobloxRenderer.mountHostNode(reconciler, node, element, hostParent, key)
 	assert(Type.of(element) == Type.Element)
 	assert(ElementKind.of(element) == ElementKind.Host)
 
@@ -23,7 +23,7 @@ function RobloxRenderer.mountHostNode(node, element, hostParent, key, mountNode)
 
 	if children ~= nil then
 		for childKey, childElement in pairs(children) do
-			local childNode = mountNode(childElement, rbx, childKey)
+			local childNode = reconciler.mountNode(childElement, rbx, childKey)
 
 			node.children[childKey] = childNode
 		end
@@ -33,15 +33,15 @@ function RobloxRenderer.mountHostNode(node, element, hostParent, key, mountNode)
 	node.hostObject = rbx
 end
 
-function RobloxRenderer.unmountHostNode(node, unmountNode)
+function RobloxRenderer.unmountHostNode(reconciler, node)
 	for _, child in pairs(node.children) do
-		unmountNode(child)
+		reconciler.unmountNode(child)
 	end
 
 	node.hostObject:Destroy()
 end
 
-function RobloxRenderer.reconcileHostNode(node, newElement)
+function RobloxRenderer.reconcileHostNode(reconciler, node, newElement)
 	-- error("NYI")
 
 	return node

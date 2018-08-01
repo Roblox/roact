@@ -72,7 +72,7 @@ local function unmountNode(node)
 	local kind = ElementKind.of(node.currentElement)
 
 	if kind == ElementKind.Host then
-		RobloxRenderer.unmountHostNode(node, unmountNode)
+		RobloxRenderer.unmountHostNode(Reconciler, node)
 	elseif kind == ElementKind.Functional then
 		error("NYI")
 	elseif kind == ElementKind.Stateful then
@@ -99,7 +99,7 @@ local function reconcileNode(node, newElement)
 	local kind = ElementKind.of(newElement)
 
 	if kind == ElementKind.Host then
-		return RobloxRenderer.reconcileHostNode(node, newElement)
+		return RobloxRenderer.reconcileHostNode(Reconciler, node, newElement)
 	elseif kind == ElementKind.Functional then
 		error("NYI")
 	elseif kind == ElementKind.Stateful then
@@ -130,8 +130,7 @@ local function mountNode(element, hostParent, key)
 	}
 
 	if kind == ElementKind.Host then
-		-- TODO: Create a real interface for Renderer <-> Reconciler
-		RobloxRenderer.mountHostNode(node, element, hostParent, key, mountNode)
+		RobloxRenderer.mountHostNode(Reconciler, node, element, hostParent, key)
 
 		return node
 	elseif kind == ElementKind.Functional then

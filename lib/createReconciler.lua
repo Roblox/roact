@@ -6,8 +6,10 @@ local function noop()
 	return nil
 end
 
-local function iterateElements(childOrChildren)
-	local richType = Type.of(childOrChildren)
+local inheritKey = {}
+
+local function iterateElements(elements)
+	local richType = Type.of(elements)
 
 	-- Single child, the simplest case!
 	if richType == Type.Element then
@@ -18,7 +20,7 @@ local function iterateElements(childOrChildren)
 				return nil
 			else
 				called = true
-				return 1, childOrChildren
+				return inheritKey, elements
 			end
 		end
 	end
@@ -28,19 +30,35 @@ local function iterateElements(childOrChildren)
 		error("Invalid children")
 	end
 
-	local regularType = typeof(childOrChildren)
+	local regularType = typeof(elements)
 
 	-- A dictionary of children, hopefully!
 	-- TODO: Is this too flaky? Should we introduce a Fragment type like React?
 	if regularType == "table" then
-		return pairs(childOrChildren)
+		return pairs(elements)
 	end
 
-	if childOrChildren == nil or regularType == "boolean" then
+	if elements == nil or regularType == "boolean" then
 		return noop
 	end
 
 	error("Invalid children")
+end
+
+local function getElement(elements, key)
+	if elements == nil or typeof(elements) == "boolean" then
+		return nil
+	end
+
+	if Type.of(elements) == Type.Element then
+		if key == inheritKey then
+			return elements
+		end
+
+		return nil
+	end
+
+	return elements[key]
 end
 
 local function createReconciler(renderer)
@@ -49,21 +67,30 @@ local function createReconciler(renderer)
 	local reconcileNode
 
 	local function reconcileChildren(node, newChildElements)
-		for key, newElement in iterateElements(newChildElements) do
-			local node = node.children[key]
+		local removeKeys = {}
 
-			if node ~= nil then
-				node.children[key] = reconcileNode(node, newElement)
+		-- Changed or removed children
+		for key, childNode in pairs(node.children) do
+			local newNode = reconcileNode(childNode, getElement(newChildElements, key))
+
+			if newNode ~= nil then
+				node.children[key] = newNode
 			else
-				-- TODO: Route parent Instance through nodes
-				node.children[key] = mountNode(newElement, nil, key)
+				removeKeys[key] = true
 			end
 		end
 
-		for key, childNode in pairs(node.children) do
-			-- TODO: Don't invalidate this iterator!
-			-- TODO: Handle case of single child and no children
-			node.children[key] = reconcileNode(childNode, newChildElements[key])
+		for key in pairs(removeKeys) do
+			node.children[key] = nil
+		end
+
+		-- Added children
+		for key, newElement in iterateElements(newChildElements) do
+			local childNode = node.children[key]
+
+			if childNode == nil then
+				node.children[key] = mountNode(newElement, node.hostParent, key)
+			end
 		end
 	end
 
@@ -96,11 +123,17 @@ local function createReconciler(renderer)
 		assert(Type.of(newElement) == Type.Element or typeof(newElement) == "boolean" or newElement == nil)
 
 		if typeof(newElement) == "boolean" or newElement == nil then
-			return unmountNode(node)
+			unmountNode(node)
+			return nil
 		end
 
 		if node.currentElement.component ~= newElement.component then
-			error("don't do that")
+			warn("Component changed type!")
+			local hostParent = node.hostParent
+			local key = node.key
+
+			unmountNode(node)
+			return mountNode(newElement, hostParent, key)
 		end
 
 		local kind = ElementKind.of(newElement)
@@ -108,11 +141,22 @@ local function createReconciler(renderer)
 		if kind == ElementKind.Host then
 			return renderer.reconcileHostNode(reconciler, node, newElement)
 		elseif kind == ElementKind.Function then
-			error("NYI")
+			local renderResult = newElement.component(newElement.props)
+
+			reconcileChildren(node, renderResult)
+
+			return node
 		elseif kind == ElementKind.Stateful then
 			-- TODO: Fire willUpdate
 
-			error("NYI")
+			-- TODO: Move logic into Component?
+			node.instance.props = newElement.props
+
+			-- TODO: getDerivedStateFromProps
+
+			local renderResult = node.instance:render()
+
+			reconcileChildren(node, renderResult)
 
 			-- TODO: Fire didUpdate
 		elseif kind == ElementKind.Portal then
@@ -137,7 +181,13 @@ local function createReconciler(renderer)
 		local node = {
 			[Type] = Type.Node,
 			currentElement = element,
+
+			-- TODO: Allow children to be a single node?
 			children = {},
+
+			-- Less certain about these properties:
+			hostParent = hostParent,
+			key = key,
 		}
 
 		if kind == ElementKind.Host then
@@ -150,9 +200,11 @@ local function createReconciler(renderer)
 			for childKey, childElement in iterateElements(renderResult) do
 				local childNode = mountNode(childElement, hostParent, childKey)
 
-				-- TODO: Figure out how to preserve 'key' if a single value is
-				-- returned.
-				node.children[childKey] = childNode
+				if childKey == inheritKey then
+					node.children[key] = childNode
+				else
+					node.children[childKey] = childNode
+				end
 			end
 
 			return node
@@ -160,16 +212,19 @@ local function createReconciler(renderer)
 			local instance = element.component:__new(element.props)
 			node.instance = instance
 
+			-- TODO: Move logic into Component?
+			-- Maybe Component should become logicless?
+
 			local renderResult = instance:render()
 
-			-- TODO: Move logic into Component?
-			-- Maybe component should become logicless?
 			for childKey, childElement in iterateElements(renderResult) do
 				local childNode = mountNode(childElement, hostParent, childKey)
 
-				-- TODO: Figure out how to preserve 'key' if a single value is
-				-- returned.
-				node.children[childKey] = childNode
+				if childKey == inheritKey then
+					node.children[key] = childNode
+				else
+					node.children[childKey] = childNode
+				end
 			end
 
 			-- TODO: Fire didMount

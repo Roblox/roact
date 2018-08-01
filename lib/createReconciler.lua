@@ -1,26 +1,6 @@
 local Type = require(script.Parent.Type)
 local ElementKind = require(script.Parent.ElementKind)
-
-local DEFAULT_TREE_CONFIG = {}
-
-local function makeConfigObject(source)
-	local config = {}
-
-	for key, value in pairs(source) do
-		config[key] = value
-	end
-
-	setmetatable(config, {
-		__index = function(_, key)
-			error(("Invalid config key %q"):format(key), 2)
-		end,
-		__newindex = function()
-			error("Cannot mutate config!", 2)
-		end,
-	})
-
-	return config
-end
+local Core = require(script.Parent.Core)
 
 local function noop()
 	return nil
@@ -65,6 +45,27 @@ end
 
 local function createReconciler(renderer)
 	local reconciler
+	local mountNode
+	local reconcileNode
+
+	local function reconcileChildren(node, newChildElements)
+		for key, newElement in iterateElements(newChildElements) do
+			local node = node.children[key]
+
+			if node ~= nil then
+				node.children[key] = reconcileNode(node, newElement)
+			else
+				-- TODO: Route parent Instance through nodes
+				node.children[key] = mountNode(newElement, nil, key)
+			end
+		end
+
+		for key, childNode in pairs(node.children) do
+			-- TODO: Don't invalidate this iterator!
+			-- TODO: Handle case of single child and no children
+			node.children[key] = reconcileNode(childNode, newChildElements[key])
+		end
+	end
 
 	local function unmountNode(node)
 		assert(Type.of(node) == Type.Node)
@@ -74,9 +75,15 @@ local function createReconciler(renderer)
 		if kind == ElementKind.Host then
 			renderer.unmountHostNode(reconciler, node)
 		elseif kind == ElementKind.Functional then
-			error("NYI")
+			for _, child in pairs(node.children) do
+				unmountNode(child)
+			end
 		elseif kind == ElementKind.Stateful then
-			error("NYI")
+			-- TODO: Fire willUnmount
+
+			for _, child in pairs(node.children) do
+				unmountNode(child)
+			end
 		elseif kind == ElementKind.Portal then
 			error("NYI")
 		else
@@ -84,7 +91,7 @@ local function createReconciler(renderer)
 		end
 	end
 
-	local function reconcileNode(node, newElement)
+	function reconcileNode(node, newElement)
 		assert(Type.of(node) == Type.Node)
 		assert(Type.of(newElement) == Type.Element or typeof(newElement) == "boolean" or newElement == nil)
 
@@ -103,7 +110,11 @@ local function createReconciler(renderer)
 		elseif kind == ElementKind.Functional then
 			error("NYI")
 		elseif kind == ElementKind.Stateful then
+			-- TODO: Fire willUpdate
+
 			error("NYI")
+
+			-- TODO: Fire didUpdate
 		elseif kind == ElementKind.Portal then
 			error("NYI")
 		else
@@ -111,7 +122,7 @@ local function createReconciler(renderer)
 		end
 	end
 
-	local function mountNode(element, hostParent, key)
+	function mountNode(element, hostParent, key)
 		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
 		assert(typeof(hostParent) == "Instance" or hostParent == nil)
 		assert(typeof(key) == "string")
@@ -139,6 +150,8 @@ local function createReconciler(renderer)
 			for childKey, childElement in iterateElements(renderResult) do
 				local childNode = mountNode(childElement, hostParent, childKey)
 
+				-- TODO: Figure out how to preserve 'key' if a single value is
+				-- returned.
 				node.children[childKey] = childNode
 			end
 
@@ -154,6 +167,8 @@ local function createReconciler(renderer)
 			for childKey, childElement in iterateElements(renderResult) do
 				local childNode = mountNode(childElement, hostParent, childKey)
 
+				-- TODO: Figure out how to preserve 'key' if a single value is
+				-- returned.
 				node.children[childKey] = childNode
 			end
 
@@ -176,19 +191,12 @@ local function createReconciler(renderer)
 			key = "Foo"
 		end
 
-		-- TODO: Accept config parameter and typecheck values
-		local config = makeConfigObject(DEFAULT_TREE_CONFIG)
-
 		local tree = {
 			[Type] = Type.Tree,
 
-			-- The root node of the tree, which starts into the hierarchy of Roact
-			-- component instances.
+			-- The root node of the tree, which starts into the hierarchy of
+			-- Roact component instances.
 			rootNode = nil,
-
-			-- A static configuration, denoting values like which scheduler and
-			-- renderer to use.
-			config = config,
 
 			mounted = true,
 		}

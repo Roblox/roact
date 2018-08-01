@@ -74,7 +74,7 @@ local function createReconciler(renderer)
 
 		if kind == ElementKind.Host then
 			renderer.unmountHostNode(reconciler, node)
-		elseif kind == ElementKind.Functional then
+		elseif kind == ElementKind.Function then
 			for _, child in pairs(node.children) do
 				unmountNode(child)
 			end
@@ -107,7 +107,7 @@ local function createReconciler(renderer)
 
 		if kind == ElementKind.Host then
 			return renderer.reconcileHostNode(reconciler, node, newElement)
-		elseif kind == ElementKind.Functional then
+		elseif kind == ElementKind.Function then
 			error("NYI")
 		elseif kind == ElementKind.Stateful then
 			-- TODO: Fire willUpdate
@@ -144,7 +144,7 @@ local function createReconciler(renderer)
 			renderer.mountHostNode(reconciler, node, element, hostParent, key)
 
 			return node
-		elseif kind == ElementKind.Functional then
+		elseif kind == ElementKind.Function then
 			local renderResult = element.component(element.props)
 
 			for childKey, childElement in iterateElements(renderResult) do

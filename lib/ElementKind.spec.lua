@@ -33,7 +33,7 @@ return function()
 			local function foo()
 			end
 
-			expect(ElementKind.fromComponent(foo)).to.equal(ElementKind.Functional)
+			expect(ElementKind.fromComponent(foo)).to.equal(ElementKind.Function)
 		end)
 
 		it("should handle stateful components", function()

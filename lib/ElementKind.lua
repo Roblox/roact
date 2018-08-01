@@ -17,7 +17,7 @@ local ElementKind = newproxy(true)
 local ElementKindInternal = {
 	Portal = Symbol.named("Portal"),
 	Host = Symbol.named("Host"),
-	Functional = Symbol.named("Functional"),
+	Function = Symbol.named("Function"),
 	Stateful = Symbol.named("Stateful"),
 }
 
@@ -31,7 +31,7 @@ end
 
 local componentTypesToKinds = {
 	["string"] = ElementKindInternal.Host,
-	["function"] = ElementKindInternal.Functional,
+	["function"] = ElementKindInternal.Function,
 	["table"] = ElementKindInternal.Stateful,
 }
 

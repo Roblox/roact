@@ -1,63 +1,62 @@
 return function()
-	local ReconcilerCompat = require(script.Parent.ReconcilerCompat)
-	local Reconciler = require(script.Parent.Reconciler)
+	local createReconcilerCompat = require(script.Parent.createReconcilerCompat)
+	local createReconciler = require(script.Parent.createReconciler)
+	local NoopRenderer = require(script.Parent.NoopRenderer)
 	local createElement = require(script.Parent.createElement)
 
-	SKIP()
+	local noopReconciler = createReconciler(NoopRenderer)
 
 	it("reify should only warn once per call site", function()
 		local callCount = 0
 		local lastMessage
-		ReconcilerCompat._warn = function(message)
+
+		local compat = createReconcilerCompat(noopReconciler, function(message)
 			callCount = callCount + 1
 			lastMessage = message
-		end
+		end)
 
 		-- We're using a loop so that we get the same stack trace and only one
 		-- warning hopefully.
 		for _ = 1, 2 do
-			local handle = ReconcilerCompat.reify(createElement("StringValue"))
-			Reconciler.unmount(handle)
+			local handle = compat.reify(createElement("StringValue"))
+			noopReconciler.unmountTree(handle)
 		end
 
 		expect(callCount).to.equal(1)
 		expect(lastMessage:find("ReconcilerCompat.spec")).to.be.ok()
 
 		-- This is a different call site, which should trigger another warning.
-		local handle = ReconcilerCompat.reify(createElement("StringValue"))
-		Reconciler.unmount(handle)
+		local handle = compat.reify(createElement("StringValue"))
+		noopReconciler.unmountTree(handle)
 
 		expect(callCount).to.equal(2)
 		expect(lastMessage:find("ReconcilerCompat.spec")).to.be.ok()
-
-		ReconcilerCompat._warn = warn
 	end)
 
 	it("teardown should only warn once per call site", function()
 		local callCount = 0
 		local lastMessage
-		ReconcilerCompat._warn = function(message)
+
+		local compat = createReconcilerCompat(noopReconciler, function(message)
 			callCount = callCount + 1
 			lastMessage = message
-		end
+		end)
 
 		-- We're using a loop so that we get the same stack trace and only one
 		-- warning hopefully.
 		for _ = 1, 2 do
-			local handle = Reconciler.mount(createElement("StringValue"))
-			ReconcilerCompat.teardown(handle)
+			local handle = noopReconciler.mountTree(createElement("StringValue"))
+			compat.teardown(handle)
 		end
 
 		expect(callCount).to.equal(1)
 		expect(lastMessage:find("ReconcilerCompat.spec")).to.be.ok()
 
 		-- This is a different call site, which should trigger another warning.
-		local handle = Reconciler.mount(createElement("StringValue"))
-		ReconcilerCompat.teardown(handle)
+		local handle = noopReconciler.mountTree(createElement("StringValue"))
+		compat.teardown(handle)
 
 		expect(callCount).to.equal(2)
 		expect(lastMessage:find("ReconcilerCompat.spec")).to.be.ok()
-
-		ReconcilerCompat._warn = warn
 	end)
 end

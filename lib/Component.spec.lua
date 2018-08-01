@@ -1,7 +1,7 @@
 return function()
 	local Core = require(script.Parent.Core)
 	local createElement = require(script.Parent.createElement)
-	local Reconciler = require(script.Parent.Reconciler)
+	-- local Reconciler = require(script.Parent.Reconciler)
 	local GlobalConfig = require(script.Parent.GlobalConfig)
 
 	local Component = require(script.Parent.Component)

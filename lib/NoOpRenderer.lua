@@ -1,5 +1,12 @@
-local NoOpRenderer = {}
+local NoopRenderer = {}
 
--- TODO: Devise an interface for renderers and implement this one for testing.
+function NoopRenderer.mountHostNode()
+end
 
-return NoOpRenderer
+function NoopRenderer.unmountHostNode()
+end
+
+function NoopRenderer.reconcileHostNode()
+end
+
+return NoopRenderer

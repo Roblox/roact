@@ -4,9 +4,13 @@
 
 local Core = require(script.Core)
 local GlobalConfig = require(script.GlobalConfig)
-local Reconciler = require(script.Reconciler)
-local ReconcilerCompat = require(script.ReconcilerCompat)
+local createReconciler = require(script.createReconciler)
+local createReconcilerCompat = require(script.createReconcilerCompat)
+local RobloxRenderer = require(script.RobloxRenderer)
 local strict = require(script.strict)
+
+local robloxReconciler = createReconciler(RobloxRenderer)
+local reconcilerCompat = createReconcilerCompat(robloxReconciler)
 
 local Roact = strict {
 	Change = require(script.Change),
@@ -23,12 +27,12 @@ local Roact = strict {
 	Portal = Core.Portal,
 	Ref = Core.Ref,
 
-	mount = Reconciler.mountTree,
-	unmount = Reconciler.unmountTree,
-	reconcile = Reconciler.reconcileTree,
+	mount = robloxReconciler.mountTree,
+	unmount = robloxReconciler.unmountTree,
+	reconcile = robloxReconciler.reconcileTree,
 
-	reify = ReconcilerCompat.reify,
-	teardown = ReconcilerCompat.teardown,
+	reify = reconcilerCompat.reify,
+	teardown = reconcilerCompat.teardown,
 
 	setGlobalConfig = GlobalConfig.set,
 	getGlobalConfigValue = GlobalConfig.getValue,

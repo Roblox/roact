@@ -1,6 +1,6 @@
 return function()
 	local createElement = require(script.Parent.createElement)
-	local Reconciler = require(script.Parent.Reconciler)
+	-- local Reconciler = require(script.Parent.Reconciler)
 
 	local PureComponent = require(script.Parent.PureComponent)
 

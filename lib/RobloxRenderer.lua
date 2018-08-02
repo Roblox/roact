@@ -42,7 +42,9 @@ function RobloxRenderer.unmountHostNode(reconciler, node)
 end
 
 function RobloxRenderer.reconcileHostNode(reconciler, node, newElement)
-	-- error("NYI")
+	-- TODO: Reconcile props
+
+	reconciler.reconcileNodeChildren(node, newElement.props[Core.Children])
 
 	return node
 end

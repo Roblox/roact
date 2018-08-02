@@ -1,6 +1,5 @@
 local Type = require(script.Parent.Type)
 local ElementKind = require(script.Parent.ElementKind)
-local Core = require(script.Parent.Core)
 
 local function noop()
 	return nil
@@ -66,7 +65,7 @@ local function createReconciler(renderer)
 	local mountNode
 	local reconcileNode
 
-	local function reconcileChildren(node, newChildElements)
+	local function reconcileNodeChildren(node, newChildElements)
 		local removeKeys = {}
 
 		-- Changed or removed children
@@ -143,7 +142,7 @@ local function createReconciler(renderer)
 		elseif kind == ElementKind.Function then
 			local renderResult = newElement.component(newElement.props)
 
-			reconcileChildren(node, renderResult)
+			reconcileNodeChildren(node, renderResult)
 
 			return node
 		elseif kind == ElementKind.Stateful then
@@ -156,7 +155,7 @@ local function createReconciler(renderer)
 
 			local renderResult = node.instance:render()
 
-			reconcileChildren(node, renderResult)
+			reconcileNodeChildren(node, renderResult)
 
 			-- TODO: Fire didUpdate
 		elseif kind == ElementKind.Portal then
@@ -286,6 +285,7 @@ local function createReconciler(renderer)
 		mountNode = mountNode,
 		unmountNode = unmountNode,
 		reconcileNode = reconcileNode,
+		reconcileNodeChildren = reconcileNodeChildren,
 	}
 
 	return reconciler

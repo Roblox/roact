@@ -158,6 +158,8 @@ local function createReconciler(renderer)
 			reconcileNodeChildren(node, renderResult)
 
 			-- TODO: Fire didUpdate
+
+			return node
 		elseif kind == ElementKind.Portal then
 			error("NYI")
 		else
@@ -266,7 +268,9 @@ local function createReconciler(renderer)
 
 		tree.mounted = false
 
-		unmountNode(tree.rootNode)
+		if tree.rootNode ~= nil then
+			unmountNode(tree.rootNode)
+		end
 	end
 
 	local function reconcileTree(tree, newElement)

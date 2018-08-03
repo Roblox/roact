@@ -72,10 +72,14 @@ function Config.new()
 		return Config.reset(self, ...)
 	end
 
+	self.scoped = function(...)
+		return Config.scoped(self, ...)
+	end
+
 	return self
 end
 
-function Config.set(self, configValues)
+function Config:set(configValues)
 	if self._lastConfigTraceback then
 		local message = (
 			"Global configuration can only be set once. Configuration was already set at:%s"
@@ -124,7 +128,7 @@ function Config.set(self, configValues)
 	self._currentConfig = join(self._currentConfig, configValues)
 end
 
-function Config.getValue(self, key)
+function Config:getValue(key)
 	if defaultConfig[key] == nil then
 		local message = (
 			"Invalid global configuration key %q (type %s). Valid configuration keys are: %s"
@@ -140,9 +144,19 @@ function Config.getValue(self, key)
 	return self._currentConfig[key]
 end
 
-function Config.reset(self)
+function Config:reset()
 	self._lastConfigTraceback = nil
 	self._currentConfig = defaultConfig
+end
+
+function Config:scoped(configValues, callback)
+	self.set(configValues)
+
+	local success, result = pcall(callback)
+
+	self.reset()
+
+	assert(success, result)
 end
 
 return Config

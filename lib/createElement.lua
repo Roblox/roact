@@ -1,7 +1,8 @@
 local Core = require(script.Parent.Core)
-local GlobalConfig = require(script.Parent.GlobalConfig)
-local Type = require(script.Parent.Type)
 local ElementKind = require(script.Parent.ElementKind)
+local GlobalConfig = require(script.Parent.GlobalConfig)
+local Logging = require(script.Parent.Logging)
+local Type = require(script.Parent.Type)
 
 --[[
 	Creates a new element representing the given component.
@@ -13,12 +14,9 @@ local ElementKind = require(script.Parent.ElementKind)
 	props. If specified, the passed `props` table is mutated!
 ]]
 local function createElement(component, props, children)
+	assert(component ~= nil, "`component` is required")
 	assert(typeof(props) == "table" or props == nil, "`props` must be a table or nil")
 	assert(typeof(children) == "table" or children == nil, "`children` must be a table or nil")
-
-	if component == nil then
-		error(("Expected component as an argument to createElement!"), 2)
-	end
 
 	if props == nil then
 		props = {}
@@ -26,7 +24,7 @@ local function createElement(component, props, children)
 
 	if children ~= nil then
 		if props[Core.Children] ~= nil then
-			warn("props[Children] was defined but was overridden by third parameter to createElement!")
+			Logging.warn("props[Children] was defined but was overridden by third parameter to createElement!")
 		end
 
 		props[Core.Children] = children

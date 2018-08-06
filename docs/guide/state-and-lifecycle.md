@@ -3,14 +3,47 @@ In the previous section, we talked about using components to create reusable chu
 Stateful components do everything that functional components do, but have the addition of mutable *state* and *lifecycle methods*.
 
 ## State
+**State** is the term we use to talk about values that are owned by a component itself.
 
-!!! info
-	This section is incomplete!
+Unlike **props**, which are passed to a component from above, **state** is created within a component and can only be updated by that component.
+
+We can set up the initial state of a stateful component inside of a method named `init`:
+
+```lua
+function MyComponent:init()
+	self:setState({
+		currentTime = 0
+	})
+end
+```
+
+To update state, we use a special method named `setState`. `setState` will merge any values we give it into our state. It will overwrite any existing values, and leave any values we don't specify alone.
+
+There's another form of `setState` we can use. When the new state we want our component to have depends on our current state, like incrementing a value, we use this form:
+
+```lua
+-- This is another special method, didMount, that we'll talk about in a moment.
+function MyComponent:didMount()
+	self:setState(function(state)
+		return {
+			currentTime = currentTime + state.currentTime
+		}
+	end)
+end
+```
+
+In this case, we're passing a _function_ to `setState`. This function is called and passed the current state, and returns a new state. It can also return `nil` to abort the state update, which lets Roact make some handy optimizations.
+
+Right now, this version of `setState` is exactly the same as the form where we pass an object. In the future, Roact will support a number of features, like asynchronous rendering, that make the distinction more important.
 
 ## Lifecycle Methods
 Stateful components can provide methods to Roact that are called when certain things happen to a component instance.
 
 Lifecycle methods are a great place to send off network requests, measure UI ([with the help of refs](/advanced/refs)), wrap non-Roact components, and produce other side-effects.
+
+The most useful lifecycle methods are generally `didMount` and `didUpdate`. Most components that do things that are difficult to express in Roact itself will use these lifecycle methods.
+
+Here's a chart of all of the methods available. You can also check out the [Lifecycle Methods](../api-reference/#lifecycle-methods) section of the API reference for more details.
 
 <div align="center">
 	<a href="../../images/lifecycle.svg">
@@ -32,11 +65,10 @@ local Roact = require(ReplicatedStorage.Roact)
 local Clock = Roact.Component:extend("Clock")
 
 function Clock:init()
-	-- In init, you should assign to 'state' directly.
-	-- Use this opportunity to set any initial values.
-	self.state = {
+	-- In init, we can use setState to set up our initial component state.
+	self:setState({
 		currentTime = 0
-	}
+	})
 end
 
 -- This render function is almost completely unchanged from the first example.

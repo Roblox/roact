@@ -42,13 +42,11 @@ local function merge(...)
 	for i = 1, select("#", ...) do
 		local entry = select(i, ...)
 
-		if entry ~= nil then
-			for key, value in pairs(entry) do
-				if value == Core.None then
-					result[key] = nil
-				else
-					result[key] = value
-				end
+		for key, value in pairs(entry) do
+			if value == Core.None then
+				result[key] = nil
+			else
+				result[key] = value
 			end
 		end
 	end
@@ -116,16 +114,13 @@ function Component:extend(name)
 
 		setmetatable(self, class)
 
+		self.state = {}
+
 		-- Call the user-provided initializer, where state and _props are set.
 		if class.init then
 			self._setStateWithoutUpdate = true
 			class.init(self, props)
 			self._setStateWithoutUpdate = false
-		end
-
-		-- The user constructer might not set state, so we can.
-		if not self.state then
-			self.state = {}
 		end
 
 		if class.getDerivedStateFromProps then

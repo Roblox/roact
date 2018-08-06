@@ -84,7 +84,7 @@ function Component:extend(name)
 		end
 	})
 
-	function class._new(props, context)
+	function class._new(passedProps, context)
 		local self = {}
 
 		-- When set to a value, setState will fail, using the given reason to
@@ -98,9 +98,9 @@ function Component:extend(name)
 		self._setStateWithoutUpdate = false
 
 		if class.defaultProps == nil then
-			self.props = props
+			self.props = passedProps
 		else
-			self.props = merge(class.defaultProps, props)
+			self.props = merge(class.defaultProps, passedProps)
 		end
 
 		self._context = {}
@@ -124,7 +124,7 @@ function Component:extend(name)
 		end
 
 		if class.getDerivedStateFromProps then
-			local partialState = class.getDerivedStateFromProps(props, self.state)
+			local partialState = class.getDerivedStateFromProps(self.props, self.state)
 
 			if partialState then
 				self.state = merge(self.state, partialState)

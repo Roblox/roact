@@ -18,6 +18,8 @@ local defaultConfig = {
 	["elementTracing"] = false,
 	-- Enables instrumentation of shouldUpdate and render methods for Roact components
 	["componentInstrumentation"] = false,
+	-- Enables warnings if an element changes type after being rendered.
+	["warnOnTypeChange"] = true,
 }
 
 -- Build a list of valid configuration values up for debug messages.

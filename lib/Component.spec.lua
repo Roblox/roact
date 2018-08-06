@@ -460,7 +460,6 @@ return function()
 
 			local handle = Reconciler.mount(testElement)
 
-			expect(forceUpdate).to.be.a("function")
 			expect(renderCount).to.equal(1)
 
 			forceUpdate()

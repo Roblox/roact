@@ -42,11 +42,13 @@ local function merge(...)
 	for i = 1, select("#", ...) do
 		local entry = select(i, ...)
 
-		for key, value in pairs(entry) do
-			if value == Core.None then
-				result[key] = nil
-			else
-				result[key] = value
+		if entry ~= nil then
+			for key, value in pairs(entry) do
+				if value == Core.None then
+					result[key] = nil
+				else
+					result[key] = value
+				end
 			end
 		end
 	end
@@ -116,9 +118,9 @@ function Component:extend(name)
 
 		-- Call the user-provided initializer, where state and _props are set.
 		if class.init then
-			self._setStateBlockedReason = "init"
+			self._setStateWithoutUpdate = true
 			class.init(self, props)
-			self._setStateBlockedReason = nil
+			self._setStateWithoutUpdate = false
 		end
 
 		-- The user constructer might not set state, so we can.

@@ -327,26 +327,6 @@ return function()
 	end)
 
 	describe("setState", function()
-		it("should throw when called in init", function()
-			local InitComponent = Component:extend("InitComponent")
-
-			function InitComponent:init()
-				self:setState({
-					a = 1
-				})
-			end
-
-			function InitComponent:render()
-				return nil
-			end
-
-			local initElement = createElement(InitComponent)
-
-			expect(function()
-				Reconciler.mount(initElement)
-			end).to.throw()
-		end)
-
 		it("should throw when called in render", function()
 			local RenderComponent = Component:extend("RenderComponent")
 
@@ -394,34 +374,6 @@ return function()
 			end).to.throw()
 		end)
 
-		it("should throw when called in willUpdate", function()
-			local TestComponent = Component:extend("TestComponent")
-			local forceUpdate
-
-			function TestComponent:init()
-				forceUpdate = function()
-					self:_forceUpdate()
-				end
-			end
-
-			function TestComponent:render()
-				return nil
-			end
-
-			function TestComponent:willUpdate()
-				self:setState({
-					a = 1
-				})
-			end
-
-			local testElement = createElement(TestComponent)
-
-			expect(function()
-				Reconciler.mount(testElement)
-				forceUpdate()
-			end).to.throw()
-		end)
-
 		it("should throw when called in willUnmount", function()
 			local TestComponent = Component:extend("TestComponent")
 
@@ -441,6 +393,66 @@ return function()
 			expect(function()
 				Reconciler.unmount(instance)
 			end).to.throw()
+		end)
+
+		it("should only render once when called in willUpdate", function()
+			local TestComponent = Component:extend("TestComponent")
+			local forceUpdate
+
+			function TestComponent:init()
+				forceUpdate = function()
+					self:_forceUpdate()
+				end
+			end
+
+			local renderCount = 0
+			function TestComponent:render()
+				renderCount = renderCount + 1
+				return nil
+			end
+
+			function TestComponent:willUpdate()
+				self:setState({
+					a = 1
+				})
+			end
+
+			local testElement = createElement(TestComponent)
+
+			local handle = Reconciler.mount(testElement)
+
+			expect(forceUpdate).to.be.a("function")
+			expect(renderCount).to.equal(1)
+
+			forceUpdate()
+
+			expect(renderCount).to.equal(2)
+
+			Reconciler.unmount(handle)
+		end)
+
+		it("should only render once when called in init", function()
+			local TestComponent = Component:extend("TestComponent")
+
+			function TestComponent:init()
+				self:setState({
+					a = 7,
+				})
+			end
+
+			local renderCount = 0
+			function TestComponent:render()
+				renderCount = renderCount + 1
+				return nil
+			end
+
+			local testElement = createElement(TestComponent)
+
+			local handle = Reconciler.mount(testElement)
+
+			expect(renderCount).to.equal(1)
+
+			Reconciler.unmount(handle)
 		end)
 
 		it("should remove values from state when the value is Core.None", function()

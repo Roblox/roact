@@ -119,7 +119,7 @@ function Component:extend(name)
 		-- Call the user-provided initializer, where state and _props are set.
 		if class.init then
 			self._setStateWithoutUpdate = true
-			class.init(self, props)
+			class.init(self, self.props)
 			self._setStateWithoutUpdate = false
 		end
 

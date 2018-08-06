@@ -214,7 +214,7 @@ function MyComponent:init()
 end
 ```
 
-In older versions of Roact, `setState` was disallowed in `init`, and you would instead assign to `state` directly. This is still acceptable, but it's simpler to use `setState`:
+In older versions of Roact, `setState` was disallowed in `init`, and you would instead assign to `state` directly. It's simpler to use `setState`, but assigning directly to `state` is still acceptable inside `init`:
 
 ```lua
 function MyComponent:init()
@@ -298,7 +298,7 @@ Setting a field in the state to `Roact.None` will clear it from the state. This 
 	* Lifecycle hooks: `willUnmount`
 	* Pure functions: `render`, `shouldUpdate`
 
-	Calling `setState` inside of `init` or `willUpdate` has different behavior in other places. Because Roact is already going to render or update a component in these cases, the update will be replaced instead of another update happening.
+	Calling `setState` inside of `init` or `willUpdate` has special behavior. Because Roact is already going to update a component in these cases, that update will be replaced instead of another being scheduled.
 
 	Roact may support calling `setState` in currently-disallowed places in the future.
 

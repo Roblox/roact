@@ -34,7 +34,7 @@ end
 
 In this case, we're passing a _function_ to `setState`. This function is called and passed the current state, and returns a new state. It can also return `nil` to abort the state update, which lets Roact make some handy optimizations.
 
-Right now, this version of `setState` is exactly the same as the form where we pass an object. In the future, Roact will support a number of features, like asynchronous rendering, that make the distinction more important.
+Right now, this version of `setState` works exactly the same way as the version that accepts an object. In the future, Roact will support optimizations that make this difference more important, like [asynchronous rendering](https://github.com/Roblox/roact/issues/18).
 
 ## Lifecycle Methods
 Stateful components can provide methods to Roact that are called when certain things happen to a component instance.

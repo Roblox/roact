@@ -297,12 +297,12 @@ function Component:_update(newProps, newState)
 		end
 	end
 
-	local startTime = tick()
+	local shouldUpdateStart = tick()
 	local doUpdate = self:shouldUpdate(newProps or self.props, newState or self.state)
-	local elapsed = tick() - startTime
+	local shouldUpdateElapsed = tick() - shouldUpdateStart
 
 	if GlobalConfig.getValue("componentInstrumentation") then
-		Instrumentation.logShouldUpdate(self._handle, doUpdate, elapsed)
+		Instrumentation.logShouldUpdate(self._handle, doUpdate, shouldUpdateElapsed)
 	end
 
 	self._setStateBlockedReason = nil
@@ -339,19 +339,15 @@ function Component:_forceUpdate(newProps, newState)
 
 	self._setStateBlockedReason = "render"
 
-	local newChildElement
-	if GlobalConfig.getValue("componentInstrumentation") then
-		local startTime = tick()
-
-		newChildElement = self:render()
-
-		local elapsed = tick() - startTime
-		Instrumentation.logRenderTime(self._handle, elapsed)
-	else
-		newChildElement = self:render()
-	end
+	local renderStart = tick()
+	local newChildElement = self:render()
+	local renderElapsed = tick() - renderStart
 
 	self._setStateBlockedReason = nil
+
+	if GlobalConfig.getValue("componentInstrumentation") then
+		Instrumentation.logRenderTime(self._handle, renderElapsed)
+	end
 
 	self._setStateBlockedReason = "reconcile"
 	if self._handle._child ~= nil then
@@ -385,12 +381,12 @@ function Component:_mount(handle)
 
 	self._setStateBlockedReason = "render"
 
-	local startTime = tick()
+	local renderStart = tick()
 	local virtualTree = self:render()
-	local elapsed = tick() - startTime
+	local renderElapsed = tick() - renderStart
 
 	if GlobalConfig.getValue("componentInstrumentation") then
-		Instrumentation.logRenderTime(self._handle, elapsed)
+		Instrumentation.logRenderTime(self._handle, renderElapsed)
 	end
 
 	self._setStateBlockedReason = nil

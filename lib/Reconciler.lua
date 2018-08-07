@@ -166,6 +166,8 @@ function Reconciler._mountInternal(element, parent, key, context)
 
 		local rbx = Instance.new(element.component)
 
+		Reconciler._singleEventManager:suspendEvents(rbx)
+
 		-- Update Roblox properties
 		for key, value in pairs(element.props) do
 			Reconciler._setRbxProp(rbx, key, value, element)
@@ -194,6 +196,8 @@ function Reconciler._mountInternal(element, parent, key, context)
 
 		-- Attach ref values, since the instance is initialized now.
 		applyRef(element.props[Core.Ref], rbx)
+
+		Reconciler._singleEventManager:resumeEvents(rbx)
 
 		return {
 			[isInstanceHandle] = true,
@@ -349,6 +353,8 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 	end
 
 	if newElementKind == ElementKind.Primitive then
+		Reconciler._singleEventManager:suspendEvents(instanceHandle._rbx)
+
 		local oldRef = oldElement.props[Core.Ref]
 		local newRef = newElement.props[Core.Ref]
 
@@ -365,6 +371,8 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 		Reconciler._reconcilePrimitiveChildren(instanceHandle, newElement)
 
 		instanceHandle._element = newElement
+
+		Reconciler._singleEventManager:resumeEvents(instanceHandle._rbx)
 
 		return instanceHandle
 	elseif newElementKind == ElementKind.Functional then

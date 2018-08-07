@@ -24,30 +24,27 @@
 	structures for both kinds of instance event.
 ]]
 
+local function tablePack(...)
+	return {
+		length = select("#", ...),
+		...,
+	}
+end
+
 local SingleEventManager = {}
 
 SingleEventManager.__index = SingleEventManager
 
---[[
-	Constructs a `Hook`, which is a bundle containing a method that can be
-	updated, as well as the signal connection.
-]]
-local function createHook(instance, event, method)
-	local hook = {
-		method = method,
-	}
-
-	hook.connection = event:Connect(function(...)
-		hook.method(instance, ...)
-	end)
-
-	return hook
-end
-
 function SingleEventManager.new()
 	local self = {
-		-- Map<Instance, Map<Event, Hook>>
+		-- Map<Instance, Map<string, Hook>>
 		_hooks = {},
+
+		-- Map<Instance, bool>
+		_suspendedInstances = {},
+
+		-- Map<Instance, List<{ Event, arguments }>>
+		_suspendedEventQueues = {},
 	}
 
 	setmetatable(self, SingleEventManager)
@@ -103,6 +100,33 @@ function SingleEventManager:disconnectAll(instance)
 	end
 
 	self._hooks[instance] = nil
+	self._suspendedInstances[instance] = nil
+	self._suspendedEventQueues[instance] = nil
+end
+
+function SingleEventManager:suspendEvents(instance)
+	self._suspendedInstances[instance] = true
+end
+
+function SingleEventManager:resumeEvents(instance)
+	local eventQueue = self._suspendedEventQueues[instance]
+
+	if eventQueue ~= nil then
+		local i = 1
+
+		while i <= #eventQueue do
+			local entry = eventQueue[i]
+
+			-- TODO: coroutine.wrap? catch errors?
+			entry.hook.method(unpack(entry.arguments, 1, entry.arguments.length))
+
+			i = i + 1
+		end
+
+		self._suspendedEventQueues[instance] = nil
+	end
+
+	self._suspendedInstances[instance] = false
 end
 
 --[[
@@ -125,7 +149,29 @@ function SingleEventManager:_connectInternal(instance, event, key, method)
 	if existingHook ~= nil then
 		existingHook.method = method
 	else
-		instanceHooks[key] = createHook(instance, event, method)
+		local hook = {
+			method = method,
+		}
+
+		hook.connection = event:Connect(function(...)
+			if self._suspendedInstances[instance] then
+				local queue = self._suspendedEventQueues[instance]
+
+				if queue == nil then
+					queue = {}
+					self._suspendedEventQueues[instance] = queue
+				end
+
+				table.insert(queue, {
+					hook = hook,
+					arguments = tablePack(instance, ...),
+				})
+			else
+				hook.method(instance, ...)
+			end
+		end)
+
+		instanceHooks[key] = hook
 	end
 end
 
@@ -152,6 +198,8 @@ function SingleEventManager:_disconnectInternal(instance, key)
 	-- If there are no hooks left for this instance, we don't need this record.
 	if next(instanceHooks) == nil then
 		self._hooks[instance] = nil
+		self._suspendedInstances[instance] = nil
+		self._suspendedEventQueues[instance] = nil
 	end
 end
 

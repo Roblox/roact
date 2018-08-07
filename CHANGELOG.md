@@ -11,6 +11,7 @@
 * Added `createRef` ([#70](https://github.com/Roblox/roact/issues/70), [#92](https://github.com/Roblox/roact/pull/92))
 * Added a warning when an element changes type during reconciliation ([#88](https://github.com/Roblox/roact/issues/88), [#137](https://github.com/Roblox/roact/pull/137))
 * Ref switching now occurs in one pass, which should fix edge cases where the result of a ref is `nil`, especially in property changed events ([#98](https://github.com/Roblox/roact/pull/98))
+* `setState` can now be called inside `init` and `willUpdate`. Instead of triggering a new render, it will affect the currently scheduled one. ([#139](https://github.com/Roblox/roact/pull/139))
 
 ## 1.0.0 Prerelease 2 (March 22, 2018)
 * Removed `is*Element` methods, this is unlikely to affect anyone ([#50](https://github.com/Roblox/roact/pull/50))

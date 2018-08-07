@@ -203,7 +203,18 @@ init(initialProps) -> void
 
 `init` is called exactly once when a new instance of a component is created. It can be used to set up the initial `state`, as well as any non-`render` related values directly on the component.
 
-`init` is the only place where you can assign to `state` directly, as opposed to using `setState`:
+Use `setState` inside of `init` to set up your initial component state:
+
+```lua
+function MyComponent:init()
+	self:setState({
+		position = 0,
+		velocity = 10
+	})
+end
+```
+
+In older versions of Roact, `setState` was disallowed in `init`, and you would instead assign to `state` directly. It's simpler to use `setState`, but assigning directly to `state` is still acceptable inside `init`:
 
 ```lua
 function MyComponent:init()
@@ -282,6 +293,16 @@ end
 Setting a field in the state to `Roact.None` will clear it from the state. This is the only way to remove a field from a component's state!
 
 !!! warning
+	`setState` can be called from anywhere **except**:
+
+	* Lifecycle hooks: `willUnmount`
+	* Pure functions: `render`, `shouldUpdate`
+
+	Calling `setState` inside of `init` or `willUpdate` has special behavior. Because Roact is already going to update a component in these cases, that update will be replaced instead of another being scheduled.
+
+	Roact may support calling `setState` in currently-disallowed places in the future.
+
+!!! warning
 	**`setState` does not always resolve synchronously!** Roact may batch and reschedule state updates in order to reduce the number of total renders.
 
 	When depending on the previous value of state, like when incrementing a counter, use the functional form to guarantee that all state updates occur!
@@ -290,13 +311,6 @@ Setting a field in the state to `Roact.None` will clear it from the state. This 
 
 	* [RFClarification: why is `setState` asynchronous?](https://github.com/facebook/react/issues/11527#issuecomment-360199710)
 	* [Does React keep the order for state updates?](https://stackoverflow.com/a/48610973/802794)
-
-!!! warning
-	Calling `setState` from any of these places is not allowed at this time and will throw an error:
-
-	* Lifecycle hooks: `willUpdate`, `willUnmount`
-	* Initialization: `init`
-	* Pure functions: `render`, `shouldUpdate`
 
 ### shouldUpdate
 ```
@@ -349,6 +363,8 @@ willUpdate(nextProps, nextState) -> void
 ```
 
 `willUpdate` is fired after an update is started but before a component's state and props are updated.
+
+`willUpdate` can be used to make tweaks to your component's state using `setState`. Often, this should be done in `getDerivedStateFromProps` instead.
 
 ### didUpdate
 ```

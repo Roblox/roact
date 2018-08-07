@@ -92,6 +92,11 @@ function Component:extend(name)
 		-- You can see a list of reasons in invalidSetStateMessages.
 		self._setStateBlockedReason = nil
 
+		-- When set to true, setState should not trigger an update, but should
+		-- instead just update self.state. Lifecycle events like `willUpdate`
+		-- can set this to change the behavior of setState slightly.
+		self._setStateWithoutUpdate = false
+
 		if class.defaultProps == nil then
 			self.props = passedProps
 		else
@@ -109,16 +114,13 @@ function Component:extend(name)
 
 		setmetatable(self, class)
 
+		self.state = {}
+
 		-- Call the user-provided initializer, where state and _props are set.
 		if class.init then
-			self._setStateBlockedReason = "init"
+			self._setStateWithoutUpdate = true
 			class.init(self, self.props)
-			self._setStateBlockedReason = nil
-		end
-
-		-- The user constructer might not set state, so we can.
-		if not self.state then
-			self.state = {}
+			self._setStateWithoutUpdate = false
 		end
 
 		if class.getDerivedStateFromProps then
@@ -236,7 +238,12 @@ function Component:setState(partialState)
 	end
 
 	local newState = merge(self.state, partialState)
-	self:_update(nil, newState)
+
+	if self._setStateWithoutUpdate then
+		self.state = newState
+	else
+		self:_update(nil, newState)
+	end
 end
 
 --[[
@@ -314,9 +321,9 @@ end
 ]]
 function Component:_forceUpdate(newProps, newState)
 	if self.willUpdate then
-		self._setStateBlockedReason = "willUpdate"
+		self._setStateWithoutUpdate = true
 		self:willUpdate(newProps or self.props, newState or self.state)
-		self._setStateBlockedReason = nil
+		self._setStateWithoutUpdate = false
 	end
 
 	local oldProps = self.props

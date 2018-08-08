@@ -71,4 +71,37 @@ return function()
 			expect(childB.ClassName).to.equal("Folder")
 		end)
 	end)
+
+	describe("reconcileHostNode", function()
+	end)
+
+	describe("unmountHostNode", function()
+		it("should delete instances from the inside-out", function()
+			local parent = Instance.new("Folder")
+			local key = "Root"
+			local element = createElement("Folder", nil, {
+				Child = createElement("Folder", nil, {
+					Grandchild = createElement("Folder"),
+				}),
+			})
+
+			local node = reconciler.mountNode(element, parent, key)
+
+			expect(#parent:GetChildren()).to.equal(1)
+
+			local root = parent:GetChildren()[1]
+			expect(#root:GetChildren()).to.equal(1)
+
+			local child = root:GetChildren()[1]
+			expect(#child:GetChildren()).to.equal(1)
+
+			local grandchild = child:GetChildren()[1]
+
+			RobloxRenderer.unmountHostNode(reconciler, node)
+
+			expect(grandchild.Parent).to.equal(nil)
+			expect(child.Parent).to.equal(nil)
+			expect(root.Parent).to.equal(nil)
+		end)
+	end)
 end

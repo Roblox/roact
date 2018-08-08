@@ -49,13 +49,10 @@ return function()
 
 		expect(mountHostNode.callCount).to.equal(1)
 
-		local values = mountHostNode:captureValues("reconciler", "node", "element", "hostParent", "key")
+		local values = mountHostNode:captureValues("reconciler", "node")
 
 		expect(values.reconciler).to.equal(reconciler)
 		expect(values.node).to.equal(node)
-		expect(values.element).to.equal(element)
-		expect(values.hostParent).to.equal(hostParent)
-		expect(values.key).to.equal(key)
 	end)
 
 	it("should invoke the renderer to reconcile host nodes", function()

@@ -117,6 +117,27 @@ local function createReconciler(renderer)
 		end
 	end
 
+	local function reconcileFunctionNode(node, newElement)
+		local renderResult = newElement.component(newElement.props)
+
+		reconcileNodeChildren(node, renderResult)
+	end
+
+	local function reconcileStatefulNode(node, newElement)
+		-- TODO: Fire willUpdate
+
+		-- TODO: Move logic into Component?
+		node.instance.props = newElement.props
+
+		-- TODO: getDerivedStateFromProps
+
+		local renderResult = node.instance:render()
+
+		reconcileNodeChildren(node, renderResult)
+
+		-- TODO: Fire didUpdate
+	end
+
 	function reconcileNode(node, newElement)
 		assert(Type.of(node) == Type.Node)
 		assert(Type.of(newElement) == Type.Element or typeof(newElement) == "boolean" or newElement == nil)
@@ -140,24 +161,11 @@ local function createReconciler(renderer)
 		if kind == ElementKind.Host then
 			return renderer.reconcileHostNode(reconciler, node, newElement)
 		elseif kind == ElementKind.Function then
-			local renderResult = newElement.component(newElement.props)
-
-			reconcileNodeChildren(node, renderResult)
+			reconcileFunctionNode(node, newElement)
 
 			return node
 		elseif kind == ElementKind.Stateful then
-			-- TODO: Fire willUpdate
-
-			-- TODO: Move logic into Component?
-			node.instance.props = newElement.props
-
-			-- TODO: getDerivedStateFromProps
-
-			local renderResult = node.instance:render()
-
-			reconcileNodeChildren(node, renderResult)
-
-			-- TODO: Fire didUpdate
+			reconcileStatefulNode(node, newElement)
 
 			return node
 		elseif kind == ElementKind.Portal then
@@ -165,6 +173,64 @@ local function createReconciler(renderer)
 		else
 			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
 		end
+	end
+
+	local function createNode(element, hostParent, key)
+		return {
+			[Type] = Type.Node,
+			currentElement = element,
+
+			-- TODO: Allow children to be a single node?
+			children = {},
+
+			-- Less certain about these properties:
+			hostParent = hostParent,
+			key = key,
+		}
+	end
+
+	local function mountFunctionNode(node)
+		local element = node.currentElement
+		local hostParent = node.hostParent
+		local key = node.key
+
+		local renderResult = element.component(element.props)
+
+		for childKey, childElement in iterateElements(renderResult) do
+			local childNode = mountNode(childElement, hostParent, childKey)
+
+			if childKey == inheritKey then
+				node.children[key] = childNode
+			else
+				node.children[childKey] = childNode
+			end
+		end
+	end
+
+	local function mountStatefulNode(node)
+		local element = node.currentElement
+		local hostParent = node.hostParent
+		local key = node.key
+
+		local instance = element.component:__new(element.props)
+		node.instance = instance
+
+		-- TODO: Move logic into Component?
+		-- Maybe Component should become logicless?
+
+		local renderResult = instance:render()
+
+		for childKey, childElement in iterateElements(renderResult) do
+			local childNode = mountNode(childElement, hostParent, childKey)
+
+			if childKey == inheritKey then
+				node.children[key] = childNode
+			else
+				node.children[childKey] = childNode
+			end
+		end
+
+		-- TODO: Fire didMount
 	end
 
 	function mountNode(element, hostParent, key)
@@ -179,56 +245,18 @@ local function createReconciler(renderer)
 
 		local kind = ElementKind.of(element)
 
-		local node = {
-			[Type] = Type.Node,
-			currentElement = element,
-
-			-- TODO: Allow children to be a single node?
-			children = {},
-
-			-- Less certain about these properties:
-			hostParent = hostParent,
-			key = key,
-		}
+		local node = createNode(element, hostParent, key)
 
 		if kind == ElementKind.Host then
-			renderer.mountHostNode(reconciler, node, element, hostParent, key)
+			renderer.mountHostNode(reconciler, node)
 
 			return node
 		elseif kind == ElementKind.Function then
-			local renderResult = element.component(element.props)
-
-			for childKey, childElement in iterateElements(renderResult) do
-				local childNode = mountNode(childElement, hostParent, childKey)
-
-				if childKey == inheritKey then
-					node.children[key] = childNode
-				else
-					node.children[childKey] = childNode
-				end
-			end
+			mountFunctionNode(node)
 
 			return node
 		elseif kind == ElementKind.Stateful then
-			local instance = element.component:__new(element.props)
-			node.instance = instance
-
-			-- TODO: Move logic into Component?
-			-- Maybe Component should become logicless?
-
-			local renderResult = instance:render()
-
-			for childKey, childElement in iterateElements(renderResult) do
-				local childNode = mountNode(childElement, hostParent, childKey)
-
-				if childKey == inheritKey then
-					node.children[key] = childNode
-				else
-					node.children[childKey] = childNode
-				end
-			end
-
-			-- TODO: Fire didMount
+			mountStatefulNode(node)
 
 			return node
 		elseif kind == ElementKind.Portal then
@@ -286,6 +314,8 @@ local function createReconciler(renderer)
 		mountTree = mountTree,
 		unmountTree = unmountTree,
 		reconcileTree = reconcileTree,
+
+		createNode = createNode,
 		mountNode = mountNode,
 		unmountNode = unmountNode,
 		reconcileNode = reconcileNode,

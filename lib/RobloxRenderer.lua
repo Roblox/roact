@@ -1,4 +1,3 @@
-local Type = require(script.Parent.Type)
 local ElementKind = require(script.Parent.ElementKind)
 local Core = require(script.Parent.Core)
 
@@ -7,10 +6,14 @@ local function setHostProperty(node, key, newValue, oldValue)
 		return
 	end
 
+	if key == Core.Children then
+		return
+	end
+
 	local keyType = typeof(key)
 
 	if keyType == "string" then
-		node.instance[key] = newValue
+		node.hostObject[key] = newValue
 	else
 		-- TODO
 		error("NYI")
@@ -19,33 +22,37 @@ end
 
 local RobloxRenderer = {}
 
-function RobloxRenderer.mountHostNode(reconciler, node, element, hostParent, key)
-	assert(Type.of(element) == Type.Element)
+function RobloxRenderer.mountHostNode(reconciler, node)
+	local element = node.currentElement
+	local hostParent = node.hostParent
+	local key = node.key
+
 	assert(ElementKind.of(element) == ElementKind.Host)
 
 	assert(element.props.Name == nil)
 	assert(element.props.Parent == nil)
 
-	local rbx = Instance.new(element.component)
+	local instance = Instance.new(element.component)
+	node.hostObject = instance
 
 	for name, value in pairs(element.props) do
-		rbx[name] = value
+		setHostProperty(node, name, value, nil)
 	end
 
-	rbx.Name = key
+	instance.Name = key
 
 	local children = element.props[Core.Children]
 
 	if children ~= nil then
 		for childKey, childElement in pairs(children) do
-			local childNode = reconciler.mountNode(childElement, rbx, childKey)
+			local childNode = reconciler.mountNode(childElement, instance, childKey)
 
 			node.children[childKey] = childNode
 		end
 	end
 
-	rbx.Parent = hostParent
-	node.hostObject = rbx
+	instance.Parent = hostParent
+	node.hostObject = instance
 end
 
 function RobloxRenderer.unmountHostNode(reconciler, node)

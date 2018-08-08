@@ -97,6 +97,9 @@ function Component:extend(name)
 		-- can set this to change the behavior of setState slightly.
 		self._setStateWithoutUpdate = false
 
+		self._setStateSuspended = false
+		self._setStateSuspendQueue = nil
+
 		if class.defaultProps == nil then
 			self.props = passedProps
 		else
@@ -225,6 +228,11 @@ function Component:setState(partialState)
 		local formattedMessage = string.format(messageSource, tostring(getmetatable(self)))
 
 		error(formattedMessage, 2)
+	end
+
+	if self._setStateSuspendQueue ~= nil then
+		table.insert(self._setStateSuspendQueue, partialState)
+		return
 	end
 
 	-- If the partial state is a function, invoke it to get the actual partial state.
@@ -425,6 +433,42 @@ function Component:_unmount()
 	end
 
 	self._handle = nil
+end
+
+function Component:_suspendSetState()
+	self._setStateSuspended = true
+end
+
+function Component:_unsuspendSetState()
+	self._setStateSuspended = false
+
+	if self._setStateSuspendQueue == nil then
+		return
+	end
+
+	local newState = self.state
+
+	for _, partialState in ipairs(self._setStateSuspendQueue) do
+		-- If the partial state is a function, invoke it to get the actual partial state.
+		if type(partialState) == "function" then
+			partialState = partialState(self.state, self.props)
+
+			-- If partialState is nil, abort the render.
+			if partialState == nil then
+				return
+			end
+		end
+
+		newState = merge(newState, partialState)
+	end
+
+	self._setStateSuspendQueue = nil
+
+	if self._setStateWithoutUpdate then
+		self.state = newState
+	else
+		self:_update(nil, newState)
+	end
 end
 
 return Component

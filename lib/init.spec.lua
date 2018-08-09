@@ -14,7 +14,7 @@ return function()
 			setGlobalConfig = "function",
 			getGlobalConfigValue = "function",
 
-			-- These functions are deprecated and will throw warnings soon!
+			-- These functions are deprecated and throw warnings!
 			reify = "function",
 			teardown = "function",
 			reconcile = "function",

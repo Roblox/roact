@@ -59,4 +59,30 @@ return function()
 		expect(callCount).to.equal(2)
 		expect(lastMessage:find("ReconcilerCompat.spec")).to.be.ok()
 	end)
+
+	it("update should only warn once per call site", function()
+		local callCount = 0
+		local lastMessage
+
+		local compat = createReconcilerCompat(noopReconciler, function(message)
+			callCount = callCount + 1
+			lastMessage = message
+		end)
+
+		for _ = 1, 2 do
+			local handle = noopReconciler.mountTree(createElement("StringValue"))
+			compat.reconcile(handle, createElement("StringValue"))
+			noopReconciler.unmountTree(handle)
+		end
+
+		expect(callCount).to.equal(1)
+		expect(lastMessage:find("ReconcilerCompat.spec")).to.be.ok()
+
+		local handle = noopReconciler.mountTree(createElement("StringValue"))
+		compat.reconcile(handle, createElement("StringValue"))
+		noopReconciler.unmountTree(handle)
+
+		expect(callCount).to.equal(2)
+		expect(lastMessage:find("ReconcilerCompat.spec")).to.be.ok()
+	end)
 end

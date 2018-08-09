@@ -17,13 +17,13 @@ return function()
 			noopReconciler.unmountTree(tree)
 		end)
 
-		it("should mount, reconcile, and unmount", function()
+		it("should mount, update, and unmount", function()
 			local tree = noopReconciler.mountTree(createElement("StringValue"))
 
 			expect(tree).to.be.ok()
 			expect(tree.rootNode).to.be.ok()
 
-			noopReconciler.reconcileTree(tree, createElement("StringValue"))
+			noopReconciler.updateTree(tree, createElement("StringValue"))
 
 			expect(tree.rootNode).to.be.ok()
 
@@ -31,7 +31,7 @@ return function()
 		end)
 	end)
 
-	describe("calling the renderer", function()
+	describe("Host components", function()
 		it("should invoke the renderer to mount host nodes", function()
 			local mountHostNode = createSpy(NoopRenderer.mountHostNode)
 
@@ -56,12 +56,12 @@ return function()
 			expect(values.node).to.equal(node)
 		end)
 
-		it("should invoke the renderer to reconcile host nodes", function()
-			local reconcileHostNode = createSpy(NoopRenderer.reconcileHostNode)
+		it("should invoke the renderer to update host nodes", function()
+			local updateHostNode = createSpy(NoopRenderer.updateHostNode)
 
 			local renderer = {
 				mountHostNode = NoopRenderer.mountHostNode,
-				reconcileHostNode = reconcileHostNode.value,
+				updateHostNode = updateHostNode.value,
 			}
 
 			local reconciler = createReconciler(renderer)
@@ -74,13 +74,13 @@ return function()
 			expect(Type.of(node)).to.equal(Type.Node)
 
 			local newElement = createElement("StringValue")
-			local newNode = reconciler.reconcileNode(node, newElement)
+			local newNode = reconciler.updateNode(node, newElement)
 
 			expect(newNode).to.equal(node)
 
-			expect(reconcileHostNode.callCount).to.equal(1)
+			expect(updateHostNode.callCount).to.equal(1)
 
-			local values = reconcileHostNode:captureValues("reconciler", "node", "newElement")
+			local values = updateHostNode:captureValues("reconciler", "node", "newElement")
 
 			expect(values.reconciler).to.equal(reconciler)
 			expect(values.node).to.equal(node)

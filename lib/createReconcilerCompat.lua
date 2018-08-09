@@ -15,6 +15,11 @@ Roact.teardown has been renamed to Roact.unmount and will be removed in a future
 Check the call to Roact.teardown at:
 ]]
 
+local reconcileMessage = [[
+Roact.reconcile has been renamed to Roact.update and will be removed in a future release.
+Check the clal to Roact.reconcile at:
+]]
+
 local function createReconcilerCompat(reconciler, warnOverride)
 	if warnOverride == nil then
 		warnOverride = warn
@@ -43,6 +48,12 @@ local function createReconcilerCompat(reconciler, warnOverride)
 		warnOnce(teardownMessage)
 
 		return reconciler.unmountTree(...)
+	end
+
+	function compat.reconcile(...)
+		warnOnce(reconcileMessage)
+
+		return reconciler.updateTree(...)
 	end
 
 	return compat

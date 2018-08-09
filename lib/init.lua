@@ -29,10 +29,11 @@ local Roact = strict {
 
 	mount = robloxReconciler.mountTree,
 	unmount = robloxReconciler.unmountTree,
-	reconcile = robloxReconciler.reconcileTree,
+	update = robloxReconciler.updateTree,
 
 	reify = reconcilerCompat.reify,
 	teardown = reconcilerCompat.teardown,
+	reconcile = reconcilerCompat.reconcile,
 
 	setGlobalConfig = GlobalConfig.set,
 	getGlobalConfigValue = GlobalConfig.getValue,

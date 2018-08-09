@@ -9,7 +9,7 @@ return function()
 			createRef = "function",
 			mount = "function",
 			unmount = "function",
-			reconcile = "function",
+			update = "function",
 			oneChild = "function",
 			setGlobalConfig = "function",
 			getGlobalConfigValue = "function",
@@ -17,6 +17,7 @@ return function()
 			-- These functions are deprecated and will throw warnings soon!
 			reify = "function",
 			teardown = "function",
+			reconcile = "function",
 
 			Component = true,
 			PureComponent = true,

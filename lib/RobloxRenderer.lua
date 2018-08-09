@@ -63,7 +63,7 @@ function RobloxRenderer.unmountHostNode(reconciler, node)
 	node.hostObject:Destroy()
 end
 
-function RobloxRenderer.reconcileHostNode(reconciler, node, newElement)
+function RobloxRenderer.updateHostNode(reconciler, node, newElement)
 	local oldProps = node.currentElement.props
 	local newProps = newElement.props
 

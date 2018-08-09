@@ -63,14 +63,14 @@ end
 local function createReconciler(renderer)
 	local reconciler
 	local mountNode
-	local reconcileNode
+	local updateNode
 
-	local function reconcileNodeChildren(node, newChildElements)
+	local function updateNodeChildren(node, newChildElements)
 		local removeKeys = {}
 
 		-- Changed or removed children
 		for key, childNode in pairs(node.children) do
-			local newNode = reconcileNode(childNode, getElement(newChildElements, key))
+			local newNode = updateNode(childNode, getElement(newChildElements, key))
 
 			if newNode ~= nil then
 				node.children[key] = newNode
@@ -117,13 +117,13 @@ local function createReconciler(renderer)
 		end
 	end
 
-	local function reconcileFunctionNode(node, newElement)
+	local function updateFunctionNode(node, newElement)
 		local renderResult = newElement.component(newElement.props)
 
-		reconcileNodeChildren(node, renderResult)
+		updateNodeChildren(node, renderResult)
 	end
 
-	local function reconcileStatefulNode(node, newElement)
+	local function updateStatefulNode(node, newElement)
 		-- TODO: Fire willUpdate
 
 		-- TODO: Move logic into Component?
@@ -133,12 +133,12 @@ local function createReconciler(renderer)
 
 		local renderResult = node.instance:render()
 
-		reconcileNodeChildren(node, renderResult)
+		updateNodeChildren(node, renderResult)
 
 		-- TODO: Fire didUpdate
 	end
 
-	function reconcileNode(node, newElement)
+	function updateNode(node, newElement)
 		assert(Type.of(node) == Type.Node)
 		assert(Type.of(newElement) == Type.Element or typeof(newElement) == "boolean" or newElement == nil)
 
@@ -159,13 +159,13 @@ local function createReconciler(renderer)
 		local kind = ElementKind.of(newElement)
 
 		if kind == ElementKind.Host then
-			return renderer.reconcileHostNode(reconciler, node, newElement)
+			return renderer.updateHostNode(reconciler, node, newElement)
 		elseif kind == ElementKind.Function then
-			reconcileFunctionNode(node, newElement)
+			updateFunctionNode(node, newElement)
 
 			return node
 		elseif kind == ElementKind.Stateful then
-			reconcileStatefulNode(node, newElement)
+			updateStatefulNode(node, newElement)
 
 			return node
 		elseif kind == ElementKind.Portal then
@@ -301,11 +301,11 @@ local function createReconciler(renderer)
 		end
 	end
 
-	local function reconcileTree(tree, newElement)
+	local function updateTree(tree, newElement)
 		assert(Type.of(tree) == Type.Tree)
 		assert(Type.of(newElement) == Type.Element)
 
-		tree.rootNode = reconcileNode(tree.rootNode, newElement)
+		tree.rootNode = updateNode(tree.rootNode, newElement)
 
 		return tree
 	end
@@ -313,13 +313,13 @@ local function createReconciler(renderer)
 	reconciler = {
 		mountTree = mountTree,
 		unmountTree = unmountTree,
-		reconcileTree = reconcileTree,
+		updateTree = updateTree,
 
 		createNode = createNode,
 		mountNode = mountNode,
 		unmountNode = unmountNode,
-		reconcileNode = reconcileNode,
-		reconcileNodeChildren = reconcileNodeChildren,
+		updateNode = updateNode,
+		updateNodeChildren = updateNodeChildren,
 	}
 
 	return reconciler

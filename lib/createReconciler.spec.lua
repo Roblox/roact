@@ -31,85 +31,87 @@ return function()
 		end)
 	end)
 
-	it("should invoke the renderer to mount host nodes", function()
-		local mountHostNode = createSpy(NoopRenderer.mountHostNode)
+	describe("calling the renderer", function()
+		it("should invoke the renderer to mount host nodes", function()
+			local mountHostNode = createSpy(NoopRenderer.mountHostNode)
 
-		local renderer = {
-			mountHostNode = mountHostNode.value,
-		}
+			local renderer = {
+				mountHostNode = mountHostNode.value,
+			}
 
-		local reconciler = createReconciler(renderer)
+			local reconciler = createReconciler(renderer)
 
-		local element = createElement("StringValue")
-		local hostParent = Instance.new("IntValue")
-		local key = "Some Key"
-		local node = reconciler.mountNode(element, hostParent, key)
+			local element = createElement("StringValue")
+			local hostParent = Instance.new("IntValue")
+			local key = "Some Key"
+			local node = reconciler.mountNode(element, hostParent, key)
 
-		expect(Type.of(node)).to.equal(Type.Node)
+			expect(Type.of(node)).to.equal(Type.Node)
 
-		expect(mountHostNode.callCount).to.equal(1)
+			expect(mountHostNode.callCount).to.equal(1)
 
-		local values = mountHostNode:captureValues("reconciler", "node")
+			local values = mountHostNode:captureValues("reconciler", "node")
 
-		expect(values.reconciler).to.equal(reconciler)
-		expect(values.node).to.equal(node)
-	end)
+			expect(values.reconciler).to.equal(reconciler)
+			expect(values.node).to.equal(node)
+		end)
 
-	it("should invoke the renderer to reconcile host nodes", function()
-		local reconcileHostNode = createSpy(NoopRenderer.reconcileHostNode)
+		it("should invoke the renderer to reconcile host nodes", function()
+			local reconcileHostNode = createSpy(NoopRenderer.reconcileHostNode)
 
-		local renderer = {
-			mountHostNode = NoopRenderer.mountHostNode,
-			reconcileHostNode = reconcileHostNode.value,
-		}
+			local renderer = {
+				mountHostNode = NoopRenderer.mountHostNode,
+				reconcileHostNode = reconcileHostNode.value,
+			}
 
-		local reconciler = createReconciler(renderer)
+			local reconciler = createReconciler(renderer)
 
-		local element = createElement("StringValue")
-		local hostParent = Instance.new("IntValue")
-		local key = "Key"
-		local node = reconciler.mountNode(element, hostParent, key)
+			local element = createElement("StringValue")
+			local hostParent = Instance.new("IntValue")
+			local key = "Key"
+			local node = reconciler.mountNode(element, hostParent, key)
 
-		expect(Type.of(node)).to.equal(Type.Node)
+			expect(Type.of(node)).to.equal(Type.Node)
 
-		local newElement = createElement("StringValue")
-		local newNode = reconciler.reconcileNode(node, newElement)
+			local newElement = createElement("StringValue")
+			local newNode = reconciler.reconcileNode(node, newElement)
 
-		expect(newNode).to.equal(node)
+			expect(newNode).to.equal(node)
 
-		expect(reconcileHostNode.callCount).to.equal(1)
+			expect(reconcileHostNode.callCount).to.equal(1)
 
-		local values = reconcileHostNode:captureValues("reconciler", "node", "newElement")
+			local values = reconcileHostNode:captureValues("reconciler", "node", "newElement")
 
-		expect(values.reconciler).to.equal(reconciler)
-		expect(values.node).to.equal(node)
-		expect(values.newElement).to.equal(newElement)
-	end)
+			expect(values.reconciler).to.equal(reconciler)
+			expect(values.node).to.equal(node)
+			expect(values.newElement).to.equal(newElement)
+		end)
 
-	it("should invoke the renderer to unmount host nodes", function()
-		local unmountHostNode = createSpy(NoopRenderer.unmountHostNode)
+		it("should invoke the renderer to unmount host nodes", function()
+			local unmountHostNode = createSpy(NoopRenderer.unmountHostNode)
 
-		local renderer = {
-			mountHostNode = NoopRenderer.mountHostNode,
-			unmountHostNode = unmountHostNode.value,
-		}
+			local renderer = {
+				mountHostNode = NoopRenderer.mountHostNode,
+				unmountHostNode = unmountHostNode.value,
+			}
 
-		local reconciler = createReconciler(renderer)
+			local reconciler = createReconciler(renderer)
 
-		local element = createElement("StringValue")
-		local hostParent = Instance.new("IntValue")
-		local key = "Key"
-		local node = reconciler.mountNode(element, hostParent, key)
+			local element = createElement("StringValue")
+			local hostParent = Instance.new("IntValue")
+			local key = "Key"
+			local node = reconciler.mountNode(element, hostParent, key)
 
-		expect(Type.of(node)).to.equal(Type.Node)
+			expect(Type.of(node)).to.equal(Type.Node)
 
-		reconciler.unmountNode(node)
+			reconciler.unmountNode(node)
 
-		expect(unmountHostNode.callCount).to.equal(1)
+			expect(unmountHostNode.callCount).to.equal(1)
 
-		local values = unmountHostNode:captureValues("reconciler", "node")
+			local values = unmountHostNode:captureValues("reconciler", "node")
 
-		expect(values.reconciler).to.equal(reconciler)
-		expect(values.node).to.equal(node)
+			expect(values.reconciler).to.equal(reconciler)
+			expect(values.node).to.equal(node)
+		end)
 	end)
 end

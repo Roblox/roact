@@ -56,8 +56,8 @@ function RobloxRenderer.mountHostNode(reconciler, node)
 end
 
 function RobloxRenderer.unmountHostNode(reconciler, node)
-	for _, child in pairs(node.children) do
-		reconciler.unmountNode(child)
+	for _, childNode in pairs(node.children) do
+		reconciler.unmountNode(childNode)
 	end
 
 	node.hostObject:Destroy()

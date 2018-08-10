@@ -197,13 +197,15 @@ local function createReconciler(renderer)
 		local renderResult = element.component(element.props)
 
 		for childKey, childElement in iterateElements(renderResult) do
-			local childNode = mountNode(childElement, hostParent, childKey)
+			local actualChildKey = childKey
 
 			if childKey == inheritKey then
-				node.children[key] = childNode
-			else
-				node.children[childKey] = childNode
+				actualChildKey = key
 			end
+
+			local childNode = mountNode(childElement, hostParent, actualChildKey)
+
+			node.children[actualChildKey] = childNode
 		end
 	end
 
@@ -221,13 +223,15 @@ local function createReconciler(renderer)
 		local renderResult = instance:render()
 
 		for childKey, childElement in iterateElements(renderResult) do
-			local childNode = mountNode(childElement, hostParent, childKey)
+			local actualChildKey = childKey
 
 			if childKey == inheritKey then
-				node.children[key] = childNode
-			else
-				node.children[childKey] = childNode
+				actualChildKey = key
 			end
+
+			local childNode = mountNode(childElement, hostParent, actualChildKey)
+
+			node.children[actualChildKey] = childNode
 		end
 
 		-- TODO: Fire didMount

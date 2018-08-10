@@ -1,64 +1,6 @@
 local Type = require(script.Parent.Type)
 local ElementKind = require(script.Parent.ElementKind)
-
-local function noop()
-	return nil
-end
-
-local inheritKey = {}
-
-local function iterateElements(elements)
-	local richType = Type.of(elements)
-
-	-- Single child, the simplest case!
-	if richType == Type.Element then
-		local called = false
-
-		return function()
-			if called then
-				return nil
-			else
-				called = true
-				return inheritKey, elements
-			end
-		end
-	end
-
-	-- This is a Roact-speciifc object, and it's the wrong kind.
-	if richType ~= nil then
-		error("Invalid children")
-	end
-
-	local regularType = typeof(elements)
-
-	-- A dictionary of children, hopefully!
-	-- TODO: Is this too flaky? Should we introduce a Fragment type like React?
-	if regularType == "table" then
-		return pairs(elements)
-	end
-
-	if elements == nil or regularType == "boolean" then
-		return noop
-	end
-
-	error("Invalid children")
-end
-
-local function getElement(elements, key)
-	if elements == nil or typeof(elements) == "boolean" then
-		return nil
-	end
-
-	if Type.of(elements) == Type.Element then
-		if key == inheritKey then
-			return elements
-		end
-
-		return nil
-	end
-
-	return elements[key]
-end
+local ChildUtils = require(script.Parent.ChildUtils)
 
 local function createReconciler(renderer)
 	local reconciler
@@ -70,7 +12,7 @@ local function createReconciler(renderer)
 
 		-- Changed or removed children
 		for key, childNode in pairs(node.children) do
-			local newNode = updateNode(childNode, getElement(newChildElements, key))
+			local newNode = updateNode(childNode, ChildUtils.getChildByKey(newChildElements, key))
 
 			if newNode ~= nil then
 				node.children[key] = newNode
@@ -84,7 +26,7 @@ local function createReconciler(renderer)
 		end
 
 		-- Added children
-		for key, newElement in iterateElements(newChildElements) do
+		for key, newElement in ChildUtils.iterateChildren(newChildElements) do
 			local childNode = node.children[key]
 
 			if childNode == nil then
@@ -105,11 +47,7 @@ local function createReconciler(renderer)
 				unmountNode(child)
 			end
 		elseif kind == ElementKind.Stateful then
-			-- TODO: Fire willUnmount
-
-			for _, child in pairs(node.children) do
-				unmountNode(child)
-			end
+			node.instance:__unmount()
 		elseif kind == ElementKind.Portal then
 			error("NYI")
 		else
@@ -121,21 +59,6 @@ local function createReconciler(renderer)
 		local renderResult = newElement.component(newElement.props)
 
 		updateNodeChildren(node, renderResult)
-	end
-
-	local function updateStatefulNode(node, newElement)
-		-- TODO: Fire willUpdate
-
-		-- TODO: Move logic into Component?
-		node.instance.props = newElement.props
-
-		-- TODO: getDerivedStateFromProps
-
-		local renderResult = node.instance:render()
-
-		updateNodeChildren(node, renderResult)
-
-		-- TODO: Fire didUpdate
 	end
 
 	function updateNode(node, newElement)
@@ -165,7 +88,7 @@ local function createReconciler(renderer)
 
 			return node
 		elseif kind == ElementKind.Stateful then
-			updateStatefulNode(node, newElement)
+			node.instance:__update(newElement, nil)
 
 			return node
 		elseif kind == ElementKind.Portal then
@@ -196,45 +119,15 @@ local function createReconciler(renderer)
 
 		local renderResult = element.component(element.props)
 
-		for childKey, childElement in iterateElements(renderResult) do
-			local actualChildKey = childKey
-
-			if childKey == inheritKey then
-				actualChildKey = key
+		for childKey, childElement in ChildUtils.iterateChildren(renderResult) do
+			if childKey == ChildUtils.UseParentKey then
+				childKey = key
 			end
 
-			local childNode = mountNode(childElement, hostParent, actualChildKey)
+			local childNode = reconciler.mountNode(childElement, hostParent, childKey)
 
-			node.children[actualChildKey] = childNode
+			node.children[childKey] = childNode
 		end
-	end
-
-	local function mountStatefulNode(node)
-		local element = node.currentElement
-		local hostParent = node.hostParent
-		local key = node.key
-
-		local instance = element.component:__new(element.props)
-		node.instance = instance
-
-		-- TODO: Move logic into Component?
-		-- Maybe Component should become logicless?
-
-		local renderResult = instance:render()
-
-		for childKey, childElement in iterateElements(renderResult) do
-			local actualChildKey = childKey
-
-			if childKey == inheritKey then
-				actualChildKey = key
-			end
-
-			local childNode = mountNode(childElement, hostParent, actualChildKey)
-
-			node.children[actualChildKey] = childNode
-		end
-
-		-- TODO: Fire didMount
 	end
 
 	function mountNode(element, hostParent, key)
@@ -260,7 +153,7 @@ local function createReconciler(renderer)
 
 			return node
 		elseif kind == ElementKind.Stateful then
-			mountStatefulNode(node)
+			element.component:__mount(reconciler, node)
 
 			return node
 		elseif kind == ElementKind.Portal then

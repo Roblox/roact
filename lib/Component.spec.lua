@@ -1,18 +1,21 @@
 return function()
 	local Core = require(script.Parent.Core)
 	local createElement = require(script.Parent.createElement)
-	-- local Reconciler = require(script.Parent.Reconciler)
+	local createReconciler = require(script.Parent.createReconciler)
+	local createSpy = require(script.Parent.createSpy)
 	local GlobalConfig = require(script.Parent.GlobalConfig)
+	local NoopRenderer = require(script.Parent.NoopRenderer)
+	local Type = require(script.Parent.Type)
 
 	local Component = require(script.Parent.Component)
 
-	SKIP()
+	local noopReconciler = createReconciler(NoopRenderer)
 
 	it("should be extendable", function()
 		local MyComponent = Component:extend("The Senate")
 
 		expect(MyComponent).to.be.ok()
-		expect(MyComponent._new).to.be.ok()
+		expect(Type.of(MyComponent)).to.equal(Type.StatefulComponentClass)
 	end)
 
 	it("should prevent extending a user component", function()
@@ -33,68 +36,96 @@ return function()
 	end)
 
 	it("should throw on render with a useful message by default", function()
-		local MyComponent = Component:extend("Foo")
+		local MyComponent = Component:extend("MyComponent")
 
-		local instance = MyComponent._new({})
+		local element = createElement(MyComponent)
+		local hostParent = nil
+		local key = "Some Component Key"
 
-		expect(instance).to.be.ok()
-
-		local ok, err = pcall(function()
-			instance:render()
+		local success, result = pcall(function()
+			noopReconciler.mountNode(element, hostParent, key)
 		end)
 
-		expect(ok).to.equal(false)
-		expect(err:find("Foo")).to.be.ok()
+		expect(success).to.equal(false)
+		expect(result:match("MyComponent")).to.be.ok()
+		expect(result:match("render")).to.be.ok()
 	end)
 
 	it("should pass props to the initializer", function()
-		local MyComponent = Component:extend("Wazo")
-
-		local callCount = 0
-		local testProps = {}
-
-		function MyComponent:init(props)
-			expect(props).to.equal(testProps)
-			callCount = callCount + 1
-		end
-
-		MyComponent._new(testProps)
-
-		expect(callCount).to.equal(1)
-	end)
-
-	it("should fire didMount and willUnmount when reified", function()
 		local MyComponent = Component:extend("MyComponent")
-		local mounts = 0
-		local unmounts = 0
+
+		local initSpy = createSpy(function(props)
+			return nil
+		end)
+
+		MyComponent.init = initSpy.value
 
 		function MyComponent:render()
 			return nil
 		end
 
-		function MyComponent:didMount()
-			mounts = mounts + 1
-		end
+		local props = {
+			a = 5,
+		}
+		local element = createElement(MyComponent, props)
+		local hostParent = nil
+		local key = "Some Component Key"
 
-		function MyComponent:willUnmount()
-			unmounts = unmounts + 1
-		end
+		local node = noopReconciler.mountNode(element, hostParent, key)
 
-		expect(mounts).to.equal(0)
-		expect(unmounts).to.equal(0)
+		expect(Type.of(node)).to.equal(Type.Node)
 
-		local instance = Reconciler.mount(createElement(MyComponent))
+		expect(initSpy.callCount).to.equal(1)
 
-		expect(mounts).to.equal(1)
-		expect(unmounts).to.equal(0)
+		local initValues = initSpy:captureValues("instance", "props")
 
-		Reconciler.unmount(instance)
-
-		expect(mounts).to.equal(1)
-		expect(unmounts).to.equal(1)
+		expect(Type.of(initValues.instance)).to.equal(Type.StatefulComponentInstance)
+		expect(typeof(initValues.props)).to.equal("table")
+		expect(initValues.props.a).to.equal(props.a)
 	end)
 
-	it("should provide the proper arguments to willUpdate and didUpdate", function()
+	it("should fire didMount and willUnmount when mounted and unmounted", function()
+		local MyComponent = Component:extend("MyComponent")
+
+		function MyComponent:render()
+			return nil
+		end
+
+		local didMountSpy = createSpy()
+		local willUnmountSpy = createSpy()
+
+		MyComponent.didMount = didMountSpy.value
+		MyComponent.willUnmount = willUnmountSpy.value
+
+		expect(didMountSpy.callCount).to.equal(0)
+		expect(willUnmountSpy.callCount).to.equal(0)
+
+		local hostParent = nil
+		local key = "Some Key"
+		local element = createElement(MyComponent)
+		local node = noopReconciler.mountNode(element, hostParent, key)
+
+		expect(didMountSpy.callCount).to.equal(1)
+		expect(willUnmountSpy.callCount).to.equal(0)
+
+		noopReconciler.unmountNode(node)
+
+		expect(didMountSpy.callCount).to.equal(1)
+		expect(willUnmountSpy.callCount).to.equal(1)
+
+		local didMountValues = didMountSpy:captureValues("instance")
+		local willUnmountValues = willUnmountSpy:captureValues("instance")
+
+		expect(Type.of(didMountValues.instance)).to.equal(Type.StatefulComponentInstance)
+
+		expect(Type.of(willUnmountValues.instance)).to.equal(Type.StatefulComponentInstance)
+
+		expect(didMountValues.instance).to.equal(willUnmountValues.instance)
+	end)
+
+	itSKIP("should provide the proper arguments to willUpdate and didUpdate", function()
+		-- TODO
+
 		local willUpdateCount = 0
 		local didUpdateCount = 0
 		local prevProps
@@ -182,192 +213,208 @@ return function()
 		Reconciler.unmount(instance)
 	end)
 
-	it("should call getDerivedStateFromProps appropriately", function()
-		local TestComponent = Component:extend("TestComponent")
-		local getStateCallback
+	describe("getDerivedStateFromProps", function()
+		SKIP()
 
-		function TestComponent.getDerivedStateFromProps(newProps, oldState)
-			return {
-				visible = newProps.visible
-			}
-		end
+		-- TODO
 
-		function TestComponent:init(props)
-			self.state = {
-				visible = false
-			}
+		it("should call getDerivedStateFromProps appropriately", function()
+			local TestComponent = Component:extend("TestComponent")
+			local getStateCallback
 
-			getStateCallback = function()
-				return self.state
+			function TestComponent.getDerivedStateFromProps(newProps, oldState)
+				return {
+					visible = newProps.visible
+				}
 			end
-		end
 
-		function TestComponent:render() end
+			function TestComponent:init(props)
+				self.state = {
+					visible = false
+				}
 
-		local handle = Reconciler.mount(createElement(TestComponent, {
-			visible = true
-		}))
+				getStateCallback = function()
+					return self.state
+				end
+			end
 
-		local state = getStateCallback()
-		expect(state.visible).to.equal(true)
+			function TestComponent:render() end
 
-		handle = Reconciler.reconcile(handle, createElement(TestComponent, {
-			visible = 123
-		}))
+			local handle = Reconciler.mount(createElement(TestComponent, {
+				visible = true
+			}))
 
-		state = getStateCallback()
-		expect(state.visible).to.equal(123)
+			local state = getStateCallback()
+			expect(state.visible).to.equal(true)
 
-		Reconciler.unmount(handle)
+			handle = Reconciler.reconcile(handle, createElement(TestComponent, {
+				visible = 123
+			}))
+
+			state = getStateCallback()
+			expect(state.visible).to.equal(123)
+
+			Reconciler.unmount(handle)
+		end)
 	end)
 
-	it("should pull values from defaultProps where appropriate", function()
-		local lastProps
-		local TestComponent = Component:extend("TestComponent")
+	describe("defaultProps", function()
+		SKIP()
 
-		TestComponent.defaultProps = {
-			foo = "hello",
-			bar = "world",
-		}
+		-- TODO
 
-		function TestComponent:render()
-			lastProps = self.props
-			return nil
-		end
+		it("should pull values from defaultProps where appropriate", function()
+			local lastProps
+			local TestComponent = Component:extend("TestComponent")
 
-		local handle = Reconciler.mount(createElement(TestComponent))
+			TestComponent.defaultProps = {
+				foo = "hello",
+				bar = "world",
+			}
 
-		expect(lastProps).to.be.a("table")
-		expect(lastProps.foo).to.equal("hello")
-		expect(lastProps.bar).to.equal("world")
+			function TestComponent:render()
+				lastProps = self.props
+				return nil
+			end
 
-		Reconciler.unmount(handle)
+			local handle = Reconciler.mount(createElement(TestComponent))
 
-		lastProps = nil
-		handle = Reconciler.mount(createElement(TestComponent, {
-			foo = 5,
-		}))
+			expect(lastProps).to.be.a("table")
+			expect(lastProps.foo).to.equal("hello")
+			expect(lastProps.bar).to.equal("world")
 
-		expect(lastProps).to.be.a("table")
-		expect(lastProps.foo).to.equal(5)
-		expect(lastProps.bar).to.equal("world")
+			Reconciler.unmount(handle)
 
-		Reconciler.unmount(handle)
+			lastProps = nil
+			handle = Reconciler.mount(createElement(TestComponent, {
+				foo = 5,
+			}))
 
-		lastProps = nil
-		handle = Reconciler.mount(createElement(TestComponent, {
-			bar = false,
-		}))
+			expect(lastProps).to.be.a("table")
+			expect(lastProps.foo).to.equal(5)
+			expect(lastProps.bar).to.equal("world")
 
-		expect(lastProps).to.be.a("table")
-		expect(lastProps.foo).to.equal("hello")
-		expect(lastProps.bar).to.equal(false)
+			Reconciler.unmount(handle)
 
-		Reconciler.unmount(handle)
-	end)
+			lastProps = nil
+			handle = Reconciler.mount(createElement(TestComponent, {
+				bar = false,
+			}))
 
-	it("should include defaultProps in props passed to shouldUpdate", function()
-		local lastProps
-		local TestComponent = Component:extend("TestComponent")
+			expect(lastProps).to.be.a("table")
+			expect(lastProps.foo).to.equal("hello")
+			expect(lastProps.bar).to.equal(false)
 
-		TestComponent.defaultProps = {
-			foo = "hello",
-			bar = "world",
-		}
+			Reconciler.unmount(handle)
+		end)
 
-		function TestComponent:shouldUpdate(newProps)
-			lastProps = newProps
-			return true
-		end
+		it("should include defaultProps in props passed to shouldUpdate", function()
+			local lastProps
+			local TestComponent = Component:extend("TestComponent")
 
-		function TestComponent:render()
-			return nil
-		end
+			TestComponent.defaultProps = {
+				foo = "hello",
+				bar = "world",
+			}
 
-		local handle = Reconciler.mount(createElement(TestComponent, {}))
-		Reconciler.reconcile(handle, createElement(TestComponent, {
-			baz = "!",
-		}))
+			function TestComponent:shouldUpdate(newProps)
+				lastProps = newProps
+				return true
+			end
 
-		expect(lastProps).to.be.a("table")
-		expect(lastProps.foo).to.equal("hello")
-		expect(lastProps.bar).to.equal("world")
-		expect(lastProps.baz).to.equal("!")
+			function TestComponent:render()
+				return nil
+			end
 
-		Reconciler.unmount(handle)
-	end)
+			local handle = Reconciler.mount(createElement(TestComponent, {}))
+			Reconciler.reconcile(handle, createElement(TestComponent, {
+				baz = "!",
+			}))
 
-	it("should fall back to defaultProps correctly after an update", function()
-		local lastProps
-		local TestComponent = Component:extend("TestComponent")
+			expect(lastProps).to.be.a("table")
+			expect(lastProps.foo).to.equal("hello")
+			expect(lastProps.bar).to.equal("world")
+			expect(lastProps.baz).to.equal("!")
 
-		TestComponent.defaultProps = {
-			foo = "hello",
-			bar = "world",
-		}
+			Reconciler.unmount(handle)
+		end)
 
-		function TestComponent:render()
-			lastProps = self.props
-			return nil
-		end
+		it("should fall back to defaultProps correctly after an update", function()
+			local lastProps
+			local TestComponent = Component:extend("TestComponent")
 
-		local handle = Reconciler.mount(createElement(TestComponent, {
-			foo = "hey"
-		}))
+			TestComponent.defaultProps = {
+				foo = "hello",
+				bar = "world",
+			}
 
-		expect(lastProps).to.be.a("table")
-		expect(lastProps.foo).to.equal("hey")
-		expect(lastProps.bar).to.equal("world")
+			function TestComponent:render()
+				lastProps = self.props
+				return nil
+			end
 
-		handle = Reconciler.reconcile(handle, createElement(TestComponent))
+			local handle = Reconciler.mount(createElement(TestComponent, {
+				foo = "hey"
+			}))
 
-		expect(lastProps).to.be.a("table")
-		expect(lastProps.foo).to.equal("hello")
-		expect(lastProps.bar).to.equal("world")
+			expect(lastProps).to.be.a("table")
+			expect(lastProps.foo).to.equal("hey")
+			expect(lastProps.bar).to.equal("world")
 
-		Reconciler.unmount(handle)
-	end)
+			handle = Reconciler.reconcile(handle, createElement(TestComponent))
 
-	it("should pass defaultProps in init and first getDerivedStateFromProps", function()
-		local derivedProps = nil
-		local initProps = nil
-		local initSelfProps = nil
+			expect(lastProps).to.be.a("table")
+			expect(lastProps.foo).to.equal("hello")
+			expect(lastProps.bar).to.equal("world")
 
-		local TestComponent = Component:extend("TestComponent")
+			Reconciler.unmount(handle)
+		end)
 
-		TestComponent.defaultProps = {
-			heyNow = "get your game on",
-		}
+		it("should pass defaultProps in init and first getDerivedStateFromProps", function()
+			local derivedProps = nil
+			local initProps = nil
+			local initSelfProps = nil
 
-		function TestComponent:init(props)
-			initProps = props
-			initSelfProps = self.props
-		end
+			local TestComponent = Component:extend("TestComponent")
 
-		function TestComponent:render()
-			return nil
-		end
+			TestComponent.defaultProps = {
+				heyNow = "get your game on",
+			}
 
-		function TestComponent.getDerivedStateFromProps(nextProps, lastState)
-			derivedProps = nextProps
-		end
+			function TestComponent:init(props)
+				initProps = props
+				initSelfProps = self.props
+			end
 
-		local tree = createElement(TestComponent)
-		local handle = Reconciler.mount(tree)
+			function TestComponent:render()
+				return nil
+			end
 
-		expect(derivedProps).to.be.ok()
-		expect(initProps).to.be.ok()
-		expect(initSelfProps).to.be.ok()
+			function TestComponent.getDerivedStateFromProps(nextProps, lastState)
+				derivedProps = nextProps
+			end
 
-		expect(derivedProps.heyNow).to.equal(TestComponent.defaultProps.heyNow)
-		expect(initProps.heyNow).to.equal(TestComponent.defaultProps.heyNow)
+			local tree = createElement(TestComponent)
+			local handle = Reconciler.mount(tree)
 
-		expect(initProps).to.equal(initSelfProps)
+			expect(derivedProps).to.be.ok()
+			expect(initProps).to.be.ok()
+			expect(initSelfProps).to.be.ok()
 
-		Reconciler.unmount(handle)
+			expect(derivedProps.heyNow).to.equal(TestComponent.defaultProps.heyNow)
+			expect(initProps.heyNow).to.equal(TestComponent.defaultProps.heyNow)
+
+			expect(initProps).to.equal(initSelfProps)
+
+			Reconciler.unmount(handle)
+		end)
 	end)
 
 	describe("setState", function()
+		SKIP()
+
+		-- TODO
+
 		it("should throw when called in init", function()
 			local InitComponent = Component:extend("InitComponent")
 
@@ -639,49 +686,60 @@ return function()
 	end)
 
 	describe("getElementTraceback", function()
-		it("should return stack traces", function()
-			local stackTraceCallback = nil
+		it("should return stack traces in initial renders", function()
+			local stackTrace = nil
 
-			GlobalConfig.set({
-				elementTracing = true
-			})
+			local config = {
+				elementTracing = true,
+			}
 
-			local TestComponent = Component:extend("TestComponent")
+			GlobalConfig.scoped(config, function()
+				local TestComponent = Component:extend("TestComponent")
 
-			function TestComponent:init()
-				stackTraceCallback = function()
-					return self:getElementTraceback()
+				function TestComponent:init()
+					stackTrace = self:getElementTraceback()
 				end
-			end
 
-			function TestComponent:render()
-				return createElement("StringValue")
-			end
+				function TestComponent:render()
+					return nil
+				end
 
-			local handle = Reconciler.mount(createElement(TestComponent))
-			expect(stackTraceCallback()).to.be.ok()
-			Reconciler.unmount(handle)
-			GlobalConfig.reset()
+				local element = createElement(TestComponent)
+				local hostParent = nil
+				local key = "Some key"
+				noopReconciler.mountNode(element, hostParent, key)
+			end)
+
+			expect(stackTrace).to.be.a("string")
 		end)
 
+		-- TODO: it should return an updated stack trace after an update
+
 		it("should return nil when elementTracing is off", function()
-			local stackTraceCallback = nil
+			local stackTrace = nil
 
-			local TestComponent = Component:extend("TestComponent")
+			local config = {
+				elementTracing = false,
+			}
 
-			function TestComponent:init()
-				stackTraceCallback = function()
-					return self:getElementTraceback()
+			GlobalConfig.scoped(config, function()
+				local TestComponent = Component:extend("TestComponent")
+
+				function TestComponent:init()
+					stackTrace = self:getElementTraceback()
 				end
-			end
 
-			function TestComponent:render()
-				return createElement("StringValue")
-			end
+				function TestComponent:render()
+					return nil
+				end
 
-			local handle = Reconciler.mount(createElement(TestComponent))
-			expect(stackTraceCallback()).to.never.be.ok()
-			Reconciler.unmount(handle)
+				local element = createElement(TestComponent)
+				local hostParent = nil
+				local key = "Some key"
+				noopReconciler.mountNode(element, hostParent, key)
+			end)
+
+			expect(stackTrace).to.equal(nil)
 		end)
 	end)
 end

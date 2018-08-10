@@ -1,16 +1,24 @@
 local Type = require(script.Parent.Type)
 local ChildUtils = require(script.Parent.ChildUtils)
 
+local componentClassMetatable = {}
+
+function componentClassMetatable:__tostring()
+	return self.__componentName
+end
+
 local Component = {}
+setmetatable(Component, componentClassMetatable)
+
 Component[Type] = Type.StatefulComponentClass
 Component.__index = Component
+Component.__componentName = "Component"
 
 function Component:extend(name)
+	assert(Type.of(self) == Type.StatefulComponentClass)
 	assert(typeof(name) == "string")
 
 	local class = {}
-	class[Type] = Type.StatefulComponentInstance
-	class.__index = class
 
 	for key, value in pairs(Component) do
 		if key ~= "extend" then
@@ -18,7 +26,34 @@ function Component:extend(name)
 		end
 	end
 
+	class[Type] = Type.StatefulComponentClass
+	class.__index = class
+	class.__componentName = name
+
+	setmetatable(class, componentClassMetatable)
+
 	return class
+end
+
+function Component:setState(mapState)
+	assert(Type.of(self) == Type.StatefulComponentInstance)
+
+	error("NYI")
+end
+
+function Component:getElementTraceback()
+	return self.__internal.element.source
+end
+
+function Component:render()
+	local message = (
+		"The component %q is missing the `render` method.\n" ..
+		"`render` must be defined when creating a Roact component!"
+	):format(
+		tostring(getmetatable(self))
+	)
+
+	error(message, 0)
 end
 
 function Component:__mount(reconciler, node)
@@ -26,21 +61,34 @@ function Component:__mount(reconciler, node)
 	assert(reconciler ~= nil)
 	assert(Type.of(node) == Type.Node)
 
+	local element = node.currentElement
 	local hostParent = node.hostParent
 	local key = node.key
 
 	local internal = {
 		reconciler = reconciler,
 		node = node,
+		element = element,
 	}
 
 	local instance = {
+		[Type] = Type.StatefulComponentInstance,
 		__internal = internal,
 	}
 
 	setmetatable(instance, self)
 
 	node.instance = instance
+
+	-- TODO: defaultProps
+	-- TODO: getDerivedStateFromProps
+
+	instance.props = element.props
+	instance.state = {}
+
+	if instance.init ~= nil then
+		instance:init(instance.props)
+	end
 
 	local renderResult = instance:render()
 
@@ -93,13 +141,16 @@ function Component:__update(updatedElement, updatedState)
 	if updatedElement ~= nil then
 		newProps = updatedElement.props
 
+		internal.element = updatedElement
+
 		-- TODO: defaultProps
-		-- TODO: getDerivedStateFromProps
 	end
 
 	if updatedState ~= nil then
 		newState = updatedState
 	end
+
+	-- TODO: getDerivedStateFromProps
 
 	if self.willUpdate ~= nil then
 		self:willUpdate(newProps, newState)
@@ -115,10 +166,6 @@ function Component:__update(updatedElement, updatedState)
 	if self.didUpdate ~= nil then
 		self:didUpdate(oldProps, oldState)
 	end
-end
-
-function Component:render()
-	error("overwrite render please")
 end
 
 return Component

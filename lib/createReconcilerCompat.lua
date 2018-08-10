@@ -17,7 +17,7 @@ Check the call to Roact.teardown at:
 
 local reconcileMessage = [[
 Roact.reconcile has been renamed to Roact.update and will be removed in a future release.
-Check the clal to Roact.reconcile at:
+Check the call to Roact.reconcile at:
 ]]
 
 local function createReconcilerCompat(reconciler, warnOverride)

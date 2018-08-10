@@ -72,7 +72,7 @@ return function()
 		end)
 	end)
 
-	describe("reconcileHostNode", function()
+	describe("updateHostNode", function()
 	end)
 
 	describe("unmountHostNode", function()

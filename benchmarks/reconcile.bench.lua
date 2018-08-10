@@ -1,19 +1,19 @@
 local Roact = require(script.Parent.Parent.Roact)
 
-local handle
+local tree
 
 return {
 	iterations = 100000,
 	setup = function()
-		handle = Roact.mount(Roact.createElement("StringValue", {
+		tree = Roact.mount(Roact.createElement("StringValue", {
 			Value = "Initial",
 		}))
 	end,
 	teardown = function()
-		Roact.unmount(handle)
+		Roact.unmount(tree)
 	end,
 	step = function(i)
-		handle = Roact.reconcile(handle, Roact.createElement("StringValue", {
+		Roact.update(tree, Roact.createElement("StringValue", {
 			Value = tostring(i),
 		}))
 	end,

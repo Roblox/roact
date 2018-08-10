@@ -85,7 +85,7 @@ function RobloxRenderer.updateHostNode(reconciler, node, newElement)
 		end
 	end
 
-	reconciler.reconcileNodeChildren(node, newElement.props[Core.Children])
+	reconciler.updateNodeChildren(node, newElement.props[Core.Children])
 
 	return node
 end

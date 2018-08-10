@@ -123,94 +123,103 @@ return function()
 		expect(didMountValues.instance).to.equal(willUnmountValues.instance)
 	end)
 
-	itSKIP("should provide the proper arguments to willUpdate and didUpdate", function()
-		-- TODO
+	it("should invoke willUpdate and didUpdate when props update", function()
+		local MyComponent = Component:extend("MyComponent")
 
-		local willUpdateCount = 0
-		local didUpdateCount = 0
-		local prevProps
-		local prevState
-		local nextProps
-		local nextState
-		local setValue
+		local willUpdateProps
+		local willUpdateState
 
-		local Child = Component:extend("PureChild")
+		local didUpdateProps
+		local didUpdateState
 
-		function Child:willUpdate(newProps, newState)
-			nextProps = assert(newProps)
-			nextState = assert(newState)
-			prevProps = assert(self.props)
-			prevState = assert(self.state)
-			willUpdateCount = willUpdateCount + 1
-		end
+		local willUpdateSpy = createSpy(function(self)
+			willUpdateProps = self.props
+			willUpdateState = self.state
+		end)
+		local didUpdateSpy = createSpy(function(self)
+			didUpdateProps = self.props
+			didUpdateState = self.state
+		end)
 
-		function Child:didUpdate(oldProps, oldState)
-			assert(oldProps)
-			assert(oldState)
-			expect(prevProps.value).to.equal(oldProps.value)
-			expect(prevState.value).to.equal(oldState.value)
-			expect(nextProps.value).to.equal(self.props.value)
-			expect(nextState.value).to.equal(self.state.value)
-			didUpdateCount = didUpdateCount + 1
-		end
+		MyComponent.willUpdate = willUpdateSpy.value
+		MyComponent.didUpdate = didUpdateSpy.value
 
-		function Child:render()
-			return nil
-		end
+		local stateValue = "some state value"
 
-		local Container = Component:extend("Container")
-
-		function Container:init()
+		function MyComponent:init()
 			self.state = {
-				value = 0,
+				value = stateValue,
 			}
 		end
 
-		function Container:didMount()
-			setValue = function(value)
-				self:setState({
-					value = value,
-				})
-			end
+		function MyComponent:render()
+			return nil
 		end
 
-		function Container:willUnmount()
-			setValue = nil
-		end
+		local value = 3
+		local element = createElement(MyComponent, {
+			value = value,
+		})
+		local hostParent = nil
+		local key = "Updates Are Cool"
 
-		function Container:render()
-			return createElement(Child, {
-				value = self.state.value,
-			})
-		end
+		local node = noopReconciler.mountNode(element, hostParent, key)
 
-		local element = createElement(Container)
-		local instance = Reconciler.mount(element)
+		expect(willUpdateSpy.callCount).to.equal(0)
+		expect(didUpdateSpy.callCount).to.equal(0)
 
-		expect(willUpdateCount).to.equal(0)
-		expect(didUpdateCount).to.equal(0)
+		local newValue = 5
+		local newElement = createElement(MyComponent, {
+			value = newValue,
+		})
+		noopReconciler.updateNode(node, newElement)
 
-		setValue(1)
+		expect(willUpdateSpy.callCount).to.equal(1)
+		expect(didUpdateSpy.callCount).to.equal(1)
 
-		expect(willUpdateCount).to.equal(1)
-		expect(didUpdateCount).to.equal(1)
+		local willUpdateValues = willUpdateSpy:captureValues("instance", "newProps", "newState")
 
-		setValue(1)
+		expect(Type.of(willUpdateValues.instance)).to.equal(Type.StatefulComponentInstance)
 
-		expect(willUpdateCount).to.equal(2)
-		expect(didUpdateCount).to.equal(2)
+		expect(willUpdateValues.newProps).to.be.a("table")
+		expect(willUpdateValues.newProps.value).to.equal(newValue)
 
-		setValue(2)
+		expect(willUpdateValues.newState).to.be.a("table")
+		expect(willUpdateValues.newState.value).to.equal(stateValue)
 
-		expect(willUpdateCount).to.equal(3)
-		expect(didUpdateCount).to.equal(3)
+		expect(willUpdateProps).to.be.a("table")
+		expect(willUpdateProps.value).to.equal(value)
 
-		setValue(1)
+		expect(willUpdateState).to.be.a("table")
+		expect(willUpdateState.value).to.equal(stateValue)
 
-		expect(willUpdateCount).to.equal(4)
-		expect(didUpdateCount).to.equal(4)
+		local didUpdateValues = didUpdateSpy:captureValues("instance", "oldProps", "oldState")
 
-		Reconciler.unmount(instance)
+		expect(Type.of(didUpdateValues.instance)).to.equal(Type.StatefulComponentInstance)
+
+		expect(didUpdateValues.oldProps).to.be.a("table")
+		expect(didUpdateValues.oldProps.value).to.equal(value)
+
+		expect(didUpdateValues.oldState).to.be.a("table")
+		expect(didUpdateValues.oldState.value).to.equal(stateValue)
+
+		expect(didUpdateProps).to.be.a("table")
+		expect(didUpdateProps.value).to.equal(newValue)
+
+		expect(didUpdateState).to.be.a("table")
+		expect(didUpdateState.value).to.equal(stateValue)
+	end)
+
+	itSKIP("should invoke willUpdate and didUpdate when state updates", function()
+		-- TODO
+	end)
+
+	itSKIP("should invoke shouldUpdate when props update", function()
+		-- TODO
+	end)
+
+	itSKIP("should invoke shouldUpdate when state updates", function()
+		-- TODO
 	end)
 
 	describe("getDerivedStateFromProps", function()

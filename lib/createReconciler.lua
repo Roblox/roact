@@ -141,7 +141,7 @@ local function createReconciler(renderer)
 		assert(typeof(hostParent) == "Instance" or hostParent == nil)
 		assert(typeof(key) == "string")
 
-		-- Boolean values reconcile as nil to enable terse conditional rendering.
+		-- Boolean values render as nil to enable terse conditional rendering.
 		if typeof(element) == "boolean" then
 			return nil
 		end

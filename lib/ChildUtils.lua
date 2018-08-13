@@ -8,11 +8,11 @@ local ChildUtils = {}
 
 ChildUtils.UseParentKey = {}
 
-function ChildUtils.iterateChildren(elements)
-	local richType = Type.of(elements)
+function ChildUtils.iterateChildren(childrenOrChild)
+	local richType = Type.of(childrenOrChild)
 
 	-- Single child, the simplest case!
-	if richType == Type.Element then
+	if richType ~= nil then
 		local called = false
 
 		return function()
@@ -20,25 +20,20 @@ function ChildUtils.iterateChildren(elements)
 				return nil
 			else
 				called = true
-				return ChildUtils.UseParentKey, elements
+				return ChildUtils.UseParentKey, childrenOrChild
 			end
 		end
 	end
 
-	-- This is a Roact-speciifc object, and it's the wrong kind.
-	if richType ~= nil then
-		error("Invalid children")
-	end
-
-	local regularType = typeof(elements)
+	local regularType = typeof(childrenOrChild)
 
 	-- A dictionary of children, hopefully!
 	-- TODO: Is this too flaky? Should we introduce a Fragment type like React?
 	if regularType == "table" then
-		return pairs(elements)
+		return pairs(childrenOrChild)
 	end
 
-	if elements == nil or regularType == "boolean" then
+	if childrenOrChild == nil or regularType == "boolean" then
 		return noop
 	end
 

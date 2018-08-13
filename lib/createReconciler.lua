@@ -8,6 +8,8 @@ local function createReconciler(renderer)
 	local updateNode
 
 	local function updateNodeChildren(node, newChildElements)
+		assert(Type.of(node) == Type.Node)
+
 		local removeKeys = {}
 
 		-- Changed or removed children
@@ -99,6 +101,10 @@ local function createReconciler(renderer)
 	end
 
 	local function createNode(element, hostParent, key)
+		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
+		assert(typeof(hostParent) == "Instance" or hostParent == nil)
+		assert(typeof(key) == "string")
+
 		return {
 			[Type] = Type.Node,
 			currentElement = element,

@@ -22,15 +22,19 @@ return function()
 				b = createElement("TextLabel"),
 			}
 
+			local seenChildren = {}
 			local count = 0
 
 			for key, child in ChildUtils.iterateChildren(children) do
 				expect(typeof(key)).to.equal("string")
 				expect(Type.of(child)).to.equal(Type.Element)
+				seenChildren[child] = true
 				count = count + 1
 			end
 
 			expect(count).to.equal(2)
+			expect(seenChildren[children.a]).to.be.ok()
+			expect(seenChildren[children.b]).to.be.ok()
 		end)
 
 		it("should return a zero-element iterator for booleans", function()

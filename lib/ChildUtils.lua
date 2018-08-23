@@ -10,7 +10,7 @@ local ChildUtils = {}
 	A signal value indicating that a child should use its parent's key, because
 	it has no key of its own.
 
-	This occurs when you return only one element from a functional component or
+	This occurs when you return only one element from a function component or
 	stateful render function.
 ]]
 ChildUtils.UseParentKey = {}

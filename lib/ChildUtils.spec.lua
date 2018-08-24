@@ -28,13 +28,13 @@ return function()
 			for key, child in ChildUtils.iterateChildren(children) do
 				expect(typeof(key)).to.equal("string")
 				expect(Type.of(child)).to.equal(Type.Element)
-				seenChildren[child] = true
+				seenChildren[child] = key
 				count = count + 1
 			end
 
 			expect(count).to.equal(2)
-			expect(seenChildren[children.a]).to.be.ok()
-			expect(seenChildren[children.b]).to.be.ok()
+			expect(seenChildren[children.a]).to.equal("a")
+			expect(seenChildren[children.b]).to.equal("b")
 		end)
 
 		it("should return a zero-element iterator for booleans", function()

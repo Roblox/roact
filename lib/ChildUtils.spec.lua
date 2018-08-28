@@ -84,5 +84,11 @@ return function()
 			expect(ChildUtils.getChildByKey(children, "a")).to.equal(children.a)
 			expect(ChildUtils.getChildByKey(children, "b")).to.equal(children.b)
 		end)
+
+		it("should return nil if the key does not exist", function()
+			local children = {}
+
+			expect(ChildUtils.getChildByKey(children, "a")).to.equal(nil)
+		end)
 	end)
 end

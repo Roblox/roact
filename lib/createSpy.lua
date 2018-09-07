@@ -18,7 +18,7 @@ local function createSpy(inner)
 	self.assertCalledWith = function(_, ...)
 		local len = select("#", ...)
 
-		assert(self.valuesLength, len, "length of expected values differs from stored values")
+		assert(self.valuesLength == len, "length of expected values differs from stored values")
 
 		for i = 1, len do
 			local expected = select(i, ...)
@@ -31,7 +31,7 @@ local function createSpy(inner)
 		local len = select("#", ...)
 		local result = {}
 
-		assert(self.valuesLength, len, "length of expected values differs from stored values")
+		assert(self.valuesLength == len, "length of expected values differs from stored values")
 
 		for i = 1, len do
 			local key = select(i, ...)

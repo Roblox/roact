@@ -32,7 +32,7 @@ local function createReconciler(renderer)
 			local childNode = node.children[key]
 
 			if childNode == nil then
-				node.children[key] = mountNode(newElement, node.hostParent, key)
+				node.children[key] = mountNode(newElement, node.hostObject, key)
 			end
 		end
 	end

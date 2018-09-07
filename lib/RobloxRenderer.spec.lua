@@ -1,6 +1,7 @@
 return function()
 	local createReconciler = require(script.Parent.createReconciler)
 	local createElement = require(script.Parent.createElement)
+	local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 
 	local RobloxRenderer = require(script.Parent.RobloxRenderer)
 
@@ -73,6 +74,77 @@ return function()
 	end)
 
 	describe("updateHostNode", function()
+		it("should update node props and children", function()
+			local parent = Instance.new("Folder")
+			local key = "updateHostNodeTest"
+			local firstValue = "foo"
+			local newValue = "bar"
+
+			local _, defaultStringValue = getDefaultPropertyValue("StringValue", "Value")
+
+			local element = createElement("StringValue", {
+				Value = firstValue
+			}, {
+				ChildA = createElement("IntValue", {
+					Value = 1
+				}),
+				ChildB = createElement("BoolValue", {
+					Value = false,
+				}),
+				ChildC = createElement("StringValue", {
+					Value = "test",
+				}),
+				ChildD = createElement("StringValue", {
+					Value = "test",
+				})
+			})
+
+			local node = reconciler.createNode(element, parent, key)
+			RobloxRenderer.mountHostNode(reconciler, node)
+
+			-- Not testing mountHostNode's work here, only testing that the
+			-- node is properly updated.
+
+			local newElement = createElement("StringValue", {
+				Value = newValue,
+			}, {
+				-- ChildA changes element type.
+				ChildA = createElement("StringValue", {
+					Value = "test"
+				}),
+				-- ChildB changes child properties.
+				ChildB = createElement("BoolValue", {
+					Value = false,
+				}),
+				-- ChildC should reset its Value property back to the default.
+				ChildC = createElement("StringValue", {}),
+				-- ChildD is deleted.
+				-- ChildE is added.
+				ChildE = createElement("Folder", {}),
+			})
+
+			RobloxRenderer.updateHostNode(reconciler, node, newElement)
+
+			local root = parent[key]
+			expect(root.ClassName).to.equal("StringValue")
+			expect(root.Value).to.equal(newValue)
+			expect(#root:GetChildren()).to.equal(4)
+
+			local childA = root.ChildA
+			expect(childA.ClassName).to.equal("StringValue")
+			expect(childA.Value).to.equal("test")
+
+			local childB = root.ChildB
+			expect(childB.ClassName).to.equal("BoolValue")
+			expect(childB.Value).to.equal(false)
+
+			local childC = root.ChildC
+			expect(childC.ClassName).to.equal("StringValue")
+			expect(childC.Value).to.equal(defaultStringValue)
+
+			local childE = root.ChildE
+			expect(childE.ClassName).to.equal("Folder")
+		end)
 	end)
 
 	describe("unmountHostNode", function()

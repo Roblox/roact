@@ -5,7 +5,7 @@
 Roact.createElement(component, [props, [children]]) -> RoactElement
 ```
 
-Creates a new Roact element representing the given `component`.
+Creates a new Roact element representing the given `component`. Elements are lightweight descriptions about what a Roblox Instance should look like, like a blueprint!
 
 The `children` argument is shorthand for adding a `Roact.Children` key to `props`. It should be specified as a dictionary of names to elements.
 
@@ -31,7 +31,7 @@ The result is a `ComponentInstanceHandle`, which is an opaque handle that repres
 Roact.reconcile(instanceHandle, element) -> ComponentInstanceHandle
 ```
 
-Updates an existing instance handle with a new element, returning a new handle.
+Updates an existing instance handle with a new element, returning a new handle. This can be used to update a UI created with `Roact.mount` by passing in a new element with new props.
 
 `reconcile` can be used to change the props of a component instance created with `mount` and is useful for putting Roact content into non-Roact applications.
 
@@ -251,7 +251,7 @@ function MyComponent:render()
 end
 ```
 
-`render` must be defined for all components. The default implementation of `render` throws an error; if your component does not render anything, define a render function that returns `nil` explicitly.
+`render` must be defined for all components. The default implementation of `render` throws an error; if your component does not render anything, define a render function that returns `nil` explicitly. This helps make sure that you don't _forget_ to define `render`!
 
 ```lua
 function MyComponent:render()
@@ -319,7 +319,7 @@ shouldUpdate(nextProps, nextState) -> bool
 
 `shouldUpdate` provides a way to override Roact's rerendering heuristics.
 
-Right now, components are re-rendered any time a parent component updates, or when state is updated via `setState`.
+By default, components are re-rendered any time a parent component updates, or when state is updated via `setState`.
 
 `PureComponent` implements `shouldUpdate` to only trigger a re-render any time the props are different based on shallow equality. In a future Roact update, *all* components may implement this check by default.
 

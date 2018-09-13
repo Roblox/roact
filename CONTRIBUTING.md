@@ -14,13 +14,14 @@ Just like bug reports, take a peak at the issue tracker for duplicates before op
 ## Documentation
 [Roact's documentation](https://roblox.github.io/roact) is built using [MkDocs](http://www.mkdocs.org/), a fairly simple documentation generator.
 
-All of the dependencies that we use to generate the documentation website are located in [requirements.txt](requirements.txt); once they're set up, use `mkdocs serve` to test the documentation locally.
+All of the dependencies that we use to generate the documentation website are located in [docs/requirements.txt](docs/requirements.txt); once they're set up, use `mkdocs serve` to test the documentation locally.
 
 ## Working on Roact
 To get started working on Roact, you'll need:
 * Git
-* Lua 5.1 with LuaRocks
-* [LuaFileSystem](https://keplerproject.github.io/luafilesystem/) (`luarocks install luafilesystem`)
+* Lua 5.1
+* Lemur's dependencies:
+	* [LuaFileSystem](https://keplerproject.github.io/luafilesystem/) (`luarocks install luafilesystem`)
 * [Luacheck](https://github.com/mpeterv/luacheck) (`luarocks install luacheck`)
 * [LuaCov](https://keplerproject.github.io/luacov) (`luarocks install luacov`)
 
@@ -32,7 +33,7 @@ Finally, you can run all of Roact's tests with:
 lua spec.lua
 ```
 
-Or, to generate a LuaCov coverage report:
+Or, to also generate a LuaCov coverage report:
 
 ```sh
 lua -lluacov spec.lua
@@ -43,13 +44,15 @@ luacov
 Before starting a pull request, open an issue about the feature or bug. This helps us prevent duplicated and wasted effort. These issues are a great place to ask for help if you run into problems!
 
 Before you submit a new pull request, check:
-* Code Style: Match the existing code!
+* Code Style: Match the [official Roblox Lua style guide](https://roblox.github.io/lua-style-guide) and the local code style
 * Changelog: Add an entry to [CHANGELOG.md](CHANGELOG.md)
 * Luacheck: Run [Luacheck](https://github.com/mpeterv/luacheck) on your code, no warnings allowed!
 * Tests: They all need to pass!
 
 ### Code Style
-Try to match the existing code style! In short:
+Roblox has an [official Lua style guide](https://roblox.github.io/lua-style-guide) which should be the general guidelines for all new code. When modifying code, follow the existing style!
+
+In short:
 
 * Tabs for indentation
 * Double quotes
@@ -61,6 +64,8 @@ Eventually we'll have a tool to check these things automatically.
 Adding an entry to [CHANGELOG.md](CHANGELOG.md) alongside your commit makes it easier for everyone to keep track of what's been changed.
 
 Add a line under the "Current master" heading. When we make a new release, all of those bullet points will be attached to a new version and the "Current master" section will become empty again.
+
+Add a link to your pull request in the entry. We don't need to link to the related GitHub issue, since pull requests will also link to them.
 
 ### Luacheck
 We use [Luacheck](https://github.com/mpeterv/luacheck) for static analysis of Lua on all of our projects.
@@ -74,4 +79,4 @@ When submitting a bug fix, create a test that verifies the broken behavior and t
 
 When submitting a new feature, add tests for all functionality.
 
-We use [LuaCov](https://keplerproject.github.io/luacov) for keeping track of code coverage. We'd like it to be as close to 100% as possible, but it's not always easy.
+We use [LuaCov](https://keplerproject.github.io/luacov) for keeping track of code coverage. We'd like it to be as close to 100% as possible, but it's not always possible. Adding tests just for the purpose of getting coverage isn't useful; we should strive to make only useful tests!

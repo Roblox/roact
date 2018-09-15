@@ -89,7 +89,7 @@ return function()
 					Value = 1
 				}),
 				ChildB = createElement("BoolValue", {
-					Value = false,
+					Value = true,
 				}),
 				ChildC = createElement("StringValue", {
 					Value = "test",

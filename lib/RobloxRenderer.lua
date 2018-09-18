@@ -1,4 +1,5 @@
 local ElementKind = require(script.Parent.ElementKind)
+local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local Core = require(script.Parent.Core)
 
 local function setHostProperty(node, key, newValue, oldValue)
@@ -13,6 +14,12 @@ local function setHostProperty(node, key, newValue, oldValue)
 	local keyType = typeof(key)
 
 	if keyType == "string" then
+		if newValue == nil then
+			local hostClass = node.hostObject.ClassName
+			local _, defaultValue = getDefaultPropertyValue(hostClass, key)
+			newValue = defaultValue
+		end
+
 		node.hostObject[key] = newValue
 	else
 		-- TODO

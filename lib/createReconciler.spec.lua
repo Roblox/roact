@@ -31,6 +31,23 @@ return function()
 		end)
 	end)
 
+	describe("booleans", function()
+		it("should mount booleans as nil", function()
+			local node = noopReconciler.mountNode(false, nil, "test")
+			expect(node).to.equal(nil)
+		end)
+
+		it("should unmount nodes if they are updated to a boolean value", function()
+			local node = noopReconciler.mountNode(createElement("StringValue"), nil, "test")
+
+			expect(node).to.be.ok()
+
+			node = noopReconciler.updateNode(node, true)
+
+			expect(node).to.equal(nil)
+		end)
+	end)
+
 	describe("Host components", function()
 		it("should invoke the renderer to mount host nodes", function()
 			local mountHostNode = createSpy(NoopRenderer.mountHostNode)

@@ -5,7 +5,7 @@
 Roact.createElement(component, [props, [children]]) -> RoactElement
 ```
 
-Creates a new Roact element representing the given `component`.
+Creates a new Roact element representing the given `component`. Elements are lightweight descriptions about what a Roblox Instance should look like, like a blueprint!
 
 The `children` argument is shorthand for adding a `Roact.Children` key to `props`. It should be specified as a dictionary of names to elements.
 
@@ -31,7 +31,7 @@ The result is a `ComponentInstanceHandle`, which is an opaque handle that repres
 Roact.reconcile(instanceHandle, element) -> ComponentInstanceHandle
 ```
 
-Updates an existing instance handle with a new element, returning a new handle.
+Updates an existing instance handle with a new element, returning a new handle. This can be used to update a UI created with `Roact.mount` by passing in a new element with new props.
 
 `reconcile` can be used to change the props of a component instance created with `mount` and is useful for putting Roact content into non-Roact applications.
 
@@ -203,7 +203,18 @@ init(initialProps) -> void
 
 `init` is called exactly once when a new instance of a component is created. It can be used to set up the initial `state`, as well as any non-`render` related values directly on the component.
 
-`init` is the only place where you can assign to `state` directly, as opposed to using `setState`:
+Use `setState` inside of `init` to set up your initial component state:
+
+```lua
+function MyComponent:init()
+	self:setState({
+		position = 0,
+		velocity = 10
+	})
+end
+```
+
+In older versions of Roact, `setState` was disallowed in `init`, and you would instead assign to `state` directly. It's simpler to use `setState`, but assigning directly to `state` is still acceptable inside `init`:
 
 ```lua
 function MyComponent:init()
@@ -240,7 +251,7 @@ function MyComponent:render()
 end
 ```
 
-`render` must be defined for all components. The default implementation of `render` throws an error; if your component does not render anything, define a render function that returns `nil` explicitly.
+`render` must be defined for all components. The default implementation of `render` throws an error; if your component does not render anything, define a render function that returns `nil` explicitly. This helps make sure that you don't _forget_ to define `render`!
 
 ```lua
 function MyComponent:render()
@@ -282,6 +293,16 @@ end
 Setting a field in the state to `Roact.None` will clear it from the state. This is the only way to remove a field from a component's state!
 
 !!! warning
+	`setState` can be called from anywhere **except**:
+
+	* Lifecycle hooks: `willUnmount`
+	* Pure functions: `render`, `shouldUpdate`
+
+	Calling `setState` inside of `init` or `willUpdate` has special behavior. Because Roact is already going to update a component in these cases, that update will be replaced instead of another being scheduled.
+
+	Roact may support calling `setState` in currently-disallowed places in the future.
+
+!!! warning
 	**`setState` does not always resolve synchronously!** Roact may batch and reschedule state updates in order to reduce the number of total renders.
 
 	When depending on the previous value of state, like when incrementing a counter, use the functional form to guarantee that all state updates occur!
@@ -291,13 +312,6 @@ Setting a field in the state to `Roact.None` will clear it from the state. This 
 	* [RFClarification: why is `setState` asynchronous?](https://github.com/facebook/react/issues/11527#issuecomment-360199710)
 	* [Does React keep the order for state updates?](https://stackoverflow.com/a/48610973/802794)
 
-!!! warning
-	Calling `setState` from any of these places is not allowed at this time and will throw an error:
-
-	* Lifecycle hooks: `willUpdate`, `willUnmount`
-	* Initialization: `init`
-	* Pure functions: `render`, `shouldUpdate`
-
 ### shouldUpdate
 ```
 shouldUpdate(nextProps, nextState) -> bool
@@ -305,7 +319,7 @@ shouldUpdate(nextProps, nextState) -> bool
 
 `shouldUpdate` provides a way to override Roact's rerendering heuristics.
 
-Right now, components are re-rendered any time a parent component updates, or when state is updated via `setState`.
+By default, components are re-rendered any time a parent component updates, or when state is updated via `setState`.
 
 `PureComponent` implements `shouldUpdate` to only trigger a re-render any time the props are different based on shallow equality. In a future Roact update, *all* components may implement this check by default.
 
@@ -349,6 +363,8 @@ willUpdate(nextProps, nextState) -> void
 ```
 
 `willUpdate` is fired after an update is started but before a component's state and props are updated.
+
+`willUpdate` can be used to make tweaks to your component's state using `setState`. Often, this should be done in `getDerivedStateFromProps` instead.
 
 ### didUpdate
 ```

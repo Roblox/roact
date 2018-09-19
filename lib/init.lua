@@ -20,10 +20,10 @@ local Roact = strict {
 	Event = require(script.Event),
 	oneChild = require(script.oneChild),
 	PureComponent = require(script.PureComponent),
+	None = require(script.None),
 
 	Children = Core.Children,
 	Element = Core.Element,
-	None = Core.None,
 	Portal = Core.Portal,
 	Ref = Core.Ref,
 

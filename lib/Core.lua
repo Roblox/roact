@@ -15,7 +15,4 @@ Core.Ref = Symbol.named("Ref")
 -- Marker used to specify that a component is a Roact Portal.
 Core.Portal = Symbol.named("Portal")
 
--- Marker used to specify that the value is nothing, because nil cannot be stored in tables.
-Core.None = Symbol.named("None")
-
 return Core

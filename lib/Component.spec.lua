@@ -1,9 +1,9 @@
 return function()
-	local Core = require(script.Parent.Core)
 	local createElement = require(script.Parent.createElement)
 	local createReconciler = require(script.Parent.createReconciler)
 	local createSpy = require(script.Parent.createSpy)
 	local GlobalConfig = require(script.Parent.GlobalConfig)
+	local None = require(script.Parent.None)
 	local NoopRenderer = require(script.Parent.NoopRenderer)
 	local Type = require(script.Parent.Type)
 
@@ -268,10 +268,6 @@ return function()
 	end)
 
 	describe("defaultProps", function()
-		SKIP()
-
-		-- TODO
-
 		it("should pull values from defaultProps where appropriate", function()
 			local lastProps
 			local TestComponent = Component:extend("TestComponent")
@@ -286,35 +282,35 @@ return function()
 				return nil
 			end
 
-			local handle = Reconciler.mount(createElement(TestComponent))
+			local handle = noopReconciler.mountNode(createElement(TestComponent), nil, "Test")
 
 			expect(lastProps).to.be.a("table")
 			expect(lastProps.foo).to.equal("hello")
 			expect(lastProps.bar).to.equal("world")
 
-			Reconciler.unmount(handle)
+			noopReconciler.unmountNode(handle)
 
 			lastProps = nil
-			handle = Reconciler.mount(createElement(TestComponent, {
-				foo = 5,
-			}))
+			local tree = createElement(TestComponent, { foo = 5 })
+			handle = noopReconciler.mountNode(tree, nil, "Test")
 
 			expect(lastProps).to.be.a("table")
 			expect(lastProps.foo).to.equal(5)
 			expect(lastProps.bar).to.equal("world")
 
-			Reconciler.unmount(handle)
+			noopReconciler.unmountNode(handle)
 
 			lastProps = nil
-			handle = Reconciler.mount(createElement(TestComponent, {
+			tree = createElement(TestComponent, {
 				bar = false,
-			}))
+			})
+			handle = noopReconciler.mountNode(tree, nil, "Test")
 
 			expect(lastProps).to.be.a("table")
 			expect(lastProps.foo).to.equal("hello")
 			expect(lastProps.bar).to.equal(false)
 
-			Reconciler.unmount(handle)
+			noopReconciler.unmountNode(handle)
 		end)
 
 		it("should include defaultProps in props passed to shouldUpdate", function()
@@ -326,17 +322,17 @@ return function()
 				bar = "world",
 			}
 
-			function TestComponent:shouldUpdate(newProps)
+			function TestComponent:willUpdate(newProps)
 				lastProps = newProps
-				return true
 			end
 
 			function TestComponent:render()
 				return nil
 			end
 
-			local handle = Reconciler.mount(createElement(TestComponent, {}))
-			Reconciler.reconcile(handle, createElement(TestComponent, {
+			local tree = createElement(TestComponent, {})
+			local handle = noopReconciler.mountNode(tree, nil, "Test")
+			noopReconciler.updateNode(handle, createElement(TestComponent, {
 				baz = "!",
 			}))
 
@@ -345,7 +341,7 @@ return function()
 			expect(lastProps.bar).to.equal("world")
 			expect(lastProps.baz).to.equal("!")
 
-			Reconciler.unmount(handle)
+			noopReconciler.unmountNode(handle)
 		end)
 
 		it("should fall back to defaultProps correctly after an update", function()
@@ -362,21 +358,20 @@ return function()
 				return nil
 			end
 
-			local handle = Reconciler.mount(createElement(TestComponent, {
-				foo = "hey"
-			}))
+			local tree = createElement(TestComponent, { foo = "hey" })
+			local handle = noopReconciler.mountNode(tree, nil, "Test")
 
 			expect(lastProps).to.be.a("table")
 			expect(lastProps.foo).to.equal("hey")
 			expect(lastProps.bar).to.equal("world")
 
-			handle = Reconciler.reconcile(handle, createElement(TestComponent))
+			handle = noopReconciler.updateNode(handle, createElement(TestComponent))
 
 			expect(lastProps).to.be.a("table")
 			expect(lastProps.foo).to.equal("hello")
 			expect(lastProps.bar).to.equal("world")
 
-			Reconciler.unmount(handle)
+			noopReconciler.unmountNode(handle)
 		end)
 
 		it("should pass defaultProps in init and first getDerivedStateFromProps", function()
@@ -404,7 +399,7 @@ return function()
 			end
 
 			local tree = createElement(TestComponent)
-			local handle = Reconciler.mount(tree)
+			local handle = noopReconciler.mountNode(tree, nil, "Test")
 
 			expect(derivedProps).to.be.ok()
 			expect(initProps).to.be.ok()
@@ -415,16 +410,12 @@ return function()
 
 			expect(initProps).to.equal(initSelfProps)
 
-			Reconciler.unmount(handle)
+			noopReconciler.unmountNode(handle)
 		end)
 	end)
 
 	describe("setState", function()
-		SKIP()
-
-		-- TODO
-
-		it("should throw when called in init", function()
+		itSKIP("should throw when called in init", function()
 			local InitComponent = Component:extend("InitComponent")
 
 			function InitComponent:init()
@@ -444,7 +435,7 @@ return function()
 			end).to.throw()
 		end)
 
-		it("should throw when called in render", function()
+		itSKIP("should throw when called in render", function()
 			local RenderComponent = Component:extend("RenderComponent")
 
 			function RenderComponent:render()
@@ -460,7 +451,7 @@ return function()
 			end).to.throw()
 		end)
 
-		it("should throw when called in shouldUpdate", function()
+		itSKIP("should throw when called in shouldUpdate", function()
 			local TestComponent = Component:extend("TestComponent")
 
 			local triggerTest
@@ -491,7 +482,7 @@ return function()
 			end).to.throw()
 		end)
 
-		it("should throw when called in willUpdate", function()
+		itSKIP("should throw when called in willUpdate", function()
 			local TestComponent = Component:extend("TestComponent")
 			local forceUpdate
 
@@ -519,7 +510,7 @@ return function()
 			end).to.throw()
 		end)
 
-		it("should throw when called in willUnmount", function()
+		itSKIP("should throw when called in willUnmount", function()
 			local TestComponent = Component:extend("TestComponent")
 
 			function TestComponent:render()
@@ -540,7 +531,7 @@ return function()
 			end).to.throw()
 		end)
 
-		it("should remove values from state when the value is Core.None", function()
+		it("should remove values from state when the value is None", function()
 			local TestComponent = Component:extend("TestComponent")
 			local setStateCallback, getStateCallback
 
@@ -553,6 +544,7 @@ return function()
 					return self.state
 				end
 
+				-- TODO: Switch to setState once implemented
 				self.state = {
 					value = 0
 				}
@@ -563,17 +555,17 @@ return function()
 			end
 
 			local element = createElement(TestComponent)
-			local instance = Reconciler.mount(element)
+			local instance = noopReconciler.mountNode(element, nil, "Test")
 
 			expect(getStateCallback().value).to.equal(0)
 
 			setStateCallback({
-				value = Core.None
+				value = None
 			})
 
 			expect(getStateCallback().value).to.equal(nil)
 
-			Reconciler.unmount(instance)
+			noopReconciler.unmountNode(instance)
 		end)
 
 		it("should invoke functions to compute a partial state", function()
@@ -593,6 +585,7 @@ return function()
 					return self.props
 				end
 
+				-- TODO: Switch to setState when possible
 				self.state = {
 					value = 0
 				}
@@ -603,7 +596,7 @@ return function()
 			end
 
 			local element = createElement(TestComponent)
-			local instance = Reconciler.mount(element)
+			local instance = noopReconciler.mountNode(element, nil, "Test")
 
 			expect(getStateCallback().value).to.equal(0)
 
@@ -618,7 +611,7 @@ return function()
 
 			expect(getStateCallback().value).to.equal(1)
 
-			Reconciler.unmount(instance)
+			noopReconciler.unmountNode(instance)
 		end)
 
 		it("should cancel rendering if the function returns nil", function()
@@ -631,6 +624,7 @@ return function()
 					self:setState(newState)
 				end
 
+				-- TODO: Use setState, again, once implemented
 				self.state = {
 					value = 0
 				}
@@ -642,7 +636,7 @@ return function()
 			end
 
 			local element = createElement(TestComponent)
-			local instance = Reconciler.mount(element)
+			local instance = noopReconciler.mountNode(element, nil, "Test")
 			expect(renderCount).to.equal(1)
 
 			setStateCallback(function(state, props)
@@ -651,10 +645,11 @@ return function()
 
 			expect(renderCount).to.equal(1)
 
-			Reconciler.unmount(instance)
+			noopReconciler.unmountNode(instance)
 		end)
 
-		it("should not call getDerivedStateFromProps on setState", function()
+		-- TODO: It SHOULD call getDerivedStateFromProps
+		itSKIP("should not call getDerivedStateFromProps on setState", function()
 			local TestComponent = Component:extend("TestComponent")
 			local setStateCallback
 			local getDerivedStateFromPropsCount = 0

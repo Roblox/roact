@@ -1,3 +1,4 @@
+local assign = require(script.Parent.assign)
 local Type = require(script.Parent.Type)
 local ChildUtils = require(script.Parent.ChildUtils)
 
@@ -38,7 +39,26 @@ end
 function Component:setState(mapState)
 	assert(Type.of(self) == Type.StatefulComponentInstance)
 
-	error("NYI")
+	-- TODO: Do something different in init and willUpdate
+	-- TODO: Throw errors in render and shouldUpdate
+
+	local partialState
+
+	if typeof(mapState) == "function" then
+		partialState = mapState(self.state, self.props)
+
+		if partialState == nil then
+			return
+		end
+	elseif typeof(mapState) == "table" then
+		partialState = mapState
+	else
+		error("Invalid argument to setState, expected function or table", 2)
+	end
+
+	local newState = assign({}, self.state, partialState)
+
+	self:__update(nil, newState)
 end
 
 function Component:getElementTraceback()
@@ -69,6 +89,7 @@ function Component:__mount(reconciler, node)
 		reconciler = reconciler,
 		node = node,
 		element = element,
+		componentClass = self,
 	}
 
 	local instance = {
@@ -80,11 +101,24 @@ function Component:__mount(reconciler, node)
 
 	node.instance = instance
 
-	-- TODO: defaultProps
-	-- TODO: getDerivedStateFromProps
+	local props = element.props
 
-	instance.props = element.props
+	if self.defaultProps ~= nil then
+		props = assign({}, self.defaultProps, props)
+	end
+
+	instance.props = props
 	instance.state = {}
+
+	if self.getDerivedStateFromProps ~= nil then
+		local derivedState = self.getDerivedStateFromProps(instance.props, instance.state)
+
+		if derivedState ~= nil then
+			assert(typeof(derivedState) == "table", "getDerivedStateFromProps must return a table!")
+
+			assign(instance.state, derivedState)
+		end
+	end
 
 	if instance.init ~= nil then
 		instance:init(instance.props)
@@ -131,6 +165,7 @@ function Component:__update(updatedElement, updatedState)
 	local internal = self.__internal
 	local node = internal.node
 	local reconciler = internal.reconciler
+	local componentClass = internal.componentClass
 
 	local oldProps = self.props
 	local oldState = self.state
@@ -143,14 +178,26 @@ function Component:__update(updatedElement, updatedState)
 
 		internal.element = updatedElement
 
-		-- TODO: defaultProps
+		if componentClass.defaultProps ~= nil then
+			newProps = assign({}, componentClass.defaultProps, newProps)
+		end
 	end
 
 	if updatedState ~= nil then
 		newState = updatedState
 	end
 
-	-- TODO: getDerivedStateFromProps
+	if componentClass.getDerivedStateFromProps ~= nil then
+		local derivedState = componentClass.getDerivedStateFromProps(newProps, newState)
+
+		if derivedState ~= nil then
+			assert(typeof(derivedState) == "table", "getDerivedStateFromProps must return a table!")
+
+			assign(updatedState, derivedState)
+		end
+	end
+
+	-- TODO: shouldUpdate
 
 	if self.willUpdate ~= nil then
 		self:willUpdate(newProps, newState)

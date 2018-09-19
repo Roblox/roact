@@ -71,9 +71,9 @@ end
 	Gets the child corresponding to a given key, respecting Roact's rules for
 	children. Specifically:
 	* If `elements` is nil or a boolean, this will return `nil`, regardless of
-	  the key given.
+		the key given.
 	* If `elements` is a single element, this will return `nil`, unless the key
-	  is ChildUtils.UseParentKey.
+		is ChildUtils.UseParentKey.
 	* If `elements` is a table of elements, this will return `elements[key]`.
 ]]
 function ChildUtils.getChildByKey(elements, key)

@@ -13,26 +13,32 @@ local function createReconciler(renderer)
 		local removeKeys = {}
 
 		-- Changed or removed children
-		for key, childNode in pairs(node.children) do
-			local newNode = updateNode(childNode, ChildUtils.getChildByKey(newChildElements, key))
+		for childKey, childNode in pairs(node.children) do
+			local newElement = ChildUtils.getChildByKey(newChildElements, childKey)
+			local newNode = updateNode(childNode, newElement)
 
 			if newNode ~= nil then
-				node.children[key] = newNode
+				node.children[childKey] = newNode
 			else
-				removeKeys[key] = true
+				removeKeys[childKey] = true
 			end
 		end
 
-		for key in pairs(removeKeys) do
-			node.children[key] = nil
+		for childKey in pairs(removeKeys) do
+			node.children[childKey] = nil
 		end
 
 		-- Added children
-		for key, newElement in ChildUtils.iterateChildren(newChildElements) do
-			local childNode = node.children[key]
+		for childKey, newElement in ChildUtils.iterateChildren(newChildElements) do
+			local childNode = node.children[childKey]
+
+			local concreteKey = childKey
+			if childKey == ChildUtils.UseParentKey then
+				concreteKey = node.key
+			end
 
 			if childNode == nil then
-				node.children[key] = mountNode(newElement, node.hostObject, key)
+				node.children[childKey] = mountNode(newElement, node.hostObject, concreteKey)
 			end
 		end
 	end
@@ -73,7 +79,9 @@ local function createReconciler(renderer)
 		end
 
 		if node.currentElement.component ~= newElement.component then
+			-- TODO: Better message
 			warn("Component changed type!")
+
 			local hostParent = node.hostParent
 			local key = node.key
 
@@ -126,11 +134,12 @@ local function createReconciler(renderer)
 		local renderResult = element.component(element.props)
 
 		for childKey, childElement in ChildUtils.iterateChildren(renderResult) do
+			local concreteKey = childKey
 			if childKey == ChildUtils.UseParentKey then
-				childKey = key
+				concreteKey = key
 			end
 
-			local childNode = reconciler.mountNode(childElement, hostParent, childKey)
+			local childNode = reconciler.mountNode(childElement, hostParent, concreteKey)
 
 			node.children[childKey] = childNode
 		end

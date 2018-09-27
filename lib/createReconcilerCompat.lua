@@ -3,7 +3,7 @@
 	this shim is easy -- just delete this file and remove it from init.
 ]]
 
-local warnedLocations = {}
+local Logging = require(script.Parent.Logging)
 
 local reifyMessage = [[
 Roact.reify has been renamed to Roact.mount and will be removed in a future release.
@@ -20,38 +20,23 @@ Roact.reconcile has been renamed to Roact.update and will be removed in a future
 Check the call to Roact.reconcile at:
 ]]
 
-local function createReconcilerCompat(reconciler, warnOverride)
-	if warnOverride == nil then
-		warnOverride = warn
-	end
-
+local function createReconcilerCompat(reconciler)
 	local compat = {}
 
-	local function warnOnce(message)
-		local trace = debug.traceback(message, 3)
-		if warnedLocations[trace] then
-			return
-		end
-
-		warnedLocations[trace] = true
-
-		warnOverride(trace)
-	end
-
 	function compat.reify(...)
-		warnOnce(reifyMessage)
+		Logging.warnOnce(reifyMessage)
 
 		return reconciler.mountTree(...)
 	end
 
 	function compat.teardown(...)
-		warnOnce(teardownMessage)
+		Logging.warnOnce(teardownMessage)
 
 		return reconciler.unmountTree(...)
 	end
 
 	function compat.reconcile(...)
-		warnOnce(reconcileMessage)
+		Logging.warnOnce(reconcileMessage)
 
 		return reconciler.updateTree(...)
 	end

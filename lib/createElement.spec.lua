@@ -79,11 +79,15 @@ return function()
 		expect(element.props[Core.Children].Child).to.equal(child)
 	end)
 
-	it("should warn if children is specified in two different ways", function()
+	it("should warn once if children is specified in two different ways", function()
 		local logInfo = Logging.capture(function()
-			createElement("Frame", {
-				[Core.Children] = {},
-			}, {})
+			-- Using a loop here to ensure that multiple occurences of the same
+			-- warning only cause output once.
+			for _ = 1, 2 do
+				createElement("Frame", {
+					[Core.Children] = {},
+				}, {})
+			end
 		end)
 
 		expect(#logInfo.warnings).to.equal(1)

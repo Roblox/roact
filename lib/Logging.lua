@@ -1,14 +1,36 @@
+--[[
+	Centralized place to handle logging. Lets us:
+	- Unit test log output via `Logging.capture`
+	- Disable verbose log messages when not debugging Roact
+
+	This should be broken out into a separate library with the addition of
+	scoping and logging configuration.
+]]
+
+-- Determines whether log messages will go to stdout/stderr
 local outputEnabled = true
+
+-- A set of LogInfo objects that should have messages inserted into them.
+-- This is a set so that nested calls to Logging.capture will behave.
 local collectors = {}
 
-local logInfoMetatable = {}
+-- A set of all stack traces that have called warnOnce.
+local onceUsedLocations = {}
 
+--[[
+	Indent a potentially multi-line string with the given number of tabs, in
+	addition to any indentation the string already has.
+]]
 local function indent(source, indentLevel)
 	local indentString = ("\t"):rep(indentLevel)
 
-	return indentString .. source:gsub("\n(.)", "\n" .. indentString .. "$1")
+	return indentString .. source:gsub("\n", "\n" .. indentString)
 end
 
+--[[
+	Indents a list of strings and then concatenates them together with newlines
+	into a single string.
+]]
 local function indentLines(lines, indentLevel)
 	local outputBuffer = {}
 
@@ -19,6 +41,12 @@ local function indentLines(lines, indentLevel)
 	return table.concat(outputBuffer, "\n")
 end
 
+local logInfoMetatable = {}
+
+--[[
+	Automatic coercion to strings for LogInfo objects to enable debugging them
+	more easily.
+]]
 function logInfoMetatable:__tostring()
 	local outputBuffer = {"LogInfo {"}
 
@@ -67,6 +95,13 @@ end
 
 local Logging = {}
 
+--[[
+	Invokes `callback`, capturing all output that happens during its execution.
+
+	Output will not go to stdout or stderr and will instead be put into a
+	LogInfo object that is returned. If `callback` throws, the error will be
+	bubbled up to the caller of `Logging.capture`.
+]]
 function Logging.capture(callback)
 	local collector = createLogInfo()
 
@@ -84,7 +119,14 @@ function Logging.capture(callback)
 	return collector
 end
 
-function Logging.error(message)
+--[[
+	Throws an error, while additionally logging the message with the logging
+	system. This can be used to indicate critical failures that should cause
+	tests not to pass even if the error is caught with `pcall`.
+]]
+function Logging.error(messageTemplate, ...)
+	local message = messageTemplate:format(...)
+
 	for collector in pairs(collectors) do
 		table.insert(collector.errors, message)
 	end
@@ -92,24 +134,41 @@ function Logging.error(message)
 	error(message, 2)
 end
 
-function Logging.warn(message)
+--[[
+	Issues a warning with an automatically attached stack trace.
+]]
+function Logging.warn(messageTemplate, ...)
+	local message = messageTemplate:format(...)
+
 	for collector in pairs(collectors) do
 		table.insert(collector.warnings, message)
 	end
 
+	-- debug.traceback inserts a leading newline, so we trim it here
+	local trace = debug.traceback("", 2):sub(2)
+	local fullMessage = ("%s\n%s"):format(message, indent(trace, 1))
+
 	if outputEnabled then
-		warn(message)
+		warn(fullMessage)
 	end
 end
 
-function Logging.info(message)
-	for collector in pairs(collectors) do
-		table.insert(collector.infos, message)
+--[[
+	Issues a warning like `Logging.warn`, but only outputs once per call site.
+
+	This is useful for marking deprecated functions that might be called a lot;
+	using `warnOnce` instead of `warn` will reduce output noise while still
+	correctly marking all call sites.
+]]
+function Logging.warnOnce(messageTemplate, ...)
+	local trace = debug.traceback()
+
+	if onceUsedLocations[trace] then
+		return
 	end
 
-	if outputEnabled then
-		print("Info:", message)
-	end
+	onceUsedLocations[trace] = true
+	Logging.warn(messageTemplate, ...)
 end
 
 return Logging

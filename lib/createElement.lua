@@ -4,6 +4,16 @@ local GlobalConfig = require(script.Parent.GlobalConfig)
 local Logging = require(script.Parent.Logging)
 local Type = require(script.Parent.Type)
 
+local multipleChildrenMessage = [[
+The prop `Roact.Children` was defined but was overriden by the third parameter to createElement!
+This can happen when a component passes props through to a child element but also uses the `children` argument:
+
+	Roact.createElement("Frame", passedProps, {
+		child = ...
+	})
+
+Instead, consider using]]
+
 --[[
 	Creates a new element representing the given component.
 
@@ -24,7 +34,7 @@ local function createElement(component, props, children)
 
 	if children ~= nil then
 		if props[Core.Children] ~= nil then
-			Logging.warn("props[Children] was defined but was overridden by third parameter to createElement!")
+			Logging.warnOnce(multipleChildrenMessage)
 		end
 
 		props[Core.Children] = children

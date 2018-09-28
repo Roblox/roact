@@ -11,46 +11,6 @@ return function()
 
 	local noopReconciler = createReconciler(NoopRenderer)
 
-	it("should be extendable", function()
-		local MyComponent = Component:extend("The Senate")
-
-		expect(MyComponent).to.be.ok()
-		expect(Type.of(MyComponent)).to.equal(Type.StatefulComponentClass)
-	end)
-
-	it("should prevent extending a user component", function()
-		local MyComponent = Component:extend("Sheev")
-
-		expect(function()
-			MyComponent:extend("Frank")
-		end).to.throw()
-	end)
-
-	it("should use a given name", function()
-		local MyComponent = Component:extend("FooBar")
-
-		local name = tostring(MyComponent)
-
-		expect(name).to.be.a("string")
-		expect(name:find("FooBar")).to.be.ok()
-	end)
-
-	it("should throw on render with a useful message by default", function()
-		local MyComponent = Component:extend("MyComponent")
-
-		local element = createElement(MyComponent)
-		local hostParent = nil
-		local key = "Some Component Key"
-
-		local success, result = pcall(function()
-			noopReconciler.mountNode(element, hostParent, key)
-		end)
-
-		expect(success).to.equal(false)
-		expect(result:match("MyComponent")).to.be.ok()
-		expect(result:match("render")).to.be.ok()
-	end)
-
 	it("should pass props to the initializer", function()
 		local MyComponent = Component:extend("MyComponent")
 
@@ -227,44 +187,44 @@ return function()
 
 		-- TODO
 
-		it("should call getDerivedStateFromProps appropriately", function()
-			local TestComponent = Component:extend("TestComponent")
-			local getStateCallback
+		-- it("should call getDerivedStateFromProps appropriately", function()
+		-- 	local TestComponent = Component:extend("TestComponent")
+		-- 	local getStateCallback
 
-			function TestComponent.getDerivedStateFromProps(newProps, oldState)
-				return {
-					visible = newProps.visible
-				}
-			end
+		-- 	function TestComponent.getDerivedStateFromProps(newProps, oldState)
+		-- 		return {
+		-- 			visible = newProps.visible
+		-- 		}
+		-- 	end
 
-			function TestComponent:init(props)
-				self.state = {
-					visible = false
-				}
+		-- 	function TestComponent:init(props)
+		-- 		self.state = {
+		-- 			visible = false
+		-- 		}
 
-				getStateCallback = function()
-					return self.state
-				end
-			end
+		-- 		getStateCallback = function()
+		-- 			return self.state
+		-- 		end
+		-- 	end
 
-			function TestComponent:render() end
+		-- 	function TestComponent:render() end
 
-			local handle = Reconciler.mount(createElement(TestComponent, {
-				visible = true
-			}))
+		-- 	local handle = Reconciler.mount(createElement(TestComponent, {
+		-- 		visible = true
+		-- 	}))
 
-			local state = getStateCallback()
-			expect(state.visible).to.equal(true)
+		-- 	local state = getStateCallback()
+		-- 	expect(state.visible).to.equal(true)
 
-			handle = Reconciler.reconcile(handle, createElement(TestComponent, {
-				visible = 123
-			}))
+		-- 	handle = Reconciler.reconcile(handle, createElement(TestComponent, {
+		-- 		visible = 123
+		-- 	}))
 
-			state = getStateCallback()
-			expect(state.visible).to.equal(123)
+		-- 	state = getStateCallback()
+		-- 	expect(state.visible).to.equal(123)
 
-			Reconciler.unmount(handle)
-		end)
+		-- 	Reconciler.unmount(handle)
+		-- end)
 	end)
 
 	describe("defaultProps", function()

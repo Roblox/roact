@@ -415,7 +415,11 @@ return function()
 	end)
 
 	describe("setState", function()
-		itSKIP("should throw when called in init", function()
+		it("should not trigger an extra update when called in init", function()
+			local renderCount = 0
+			local updateCount = 0
+			local capturedState
+
 			local InitComponent = Component:extend("InitComponent")
 
 			function InitComponent:init()
@@ -424,18 +428,26 @@ return function()
 				})
 			end
 
+			function InitComponent:willUpdate()
+				updateCount = updateCount + 1
+			end
+
 			function InitComponent:render()
+				renderCount = renderCount + 1
+				capturedState = self.state
 				return nil
 			end
 
 			local initElement = createElement(InitComponent)
 
-			expect(function()
-				Reconciler.mount(initElement)
-			end).to.throw()
+			noopReconciler.mountTree(initElement)
+
+			expect(renderCount).to.equal(1)
+			expect(updateCount).to.equal(0)
+			expect(capturedState.a).to.equal(1)
 		end)
 
-		itSKIP("should throw when called in render", function()
+		it("should throw when called in render", function()
 			local RenderComponent = Component:extend("RenderComponent")
 
 			function RenderComponent:render()
@@ -447,22 +459,12 @@ return function()
 			local renderElement = createElement(RenderComponent)
 
 			expect(function()
-				Reconciler.mount(renderElement)
+				noopReconciler.mountTree(renderElement)
 			end).to.throw()
 		end)
 
-		itSKIP("should throw when called in shouldUpdate", function()
+		it("should throw when called in shouldUpdate", function()
 			local TestComponent = Component:extend("TestComponent")
-
-			local triggerTest
-
-			function TestComponent:init()
-				triggerTest = function()
-					self:setState({
-						a = 1
-					})
-				end
-			end
 
 			function TestComponent:render()
 				return nil
@@ -474,23 +476,18 @@ return function()
 				})
 			end
 
-			local testElement = createElement(TestComponent)
+			local initialElement = createElement(TestComponent)
+			local updatedElement = createElement(TestComponent)
+
+			local tree = noopReconciler.mountTree(initialElement)
 
 			expect(function()
-				Reconciler.mount(testElement)
-				triggerTest()
+				noopReconciler.updateTree(tree, updatedElement)
 			end).to.throw()
 		end)
 
-		itSKIP("should throw when called in willUpdate", function()
+		it("should throw when called in willUpdate", function()
 			local TestComponent = Component:extend("TestComponent")
-			local forceUpdate
-
-			function TestComponent:init()
-				forceUpdate = function()
-					self:_forceUpdate()
-				end
-			end
 
 			function TestComponent:render()
 				return nil
@@ -502,15 +499,16 @@ return function()
 				})
 			end
 
-			local testElement = createElement(TestComponent)
+			local initialElement = createElement(TestComponent)
+			local updatedElement = createElement(TestComponent)
+			local tree = noopReconciler.mountTree(initialElement)
 
 			expect(function()
-				Reconciler.mount(testElement)
-				forceUpdate()
+				noopReconciler.updateTree(tree, updatedElement)
 			end).to.throw()
 		end)
 
-		itSKIP("should throw when called in willUnmount", function()
+		it("should throw when called in willUnmount", function()
 			local TestComponent = Component:extend("TestComponent")
 
 			function TestComponent:render()
@@ -524,10 +522,10 @@ return function()
 			end
 
 			local element = createElement(TestComponent)
-			local instance = Reconciler.mount(element)
+			local tree = noopReconciler.mountTree(element)
 
 			expect(function()
-				Reconciler.unmount(instance)
+				noopReconciler.unmountTree(tree)
 			end).to.throw()
 		end)
 
@@ -544,10 +542,9 @@ return function()
 					return self.state
 				end
 
-				-- TODO: Switch to setState once implemented
-				self.state = {
+				self:setState({
 					value = 0
-				}
+				})
 			end
 
 			function TestComponent:render()
@@ -585,10 +582,9 @@ return function()
 					return self.props
 				end
 
-				-- TODO: Switch to setState when possible
-				self.state = {
+				self:setState({
 					value = 0
-				}
+				})
 			end
 
 			function TestComponent:render()
@@ -624,10 +620,9 @@ return function()
 					self:setState(newState)
 				end
 
-				-- TODO: Use setState, again, once implemented
-				self.state = {
+				self:setState({
 					value = 0
-				}
+				})
 			end
 
 			function TestComponent:render()
@@ -646,46 +641,6 @@ return function()
 			expect(renderCount).to.equal(1)
 
 			noopReconciler.unmountNode(instance)
-		end)
-
-		-- TODO: It SHOULD call getDerivedStateFromProps
-		itSKIP("should not call getDerivedStateFromProps on setState", function()
-			local TestComponent = Component:extend("TestComponent")
-			local setStateCallback
-			local getDerivedStateFromPropsCount = 0
-
-			function TestComponent:init()
-				setStateCallback = function(newState)
-					self:setState(newState)
-				end
-
-				self.state = {
-					value = 0
-				}
-			end
-
-			function TestComponent:render()
-				return nil
-			end
-
-			function TestComponent.getDerivedStateFromProps(nextProps, lastState)
-				getDerivedStateFromPropsCount = getDerivedStateFromPropsCount + 1
-			end
-
-			local element = createElement(TestComponent, {
-				someProp = 1,
-			})
-
-			local instance = Reconciler.mount(element)
-			expect(getDerivedStateFromPropsCount).to.equal(1)
-
-			setStateCallback({
-				value = 1,
-			})
-			expect(getDerivedStateFromPropsCount).to.equal(1)
-
-
-			Reconciler.unmount(instance)
 		end)
 	end)
 

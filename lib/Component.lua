@@ -2,8 +2,13 @@ local assign = require(script.Parent.assign)
 local Type = require(script.Parent.Type)
 local ChildUtils = require(script.Parent.ChildUtils)
 local Symbol = require(script.Parent.Symbol)
+local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
 
 local InternalData = Symbol.named("InternalData")
+
+local componentMissingRenderMessage = [[
+The component %q is missing the `render` method.
+`render` must be defined when creating a Roact component!]]
 
 local componentClassMetatable = {}
 
@@ -50,8 +55,23 @@ end
 function Component:setState(mapState)
 	assert(Type.of(self) == Type.StatefulComponentInstance)
 
+	local internalData = self[InternalData]
+
+	-- This value will be set when we're in a place that `setState` should not
+	-- be used. It will be set to the name of a message to display to the user.
+	if internalData.setStateBlockedReason ~= nil then
+		local messageTemplate = invalidSetStateMessages[internalData.setStateBlockedReason]
+
+		if messageTemplate == nil then
+			messageTemplate = invalidSetStateMessages.default
+		end
+
+		local message = messageTemplate:format(tostring(internalData.componentClass))
+
+		error(message, 2)
+	end
+
 	-- TODO: Do something different in init and willUpdate
-	-- TODO: Throw errors in render and shouldUpdate
 
 	local partialState
 
@@ -69,7 +89,13 @@ function Component:setState(mapState)
 
 	local newState = assign({}, self.state, partialState)
 
-	self:__update(nil, newState)
+	-- If `setState` is called in `init` or `willUpdate`, we can skip triggering
+	-- another update!
+	if internalData.setStateShouldSkipUpdate then
+		self.state = newState
+	else
+		self:__update(nil, newState)
+	end
 end
 
 --[[
@@ -90,11 +116,10 @@ end
 	TODO: Accept props and state as arguments.
 ]]
 function Component:render()
-	local message = (
-		"The component %q is missing the `render` method.\n" ..
-		"`render` must be defined when creating a Roact component!"
-	):format(
-		tostring(getmetatable(self))
+	local internalData = self[InternalData]
+
+	local message = componentMissingRenderMessage:format(
+		tostring(internalData.componentClass)
 	)
 
 	error(message, 0)
@@ -120,6 +145,9 @@ function Component:__mount(reconciler, node)
 		node = node,
 		element = element,
 		componentClass = self,
+
+		setStateBlockedReason = nil,
+		setStateShouldSkipUpdate = false,
 	}
 
 	local instance = {
@@ -151,11 +179,14 @@ function Component:__mount(reconciler, node)
 	end
 
 	if instance.init ~= nil then
-		-- TODO: Change behavior of setState here to match master branch.
+		internalData.setStateShouldSkipUpdate = true
 		instance:init(instance.props)
+		internalData.setStateShouldSkipUpdate = false
 	end
 
+	internalData.setStateBlockedReason = "render"
 	local renderResult = instance:render()
+	internalData.setStateBlockedReason = nil
 
 	for childKey, childElement in ChildUtils.iterateChildren(renderResult) do
 		local concreteKey = childKey
@@ -184,8 +215,12 @@ function Component:__unmount()
 	local node = internalData.node
 	local reconciler = internalData.reconciler
 
+	-- TODO: Set unmounted flag to disallow setState after this point
+
 	if self.willUnmount ~= nil then
+		internalData.setStateBlockedReason = "willUnmount"
 		self:willUnmount()
+		internalData.setStateBlockedReason = nil
 	end
 
 	for _, childNode in pairs(node.children) do
@@ -243,7 +278,11 @@ function Component:__update(updatedElement, updatedState)
 	end
 
 	if self.shouldUpdate ~= nil then
-		if not self:shouldUpdate(newProps, newState) then
+		internalData.setStateBlockedReason = "shouldUpdate"
+		local continueWithUpdate = self:shouldUpdate(newProps, newState)
+		internalData.setStateBlockedReason = nil
+
+		if not continueWithUpdate then
 			-- TODO: Do we need to reset internalData.element so that
 			-- getElementTraceback stays correct?
 			return
@@ -251,13 +290,18 @@ function Component:__update(updatedElement, updatedState)
 	end
 
 	if self.willUpdate ~= nil then
+		internalData.setStateBlockedReason = "willUpdate"
 		self:willUpdate(newProps, newState)
+		internalData.setStateBlockedReason = nil
 	end
 
+	-- TODO: Handle case of willUpdate containing a setState call
 	self.props = newProps
 	self.state = newState
 
+	internalData.setStateBlockedReason = "render"
 	local renderResult = node.instance:render()
+	internalData.setStateBlockedReason = nil
 
 	reconciler.updateNodeChildren(node, renderResult)
 

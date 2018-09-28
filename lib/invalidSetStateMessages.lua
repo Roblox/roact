@@ -26,18 +26,6 @@ shouldUpdate must be a pure function that only depends on props and state.
 
 Check the definition of shouldUpdate in the component %q.]]
 
-invalidSetStateMessages["init"] = [[
-setState cannot be used in the init method.
-During init, the component hasn't initialized yet, and isn't ready to render.
-
-Instead, set the `state` value directly:
-
-	self.state = {
-		value = "foo"
-	}
-
-Check the definition of init in the component %q.]]
-
 invalidSetStateMessages["render"] = [[
 setState cannot be used in the render method.
 render must be a pure function that only depends on props and state.

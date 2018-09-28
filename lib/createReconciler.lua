@@ -7,6 +7,10 @@ local function createReconciler(renderer)
 	local mountNode
 	local updateNode
 
+	--[[
+		Utility to update the children of a node based on zero or more updated
+		children given as elements.
+	]]
 	local function updateNodeChildren(node, newChildElements)
 		assert(Type.of(node) == Type.Node)
 
@@ -43,6 +47,9 @@ local function createReconciler(renderer)
 		end
 	end
 
+	--[[
+		Unmounts the given node and releases any held resources.
+	]]
 	local function unmountNode(node)
 		assert(Type.of(node) == Type.Node)
 
@@ -69,6 +76,16 @@ local function createReconciler(renderer)
 		updateNodeChildren(node, renderResult)
 	end
 
+	--[[
+		Update the given node using a new element describing what it should
+		transform into.
+
+		`updateNode` will return a new node that should replace the passed in
+		node. This is because a node can be updated with an element referencing
+		a different component than the input node. `updateNode` will unmount the
+		input node, mount a new node, and return it in this case, while also
+		issuing a warning to the user.
+	]]
 	function updateNode(node, newElement)
 		assert(Type.of(node) == Type.Node)
 		assert(Type.of(newElement) == Type.Element or typeof(newElement) == "boolean" or newElement == nil)
@@ -108,6 +125,9 @@ local function createReconciler(renderer)
 		end
 	end
 
+	--[[
+		Constructs a new node but not does mount it.
+	]]
 	local function createNode(element, hostParent, key)
 		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
 		assert(typeof(hostParent) == "Instance" or hostParent == nil)
@@ -145,6 +165,10 @@ local function createReconciler(renderer)
 		end
 	end
 
+	--[[
+		Constructs a new node and mounts it, but does not place it into the
+		tree.
+	]]
 	function mountNode(element, hostParent, key)
 		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
 		assert(typeof(hostParent) == "Instance" or hostParent == nil)
@@ -178,6 +202,10 @@ local function createReconciler(renderer)
 		end
 	end
 
+	--[[
+		Constructs a new Roact tree, constructs a root node for it, and mounts
+		it.
+	]]
 	local function mountTree(element, hostParent, key)
 		assert(Type.of(element) == Type.Element)
 		assert(typeof(hostParent) == "Instance" or hostParent == nil)
@@ -189,6 +217,8 @@ local function createReconciler(renderer)
 
 		local tree = {
 			[Type] = Type.Tree,
+
+			-- TODO: Move these fields into an internal data table?
 
 			-- The root node of the tree, which starts into the hierarchy of
 			-- Roact component instances.
@@ -202,6 +232,12 @@ local function createReconciler(renderer)
 		return tree
 	end
 
+	--[[
+		Unmounts the tree, freeing all of its resources.
+
+		No further operations should be done on the tree after it's been
+		unmounted, as indictaed by its the `mounted` field.
+	]]
 	local function unmountTree(tree)
 		assert(Type.of(tree) == Type.Tree)
 		assert(tree.mounted, "Cannot unmounted a Roact tree that has already been unmounted")
@@ -213,6 +249,9 @@ local function createReconciler(renderer)
 		end
 	end
 
+	--[[
+		Utility method for updating the root node of a tree given a new element.
+	]]
 	local function updateTree(tree, newElement)
 		assert(Type.of(tree) == Type.Tree)
 		assert(Type.of(newElement) == Type.Element)

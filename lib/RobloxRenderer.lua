@@ -1,3 +1,9 @@
+--[[
+	Renderer that deals in terms of Roblox Instances. This is the most
+	well-supported renderer after NoopRenderer and is currently the only
+	renderer that does anything.
+]]
+
 local ElementKind = require(script.Parent.ElementKind)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local Core = require(script.Parent.Core)

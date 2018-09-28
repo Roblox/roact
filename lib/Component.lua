@@ -295,7 +295,6 @@ function Component:__update(updatedElement, updatedState)
 		internalData.setStateBlockedReason = nil
 	end
 
-	-- TODO: Handle case of willUpdate containing a setState call
 	self.props = newProps
 	self.state = newState
 

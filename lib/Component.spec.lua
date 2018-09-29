@@ -1,7 +1,6 @@
 return function()
 	local createElement = require(script.Parent.createElement)
 	local createReconciler = require(script.Parent.createReconciler)
-	local GlobalConfig = require(script.Parent.GlobalConfig)
 	local None = require(script.Parent.None)
 	local NoopRenderer = require(script.Parent.NoopRenderer)
 
@@ -428,64 +427,6 @@ return function()
 			expect(renderCount).to.equal(1)
 
 			noopReconciler.unmountNode(instance)
-		end)
-	end)
-
-	describe("getElementTraceback", function()
-		it("should return stack traces in initial renders", function()
-			local stackTrace = nil
-
-			local config = {
-				elementTracing = true,
-			}
-
-			GlobalConfig.scoped(config, function()
-				local TestComponent = Component:extend("TestComponent")
-
-				function TestComponent:init()
-					stackTrace = self:getElementTraceback()
-				end
-
-				function TestComponent:render()
-					return nil
-				end
-
-				local element = createElement(TestComponent)
-				local hostParent = nil
-				local key = "Some key"
-				noopReconciler.mountNode(element, hostParent, key)
-			end)
-
-			expect(stackTrace).to.be.a("string")
-		end)
-
-		-- TODO: it should return an updated stack trace after an update
-
-		it("should return nil when elementTracing is off", function()
-			local stackTrace = nil
-
-			local config = {
-				elementTracing = false,
-			}
-
-			GlobalConfig.scoped(config, function()
-				local TestComponent = Component:extend("TestComponent")
-
-				function TestComponent:init()
-					stackTrace = self:getElementTraceback()
-				end
-
-				function TestComponent:render()
-					return nil
-				end
-
-				local element = createElement(TestComponent)
-				local hostParent = nil
-				local key = "Some key"
-				noopReconciler.mountNode(element, hostParent, key)
-			end)
-
-			expect(stackTrace).to.equal(nil)
 		end)
 	end)
 end

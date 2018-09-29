@@ -1,10 +1,10 @@
 return function()
+	local assertDeepEqual = require(script.Parent.Parent.assertDeepEqual)
 	local createElement = require(script.Parent.Parent.createElement)
 	local createReconciler = require(script.Parent.Parent.createReconciler)
 	local createSpy = require(script.Parent.Parent.createSpy)
 	local NoopRenderer = require(script.Parent.Parent.NoopRenderer)
 	local Type = require(script.Parent.Parent.Type)
-	local deepEqual = require(script.Parent.Parent.deepEqual)
 
 	local Component = require(script.Parent.Parent.Component)
 
@@ -42,8 +42,8 @@ return function()
 		local values = willUpdateSpy:captureValues("self", "newProps", "newState")
 
 		expect(Type.of(values.self)).to.equal(Type.StatefulComponentInstance)
-		assert(deepEqual(values.newProps, newProps), "Expected newProps to equal passed in props")
-		assert(deepEqual(values.newState, {}), "Expected newState to be empty")
+		assertDeepEqual(values.newProps, newProps)
+		assertDeepEqual(values.newState, {})
 	end)
 
 	-- TODO: it should be invoked when updated via setState

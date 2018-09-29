@@ -1,10 +1,10 @@
 return function()
+	local assertDeepEqual = require(script.Parent.Parent.assertDeepEqual)
 	local createElement = require(script.Parent.Parent.createElement)
 	local createReconciler = require(script.Parent.Parent.createReconciler)
 	local createSpy = require(script.Parent.Parent.createSpy)
 	local NoopRenderer = require(script.Parent.Parent.NoopRenderer)
 	local Type = require(script.Parent.Parent.Type)
-	local deepEqual = require(script.Parent.Parent.deepEqual)
 
 	local Component = require(script.Parent.Parent.Component)
 
@@ -52,11 +52,12 @@ return function()
 
 		expect(Type.of(values.self)).to.equal(Type.StatefulComponentInstance)
 
-		assert(deepEqual(values.newProps, newProps))
-		assert(deepEqual(capturedProps, initialProps))
+		assertDeepEqual(values.newProps, newProps)
+
+		assertDeepEqual(capturedProps, initialProps)
 
 		expect(values.newState).to.equal(capturedState)
-		assert(deepEqual(capturedState, {}))
+		assertDeepEqual(capturedState, {})
 	end)
 
 	it("should be invoked when state is updated", function()
@@ -114,12 +115,12 @@ return function()
 
 		expect(Type.of(values.self)).to.equal(Type.StatefulComponentInstance)
 
-		assert(values.newProps == capturedProps)
-		assert(deepEqual(capturedProps, {}))
+		expect(values.newProps).to.equal(capturedProps)
+		assertDeepEqual(capturedProps, {})
 
-		assert(deepEqual(capturedState, initialState))
+		assertDeepEqual(capturedState, initialState)
 		expect(capturedState).to.equal(initState)
-		assert(deepEqual(values.newState, newState))
+		assertDeepEqual(values.newState, newState)
 	end)
 
 	it("should not abort an update when returning true", function()

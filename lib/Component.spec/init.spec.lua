@@ -1,4 +1,5 @@
 return function()
+	local assertDeepEqual = require(script.Parent.Parent.assertDeepEqual)
 	local createElement = require(script.Parent.Parent.createElement)
 	local createReconciler = require(script.Parent.Parent.createReconciler)
 	local createSpy = require(script.Parent.Parent.createSpy)
@@ -35,6 +36,6 @@ return function()
 
 		expect(Type.of(values.self)).to.equal(Type.StatefulComponentInstance)
 		expect(typeof(values.props)).to.equal("table")
-		expect(values.props.a).to.equal(props.a)
+		assertDeepEqual(values.props, props)
 	end)
 end

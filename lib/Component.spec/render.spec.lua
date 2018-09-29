@@ -20,8 +20,6 @@ return function()
 			noopReconciler.mountNode(element, hostParent, key)
 		end)
 
-		print(result)
-
 		expect(success).to.equal(false)
 		expect(result:match("MyComponent")).to.be.ok()
 		expect(result:match("render")).to.be.ok()

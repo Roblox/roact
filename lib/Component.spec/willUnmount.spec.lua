@@ -12,9 +12,7 @@ return function()
 	it("should be invoked when mounted", function()
 		local MyComponent = Component:extend("MyComponent")
 
-		local willUnmountSpy = createSpy(function(props)
-			return nil
-		end)
+		local willUnmountSpy = createSpy()
 
 		MyComponent.willUnmount = willUnmountSpy.value
 

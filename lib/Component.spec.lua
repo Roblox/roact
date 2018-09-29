@@ -9,14 +9,6 @@ return function()
 
 	local noopReconciler = createReconciler(NoopRenderer)
 
-	itSKIP("should invoke shouldUpdate when props update", function()
-		-- TODO
-	end)
-
-	itSKIP("should invoke shouldUpdate when state updates", function()
-		-- TODO
-	end)
-
 	describe("getDerivedStateFromProps", function()
 		SKIP()
 

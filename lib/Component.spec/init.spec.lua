@@ -12,9 +12,7 @@ return function()
 	it("should be invoked with props when mounted", function()
 		local MyComponent = Component:extend("MyComponent")
 
-		local initSpy = createSpy(function(props)
-			return nil
-		end)
+		local initSpy = createSpy()
 
 		MyComponent.init = initSpy.value
 

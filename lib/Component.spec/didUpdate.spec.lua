@@ -13,9 +13,7 @@ return function()
 	it("should be invoked when updated via updateNode", function()
 		local MyComponent = Component:extend("MyComponent")
 
-		local didUpdateSpy = createSpy(function(props)
-			return nil
-		end)
+		local didUpdateSpy = createSpy()
 
 		MyComponent.didUpdate = didUpdateSpy.value
 

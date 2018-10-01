@@ -1,4 +1,5 @@
 return function()
+	local assertDeepEqual = require(script.Parent.Parent.assertDeepEqual)
 	local createElement = require(script.Parent.Parent.createElement)
 	local createReconciler = require(script.Parent.Parent.createReconciler)
 	local createSpy = require(script.Parent.Parent.createSpy)
@@ -28,7 +29,12 @@ return function()
 	it("should be invoked when a component is mounted", function()
 		local Foo = Component:extend("Foo")
 
-		local renderSpy = createSpy()
+		local capturedProps
+		local capturedState
+		local renderSpy = createSpy(function(self)
+			capturedProps = self.props
+			capturedState = self.state
+		end)
 		Foo.render = renderSpy.value
 
 		local element = createElement(Foo)
@@ -42,15 +48,25 @@ return function()
 		local renderArguments = renderSpy:captureValues("self")
 
 		expect(Type.of(renderArguments.self)).to.equal(Type.StatefulComponentInstance)
+		assertDeepEqual(capturedProps, {})
+		assertDeepEqual(capturedState, {})
 	end)
 
 	it("should be invoked when a component is updated via props", function()
 		local Foo = Component:extend("Foo")
 
-		local renderSpy = createSpy()
+		local capturedProps
+		local capturedState
+		local renderSpy = createSpy(function(self)
+			capturedProps = self.props
+			capturedState = self.state
+		end)
 		Foo.render = renderSpy.value
 
-		local element = createElement(Foo)
+		local initialProps = {
+			a = 2,
+		}
+		local element = createElement(Foo, initialProps)
 		local hostParent = nil
 		local key = "Foo Test"
 
@@ -58,14 +74,31 @@ return function()
 
 		expect(renderSpy.callCount).to.equal(1)
 
-		local newElement = createElement(Foo)
+		local firstRenderArguments = renderSpy:captureValues("self")
+		local firstProps = capturedProps
+		local firstState = capturedState
+
+		expect(Type.of(firstRenderArguments.self)).to.equal(Type.StatefulComponentInstance)
+		assertDeepEqual(firstProps, initialProps)
+		assertDeepEqual(firstState, {})
+
+		local updatedProps = {
+			a = 3,
+		}
+		local newElement = createElement(Foo, updatedProps)
 
 		noopReconciler.updateNode(node, newElement)
 
 		expect(renderSpy.callCount).to.equal(2)
 
-		local renderArguments = renderSpy:captureValues("self")
-		expect(Type.of(renderArguments.self)).to.equal(Type.StatefulComponentInstance)
+		local secondRenderArguments = renderSpy:captureValues("self")
+		local secondProps = capturedProps
+		local secondState = capturedState
+
+		expect(Type.of(secondRenderArguments.self)).to.equal(Type.StatefulComponentInstance)
+		expect(secondProps).never.to.equal(firstProps)
+		assertDeepEqual(secondProps, updatedProps)
+		expect(secondState).to.equal(firstState)
 	end)
 
 	it("should be invoked when a component is updated via state", function()
@@ -78,7 +111,12 @@ return function()
 			end
 		end
 
-		local renderSpy = createSpy()
+		local capturedProps
+		local capturedState
+		local renderSpy = createSpy(function(self)
+			capturedProps = self.props
+			capturedState = self.state
+		end)
 		Foo.render = renderSpy.value
 
 		local element = createElement(Foo)
@@ -89,22 +127,25 @@ return function()
 
 		expect(renderSpy.callCount).to.equal(1)
 
-		local initialRenderArguments = renderSpy:captureValues("self")
-		local initialProps = initialRenderArguments.self.props
-		local initialState = initialRenderArguments.self.state
+		local firstRenderArguments = renderSpy:captureValues("self")
+		local firstProps = capturedProps
+		local firstState = capturedState
 
-		expect(Type.of(initialRenderArguments.self)).to.equal(Type.StatefulComponentInstance)
+		expect(Type.of(firstRenderArguments.self)).to.equal(Type.StatefulComponentInstance)
 
 		setState({})
 
 		expect(renderSpy.callCount).to.equal(2)
 
 		local renderArguments = renderSpy:captureValues("self")
-		local props = renderArguments.self.props
-		local state = renderArguments.self.state
 
 		expect(Type.of(renderArguments.self)).to.equal(Type.StatefulComponentInstance)
-		expect(props).to.equal(initialProps)
-		expect(state).never.to.equal(initialState)
+		expect(capturedProps).to.equal(firstProps)
+		expect(capturedState).never.to.equal(firstState)
 	end)
+
+	-- TODO: Test defaultProps on initial render
+	-- TODO: Test defaultProps on prop update
+	-- TODO: Test defaultProps on state update
+	-- TODO: Test that setState throws
 end

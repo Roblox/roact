@@ -1,6 +1,4 @@
 return function()
-	local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 	local Core = require(script.Parent.Core)
 	local Event = require(script.Parent.Event)
 	local Change = require(script.Parent.Change)
@@ -103,18 +101,19 @@ return function()
 			[Event.Changed] = eventCallback,
 		})
 
-		local handle = Reconciler.mount(element, ReplicatedStorage, "Foo")
+		local container = Instance.new("Folder")
+		local handle = Reconciler.mount(element, container, "Foo")
 		expect(handle).to.be.ok()
 		expect(sizeChangedCount).to.equal(0)
-		expect(ReplicatedStorage.Foo).to.be.ok()
+		expect(container.Foo).to.be.ok()
 
-		ReplicatedStorage.Foo.Size = UDim2.new(0, 100, 0, 100)
+		container.Foo.Size = UDim2.new(0, 100, 0, 100)
 		expect(sizeChangedCount).to.equal(1)
 
 		handle = Reconciler.reconcile(handle, createElement("Frame", {
 			[Event.Changed] = nil
 		}))
-		ReplicatedStorage.Foo.Size = UDim2.new(0, 200, 0, 200)
+		container.Foo.Size = UDim2.new(0, 200, 0, 200)
 		expect(sizeChangedCount).to.equal(1)
 
 		Reconciler.unmount(handle)
@@ -131,18 +130,19 @@ return function()
 			[Change.Size] = changeCallback,
 		})
 
-		local handle = Reconciler.mount(element, ReplicatedStorage, "Foo")
+		local container = Instance.new("Folder")
+		local handle = Reconciler.mount(element, container, "Foo")
 		expect(handle).to.be.ok()
 		expect(sizeChangedCount).to.equal(0)
-		expect(ReplicatedStorage.Foo).to.be.ok()
+		expect(container.Foo).to.be.ok()
 
-		ReplicatedStorage.Foo.Size = UDim2.new(0, 100, 0, 100)
+		container.Foo.Size = UDim2.new(0, 100, 0, 100)
 		expect(sizeChangedCount).to.equal(1)
 
 		handle = Reconciler.reconcile(handle, createElement("Frame", {
 			[Change.Size] = nil
 		}))
-		ReplicatedStorage.Foo.Size = UDim2.new(0, 200, 0, 200)
+		container.Foo.Size = UDim2.new(0, 200, 0, 200)
 		expect(sizeChangedCount).to.equal(1)
 
 		Reconciler.unmount(handle)

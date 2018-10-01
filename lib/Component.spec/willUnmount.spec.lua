@@ -9,7 +9,7 @@ return function()
 
 	local noopReconciler = createReconciler(NoopRenderer)
 
-	it("should be invoked when mounted", function()
+	it("should be invoked when unmounted", function()
 		local MyComponent = Component:extend("MyComponent")
 
 		local willUnmountSpy = createSpy()

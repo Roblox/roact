@@ -3,6 +3,7 @@ return function()
 
 	local Core = require(script.Parent.Core)
 	local Event = require(script.Parent.Event)
+	local Change = require(script.Parent.Change)
 	local createRef = require(script.Parent.createRef)
 	local createElement = require(script.Parent.createElement)
 
@@ -89,34 +90,60 @@ return function()
 		expect(bRef.current).to.never.be.ok()
 	end)
 
-	it("should clean up event references properly", function()
-		local valueChangedCount = 0
+	it("should clean up Event references properly", function()
+		local sizeChangedCount = 0
 
 		local function eventCallback(object, property)
-			if property == "Value" then
-				valueChangedCount = valueChangedCount + 1
+			if property == "Size" then
+				sizeChangedCount = sizeChangedCount + 1
 			end
 		end
 
-		local element = createElement("StringValue", {
+		local element = createElement("Frame", {
 			[Event.Changed] = eventCallback,
 		})
 
 		local handle = Reconciler.mount(element, ReplicatedStorage, "Foo")
 		expect(handle).to.be.ok()
-		expect(valueChangedCount).to.equal(0)
+		expect(sizeChangedCount).to.equal(0)
 		expect(ReplicatedStorage.Foo).to.be.ok()
 
-		ReplicatedStorage.Foo.Value = "A"
-		expect(valueChangedCount).to.equal(1)
+		ReplicatedStorage.Foo.Size = UDim2.new(0, 100, 0, 100)
+		expect(sizeChangedCount).to.equal(1)
 
-		Reconciler.reconcile(handle, createElement("StringValue", {
+		handle = Reconciler.reconcile(handle, createElement("Frame", {
 			[Event.Changed] = nil
 		}))
+		ReplicatedStorage.Foo.Size = UDim2.new(0, 200, 0, 200)
+		expect(sizeChangedCount).to.equal(1)
 
-		ReplicatedStorage.Foo.Value = "B"
+		Reconciler.unmount(handle)
+	end)
 
-		expect(valueChangedCount).to.equal(1)
+	it("should clean up Change references properly", function()
+		local sizeChangedCount = 0
+
+		local function changeCallback()
+			sizeChangedCount = sizeChangedCount + 1
+		end
+
+		local element = createElement("Frame", {
+			[Change.Size] = changeCallback,
+		})
+
+		local handle = Reconciler.mount(element, ReplicatedStorage, "Foo")
+		expect(handle).to.be.ok()
+		expect(sizeChangedCount).to.equal(0)
+		expect(ReplicatedStorage.Foo).to.be.ok()
+
+		ReplicatedStorage.Foo.Size = UDim2.new(0, 100, 0, 100)
+		expect(sizeChangedCount).to.equal(1)
+
+		handle = Reconciler.reconcile(handle, createElement("Frame", {
+			[Change.Size] = nil
+		}))
+		ReplicatedStorage.Foo.Size = UDim2.new(0, 200, 0, 200)
+		expect(sizeChangedCount).to.equal(1)
 
 		Reconciler.unmount(handle)
 	end)

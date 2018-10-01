@@ -295,10 +295,10 @@ Setting a field in the state to `Roact.None` will clear it from the state. This 
 !!! warning
 	`setState` can be called from anywhere **except**:
 
-	* Lifecycle hooks: `willUnmount`
+	* Lifecycle hooks: `willUnmount`, `willUpdate`
 	* Pure functions: `render`, `shouldUpdate`
 
-	Calling `setState` inside of `init` or `willUpdate` has special behavior. Because Roact is already going to update a component in these cases, that update will be replaced instead of another being scheduled.
+	Calling `setState` inside of `init` has special behavior. The result of setState will be used to determine initial state, and no additional updates will be scheduled.
 
 	Roact may support calling `setState` in currently-disallowed places in the future.
 
@@ -363,8 +363,6 @@ willUpdate(nextProps, nextState) -> void
 ```
 
 `willUpdate` is fired after an update is started but before a component's state and props are updated.
-
-`willUpdate` can be used to make tweaks to your component's state using `setState`. Often, this should be done in `getDerivedStateFromProps` instead.
 
 ### didUpdate
 ```

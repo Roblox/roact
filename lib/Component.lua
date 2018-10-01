@@ -93,7 +93,7 @@ function Component:extend(name)
 		self._setStateBlockedReason = nil
 
 		-- When set to true, setState should not trigger an update, but should
-		-- instead just update self.state. Lifecycle events like `willUpdate`
+		-- instead just update self.state. Lifecycle events like `init`
 		-- can set this to change the behavior of setState slightly.
 		self._setStateWithoutUpdate = false
 
@@ -321,9 +321,9 @@ end
 ]]
 function Component:_forceUpdate(newProps, newState)
 	if self.willUpdate then
-		self._setStateWithoutUpdate = true
+		self._setStateBlockedReason = "willUpdate"
 		self:willUpdate(newProps or self.props, newState or self.state)
-		self._setStateWithoutUpdate = false
+		self._setStateBlockedReason = nil
 	end
 
 	local oldProps = self.props

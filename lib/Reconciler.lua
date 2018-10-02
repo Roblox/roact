@@ -459,17 +459,6 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 
 		local newValue = toElement.props[key]
 
-		-- Assume any property that can be set to nil has a default value of nil
-		if newValue == nil then
-			local _, value = getDefaultPropertyValue(rbx.ClassName, key)
-
-			-- We don't care if getDefaultPropertyValue fails, because
-			-- _setRbxProp will catch the error below.
-			newValue = value
-		end
-
-		-- Roblox does this check for normal values, but we have special
-		-- properties like events that warrant this.
 		if oldValue ~= newValue then
 			Reconciler._setRbxProp(rbx, key, newValue, toElement)
 		end
@@ -478,8 +467,6 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 	-- Set properties that are new in toElement
 	for key, newValue in pairs(toElement.props) do
 		if not seenProps[key] then
-			seenProps[key] = true
-
 			local oldValue = fromElement.props[key]
 
 			if oldValue ~= newValue then
@@ -511,6 +498,19 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 	if type(key) == "string" then
 		-- Regular property
 
+		if value == nil then
+			-- Here, we assume that any properties for which nil is a valid
+			-- value have nil as their default value. This is necessary because
+			-- we can't distinguish between a property being set to nil and not
+			-- being present at all in a table; we assume the latter.
+
+			local hasProperty, defaultValue = getDefaultPropertyValue(rbx.ClassName, key)
+
+			if hasProperty then
+				value = defaultValue
+			end
+		end
+
 		local success, err = pcall(set, rbx, key, value)
 
 		if not success then
@@ -529,9 +529,17 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 		-- Special property with extra data attached.
 
 		if key.type == Event then
-			Reconciler._singleEventManager:connect(rbx, key.name, value)
+			if value ~= nil then
+				Reconciler._singleEventManager:connect(rbx, key.name, value)
+			else
+				Reconciler._singleEventManager:disconnect(rbx, key.name)
+			end
 		elseif key.type == Change then
-			Reconciler._singleEventManager:connectProperty(rbx, key.name, value)
+			if value ~= nil then
+				Reconciler._singleEventManager:connectProperty(rbx, key.name, value)
+			else
+				Reconciler._singleEventManager:disconnectProperty(rbx, key.name)
+			end
 		else
 			local source = element.source or DEFAULT_SOURCE
 

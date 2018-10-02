@@ -1,5 +1,7 @@
 return function()
 	local Core = require(script.Parent.Core)
+	local Event = require(script.Parent.Event)
+	local Change = require(script.Parent.Change)
 	local createRef = require(script.Parent.createRef)
 	local createElement = require(script.Parent.createElement)
 
@@ -84,5 +86,65 @@ return function()
 		expect(bRef.current).to.be.ok()
 		Reconciler.unmount(handle)
 		expect(bRef.current).to.never.be.ok()
+	end)
+
+	it("should clean up Event references properly", function()
+		local sizeChangedCount = 0
+
+		local function eventCallback(object, property)
+			if property == "Size" then
+				sizeChangedCount = sizeChangedCount + 1
+			end
+		end
+
+		local element = createElement("Frame", {
+			[Event.Changed] = eventCallback,
+		})
+
+		local container = Instance.new("Folder")
+		local handle = Reconciler.mount(element, container, "Foo")
+		expect(handle).to.be.ok()
+		expect(sizeChangedCount).to.equal(0)
+		expect(container.Foo).to.be.ok()
+
+		container.Foo.Size = UDim2.new(0, 100, 0, 100)
+		expect(sizeChangedCount).to.equal(1)
+
+		handle = Reconciler.reconcile(handle, createElement("Frame", {
+			[Event.Changed] = nil
+		}))
+		container.Foo.Size = UDim2.new(0, 200, 0, 200)
+		expect(sizeChangedCount).to.equal(1)
+
+		Reconciler.unmount(handle)
+	end)
+
+	it("should clean up Change references properly", function()
+		local sizeChangedCount = 0
+
+		local function changeCallback()
+			sizeChangedCount = sizeChangedCount + 1
+		end
+
+		local element = createElement("Frame", {
+			[Change.Size] = changeCallback,
+		})
+
+		local container = Instance.new("Folder")
+		local handle = Reconciler.mount(element, container, "Foo")
+		expect(handle).to.be.ok()
+		expect(sizeChangedCount).to.equal(0)
+		expect(container.Foo).to.be.ok()
+
+		container.Foo.Size = UDim2.new(0, 100, 0, 100)
+		expect(sizeChangedCount).to.equal(1)
+
+		handle = Reconciler.reconcile(handle, createElement("Frame", {
+			[Change.Size] = nil
+		}))
+		container.Foo.Size = UDim2.new(0, 200, 0, 200)
+		expect(sizeChangedCount).to.equal(1)
+
+		Reconciler.unmount(handle)
 	end)
 end

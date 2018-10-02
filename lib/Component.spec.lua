@@ -437,13 +437,6 @@ return function()
 		it("should throw when called in willUpdate", function()
 			local TestComponent = Component:extend("TestComponent")
 
-			local forceUpdate
-			function TestComponent:init()
-				forceUpdate = function()
-					self:_forceUpdate()
-				end
-			end
-
 			function TestComponent:render()
 				return nil
 			end
@@ -454,11 +447,18 @@ return function()
 				})
 			end
 
-			local element = createElement(TestComponent)
+			local element = createElement(TestComponent, {
+				someProp = 1,
+			})
+
+			local handle = Reconciler.mount(element)
 
 			expect(function()
-				Reconciler.mount(element)
-				forceUpdate()
+				handle = Reconciler.reconcile(handle, {
+					createElement(TestComponent, {
+						someProp = 2
+					})
+				})
 			end).to.throw()
 		end)
 

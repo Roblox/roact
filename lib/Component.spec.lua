@@ -434,19 +434,10 @@ return function()
 			end).to.throw()
 		end)
 
-		it("should only render once when called in willUpdate", function()
+		it("should throw when called in willUpdate", function()
 			local TestComponent = Component:extend("TestComponent")
-			local forceUpdate
 
-			function TestComponent:init()
-				forceUpdate = function()
-					self:_forceUpdate()
-				end
-			end
-
-			local renderCount = 0
 			function TestComponent:render()
-				renderCount = renderCount + 1
 				return nil
 			end
 
@@ -456,17 +447,19 @@ return function()
 				})
 			end
 
-			local testElement = createElement(TestComponent)
+			local element = createElement(TestComponent, {
+				someProp = 1,
+			})
 
-			local handle = Reconciler.mount(testElement)
+			local handle = Reconciler.mount(element)
 
-			expect(renderCount).to.equal(1)
-
-			forceUpdate()
-
-			expect(renderCount).to.equal(2)
-
-			Reconciler.unmount(handle)
+			expect(function()
+				handle = Reconciler.reconcile(handle, {
+					createElement(TestComponent, {
+						someProp = 2
+					})
+				})
+			end).to.throw()
 		end)
 
 		it("should only render once when called in init", function()

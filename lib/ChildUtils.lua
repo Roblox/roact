@@ -1,4 +1,5 @@
 local Type = require(script.Parent.Type)
+local Symbol = require(script.Parent.Symbol)
 
 local function noop()
 	return nil
@@ -13,7 +14,7 @@ local ChildUtils = {}
 	This occurs when you return only one element from a function component or
 	stateful render function.
 ]]
-ChildUtils.UseParentKey = {}
+ChildUtils.UseParentKey = Symbol.named("UseParentKey")
 
 --[[
 	Returns an iterator over the children of an element.

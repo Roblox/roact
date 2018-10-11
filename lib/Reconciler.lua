@@ -32,6 +32,7 @@ local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local SingleEventManager = require(script.Parent.SingleEventManager)
 local Symbol = require(script.Parent.Symbol)
 local GlobalConfig = require(script.Parent.GlobalConfig)
+local isBinding = require(script.Parent.isBinding)
 
 local isInstanceHandle = Symbol.named("isInstanceHandle")
 
@@ -56,6 +57,7 @@ local function applyRef(ref, newRbx)
 
 	if type(ref) == "table" then
 		ref.current = newRbx
+		ref.changed:fire(newRbx)
 	else
 		ref(newRbx)
 	end
@@ -112,6 +114,12 @@ function Reconciler.unmount(instanceHandle)
 
 		for _, child in pairs(instanceHandle._children) do
 			Reconciler.unmount(child)
+		end
+
+		if element._bindings ~= nil then
+			for _, disconnect in pairs(element._bindings) do
+				disconnect()
+			end
 		end
 
 		-- Necessary to make sure SingleEventManager doesn't leak references
@@ -511,20 +519,49 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 			end
 		end
 
-		local success, err = pcall(set, rbx, key, value)
+		-- special case for bindings
+		if isBinding(value) then
+			local disconnect = value.ref.changed:subscribe(function(refRbx)
+				local refName = value.ref.current and value.ref.current.Name
+				print("Update binding:", rbx.Name, key, refName)
+				local success, err = pcall(set, rbx, key, refRbx);
 
-		if not success then
-			local source = element.source or DEFAULT_SOURCE
+				if not success then
+					local source = element.source or DEFAULT_SOURCE
 
-			local message = ("Failed to set property %s on primitive instance of class %s\n%s\n%s"):format(
-				key,
-				rbx.ClassName,
-				err,
-				source
-			)
+					local message = ("Failed to set binding %s on primitive instance of class %s\n%s\n%s"):format(
+						key,
+						rbx.ClassName,
+						err,
+						source
+					)
 
-			error(message, 0)
+					error(message, 0)
+				end
+			end)
+
+			if element._bindings == nil then
+				element._bindings = {}
+			end
+
+			element._bindings[key] = disconnect
+		else
+			local success, err = pcall(set, rbx, key, value)
+
+			if not success then
+				local source = element.source or DEFAULT_SOURCE
+
+				local message = ("Failed to set property %s on primitive instance of class %s\n%s\n%s"):format(
+					key,
+					rbx.ClassName,
+					err,
+					source
+				)
+
+				error(message, 0)
+			end
 		end
+
 	elseif type(key) == "table" then
 		-- Special property with extra data attached.
 

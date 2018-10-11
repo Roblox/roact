@@ -17,11 +17,14 @@ local Roact = {
 	oneChild = require(script.oneChild),
 	PureComponent = require(script.PureComponent),
 
+	bindToRef = require(script.bindToRef),
+
 	Children = Core.Children,
 	Element = Core.Element,
 	None = Core.None,
 	Portal = Core.Portal,
 	Ref = Core.Ref,
+	Binding = Core.Binding,
 
 	mount = Reconciler.mount,
 	unmount = Reconciler.unmount,

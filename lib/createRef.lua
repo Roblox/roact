@@ -6,6 +6,7 @@
 	* https://reactjs.org/docs/refs-and-the-dom.html
 	* https://reactjs.org/blog/2018/03/29/react-v-16-3.html#createref-api
 ]]
+local createSignal = require(script.Parent.createSignal)
 
 local refMetatable = {
 	__tostring = function(self)
@@ -16,5 +17,6 @@ local refMetatable = {
 return function()
 	return setmetatable({
 		current = nil,
+		changed = createSignal(),
 	}, refMetatable)
 end

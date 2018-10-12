@@ -32,7 +32,7 @@ local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local SingleEventManager = require(script.Parent.SingleEventManager)
 local Symbol = require(script.Parent.Symbol)
 local GlobalConfig = require(script.Parent.GlobalConfig)
-local isBinding = require(script.Parent.isBinding)
+local Ref = require(script.Parent.Ref)
 
 local isInstanceHandle = Symbol.named("isInstanceHandle")
 
@@ -45,23 +45,6 @@ local ElementKind = {
 	Functional = Symbol.named("ElementKind.Functional"),
 	Stateful = Symbol.named("ElementKind.Stateful"),
 }
-
---[[
-	Sets the value of a reference to a new rendered object.
-	Correctly handles both function-style and object-style refs.
-]]
-local function applyRef(ref, newRbx)
-	if ref == nil then
-		return
-	end
-
-	if type(ref) == "table" then
-		ref.current = newRbx
-		ref.changed:fire(newRbx)
-	else
-		ref(newRbx)
-	end
-end
 
 local componentTypesToKinds = {
 	["string"] = ElementKind.Primitive,
@@ -108,18 +91,19 @@ function Reconciler.unmount(instanceHandle)
 	if elementKind == ElementKind.Primitive then
 		-- We're destroying a Roblox Instance-based object
 
-		-- Kill refs before we make changes, since any mutations past this point
-		-- aren't relevant to components.
-		applyRef(element.props[Core.Ref], nil)
-
-		for _, child in pairs(instanceHandle._children) do
-			Reconciler.unmount(child)
-		end
-
+		-- Remove bindings to refs
 		if element._bindings ~= nil then
 			for _, disconnect in pairs(element._bindings) do
 				disconnect()
 			end
+		end
+
+		-- Kill refs before we make changes, since any mutations past this point
+		-- aren't relevant to components.
+		Ref.apply(element.props[Core.Ref], nil)
+
+		for _, child in pairs(instanceHandle._children) do
+			Reconciler.unmount(child)
 		end
 
 		-- Necessary to make sure SingleEventManager doesn't leak references
@@ -201,7 +185,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 		rbx.Parent = parent
 
 		-- Attach ref values, since the instance is initialized now.
-		applyRef(element.props[Core.Ref], rbx)
+		Ref.apply(element.props[Core.Ref], rbx)
 
 		return {
 			[isInstanceHandle] = true,
@@ -364,8 +348,8 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 		-- Roact doesn't provide any guarantees with regards to the sequencing
 		-- between refs and other changes in the commit phase.
 		if newRef ~= oldRef then
-			applyRef(oldRef, nil)
-			applyRef(newRef, instanceHandle._rbx)
+			Ref.apply(oldRef, nil)
+			Ref.apply(newRef, instanceHandle._rbx)
 		end
 
 		-- Update properties and children of the Roblox object.
@@ -468,6 +452,9 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 		local newValue = toElement.props[key]
 
 		if oldValue ~= newValue then
+			if Ref.isRef(oldValue) and Ref.isRef(newValue) then
+				print("Reconciling a binding!!")
+			end
 			Reconciler._setRbxProp(rbx, key, newValue, toElement)
 		end
 	end
@@ -517,34 +504,18 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 			if hasProperty then
 				value = defaultValue
 			end
+
+			local disconnectOldRef = element._bindings[key]
+			if disconnectOldRef ~= nil then
+				print("Remove binding:", rbx.name, key)
+				disconnectOldRef()
+				element._bindings[key] = nil
+			end
 		end
 
 		-- special case for bindings
-		if isBinding(value) then
-			local disconnect = value.ref.changed:subscribe(function(refRbx)
-				local refName = value.ref.current and value.ref.current.Name
-				print("Update binding:", rbx.Name, key, refName)
-				local success, err = pcall(set, rbx, key, refRbx);
-
-				if not success then
-					local source = element.source or DEFAULT_SOURCE
-
-					local message = ("Failed to set binding %s on primitive instance of class %s\n%s\n%s"):format(
-						key,
-						rbx.ClassName,
-						err,
-						source
-					)
-
-					error(message, 0)
-				end
-			end)
-
-			if element._bindings == nil then
-				element._bindings = {}
-			end
-
-			element._bindings[key] = disconnect
+		if Ref.isRef(value) then
+			Reconciler._setRefBinding(rbx, key, value, element)
 		else
 			local success, err = pcall(set, rbx, key, value)
 
@@ -602,6 +573,40 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 
 		error(message, 0)
 	end
+end
+
+function Reconciler._setRefBinding(rbx, key, refValue, element)
+	if element._bindings == nil then
+		element._bindings = {}
+	end
+
+	local disconnectOldRef = element._bindings[key]
+	if disconnectOldRef ~= nil then
+		print("A binding exists! Unbind before rebinding!")
+		disconnectOldRef()
+	end
+
+	local disconnect = refValue.changed:subscribe(function(refRbx)
+		local refName = refValue.current and refValue.current.Name or "nil"
+		print(("Update binding: %s.%s -> %s"):format(rbx.Name, key, refName))
+
+		local success, err = pcall(set, rbx, key, refRbx);
+
+		if not success then
+			local source = element.source or DEFAULT_SOURCE
+
+			local message = ("Failed to set binding %s on primitive instance of class %s\n%s\n%s"):format(
+				key,
+				rbx.ClassName,
+				err,
+				source
+			)
+
+			error(message, 0)
+		end
+	end)
+
+	element._bindings[key] = disconnect
 end
 
 return Reconciler

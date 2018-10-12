@@ -21,7 +21,4 @@ Core.None = Symbol.named("None")
 -- Marker used to specify that the table it is present within is a component.
 Core.Element = Symbol.named("Element")
 
--- Marker used to specify a binding object that's being used to create a ref usable as an object reference
-Core.Binding = Symbol.named("Binding")
-
 return Core

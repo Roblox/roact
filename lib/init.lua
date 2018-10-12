@@ -6,18 +6,18 @@ local Core = require(script.Core)
 local GlobalConfig = require(script.GlobalConfig)
 local Instrumentation = require(script.Instrumentation)
 local Reconciler = require(script.Reconciler)
+local Ref = require(script.Ref)
 local ReconcilerCompat = require(script.ReconcilerCompat)
 
 local Roact = {
 	Change = require(script.Change),
 	Component = require(script.Component),
 	createElement = require(script.createElement),
-	createRef = require(script.createRef),
 	Event = require(script.Event),
 	oneChild = require(script.oneChild),
 	PureComponent = require(script.PureComponent),
 
-	bindToRef = require(script.bindToRef),
+	createRef = Ref.create,
 
 	Children = Core.Children,
 	Element = Core.Element,

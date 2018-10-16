@@ -14,14 +14,20 @@ local strict = require(script.Parent.strict)
 
 local Type = newproxy(true)
 
-local TypeInternal = {
-	Element = Symbol.named("RoactElement"),
-	Node = Symbol.named("RoactNode"),
-	Ref = Symbol.named("RoactRef"),
-	StatefulComponentClass = Symbol.named("StatefulComponentClass"),
-	StatefulComponentInstance = Symbol.named("StatefulComponentInstance"),
-	Tree = Symbol.named("RoactTree"),
-}
+local TypeInternal = {}
+
+local function addType(name)
+	TypeInternal[name] = Symbol.named("Roact" .. name)
+end
+
+addType("Element")
+addType("HostChangeEvent")
+addType("HostEvent")
+addType("Node")
+addType("Ref")
+addType("StatefulComponentClass")
+addType("StatefulComponentInstance")
+addType("Tree")
 
 function TypeInternal.of(value)
 	if typeof(value) ~= "table" then
@@ -32,6 +38,10 @@ function TypeInternal.of(value)
 end
 
 getmetatable(Type).__index = TypeInternal
+
+getmetatable(Type).__tostring = function()
+	return "RoactType"
+end
 
 strict(TypeInternal, "Type")
 

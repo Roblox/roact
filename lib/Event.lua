@@ -1,6 +1,6 @@
 --[[
-	Index into 'Event' to get a prop key for attaching to an event on a
-	Roblox Instance.
+	Index into `Event` to get a prop key for attaching to an event on a Roblox
+	Instance.
 
 	Example:
 
@@ -13,19 +13,21 @@
 		})
 ]]
 
+local Type = require(script.Parent.Type)
+
 local Event = {}
 
 local eventMetatable = {
 	__tostring = function(self)
-		return ("Event(%s)"):format(self.name)
-	end
+		return ("RoactHostEvent(%s)"):format(self.name)
+	end,
 }
 
 setmetatable(Event, {
 	__index = function(self, eventName)
 		local event = {
-			type = Event,
-			name = eventName
+			[Type] = Type.HostEvent,
+			name = eventName,
 		}
 
 		setmetatable(event, eventMetatable)

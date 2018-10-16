@@ -11,18 +11,20 @@
 		})
 ]]
 
+local Type = require(script.Parent.Type)
+
 local Change = {}
 
 local changeMetatable = {
 	__tostring = function(self)
-		return ("ChangeListener(%s)"):format(self.name)
-	end
+		return ("RoactHostChangeEvent(%s)"):format(self.name)
+	end,
 }
 
 setmetatable(Change, {
 	__index = function(self, propertyName)
 		local changeListener = {
-			type = Change,
+			[Type] = Type.HostChangeEvent,
 			name = propertyName
 		}
 

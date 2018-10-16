@@ -1,15 +1,19 @@
 return function()
+	local Type = require(script.Parent.Type)
+
 	local createRef = require(script.Parent.createRef)
 
 	it("should create refs", function()
-		expect(createRef()).to.be.ok()
+		local ref = createRef()
+		expect(Type.of(ref)).to.equal(Type.Ref)
+		expect(ref.current).to.equal(nil)
 	end)
 
 	it("should support tostring on refs", function()
 		local ref = createRef()
-		expect(tostring(ref)).to.equal("RoactReference(nil)")
+		expect(tostring(ref)).to.equal("RoactRef(nil)")
 
 		ref.current = "foo"
-		expect(tostring(ref)).to.equal("RoactReference(foo)")
+		expect(tostring(ref)).to.equal("RoactRef(foo)")
 	end)
 end

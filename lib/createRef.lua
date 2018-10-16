@@ -7,14 +7,23 @@
 	* https://reactjs.org/blog/2018/03/29/react-v-16-3.html#createref-api
 ]]
 
+local Type = require(script.Parent.Type)
+
 local refMetatable = {
 	__tostring = function(self)
-		return ("RoactReference(%s)"):format(tostring(self.current))
+		return ("RoactRef(%s)"):format(tostring(self.current))
 	end,
 }
 
-return function()
-	return setmetatable({
+local function createRef()
+	local ref = {
+		[Type] = Type.Ref,
 		current = nil,
-	}, refMetatable)
+	}
+
+	setmetatable(ref, refMetatable)
+
+	return ref
 end
+
+return createRef

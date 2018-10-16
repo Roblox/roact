@@ -15,13 +15,12 @@ local strict = require(script.Parent.strict)
 local Type = newproxy(true)
 
 local TypeInternal = {
-	Tree = Symbol.named("RoactTree"),
-	Node = Symbol.named("RoactNode"),
 	Element = Symbol.named("RoactElement"),
-
-	-- Too verbose?
+	Node = Symbol.named("RoactNode"),
+	Ref = Symbol.named("RoactRef"),
 	StatefulComponentClass = Symbol.named("StatefulComponentClass"),
 	StatefulComponentInstance = Symbol.named("StatefulComponentInstance"),
+	Tree = Symbol.named("RoactTree"),
 }
 
 function TypeInternal.of(value)

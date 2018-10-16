@@ -24,7 +24,7 @@ return function()
 		local hostParent = nil
 		local key = "Test"
 
-		noopReconciler.mountNode(element, hostParent, key)
+		noopReconciler.mountVirtualNode(element, hostParent, key)
 
 		expect(didMountSpy.callCount).to.equal(1)
 

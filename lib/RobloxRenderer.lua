@@ -58,7 +58,7 @@ function RobloxRenderer.mountHostNode(reconciler, node)
 
 	if children ~= nil then
 		for childKey, childElement in pairs(children) do
-			local childNode = reconciler.mountNode(childElement, instance, childKey)
+			local childNode = reconciler.mountVirtualNode(childElement, instance, childKey)
 
 			node.children[childKey] = childNode
 		end
@@ -70,7 +70,7 @@ end
 
 function RobloxRenderer.unmountHostNode(reconciler, node)
 	for _, childNode in pairs(node.children) do
-		reconciler.unmountNode(childNode)
+		reconciler.unmountVirtualNode(childNode)
 	end
 
 	node.hostObject:Destroy()
@@ -98,7 +98,7 @@ function RobloxRenderer.updateHostNode(reconciler, node, newElement)
 		end
 	end
 
-	reconciler.updateNodeChildren(node, newElement.props[Core.Children])
+	reconciler.updateVirtualNodeChildren(node, newElement.props[Core.Children])
 
 	return node
 end

@@ -33,16 +33,16 @@ return function()
 
 	describe("booleans", function()
 		it("should mount booleans as nil", function()
-			local node = noopReconciler.mountNode(false, nil, "test")
+			local node = noopReconciler.mountVirtualNode(false, nil, "test")
 			expect(node).to.equal(nil)
 		end)
 
 		it("should unmount nodes if they are updated to a boolean value", function()
-			local node = noopReconciler.mountNode(createElement("StringValue"), nil, "test")
+			local node = noopReconciler.mountVirtualNode(createElement("StringValue"), nil, "test")
 
 			expect(node).to.be.ok()
 
-			node = noopReconciler.updateNode(node, true)
+			node = noopReconciler.updateVirtualNode(node, true)
 
 			expect(node).to.equal(nil)
 		end)
@@ -61,9 +61,9 @@ return function()
 			local element = createElement("StringValue")
 			local hostParent = Instance.new("IntValue")
 			local key = "Some Key"
-			local node = reconciler.mountNode(element, hostParent, key)
+			local node = reconciler.mountVirtualNode(element, hostParent, key)
 
-			expect(Type.of(node)).to.equal(Type.Node)
+			expect(Type.of(node)).to.equal(Type.VirtualNode)
 
 			expect(mountHostNode.callCount).to.equal(1)
 
@@ -86,12 +86,12 @@ return function()
 			local element = createElement("StringValue")
 			local hostParent = Instance.new("IntValue")
 			local key = "Key"
-			local node = reconciler.mountNode(element, hostParent, key)
+			local node = reconciler.mountVirtualNode(element, hostParent, key)
 
-			expect(Type.of(node)).to.equal(Type.Node)
+			expect(Type.of(node)).to.equal(Type.VirtualNode)
 
 			local newElement = createElement("StringValue")
-			local newNode = reconciler.updateNode(node, newElement)
+			local newNode = reconciler.updateVirtualNode(node, newElement)
 
 			expect(newNode).to.equal(node)
 
@@ -117,11 +117,11 @@ return function()
 			local element = createElement("StringValue")
 			local hostParent = Instance.new("IntValue")
 			local key = "Key"
-			local node = reconciler.mountNode(element, hostParent, key)
+			local node = reconciler.mountVirtualNode(element, hostParent, key)
 
-			expect(Type.of(node)).to.equal(Type.Node)
+			expect(Type.of(node)).to.equal(Type.VirtualNode)
 
-			reconciler.unmountNode(node)
+			reconciler.unmountVirtualNode(node)
 
 			expect(unmountHostNode.callCount).to.equal(1)
 
@@ -143,9 +143,9 @@ return function()
 			})
 			local hostParent = Instance.new("Folder")
 			local key = "A Key"
-			local node = noopReconciler.mountNode(element, hostParent, key)
+			local node = noopReconciler.mountVirtualNode(element, hostParent, key)
 
-			expect(Type.of(node)).to.equal(Type.Node)
+			expect(Type.of(node)).to.equal(Type.VirtualNode)
 
 			expect(componentSpy.callCount).to.equal(1)
 
@@ -156,7 +156,7 @@ return function()
 
 			expect(#hostParent:GetChildren()).to.equal(0)
 
-			noopReconciler.unmountNode(node)
+			noopReconciler.unmountVirtualNode(node)
 
 			expect(componentSpy.callCount).to.equal(1)
 		end)
@@ -177,9 +177,9 @@ return function()
 			})
 			local hostParent = Instance.new("Folder")
 			local key = "A Key"
-			local node = noopReconciler.mountNode(element, hostParent, key)
+			local node = noopReconciler.mountVirtualNode(element, hostParent, key)
 
-			expect(Type.of(node)).to.equal(Type.Node)
+			expect(Type.of(node)).to.equal(Type.VirtualNode)
 
 			expect(parentComponentSpy.callCount).to.equal(1)
 			expect(childComponentSpy.callCount).to.equal(1)
@@ -195,7 +195,7 @@ return function()
 
 			expect(#hostParent:GetChildren()).to.equal(0)
 
-			noopReconciler.unmountNode(node)
+			noopReconciler.unmountVirtualNode(node)
 
 			expect(parentComponentSpy.callCount).to.equal(1)
 			expect(childComponentSpy.callCount).to.equal(1)
@@ -226,9 +226,9 @@ return function()
 			})
 			local hostParent = Instance.new("Folder")
 			local key = "A Key"
-			local node = noopReconciler.mountNode(element, hostParent, key)
+			local node = noopReconciler.mountVirtualNode(element, hostParent, key)
 
-			expect(Type.of(node)).to.equal(Type.Node)
+			expect(Type.of(node)).to.equal(Type.VirtualNode)
 
 			expect(parentComponentSpy.callCount).to.equal(1)
 			expect(childAComponentSpy.callCount).to.equal(1)
@@ -249,7 +249,7 @@ return function()
 
 			expect(#hostParent:GetChildren()).to.equal(0)
 
-			noopReconciler.unmountNode(node)
+			noopReconciler.unmountVirtualNode(node)
 
 			expect(parentComponentSpy.callCount).to.equal(1)
 			expect(childAComponentSpy.callCount).to.equal(1)

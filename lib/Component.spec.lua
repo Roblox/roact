@@ -146,7 +146,7 @@ return function()
 			end
 
 			local element = createElement(TestComponent)
-			local instance = noopReconciler.mountNode(element, nil, "Test")
+			local instance = noopReconciler.mountVirtualNode(element, nil, "Test")
 
 			expect(getStateCallback().value).to.equal(0)
 
@@ -156,7 +156,7 @@ return function()
 
 			expect(getStateCallback().value).to.equal(nil)
 
-			noopReconciler.unmountNode(instance)
+			noopReconciler.unmountVirtualNode(instance)
 		end)
 
 		it("should invoke functions to compute a partial state", function()
@@ -186,7 +186,7 @@ return function()
 			end
 
 			local element = createElement(TestComponent)
-			local instance = noopReconciler.mountNode(element, nil, "Test")
+			local instance = noopReconciler.mountVirtualNode(element, nil, "Test")
 
 			expect(getStateCallback().value).to.equal(0)
 
@@ -201,7 +201,7 @@ return function()
 
 			expect(getStateCallback().value).to.equal(1)
 
-			noopReconciler.unmountNode(instance)
+			noopReconciler.unmountVirtualNode(instance)
 		end)
 
 		it("should cancel rendering if the function returns nil", function()
@@ -225,7 +225,7 @@ return function()
 			end
 
 			local element = createElement(TestComponent)
-			local instance = noopReconciler.mountNode(element, nil, "Test")
+			local instance = noopReconciler.mountVirtualNode(element, nil, "Test")
 			expect(renderCount).to.equal(1)
 
 			setStateCallback(function(state, props)
@@ -234,7 +234,7 @@ return function()
 
 			expect(renderCount).to.equal(1)
 
-			noopReconciler.unmountNode(instance)
+			noopReconciler.unmountVirtualNode(instance)
 		end)
 	end)
 end

@@ -29,7 +29,7 @@ return function()
 			local hostParent = nil
 			local key = "Some key"
 
-			noopReconciler.mountNode(element, hostParent, key)
+			noopReconciler.mountVirtualNode(element, hostParent, key)
 		end)
 
 		expect(stackTrace).to.be.a("string")
@@ -59,7 +59,7 @@ return function()
 			local hostParent = nil
 			local key = "Some key"
 
-			noopReconciler.mountNode(element, hostParent, key)
+			noopReconciler.mountVirtualNode(element, hostParent, key)
 		end)
 
 		expect(stackTrace).to.equal(nil)

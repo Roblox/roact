@@ -36,7 +36,7 @@ return function()
 		local hostParent = nil
 		local key = "Some Foo"
 
-		noopReconciler.mountNode(element, hostParent, key)
+		noopReconciler.mountVirtualNode(element, hostParent, key)
 
 		local expectedProps = {
 			a = defaultProps.a,
@@ -71,14 +71,14 @@ return function()
 		local hostParent = nil
 		local key = "Some Foo"
 
-		local node = noopReconciler.mountNode(element, hostParent, key)
+		local node = noopReconciler.mountVirtualNode(element, hostParent, key)
 
 		local updatedProps = {
 			c = 5,
 		}
 		local updatedElement = createElement(Foo, updatedProps)
 
-		noopReconciler.updateNode(node, updatedElement)
+		noopReconciler.updateVirtualNode(node, updatedElement)
 
 		local expectedProps = {
 			a = defaultProps.a,
@@ -113,7 +113,7 @@ return function()
 		local hostParent = nil
 		local key = "Some Foo"
 
-		noopReconciler.mountNode(element, hostParent, key)
+		noopReconciler.mountVirtualNode(element, hostParent, key)
 
 		local expectedProps = {
 			a = defaultProps.a,

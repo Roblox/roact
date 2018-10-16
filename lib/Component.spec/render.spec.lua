@@ -18,7 +18,7 @@ return function()
 		local key = "Test"
 
 		local success, result = pcall(function()
-			noopReconciler.mountNode(element, hostParent, key)
+			noopReconciler.mountVirtualNode(element, hostParent, key)
 		end)
 
 		expect(success).to.equal(false)
@@ -41,7 +41,7 @@ return function()
 		local hostParent = nil
 		local key = "Foo Test"
 
-		noopReconciler.mountNode(element, hostParent, key)
+		noopReconciler.mountVirtualNode(element, hostParent, key)
 
 		expect(renderSpy.callCount).to.equal(1)
 
@@ -70,7 +70,7 @@ return function()
 		local hostParent = nil
 		local key = "Foo Test"
 
-		local node = noopReconciler.mountNode(element, hostParent, key)
+		local node = noopReconciler.mountVirtualNode(element, hostParent, key)
 
 		expect(renderSpy.callCount).to.equal(1)
 
@@ -87,7 +87,7 @@ return function()
 		}
 		local newElement = createElement(Foo, updatedProps)
 
-		noopReconciler.updateNode(node, newElement)
+		noopReconciler.updateVirtualNode(node, newElement)
 
 		expect(renderSpy.callCount).to.equal(2)
 
@@ -123,7 +123,7 @@ return function()
 		local hostParent = nil
 		local key = "Foo Test"
 
-		noopReconciler.mountNode(element, hostParent, key)
+		noopReconciler.mountVirtualNode(element, hostParent, key)
 
 		expect(renderSpy.callCount).to.equal(1)
 

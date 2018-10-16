@@ -127,22 +127,22 @@ end
 
 --[[
 	An internal method used by the reconciler to construct a new component
-	instance and attach it to the given node.
+	instance and attach it to the given virtualNode.
 ]]
-function Component:__mount(reconciler, node)
+function Component:__mount(reconciler, virtualNode)
 	assert(Type.of(self) == Type.StatefulComponentClass)
 	assert(reconciler ~= nil)
-	assert(Type.of(node) == Type.Node)
+	assert(Type.of(virtualNode) == Type.VirtualNode)
 
-	local element = node.currentElement
-	local hostParent = node.hostParent
-	local key = node.key
+	local element = virtualNode.currentElement
+	local hostParent = virtualNode.hostParent
+	local key = virtualNode.key
 
 	-- Contains all the information that we want to keep from consumers of
 	-- Roact, or even other parts of the codebase like the reconciler.
 	local internalData = {
 		reconciler = reconciler,
-		node = node,
+		virtualNode = virtualNode,
 		element = element,
 		componentClass = self,
 
@@ -157,7 +157,7 @@ function Component:__mount(reconciler, node)
 
 	setmetatable(instance, self)
 
-	node.instance = instance
+	virtualNode.instance = instance
 
 	local props = element.props
 
@@ -194,9 +194,9 @@ function Component:__mount(reconciler, node)
 			concreteKey = key
 		end
 
-		local childNode = reconciler.mountNode(childElement, hostParent, concreteKey)
+		local childNode = reconciler.mountVirtualNode(childElement, hostParent, concreteKey)
 
-		node.children[childKey] = childNode
+		virtualNode.children[childKey] = childNode
 	end
 
 	if instance.didMount ~= nil then
@@ -212,7 +212,7 @@ function Component:__unmount()
 	assert(Type.of(self) == Type.StatefulComponentInstance)
 
 	local internalData = self[InternalData]
-	local node = internalData.node
+	local virtualNode = internalData.virtualNode
 	local reconciler = internalData.reconciler
 
 	-- TODO: Set unmounted flag to disallow setState after this point
@@ -223,8 +223,8 @@ function Component:__unmount()
 		internalData.setStateBlockedReason = nil
 	end
 
-	for _, childNode in pairs(node.children) do
-		reconciler.unmountNode(childNode)
+	for _, childNode in pairs(virtualNode.children) do
+		reconciler.unmountVirtualNode(childNode)
 	end
 end
 
@@ -242,7 +242,7 @@ function Component:__update(updatedElement, updatedState)
 	assert(typeof(updatedState) == "table" or updatedState == nil)
 
 	local internalData = self[InternalData]
-	local node = internalData.node
+	local virtualNode = internalData.virtualNode
 	local reconciler = internalData.reconciler
 	local componentClass = internalData.componentClass
 
@@ -299,10 +299,10 @@ function Component:__update(updatedElement, updatedState)
 	self.state = newState
 
 	internalData.setStateBlockedReason = "render"
-	local renderResult = node.instance:render()
+	local renderResult = virtualNode.instance:render()
 	internalData.setStateBlockedReason = nil
 
-	reconciler.updateNodeChildren(node, renderResult)
+	reconciler.updateVirtualNodeChildren(virtualNode, renderResult)
 
 	if self.didUpdate ~= nil then
 		self:didUpdate(oldProps, oldState)

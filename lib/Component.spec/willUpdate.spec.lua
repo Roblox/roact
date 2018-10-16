@@ -10,7 +10,7 @@ return function()
 
 	local noopReconciler = createReconciler(NoopRenderer)
 
-	it("should be invoked when updated via updateNode", function()
+	it("should be invoked when updated via updateVirtualNode", function()
 		local MyComponent = Component:extend("MyComponent")
 
 		local willUpdateSpy = createSpy()
@@ -28,14 +28,14 @@ return function()
 		local hostParent = nil
 		local key = "Test"
 
-		local node = noopReconciler.mountNode(initialElement, hostParent, key)
+		local node = noopReconciler.mountVirtualNode(initialElement, hostParent, key)
 
 		local newProps = {
 			a = 6,
 			b = 2,
 		}
 		local newElement = createElement(MyComponent, newProps)
-		noopReconciler.updateNode(node, newElement)
+		noopReconciler.updateVirtualNode(node, newElement)
 
 		expect(willUpdateSpy.callCount).to.equal(1)
 

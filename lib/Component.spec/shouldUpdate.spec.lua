@@ -35,7 +35,7 @@ return function()
 		local hostParent = nil
 		local key = "Test"
 
-		local node = noopReconciler.mountNode(initialElement, hostParent, key)
+		local node = noopReconciler.mountVirtualNode(initialElement, hostParent, key)
 
 		expect(shouldUpdateSpy.callCount).to.equal(0)
 
@@ -44,7 +44,7 @@ return function()
 			b = 2,
 		}
 		local newElement = createElement(MyComponent, newProps)
-		noopReconciler.updateNode(node, newElement)
+		noopReconciler.updateVirtualNode(node, newElement)
 
 		expect(shouldUpdateSpy.callCount).to.equal(1)
 
@@ -98,7 +98,7 @@ return function()
 		local hostParent = nil
 		local key = "Test"
 
-		noopReconciler.mountNode(initialElement, hostParent, key)
+		noopReconciler.mountVirtualNode(initialElement, hostParent, key)
 
 		expect(shouldUpdateSpy.callCount).to.equal(0)
 
@@ -138,12 +138,12 @@ return function()
 		local hostParent = nil
 		local key = "Test"
 
-		local node = noopReconciler.mountNode(initialElement, hostParent, key)
+		local node = noopReconciler.mountVirtualNode(initialElement, hostParent, key)
 
 		expect(renderSpy.callCount).to.equal(1)
 
 		local newElement = createElement(MyComponent)
-		noopReconciler.updateNode(node, newElement)
+		noopReconciler.updateVirtualNode(node, newElement)
 
 		expect(renderSpy.callCount).to.equal(2)
 	end)
@@ -163,12 +163,12 @@ return function()
 		local hostParent = nil
 		local key = "Test"
 
-		local node = noopReconciler.mountNode(initialElement, hostParent, key)
+		local node = noopReconciler.mountVirtualNode(initialElement, hostParent, key)
 
 		expect(renderSpy.callCount).to.equal(1)
 
 		local newElement = createElement(MyComponent)
-		noopReconciler.updateNode(node, newElement)
+		noopReconciler.updateVirtualNode(node, newElement)
 
 		expect(renderSpy.callCount).to.equal(1)
 	end)

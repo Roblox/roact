@@ -17,7 +17,7 @@ return function()
 				Value = value,
 			})
 
-			local node = reconciler.createNode(element, parent, key)
+			local node = reconciler.createVirtualNode(element, parent, key)
 
 			RobloxRenderer.mountHostNode(reconciler, node)
 
@@ -46,7 +46,7 @@ return function()
 				ChildB = createElement("Folder"),
 			})
 
-			local node = reconciler.createNode(element, parent, key)
+			local node = reconciler.createVirtualNode(element, parent, key)
 
 			RobloxRenderer.mountHostNode(reconciler, node)
 
@@ -99,7 +99,7 @@ return function()
 				})
 			})
 
-			local node = reconciler.createNode(element, parent, key)
+			local node = reconciler.createVirtualNode(element, parent, key)
 			RobloxRenderer.mountHostNode(reconciler, node)
 
 			-- Not testing mountHostNode's work here, only testing that the
@@ -157,7 +157,7 @@ return function()
 				}),
 			})
 
-			local node = reconciler.mountNode(element, parent, key)
+			local node = reconciler.mountVirtualNode(element, parent, key)
 
 			expect(#parent:GetChildren()).to.equal(1)
 

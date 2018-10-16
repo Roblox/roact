@@ -586,7 +586,7 @@ function Reconciler._setRefBinding(rbx, key, refValue, element)
 		disconnectOldRef()
 	end
 
-	local disconnect = refValue.changed:subscribe(function(refRbx)
+	local function refChanged(refRbx)
 		local refName = refValue.current and refValue.current.Name or "nil"
 		print(("Update binding: %s.%s -> %s"):format(rbx.Name, key, refName))
 
@@ -604,7 +604,13 @@ function Reconciler._setRefBinding(rbx, key, refValue, element)
 
 			error(message, 0)
 		end
-	end)
+	end
+
+	local disconnect = refValue.changed:subscribe(refChanged)
+
+	if refValue.current ~= nil then
+		refChanged(refValue.current)
+	end
 
 	element._bindings[key] = disconnect
 end

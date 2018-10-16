@@ -12,7 +12,17 @@ This can happen when a component passes props through to a child element but als
 		child = ...
 	})
 
-Instead, consider using]]
+Instead, consider using a utility function to merge tables of children together:
+
+	local children = mergeTables(passedProps[Roact.Children], {
+		child = ...
+	})
+
+	local fullProps = mergeTables(passedProps, {
+		[Roact.Children] = children
+	})
+
+	Roact.createElement("Frame", fullProps)]]
 
 --[[
 	Creates a new element representing the given component.

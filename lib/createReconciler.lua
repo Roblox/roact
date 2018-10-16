@@ -231,10 +231,10 @@ local function createReconciler(renderer)
 	end
 
 	--[[
-		Constructs a new Roact tree, constructs a root virtual node for it, and
-		mounts it.
+		Constructs a new Roact virtual tree, constructs a root node for
+		it, and mounts it.
 	]]
-	local function mountTree(element, hostParent, key)
+	local function mountVirtualTree(element, hostParent, key)
 		assert(Type.of(element) == Type.Element)
 		assert(typeof(hostParent) == "Instance" or hostParent == nil)
 		assert(typeof(key) == "string" or key == nil)
@@ -244,7 +244,7 @@ local function createReconciler(renderer)
 		end
 
 		local tree = {
-			[Type] = Type.Tree,
+			[Type] = Type.VirtualTree,
 
 			-- TODO: Move these fields into an internal data table?
 
@@ -261,13 +261,13 @@ local function createReconciler(renderer)
 	end
 
 	--[[
-		Unmounts the tree, freeing all of its resources.
+		Unmounts the virtual tree, freeing all of its resources.
 
 		No further operations should be done on the tree after it's been
 		unmounted, as indictaed by its the `mounted` field.
 	]]
-	local function unmountTree(tree)
-		assert(Type.of(tree) == Type.Tree)
+	local function unmountVirtualTree(tree)
+		assert(Type.of(tree) == Type.VirtualTree)
 		assert(tree.mounted, "Cannot unmounted a Roact tree that has already been unmounted")
 
 		tree.mounted = false
@@ -278,10 +278,11 @@ local function createReconciler(renderer)
 	end
 
 	--[[
-		Utility method for updating the root node of a tree given a new element.
+		Utility method for updating the root node of a virtual tree given a new
+		element.
 	]]
-	local function updateTree(tree, newElement)
-		assert(Type.of(tree) == Type.Tree)
+	local function updateVirtualTree(tree, newElement)
+		assert(Type.of(tree) == Type.VirtualTree)
 		assert(Type.of(newElement) == Type.Element)
 
 		tree.rootNode = updateVirtualNode(tree.rootNode, newElement)
@@ -290,9 +291,9 @@ local function createReconciler(renderer)
 	end
 
 	reconciler = {
-		mountTree = mountTree,
-		unmountTree = unmountTree,
-		updateTree = updateTree,
+		mountVirtualTree = mountVirtualTree,
+		unmountVirtualTree = unmountVirtualTree,
+		updateVirtualTree = updateVirtualTree,
 
 		createVirtualNode = createVirtualNode,
 		mountVirtualNode = mountVirtualNode,

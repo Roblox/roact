@@ -27,9 +27,9 @@ local Roact = strict {
 	Portal = Core.Portal,
 	Ref = Core.Ref,
 
-	mount = robloxReconciler.mountTree,
-	unmount = robloxReconciler.unmountTree,
-	update = robloxReconciler.updateTree,
+	mount = robloxReconciler.mountVirtualTree,
+	unmount = robloxReconciler.unmountVirtualTree,
+	update = robloxReconciler.updateVirtualTree,
 
 	reify = reconcilerCompat.reify,
 	teardown = reconcilerCompat.teardown,

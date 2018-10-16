@@ -26,8 +26,8 @@ addType("HostEvent")
 addType("Ref")
 addType("StatefulComponentClass")
 addType("StatefulComponentInstance")
-addType("Tree")
 addType("VirtualNode")
+addType("VirtualTree")
 
 function TypeInternal.of(value)
 	if typeof(value) ~= "table" then

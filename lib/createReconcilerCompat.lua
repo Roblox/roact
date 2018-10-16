@@ -26,19 +26,19 @@ local function createReconcilerCompat(reconciler)
 	function compat.reify(...)
 		Logging.warnOnce(reifyMessage)
 
-		return reconciler.mountTree(...)
+		return reconciler.mountVirtualTree(...)
 	end
 
 	function compat.teardown(...)
 		Logging.warnOnce(teardownMessage)
 
-		return reconciler.unmountTree(...)
+		return reconciler.unmountVirtualTree(...)
 	end
 
 	function compat.reconcile(...)
 		Logging.warnOnce(reconcileMessage)
 
-		return reconciler.updateTree(...)
+		return reconciler.updateVirtualTree(...)
 	end
 
 	return compat

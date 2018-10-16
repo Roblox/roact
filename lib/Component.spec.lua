@@ -34,7 +34,7 @@ return function()
 
 			local initElement = createElement(InitComponent)
 
-			noopReconciler.mountTree(initElement)
+			noopReconciler.mountVirtualTree(initElement)
 
 			expect(renderCount).to.equal(1)
 			expect(updateCount).to.equal(0)
@@ -53,7 +53,7 @@ return function()
 			local renderElement = createElement(RenderComponent)
 
 			expect(function()
-				noopReconciler.mountTree(renderElement)
+				noopReconciler.mountVirtualTree(renderElement)
 			end).to.throw()
 		end)
 
@@ -73,10 +73,10 @@ return function()
 			local initialElement = createElement(TestComponent)
 			local updatedElement = createElement(TestComponent)
 
-			local tree = noopReconciler.mountTree(initialElement)
+			local tree = noopReconciler.mountVirtualTree(initialElement)
 
 			expect(function()
-				noopReconciler.updateTree(tree, updatedElement)
+				noopReconciler.updateVirtualTree(tree, updatedElement)
 			end).to.throw()
 		end)
 
@@ -95,10 +95,10 @@ return function()
 
 			local initialElement = createElement(TestComponent)
 			local updatedElement = createElement(TestComponent)
-			local tree = noopReconciler.mountTree(initialElement)
+			local tree = noopReconciler.mountVirtualTree(initialElement)
 
 			expect(function()
-				noopReconciler.updateTree(tree, updatedElement)
+				noopReconciler.updateVirtualTree(tree, updatedElement)
 			end).to.throw()
 		end)
 
@@ -116,10 +116,10 @@ return function()
 			end
 
 			local element = createElement(TestComponent)
-			local tree = noopReconciler.mountTree(element)
+			local tree = noopReconciler.mountVirtualTree(element)
 
 			expect(function()
-				noopReconciler.unmountTree(tree)
+				noopReconciler.unmountVirtualTree(tree)
 			end).to.throw()
 		end)
 

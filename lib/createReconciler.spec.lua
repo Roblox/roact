@@ -10,24 +10,24 @@ return function()
 
 	describe("tree operations", function()
 		it("should mount and unmount", function()
-			local tree = noopReconciler.mountTree(createElement("StringValue"))
+			local tree = noopReconciler.mountVirtualTree(createElement("StringValue"))
 
 			expect(tree).to.be.ok()
 
-			noopReconciler.unmountTree(tree)
+			noopReconciler.unmountVirtualTree(tree)
 		end)
 
 		it("should mount, update, and unmount", function()
-			local tree = noopReconciler.mountTree(createElement("StringValue"))
+			local tree = noopReconciler.mountVirtualTree(createElement("StringValue"))
 
 			expect(tree).to.be.ok()
 			expect(tree.rootNode).to.be.ok()
 
-			noopReconciler.updateTree(tree, createElement("StringValue"))
+			noopReconciler.updateVirtualTree(tree, createElement("StringValue"))
 
 			expect(tree.rootNode).to.be.ok()
 
-			noopReconciler.unmountTree(tree)
+			noopReconciler.unmountVirtualTree(tree)
 		end)
 	end)
 

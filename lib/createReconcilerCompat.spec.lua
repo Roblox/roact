@@ -15,7 +15,7 @@ return function()
 			-- warning hopefully.
 			for _ = 1, 2 do
 				local handle = compatReconciler.reify(createElement("StringValue"))
-				noopReconciler.unmountTree(handle)
+				noopReconciler.unmountVirtualTree(handle)
 			end
 		end)
 
@@ -25,7 +25,7 @@ return function()
 		logInfo = Logging.capture(function()
 			-- This is a different call site, which should trigger another warning.
 			local handle = compatReconciler.reify(createElement("StringValue"))
-			noopReconciler.unmountTree(handle)
+			noopReconciler.unmountVirtualTree(handle)
 		end)
 
 		expect(#logInfo.warnings).to.equal(1)
@@ -37,7 +37,7 @@ return function()
 			-- We're using a loop so that we get the same stack trace and only one
 			-- warning hopefully.
 			for _ = 1, 2 do
-				local handle = noopReconciler.mountTree(createElement("StringValue"))
+				local handle = noopReconciler.mountVirtualTree(createElement("StringValue"))
 				compatReconciler.teardown(handle)
 			end
 		end)
@@ -47,7 +47,7 @@ return function()
 
 		logInfo = Logging.capture(function()
 			-- This is a different call site, which should trigger another warning.
-			local handle = noopReconciler.mountTree(createElement("StringValue"))
+			local handle = noopReconciler.mountVirtualTree(createElement("StringValue"))
 			compatReconciler.teardown(handle)
 		end)
 
@@ -60,9 +60,9 @@ return function()
 			-- We're using a loop so that we get the same stack trace and only one
 			-- warning hopefully.
 			for _ = 1, 2 do
-				local handle = noopReconciler.mountTree(createElement("StringValue"))
+				local handle = noopReconciler.mountVirtualTree(createElement("StringValue"))
 				compatReconciler.reconcile(handle, createElement("StringValue"))
-				noopReconciler.unmountTree(handle)
+				noopReconciler.unmountVirtualTree(handle)
 			end
 		end)
 
@@ -71,9 +71,9 @@ return function()
 
 		logInfo = Logging.capture(function()
 			-- This is a different call site, which should trigger another warning.
-			local handle = noopReconciler.mountTree(createElement("StringValue"))
+			local handle = noopReconciler.mountVirtualTree(createElement("StringValue"))
 			compatReconciler.reconcile(handle, createElement("StringValue"))
-			noopReconciler.unmountTree(handle)
+			noopReconciler.unmountVirtualTree(handle)
 		end)
 
 		expect(#logInfo.warnings).to.equal(1)

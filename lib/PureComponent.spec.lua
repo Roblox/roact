@@ -50,7 +50,7 @@ return function()
 		end
 
 		local element = createElement(PureContainer)
-		local tree = noopReconciler.mountTree(element, nil, "PureComponent Tree")
+		local tree = noopReconciler.mountVirtualTree(element, nil, "PureComponent Tree")
 
 		expect(updateCount).to.equal(0)
 
@@ -70,6 +70,6 @@ return function()
 
 		expect(updateCount).to.equal(3)
 
-		noopReconciler.unmountTree(tree)
+		noopReconciler.unmountVirtualTree(tree)
 	end)
 end

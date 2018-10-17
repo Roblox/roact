@@ -25,6 +25,8 @@ local Roact = strict {
 	Event = require(script.PropMarkers.Event),
 	Ref = require(script.PropMarkers.Ref),
 
+	-- TODO: This is exposed in `master` as a way to figure out if something is
+	-- an element. We should replace this with dedicated typecheck functions!
 	-- Element = Core.Element,
 
 	mount = robloxReconciler.mountVirtualTree,

@@ -10,7 +10,7 @@ return function()
 	local BindingTest = Roact.Component:extend("BindingTest")
 
 	function BindingTest:init()
-		self.binding = Roact.createBinding(0)
+		self.binding, self.updateBinding = Roact.createBinding(0)
 	end
 
 	function BindingTest:render()
@@ -24,13 +24,17 @@ return function()
 
 	function BindingTest:didMount()
 		spawn(function()
-			while true do
-				wait(1)
-
+			while self.binding ~= nil do
 				print("Update binding!")
-				self.binding:update(self.binding:getValue() + 1)
+				self.updateBinding(self.binding.getValue() + 1)
+
+				wait(1)
 			end
 		end)
+	end
+
+	function BindingTest:willUnmount()
+		self.binding = nil
 	end
 
 	local app = Roact.createElement("ScreenGui", nil, {

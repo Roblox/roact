@@ -5,8 +5,33 @@
 ]]
 
 local ElementKind = require(script.Parent.ElementKind)
+local Binding = require(script.Parent.Binding)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local Children = require(script.Parent.PropMarkers.Children)
+
+local function bindHostProperty(node, key, newBinding, oldBinding)
+	if oldBinding ~= nil then
+		local disconnect = node.bindings[key]
+
+		node.bindings[key] = disconnect()
+	end
+
+	if newBinding ~= nil then
+		local function updateBoundProperty(newValue)
+			node.hostObject[key] = newValue
+		end
+
+		if node.bindings == nil then
+			node.bindings = {}
+		end
+
+		node.bindings[key] = Binding.subscribe(newBinding, updateBoundProperty)
+
+		return newBinding.getValue()
+	end
+
+	return nil
+end
 
 local function setHostProperty(node, key, newValue, oldValue)
 	if newValue == oldValue then
@@ -24,6 +49,10 @@ local function setHostProperty(node, key, newValue, oldValue)
 			local hostClass = node.hostObject.ClassName
 			local _, defaultValue = getDefaultPropertyValue(hostClass, key)
 			newValue = defaultValue
+		end
+
+		if Binding.isBinding(newValue) then
+			newValue = bindHostProperty(node, key, newValue, oldValue)
 		end
 
 		node.hostObject[key] = newValue
@@ -71,6 +100,12 @@ end
 function RobloxRenderer.unmountHostNode(reconciler, node)
 	for _, childNode in pairs(node.children) do
 		reconciler.unmountVirtualNode(childNode)
+	end
+
+	if node.bindings ~= nil then
+		for _, disconnect in pairs(node.bindings) do
+			disconnect()
+		end
 	end
 
 	node.hostObject:Destroy()

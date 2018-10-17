@@ -6,12 +6,13 @@
 	* https://reactjs.org/docs/refs-and-the-dom.html
 	* https://reactjs.org/blog/2018/03/29/react-v-16-3.html#createref-api
 ]]
+local Binding = require(script.Parent.Binding)
 local Symbol = require(script.Parent.Symbol)
 local Type = require(script.Parent.Type)
-local Binding = require(script.Parent.Binding)
 
 local Internal = {
-	Binding = Symbol.named("Binding"),
+	binding = Symbol.named("binding"),
+	updater = Symbol.named("updater"),
 }
 
 local refMetatable = {
@@ -19,10 +20,10 @@ local refMetatable = {
 		return ("RoactRef(%s)"):format(tostring(self.current))
 	end,
 
-	-- Compatibility layer
+	-- Compatibility layer to extract value from binding
 	__index = function(self, key)
 		if key == "current" then
-			return self.getValue()
+			return self[Internal.binding].getValue()
 		end
 	end,
 }
@@ -30,13 +31,12 @@ local refMetatable = {
 local Ref = {}
 
 function Ref.create()
-	local binding = Binding.create(nil)
+	local binding, updater = Binding.create(nil)
 
 	local ref = {
 		[Type] = Type.Ref,
-		[Internal.Binding] = binding,
-
-		getValue = binding.getValue,
+		[Internal.binding] = binding,
+		[Internal.updater] = updater,
 	}
 
 	setmetatable(ref, refMetatable)
@@ -45,12 +45,15 @@ function Ref.create()
 end
 
 function Ref.getBinding(ref)
-	return ref[Internal.Binding]
+	return ref[Internal.binding]
 end
 
+--[[
+	Update the rbx value in a given ref
+]]
 function Ref.apply(ref, newRbx)
 	if ref ~= nil then
-		ref[Internal.Binding].update(newRbx)
+		ref[Internal.updater](newRbx)
 	end
 end
 

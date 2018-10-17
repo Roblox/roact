@@ -49,6 +49,16 @@ local function setHostProperty(node, key, newValue, oldValue)
 			newValue = defaultValue
 		end
 
+		-- If either value is a Ref, unwrap it into a Binding
+		if Type.of(newValue) == Type.Ref then
+			newValue = Ref.getBinding(newValue)
+		end
+
+		if Type.of(oldValue) == Type.Ref then
+			oldValue = Ref.getBinding(oldValue)
+		end
+
+		-- If either value is a Binding, detach and/or attach it as expected
 		if Type.of(oldValue) == Type.Binding then
 			local disconnect = node.bindings[key]
 
@@ -57,10 +67,6 @@ local function setHostProperty(node, key, newValue, oldValue)
 
 		if Type.of(newValue) == Type.Binding then
 			newValue = bindHostProperty(node, key, newValue)
-		end
-
-		if Type.of(newValue) == Type.Ref then
-			newValue = bindHostProperty(node, key, Ref.getBinding(newValue))
 		end
 
 		node.hostObject[key] = newValue

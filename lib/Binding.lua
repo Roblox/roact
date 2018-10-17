@@ -4,13 +4,13 @@ local Type = require(script.Parent.Type)
 local createSignal = require(script.Parent.createSignal)
 
 local Internal = {
-	ChangeSignal = Symbol.named("ChangeSignal"),
-	Value = Symbol.named("Value"),
+	changeSignal = Symbol.named("changeSignal"),
+	value = Symbol.named("value"),
 }
 
 local bindingMetatable = {
 	__tostring = function(self)
-		return ("RoactBinding(%s)"):format(tostring(self[Internal.Value]))
+		return "RoactBinding"
 	end,
 }
 
@@ -19,26 +19,26 @@ local Binding = {}
 function Binding.create(initialValue)
 	local binding = {
 		[Type] = Type.Binding,
-		[Internal.Value] = initialValue,
-		[Internal.ChangeSignal] = createSignal(),
+		[Internal.value] = initialValue,
+		[Internal.changeSignal] = createSignal(),
 	}
 
 	binding.getValue = function()
-		return binding[Internal.Value]
-	end
-
-	binding.update = function(newValue)
-		binding[Internal.Value] = newValue
-		binding[Internal.ChangeSignal]:fire(newValue)
+		return binding[Internal.value]
 	end
 
 	setmetatable(binding, bindingMetatable)
 
-	return binding
+	local updater = function(newValue)
+		binding[Internal.value] = newValue
+		binding[Internal.changeSignal]:fire(newValue)
+	end
+
+	return binding, updater
 end
 
 function Binding.subscribe(binding, updateHandler)
-	return binding[Internal.ChangeSignal]:subscribe(updateHandler)
+	return binding[Internal.changeSignal]:subscribe(updateHandler)
 end
 
 return Binding

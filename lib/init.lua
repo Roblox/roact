@@ -8,6 +8,7 @@ local createReconcilerCompat = require(script.createReconcilerCompat)
 local RobloxRenderer = require(script.RobloxRenderer)
 local strict = require(script.strict)
 local Binding = require(script.Binding)
+local Ref = require(script.Ref)
 
 local robloxReconciler = createReconciler(RobloxRenderer)
 local reconcilerCompat = createReconcilerCompat(robloxReconciler)
@@ -15,7 +16,6 @@ local reconcilerCompat = createReconcilerCompat(robloxReconciler)
 local Roact = strict {
 	Component = require(script.Component),
 	createElement = require(script.createElement),
-	createRef = require(script.createRef),
 	oneChild = require(script.oneChild),
 	PureComponent = require(script.PureComponent),
 	None = require(script.None),
@@ -26,7 +26,7 @@ local Roact = strict {
 	Event = require(script.PropMarkers.Event),
 	Ref = require(script.PropMarkers.Ref),
 
-	-- Element = Core.Element,
+	createRef = Ref.create,
 	createBinding = Binding.create,
 
 	mount = robloxReconciler.mountVirtualTree,

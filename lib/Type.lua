@@ -28,6 +28,7 @@ addType("StatefulComponentClass")
 addType("StatefulComponentInstance")
 addType("VirtualNode")
 addType("VirtualTree")
+addType("Binding")
 
 function TypeInternal.of(value)
 	if typeof(value) ~= "table" then

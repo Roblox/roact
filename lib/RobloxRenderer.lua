@@ -6,16 +6,12 @@
 
 local ElementKind = require(script.Parent.ElementKind)
 local Binding = require(script.Parent.Binding)
+local Ref = require(script.Parent.Ref)
+local Type = require(script.Parent.Type)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local Children = require(script.Parent.PropMarkers.Children)
 
-local function bindHostProperty(node, key, newBinding, oldBinding)
-	if oldBinding ~= nil then
-		local disconnect = node.bindings[key]
-
-		node.bindings[key] = disconnect()
-	end
-
+local function bindHostProperty(node, key, newBinding)
 	if newBinding ~= nil then
 		local function updateBoundProperty(newValue)
 			node.hostObject[key] = newValue
@@ -51,11 +47,20 @@ local function setHostProperty(node, key, newValue, oldValue)
 			newValue = defaultValue
 		end
 
-		if Binding.isBinding(newValue) then
-			newValue = bindHostProperty(node, key, newValue, oldValue)
+		if Type.of(oldValue) == Type.Binding then
+			local disconnect = node.bindings[key]
+
+			node.bindings[key] = disconnect()
+		end
+
+		if Type.of(newValue) == Type.Binding then
+			newValue = bindHostProperty(node, key, newValue)
 		end
 
 		node.hostObject[key] = newValue
+	elseif key == Core.Ref then
+		Ref.apply(oldValue, nil)
+		Ref.apply(newValue, node.hostObject)
 	else
 		-- TODO
 		error("NYI")

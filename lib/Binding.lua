@@ -1,4 +1,6 @@
 local Symbol = require(script.Parent.Symbol)
+local Type = require(script.Parent.Type)
+
 local createSignal = require(script.Parent.createSignal)
 
 local Internal = {
@@ -16,6 +18,7 @@ local Binding = {}
 
 function Binding.create(initialValue)
 	local self = {
+		[Type] = Type.Binding,
 		[Internal.Value] = initialValue,
 		[Internal.ChangeSignal] = createSignal(),
 	}
@@ -32,10 +35,6 @@ function Binding.create(initialValue)
 	end
 
 	return self, updater
-end
-
-function Binding.isBinding(value)
-	return typeof(value) == "table" and getmetatable(value) == bindingMetatable
 end
 
 function Binding.subscribe(binding, updateHandler)

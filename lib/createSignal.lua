@@ -12,7 +12,8 @@
 		disconnect()
 ]]
 
-local globalSubs = 0
+local DEBUG_SIGNAL = true
+local debug_globalSubs = 0
 
 local function addToMap(map, addKey, addValue)
 	local new = {}
@@ -23,8 +24,10 @@ local function addToMap(map, addKey, addValue)
 
 	new[addKey] = addValue
 
-	globalSubs = globalSubs + 1
-	print("Signal subscriptions:", globalSubs)
+	if DEBUG_SIGNAL then
+		debug_globalSubs = debug_globalSubs + 1
+		print("Signal subscriptions:", debug_globalSubs)
+	end
 
 	return new
 end
@@ -38,8 +41,10 @@ local function removeFromMap(map, removeKey)
 		end
 	end
 
-	globalSubs = globalSubs - 1
-	print("Signal subscriptions:", globalSubs)
+	if DEBUG_SIGNAL then
+		debug_globalSubs = debug_globalSubs - 1
+		print("Signal subscriptions:", debug_globalSubs)
+	end
 
 	return new
 end
@@ -62,6 +67,12 @@ local function createSignal()
 			connection.disconnected = true
 			connections = removeFromMap(connections, callback)
 
+			--[[
+				We return nil here to make it easier to clear connections and nil out their references:
+
+					local disconnect = mapOfConnections[key]
+					mapOfConnections[key] = disconnect()
+			]]
 			return nil
 		end
 

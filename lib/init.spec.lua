@@ -25,7 +25,6 @@ return function()
 			Change = true,
 			Ref = true,
 			None = true,
-			-- Element = true,
 			UNSTABLE = true,
 		}
 
@@ -58,113 +57,6 @@ return function()
 				error(message)
 			end
 		end
-	end)
-
-	describe("Props", function()
-		it("should be passed to primitive components", function()
-			local container = Instance.new("IntValue")
-
-			local element = Roact.createElement("StringValue", {
-				Value = "foo",
-			})
-
-			Roact.mount(element, container, "TestStringValue")
-
-			local rbx = container:FindFirstChild("TestStringValue")
-
-			expect(rbx).to.be.ok()
-			expect(rbx.Value).to.equal("foo")
-		end)
-
-		it("should be passed to functional components", function()
-			local testProp = {}
-
-			local callCount = 0
-
-			local function TestComponent(props)
-				expect(props.testProp).to.equal(testProp)
-				callCount = callCount + 1
-			end
-
-			local element = Roact.createElement(TestComponent, {
-				testProp = testProp,
-			})
-
-			Roact.mount(element)
-
-			-- The only guarantee is that the function will be invoked at least once
-			expect(callCount > 0).to.equal(true)
-		end)
-
-		it("should be passed to stateful components", function()
-			local testProp = {}
-
-			local callCount = 0
-
-			local TestComponent = Roact.Component:extend("TestComponent")
-
-			function TestComponent:init(props)
-				expect(props.testProp).to.equal(testProp)
-				callCount = callCount + 1
-			end
-
-			function TestComponent:render()
-			end
-
-			local element = Roact.createElement(TestComponent, {
-				testProp = testProp,
-			})
-
-			Roact.mount(element)
-
-			expect(callCount).to.equal(1)
-		end)
-	end)
-
-	describe("State", function()
-		it("should trigger a re-render of child components", function()
-			local renderCount = 0
-			local listener = nil
-
-			local TestChild = Roact.Component:extend("TestChild")
-
-			function TestChild:render()
-				renderCount = renderCount + 1
-				return nil
-			end
-
-			local TestParent = Roact.Component:extend("TestParent")
-
-			function TestParent:init(props)
-				self.state = {
-					value = 0,
-				}
-			end
-
-			function TestParent:didMount()
-				listener = function()
-					self:setState({
-						value = self.state.value + 1,
-					})
-				end
-			end
-
-			function TestParent:render()
-				return Roact.createElement(TestChild, {
-					value = self.state.value,
-				})
-			end
-
-			local element = Roact.createElement(TestParent)
-			Roact.mount(element)
-
-			expect(renderCount >= 1).to.equal(true)
-			expect(listener).to.be.a("function")
-
-			listener()
-
-			expect(renderCount >= 2).to.equal(true)
-		end)
 	end)
 
 	describe("Context", function()

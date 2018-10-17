@@ -9,6 +9,7 @@ local Binding = require(script.Parent.Binding)
 local Ref = require(script.Parent.Ref)
 local Type = require(script.Parent.Type)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
+local Type = require(script.Parent.Type)
 local Children = require(script.Parent.PropMarkers.Children)
 
 local RefMarker = require(script.Parent.PropMarkers.Ref)
@@ -32,13 +33,7 @@ local function setHostProperty(node, key, newValue, oldValue)
 		return
 	end
 
-	if key == Children then
-		return
-	end
-
-	local keyType = typeof(key)
-
-	if keyType == "string" then
+	if typeof(key) == "string" then
 		if newValue == nil then
 			local hostClass = node.hostObject.ClassName
 			local _, defaultValue = getDefaultPropertyValue(hostClass, key)
@@ -67,13 +62,29 @@ local function setHostProperty(node, key, newValue, oldValue)
 
 		-- Assign the new value to the object
 		node.hostObject[key] = newValue
+
+		return
 	elseif key == RefMarker then
 		Ref.apply(oldValue, nil)
 		Ref.apply(newValue, node.hostObject)
-	else
-		-- TODO
-		error(("%s: NYI"):format(tostring(key)))
+
+		return
 	end
+
+	if key == Children then
+		-- Children and refs are handled elsewhere in the renderer
+		return
+	end
+
+	local internalKeyType = Type.of(key)
+
+	if internalKeyType == Type.HostEvent or internalKeyType == Type.HostChangeEvent then
+		-- Event connections are handled in a separate pass
+		return
+	end
+
+	-- TODO: Better error message
+	error(("Unknown prop %q"):format(tostring(key)))
 end
 
 local RobloxRenderer = {}
@@ -85,14 +96,15 @@ function RobloxRenderer.mountHostNode(reconciler, node)
 
 	assert(ElementKind.of(element) == ElementKind.Host)
 
+	-- TODO: Better error messages
 	assert(element.props.Name == nil)
 	assert(element.props.Parent == nil)
 
 	local instance = Instance.new(element.component)
 	node.hostObject = instance
 
-	for name, value in pairs(element.props) do
-		setHostProperty(node, name, value, nil)
+	for propKey, value in pairs(element.props) do
+		setHostProperty(node, propKey, value, nil)
 	end
 
 	instance.Name = key
@@ -109,9 +121,13 @@ function RobloxRenderer.mountHostNode(reconciler, node)
 
 	instance.Parent = hostParent
 	node.hostObject = instance
+
+	-- TODO: Attach ref
 end
 
 function RobloxRenderer.unmountHostNode(reconciler, node)
+	-- TODO: Detach ref
+
 	for _, childNode in pairs(node.children) do
 		reconciler.unmountVirtualNode(childNode)
 	end
@@ -130,20 +146,20 @@ function RobloxRenderer.updateHostNode(reconciler, node, newElement)
 	local newProps = newElement.props
 
 	-- Apply props that were added or updated
-	for key, newValue in pairs(newProps) do
-		local oldValue = oldProps[key]
+	for propKey, newValue in pairs(newProps) do
+		local oldValue = oldProps[propKey]
 
 		if newValue ~= oldValue then
-			setHostProperty(node, key, newValue, oldValue)
+			setHostProperty(node, propKey, newValue, oldValue)
 		end
 	end
 
 	-- Apply props that were removed
-	for key, oldValue in pairs(oldProps) do
-		local newValue = newProps[key]
+	for propKey, oldValue in pairs(oldProps) do
+		local newValue = newProps[propKey]
 
 		if newValue == nil then
-			setHostProperty(node, key, nil, oldValue)
+			setHostProperty(node, propKey, nil, oldValue)
 		end
 	end
 

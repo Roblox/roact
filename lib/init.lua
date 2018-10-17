@@ -28,6 +28,9 @@ local Roact = strict {
 
 	createRef = Ref.create,
 	createBinding = Binding.create,
+	-- TODO: This is exposed in `master` as a way to figure out if something is
+	-- an element. We should replace this with dedicated typecheck functions!
+	-- Element = Core.Element,
 
 	mount = robloxReconciler.mountVirtualTree,
 	unmount = robloxReconciler.unmountVirtualTree,

@@ -52,6 +52,7 @@ function RobloxRenderer.mountHostNode(reconciler, node)
 
 	assert(ElementKind.of(element) == ElementKind.Host)
 
+	-- TODO: Better error messages
 	assert(element.props.Name == nil)
 	assert(element.props.Parent == nil)
 

@@ -1,4 +1,4 @@
-local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
+local PlayerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 
 local exampleData = {
 	{
@@ -24,6 +24,10 @@ local exampleData = {
 	{
 		name = "ref",
 		label = "Ref",
+	},
+	{
+		name = "binding",
+		label = "Binding",
 	},
 }
 

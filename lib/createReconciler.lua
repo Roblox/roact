@@ -13,20 +13,6 @@ local ChildUtils = require(script.Parent.ChildUtils)
 	When testing the reconciler itself, it's common to use `NoopRenderer` with
 	spies replacing some methods. The default (and only) reconciler interface
 	exposed by Roact right now uses `RobloxRenderer`.
-
-	The reconciler primarily deals with a few kinds of objects:
-	- Tree
-	- Virtual Node
-	- Component Instance
-	- Element
-
-	Trees are... (TODO)
-
-	Virtual Nodes are... (TODO)
-
-	Component Instances are... (TODO)
-
-	Elements are... (TODO)
 ]]
 local function createReconciler(renderer)
 	local reconciler

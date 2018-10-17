@@ -2,7 +2,6 @@
 	Packages up the internals of Roact and exposes a public API for it.
 ]]
 
-local Core = require(script.Core)
 local GlobalConfig = require(script.GlobalConfig)
 local createReconciler = require(script.createReconciler)
 local createReconcilerCompat = require(script.createReconcilerCompat)
@@ -13,19 +12,20 @@ local robloxReconciler = createReconciler(RobloxRenderer)
 local reconcilerCompat = createReconcilerCompat(robloxReconciler)
 
 local Roact = strict {
-	Change = require(script.Change),
 	Component = require(script.Component),
 	createElement = require(script.createElement),
 	createRef = require(script.createRef),
-	Event = require(script.Event),
 	oneChild = require(script.oneChild),
 	PureComponent = require(script.PureComponent),
 	None = require(script.None),
+	Portal = require(script.Portal),
 
-	Children = Core.Children,
-	Element = Core.Element,
-	Portal = Core.Portal,
-	Ref = Core.Ref,
+	Change = require(script.PropMarkers.Change),
+	Children = require(script.PropMarkers.Children),
+	Event = require(script.PropMarkers.Event),
+	Ref = require(script.PropMarkers.Ref),
+
+	-- Element = Core.Element,
 
 	mount = robloxReconciler.mountVirtualTree,
 	unmount = robloxReconciler.unmountVirtualTree,

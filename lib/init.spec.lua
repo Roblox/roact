@@ -1,8 +1,6 @@
 return function()
 	local Roact = require(script.Parent)
 
-	SKIP()
-
 	it("should load with all public APIs", function()
 		local publicApi = {
 			createElement = "function",
@@ -27,7 +25,7 @@ return function()
 			Change = true,
 			Ref = true,
 			None = true,
-			Element = true,
+			-- Element = true,
 			UNSTABLE = true,
 		}
 
@@ -170,6 +168,8 @@ return function()
 	end)
 
 	describe("Context", function()
+		SKIP()
+
 		it("should be passed to children through primitive and functional components", function()
 			local testValue = {}
 
@@ -214,6 +214,8 @@ return function()
 	end)
 
 	describe("Ref", function()
+		SKIP()
+
 		it("should call back with a Roblox object after properties and children", function()
 			local callCount = 0
 
@@ -316,6 +318,8 @@ return function()
 	end)
 
 	describe("Portal", function()
+		SKIP()
+
 		it("should place all children as children of the target Roblox instance", function()
 			local target = Instance.new("Folder")
 

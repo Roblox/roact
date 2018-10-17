@@ -1,10 +1,11 @@
 return function()
 	local Component = require(script.Parent.Component)
-	local Core = require(script.Parent.Core)
 	local ElementKind = require(script.Parent.ElementKind)
 	local GlobalConfig = require(script.Parent.GlobalConfig)
 	local Logging = require(script.Parent.Logging)
 	local Type = require(script.Parent.Type)
+	local Portal = require(script.Parent.Portal)
+	local Children = require(script.Parent.PropMarkers.Children)
 
 	local createElement = require(script.Parent.createElement)
 
@@ -36,7 +37,7 @@ return function()
 	end)
 
 	it("should create new portal elements", function()
-		local element = createElement(Core.Portal)
+		local element = createElement(Portal)
 
 		expect(element).to.be.ok()
 		expect(Type.of(element)).to.equal(Type.Element)
@@ -63,8 +64,8 @@ return function()
 
 		expect(element).to.be.ok()
 		expect(element.props.Value).to.equal("Foo")
-		expect(element.props[Core.Children]).to.be.ok()
-		expect(element.props[Core.Children].Child).to.equal(child)
+		expect(element.props[Children]).to.be.ok()
+		expect(element.props[Children].Child).to.equal(child)
 	end)
 
 	it("should accept children with without props", function()
@@ -75,8 +76,8 @@ return function()
 		})
 
 		expect(element).to.be.ok()
-		expect(element.props[Core.Children]).to.be.ok()
-		expect(element.props[Core.Children].Child).to.equal(child)
+		expect(element.props[Children]).to.be.ok()
+		expect(element.props[Children].Child).to.equal(child)
 	end)
 
 	it("should warn once if children is specified in two different ways", function()
@@ -85,7 +86,7 @@ return function()
 			-- warning only cause output once.
 			for _ = 1, 2 do
 				createElement("Frame", {
-					[Core.Children] = {},
+					[Children] = {},
 				}, {})
 			end
 		end)

@@ -11,7 +11,7 @@
 		})
 ]]
 
-local Type = require(script.Parent.Type)
+local Type = require(script.Parent.Parent.Type)
 
 local Change = {}
 

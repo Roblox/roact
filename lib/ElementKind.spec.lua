@@ -1,5 +1,5 @@
 return function()
-	local Core = require(script.Parent.Core)
+	local Portal = require(script.Parent.Portal)
 	local Component = require(script.Parent.Component)
 
 	local ElementKind = require(script.Parent.ElementKind)
@@ -43,7 +43,7 @@ return function()
 		end)
 
 		it("should handle portals", function()
-			expect(ElementKind.fromComponent(Core.Portal)).to.equal(ElementKind.Portal)
+			expect(ElementKind.fromComponent(Portal)).to.equal(ElementKind.Portal)
 		end)
 
 		it("should return nil for invalid inputs", function()

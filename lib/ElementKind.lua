@@ -9,8 +9,8 @@
 ]]
 
 local Symbol = require(script.Parent.Symbol)
-local Core = require(script.Parent.Core)
 local strict = require(script.Parent.strict)
+local Portal = require(script.Parent.Portal)
 
 local ElementKind = newproxy(true)
 
@@ -36,7 +36,7 @@ local componentTypesToKinds = {
 }
 
 function ElementKindInternal.fromComponent(component)
-	if component == Core.Portal then
+	if component == Portal then
 		return ElementKind.Portal
 	else
 		return componentTypesToKinds[typeof(component)]

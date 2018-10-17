@@ -1,4 +1,4 @@
-local Core = require(script.Parent.Core)
+local Children = require(script.Parent.PropMarkers.Children)
 local ElementKind = require(script.Parent.ElementKind)
 local GlobalConfig = require(script.Parent.GlobalConfig)
 local Logging = require(script.Parent.Logging)
@@ -43,11 +43,11 @@ local function createElement(component, props, children)
 	end
 
 	if children ~= nil then
-		if props[Core.Children] ~= nil then
+		if props[Children] ~= nil then
 			Logging.warnOnce(multipleChildrenMessage)
 		end
 
-		props[Core.Children] = children
+		props[Children] = children
 	end
 
 	local elementKind = ElementKind.fromComponent(component)

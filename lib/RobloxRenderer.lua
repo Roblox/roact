@@ -6,14 +6,14 @@
 
 local ElementKind = require(script.Parent.ElementKind)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
-local Core = require(script.Parent.Core)
+local Children = require(script.Parent.PropMarkers.Children)
 
 local function setHostProperty(node, key, newValue, oldValue)
 	if newValue == oldValue then
 		return
 	end
 
-	if key == Core.Children then
+	if key == Children then
 		return
 	end
 
@@ -54,7 +54,7 @@ function RobloxRenderer.mountHostNode(reconciler, node)
 
 	instance.Name = key
 
-	local children = element.props[Core.Children]
+	local children = element.props[Children]
 
 	if children ~= nil then
 		for childKey, childElement in pairs(children) do
@@ -98,7 +98,7 @@ function RobloxRenderer.updateHostNode(reconciler, node, newElement)
 		end
 	end
 
-	reconciler.updateVirtualNodeChildren(node, newElement.props[Core.Children])
+	reconciler.updateVirtualNodeChildren(node, newElement.props[Children])
 
 	return node
 end

@@ -19,6 +19,7 @@ local Binding = {}
 function Binding.create(initialValue)
 	local binding = {
 		[Type] = Type.Binding,
+
 		[Internal.value] = initialValue,
 		[Internal.changeSignal] = createSignal(),
 	}

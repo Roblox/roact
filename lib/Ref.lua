@@ -20,7 +20,7 @@ local refMetatable = {
 		return ("RoactRef(%s)"):format(tostring(self.current))
 	end,
 
-	-- Compatibility layer to extract value from binding
+	-- Compatibility layer; you can also use getValue() like with bindings
 	__index = function(self, key)
 		if key == "current" then
 			return self[Internal.binding].getValue()
@@ -35,8 +35,11 @@ function Ref.create()
 
 	local ref = {
 		[Type] = Type.Ref,
+
 		[Internal.binding] = binding,
 		[Internal.updater] = updater,
+
+		getValue = binding.getValue,
 	}
 
 	setmetatable(ref, refMetatable)

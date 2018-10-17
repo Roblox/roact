@@ -3,17 +3,13 @@ return function()
 
 	local Roact = require(game.ReplicatedStorage.Roact)
 
-	--[[
-		A search bar with an icon and a text box
-		When the icon is clicked, the TextBox captures focus
-	]]
-	local BindingTest = Roact.Component:extend("BindingTest")
+	local BindingExample = Roact.Component:extend("BindingExample")
 
-	function BindingTest:init()
+	function BindingExample:init()
 		self.binding, self.updateBinding = Roact.createBinding(0)
 	end
 
-	function BindingTest:render()
+	function BindingExample:render()
 		return Roact.createElement("Frame", {
 			Size = UDim2.new(0, 200, 0, 200),
 			Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -22,7 +18,7 @@ return function()
 		})
 	end
 
-	function BindingTest:didMount()
+	function BindingExample:didMount()
 		spawn(function()
 			while self.binding ~= nil do
 				print("Update binding!")
@@ -33,12 +29,12 @@ return function()
 		end)
 	end
 
-	function BindingTest:willUnmount()
+	function BindingExample:willUnmount()
 		self.binding = nil
 	end
 
 	local app = Roact.createElement("ScreenGui", nil, {
-		BindingTest = Roact.createElement(BindingTest),
+		BindingExample = Roact.createElement(BindingExample),
 	})
 
 	local handle = Roact.mount(app, PlayerGui)

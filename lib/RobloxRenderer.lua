@@ -14,21 +14,17 @@ local Children = require(script.Parent.PropMarkers.Children)
 local RefMarker = require(script.Parent.PropMarkers.Ref)
 
 local function bindHostProperty(node, key, newBinding)
-	if newBinding ~= nil then
-		local function updateBoundProperty(newValue)
-			node.hostObject[key] = newValue
-		end
-
-		if node.bindings == nil then
-			node.bindings = {}
-		end
-
-		node.bindings[key] = Binding.subscribe(newBinding, updateBoundProperty)
-
-		return newBinding.getValue()
+	local function updateBoundProperty(newValue)
+		node.hostObject[key] = newValue
 	end
 
-	return nil
+	if node.bindings == nil then
+		node.bindings = {}
+	end
+
+	node.bindings[key] = Binding.subscribe(newBinding, updateBoundProperty)
+
+	return newBinding.getValue()
 end
 
 local function setHostProperty(node, key, newValue, oldValue)
@@ -58,7 +54,7 @@ local function setHostProperty(node, key, newValue, oldValue)
 			oldValue = Ref.getBinding(oldValue)
 		end
 
-		-- If either value is a Binding, detach and/or attach it as expected
+		-- If either value is a Binding, detach or attach it as expected
 		if Type.of(oldValue) == Type.Binding then
 			local disconnect = node.bindings[key]
 
@@ -69,6 +65,7 @@ local function setHostProperty(node, key, newValue, oldValue)
 			newValue = bindHostProperty(node, key, newValue)
 		end
 
+		-- Assign the new value to the object
 		node.hostObject[key] = newValue
 	elseif key == RefMarker then
 		Ref.apply(oldValue, nil)

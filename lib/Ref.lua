@@ -12,7 +12,6 @@ local Binding = require(script.Parent.Binding)
 
 local Internal = {
 	Binding = Symbol.named("Binding"),
-	Updater = Symbol.named("Updater"),
 }
 
 local refMetatable = {
@@ -23,7 +22,7 @@ local refMetatable = {
 	-- Compatibility layer
 	__index = function(self, key)
 		if key == "current" then
-			return self[Internal.Binding].getValue()
+			return self.getValue()
 		end
 	end,
 }
@@ -31,12 +30,13 @@ local refMetatable = {
 local Ref = {}
 
 function Ref.create()
-	local binding, updater = Binding.create(nil)
+	local binding = Binding.create(nil)
 
 	local ref = {
 		[Type] = Type.Ref,
 		[Internal.Binding] = binding,
-		[Internal.Updater] = updater,
+
+		getValue = binding.getValue,
 	}
 
 	setmetatable(ref, refMetatable)
@@ -44,9 +44,13 @@ function Ref.create()
 	return ref
 end
 
+function Ref.getBinding(ref)
+	return ref[Internal.Binding]
+end
+
 function Ref.apply(ref, newRbx)
 	if ref ~= nil then
-		ref[Internal.Updater](newRbx)
+		ref[Internal.Binding].update(newRbx)
 	end
 end
 

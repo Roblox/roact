@@ -17,24 +17,24 @@ local bindingMetatable = {
 local Binding = {}
 
 function Binding.create(initialValue)
-	local self = {
+	local binding = {
 		[Type] = Type.Binding,
 		[Internal.Value] = initialValue,
 		[Internal.ChangeSignal] = createSignal(),
 	}
 
-	self.getValue = function()
-		return self[Internal.Value]
+	binding.getValue = function()
+		return binding[Internal.Value]
 	end
 
-	setmetatable(self, bindingMetatable)
-
-	local updater = function(newValue)
-		self[Internal.Value] = newValue
-		self[Internal.ChangeSignal]:fire(newValue)
+	binding.update = function(newValue)
+		binding[Internal.Value] = newValue
+		binding[Internal.ChangeSignal]:fire(newValue)
 	end
 
-	return self, updater
+	setmetatable(binding, bindingMetatable)
+
+	return binding
 end
 
 function Binding.subscribe(binding, updateHandler)

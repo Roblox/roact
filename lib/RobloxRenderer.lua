@@ -11,6 +11,8 @@ local Type = require(script.Parent.Type)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local Children = require(script.Parent.PropMarkers.Children)
 
+local RefMarker = require(script.Parent.PropMarkers.Ref)
+
 local function bindHostProperty(node, key, newBinding)
 	if newBinding ~= nil then
 		local function updateBoundProperty(newValue)
@@ -57,13 +59,17 @@ local function setHostProperty(node, key, newValue, oldValue)
 			newValue = bindHostProperty(node, key, newValue)
 		end
 
+		if Type.of(newValue) == Type.Ref then
+			newValue = bindHostProperty(node, key, Ref.getBinding(newValue))
+		end
+
 		node.hostObject[key] = newValue
-	elseif key == Core.Ref then
+	elseif key == RefMarker then
 		Ref.apply(oldValue, nil)
 		Ref.apply(newValue, node.hostObject)
 	else
 		-- TODO
-		error("NYI")
+		error(("%s: NYI"):format(tostring(key)))
 	end
 end
 

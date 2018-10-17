@@ -59,7 +59,7 @@ return function()
 			local reconciler = createReconciler(renderer)
 
 			local element = createElement("StringValue")
-			local hostParent = Instance.new("IntValue")
+			local hostParent = nil
 			local key = "Some Key"
 			local node = reconciler.mountVirtualNode(element, hostParent, key)
 
@@ -84,7 +84,7 @@ return function()
 			local reconciler = createReconciler(renderer)
 
 			local element = createElement("StringValue")
-			local hostParent = Instance.new("IntValue")
+			local hostParent = nil
 			local key = "Key"
 			local node = reconciler.mountVirtualNode(element, hostParent, key)
 
@@ -115,7 +115,7 @@ return function()
 			local reconciler = createReconciler(renderer)
 
 			local element = createElement("StringValue")
-			local hostParent = Instance.new("IntValue")
+			local hostParent = nil
 			local key = "Key"
 			local node = reconciler.mountVirtualNode(element, hostParent, key)
 
@@ -141,7 +141,7 @@ return function()
 			local element = createElement(componentSpy.value, {
 				someValue = 5,
 			})
-			local hostParent = Instance.new("Folder")
+			local hostParent = nil
 			local key = "A Key"
 			local node = noopReconciler.mountVirtualNode(element, hostParent, key)
 
@@ -153,8 +153,6 @@ return function()
 
 			expect(calledWith.props).to.be.a("table")
 			expect(calledWith.props.someValue).to.equal(5)
-
-			expect(#hostParent:GetChildren()).to.equal(0)
 
 			noopReconciler.unmountVirtualNode(node)
 
@@ -175,7 +173,7 @@ return function()
 			local element = createElement(parentComponentSpy.value, {
 				value = 13,
 			})
-			local hostParent = Instance.new("Folder")
+			local hostParent = nil
 			local key = "A Key"
 			local node = noopReconciler.mountVirtualNode(element, hostParent, key)
 
@@ -192,8 +190,6 @@ return function()
 
 			expect(childCalledWith.props).to.be.a("table")
 			expect(childCalledWith.props.value).to.equal(14)
-
-			expect(#hostParent:GetChildren()).to.equal(0)
 
 			noopReconciler.unmountVirtualNode(node)
 
@@ -224,7 +220,7 @@ return function()
 			local element = createElement(parentComponentSpy.value, {
 				value = 17,
 			})
-			local hostParent = Instance.new("Folder")
+			local hostParent = nil
 			local key = "A Key"
 			local node = noopReconciler.mountVirtualNode(element, hostParent, key)
 
@@ -246,8 +242,6 @@ return function()
 
 			expect(childBCalledWith.props).to.be.a("table")
 			expect(childBCalledWith.props.value).to.equal(22)
-
-			expect(#hostParent:GetChildren()).to.equal(0)
 
 			noopReconciler.unmountVirtualNode(node)
 

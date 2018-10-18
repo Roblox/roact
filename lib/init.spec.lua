@@ -5,6 +5,7 @@ return function()
 		local publicApi = {
 			createElement = "function",
 			createRef = "function",
+			createBinding = "function",
 			mount = "function",
 			unmount = "function",
 			update = "function",

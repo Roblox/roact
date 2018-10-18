@@ -8,7 +8,6 @@ local createReconcilerCompat = require(script.createReconcilerCompat)
 local RobloxRenderer = require(script.RobloxRenderer)
 local strict = require(script.strict)
 local Binding = require(script.Binding)
-local Ref = require(script.Ref)
 
 local robloxReconciler = createReconciler(RobloxRenderer)
 local reconcilerCompat = createReconcilerCompat(robloxReconciler)
@@ -20,14 +19,15 @@ local Roact = strict {
 	PureComponent = require(script.PureComponent),
 	None = require(script.None),
 	Portal = require(script.Portal),
+	createRef = require(script.createRef),
 
 	Change = require(script.PropMarkers.Change),
 	Children = require(script.PropMarkers.Children),
 	Event = require(script.PropMarkers.Event),
 	Ref = require(script.PropMarkers.Ref),
 
-	createRef = Ref.create,
 	createBinding = Binding.create,
+
 	-- TODO: This is exposed in `master` as a way to figure out if something is
 	-- an element. We should replace this with dedicated typecheck functions!
 	-- Element = Core.Element,

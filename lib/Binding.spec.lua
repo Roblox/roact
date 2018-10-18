@@ -2,7 +2,7 @@ return function()
 	local Type = require(script.Parent.Type)
 
 	local Binding = require(script.Parent.Binding)
-FOCUS()
+
 	describe("Binding.create", function()
 
 		it("should return object with Type 'Binding'", function()
@@ -16,6 +16,14 @@ FOCUS()
 
 			expect(update).to.be.ok()
 			expect(typeof(update)).to.equal("function")
+		end)
+
+		it("should support tostring on bindings", function()
+			local binding, update = Binding.create(1)
+			expect(tostring(binding)).to.equal("RoactBinding(1)")
+
+			update("foo")
+			expect(tostring(binding)).to.equal("RoactBinding(foo)")
 		end)
 	end)
 
@@ -36,7 +44,7 @@ FOCUS()
 
 			local lastUpdateValue = nil
 
-			local disconnect = binding:subscribe(function(value)
+			local disconnect = Binding.subscribe(binding, function(value)
 				lastUpdateValue = value
 			end)
 
@@ -58,9 +66,9 @@ FOCUS()
 
 	describe("Mapped bindings", function()
 		it("should be composable", function()
-			local a, update = Binding.create("hi")
+			local word, updateWord = Binding.create("hi")
 
-			local length = a:map(function(value)
+			local length = word:map(function(value)
 				return string.len(value)
 			end)
 
@@ -68,15 +76,65 @@ FOCUS()
 				return value % 2 == 0
 			end)
 
-			expect(a:getValue()).to.equal("hi")
+			expect(word:getValue()).to.equal("hi")
 			expect(length:getValue()).to.equal(2)
 			expect(isEvenLength:getValue()).to.equal(true)
 
-			update("sup")
+			updateWord("sup")
 
-			expect(a:getValue()).to.equal("sup")
+			expect(word:getValue()).to.equal("sup")
 			expect(length:getValue()).to.equal(3)
 			expect(isEvenLength:getValue()).to.equal(false)
+		end)
+
+		it("should cascade updates when subscribed", function()
+			-- base binding
+			local word, updateWord = Binding.create("hi")
+
+			local lastWord = nil
+			local disconnectWord = Binding.subscribe(word, function(value)
+				lastWord = value
+			end)
+
+			-- binding -> base binding
+			local length = word:map(function(value)
+				return string.len(value)
+			end)
+
+			local lastLength = nil
+			local disconnectLength = Binding.subscribe(length, function(value)
+				lastLength = value
+			end)
+
+			-- binding -> binding -> base binding
+			local isEvenLength = length:map(function(value)
+				return value % 2 == 0
+			end)
+
+			local lastEvenLength = nil
+			local disconnectIsEvenLength = Binding.subscribe(isEvenLength, function(value)
+				lastEvenLength = value
+			end)
+
+			expect(lastWord).never.to.be.ok()
+			expect(lastLength).never.to.be.ok()
+			expect(lastEvenLength).never.to.be.ok()
+
+			updateWord("nice")
+
+			expect(lastWord).to.equal("nice")
+			expect(lastLength).to.equal(4)
+			expect(lastEvenLength).to.equal(true)
+
+			disconnectWord()
+			disconnectLength()
+			disconnectIsEvenLength()
+
+			updateWord("goodbye")
+
+			expect(lastWord).to.equal("nice")
+			expect(lastLength).to.equal(4)
+			expect(lastEvenLength).to.equal(true)
 		end)
 	end)
 end

@@ -5,15 +5,15 @@
 ]]
 
 local ElementKind = require(script.Parent.ElementKind)
-local Binding = require(script.Parent.Binding)
-local Ref = require(script.Parent.Ref)
 local Type = require(script.Parent.Type)
+local Binding = require(script.Parent.Binding)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local Children = require(script.Parent.PropMarkers.Children)
 
 local RefMarker = require(script.Parent.PropMarkers.Ref)
 
 local function bindHostProperty(node, key, newBinding)
+
 	local function updateBoundProperty(newValue)
 		node.hostObject[key] = newValue
 	end
@@ -24,7 +24,7 @@ local function bindHostProperty(node, key, newBinding)
 
 	node.bindings[key] = Binding.subscribe(newBinding, updateBoundProperty)
 
-	return newBinding.getValue()
+	return newBinding:getValue()
 end
 
 local function setHostProperty(node, key, newValue, oldValue)
@@ -37,15 +37,6 @@ local function setHostProperty(node, key, newValue, oldValue)
 			local hostClass = node.hostObject.ClassName
 			local _, defaultValue = getDefaultPropertyValue(hostClass, key)
 			newValue = defaultValue
-		end
-
-		-- If either value is a Ref, unwrap it into a Binding
-		if Type.of(newValue) == Type.Ref then
-			newValue = Ref.getBinding(newValue)
-		end
-
-		if Type.of(oldValue) == Type.Ref then
-			oldValue = Ref.getBinding(oldValue)
 		end
 
 		-- If either value is a Binding, detach or attach it as expected
@@ -119,7 +110,7 @@ function RobloxRenderer.mountHostNode(reconciler, node)
 	local ref = element.props[RefMarker]
 	if ref ~= nil then
 		-- TODO: Verify ref object is correct type?
-		Ref.apply(ref, instance)
+		Binding.update(ref, instance)
 	end
 
 	return
@@ -131,7 +122,7 @@ function RobloxRenderer.unmountHostNode(reconciler, node)
 
 	if ref ~= nil then
 		-- TODO: Verify correct type?
-		Ref.apply(ref, nil)
+		Binding.update(ref, nil)
 	end
 
 	for _, childNode in pairs(node.children) do

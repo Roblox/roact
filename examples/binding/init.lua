@@ -12,7 +12,9 @@ return function()
 	function BindingExample:render()
 		return Roact.createElement("Frame", {
 			Size = UDim2.new(0, 200, 0, 200),
-			Position = UDim2.new(0.5, 0, 0.5, 0),
+			Position = self.binding:map(function(value)
+				return UDim2.new(0.5 + value / 200, 0, 0.5, 0)
+			end),
 			AnchorPoint = Vector2.new(0.5, 0.5),
 			BorderSizePixel = self.binding,
 		})
@@ -22,9 +24,9 @@ return function()
 		spawn(function()
 			while self.binding ~= nil do
 				print("Update binding!")
-				self.updateBinding(self.binding.getValue() + 1)
+				self.updateBinding(self.binding:getValue() + 1)
 
-				wait(1)
+				wait(0.1)
 			end
 		end)
 	end

@@ -3,17 +3,9 @@ return function()
 
 	local createRef = require(script.Parent.createRef)
 
-	it("should create refs", function()
+	it("should create refs, which are specialized bindings", function()
 		local ref = createRef()
-		expect(Type.of(ref)).to.equal(Type.Ref)
+		expect(Type.of(ref)).to.equal(Type.Binding)
 		expect(ref.current).to.equal(nil)
-	end)
-
-	it("should support tostring on refs", function()
-		local ref = createRef()
-		expect(tostring(ref)).to.equal("RoactRef(nil)")
-
-		ref.current = "foo"
-		expect(tostring(ref)).to.equal("RoactRef(foo)")
 	end)
 end

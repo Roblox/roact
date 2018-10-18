@@ -10,7 +10,7 @@ local Binding = require(script.Parent.Binding)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local Children = require(script.Parent.PropMarkers.Children)
 
-local RefMarker = require(script.Parent.PropMarkers.Ref)
+local Ref = require(script.Parent.PropMarkers.Ref)
 
 local function bindHostProperty(node, key, newBinding)
 
@@ -56,7 +56,7 @@ local function setHostProperty(node, key, newValue, oldValue)
 		return
 	end
 
-	if key == Children or key == RefMarker then
+	if key == Children or key == Ref then
 		-- Children and refs are handled elsewhere in the renderer
 		return
 	end
@@ -107,7 +107,7 @@ function RobloxRenderer.mountHostNode(reconciler, node)
 	instance.Parent = hostParent
 	node.hostObject = instance
 
-	local ref = element.props[RefMarker]
+	local ref = element.props[Ref]
 	if ref ~= nil then
 		-- TODO: Verify ref object is correct type?
 		Binding.update(ref, instance)
@@ -118,7 +118,7 @@ end
 
 function RobloxRenderer.unmountHostNode(reconciler, node)
 	local element = node.currentElement
-	local ref = element.props[RefMarker]
+	local ref = element.props[Ref]
 
 	if ref ~= nil then
 		-- TODO: Verify correct type?
@@ -159,6 +159,8 @@ function RobloxRenderer.updateHostNode(reconciler, node, newElement)
 			setHostProperty(node, propKey, nil, oldValue)
 		end
 	end
+
+	-- TODO: Reconcile refs appropriately
 
 	reconciler.updateVirtualNodeChildren(node, newElement.props[Children])
 

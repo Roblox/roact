@@ -8,6 +8,7 @@ local function createRef()
 	local binding, _ = Binding.create(nil)
 
 	getmetatable(binding).__index = function(self, key)
+		-- TODO: Throw errors if attempting to access invalid fields
 		if key == "current" then
 			return self:getValue()
 		end

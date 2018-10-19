@@ -21,9 +21,11 @@ return function()
 	end
 
 	function BindingExample:didMount()
+		self.running = true
+
 		spawn(function()
-			while self.binding ~= nil do
-				print("Update binding!")
+			while self.running do
+				-- With each update, the frame's border grows and it moves to the right
 				self.updateBinding(self.binding:getValue() + 1)
 
 				wait(0.1)
@@ -32,7 +34,7 @@ return function()
 	end
 
 	function BindingExample:willUnmount()
-		self.binding = nil
+		self.running = false
 	end
 
 	local app = Roact.createElement("ScreenGui", nil, {

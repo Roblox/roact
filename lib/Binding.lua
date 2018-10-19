@@ -3,6 +3,9 @@ local Type = require(script.Parent.Type)
 
 local createSignal = require(script.Parent.createSignal)
 
+--[[
+	Markers for fields and methods that are hidden from external users
+]]
 local Internal = {
 	changeSignal = Symbol.named("changeSignal"),
 	value = Symbol.named("value"),
@@ -19,6 +22,10 @@ local bindingMetatable = {
 
 local Binding = {}
 
+--[[
+	Create a new binding object with the given starting value. This
+	function will be exposed to users of Roact.
+]]
 function Binding.create(initialValue)
 	local binding = Binding.createFromSource(initialValue, function(value)
 		return value
@@ -31,6 +38,12 @@ function Binding.create(initialValue)
 	return binding, updater
 end
 
+--[[
+	Creates a new binding from the given source and with the given mapping.
+
+	The source can either be a starting value or another Binding object,
+	which is useful for mapping a binding onto another binding
+]]
 function Binding.createFromSource(source, mapFunc)
 	local initialValue = source
 	if Type.of(source) == Type.Binding then
@@ -48,6 +61,8 @@ function Binding.createFromSource(source, mapFunc)
 	}
 
 	binding[Internal.update] = function(self, newValue)
+		assert(self ~= newValue, "Really? Come on...")
+
 		newValue = mapFunc(newValue)
 
 		self[Internal.value] = newValue

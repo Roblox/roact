@@ -25,10 +25,10 @@ return function()
 				Text = "=>",
 
 				-- Handle click events on the search button
-				-- [Roact.Event.Activated] = function()
-				-- 	print("Button clicked; have the TextBox capture focus")
-				-- 	self.textBoxRef.current:CaptureFocus()
-				-- end
+				[Roact.Event.Activated] = function()
+					print("Button clicked; have the TextBox capture focus")
+					self.textBoxRef.current:CaptureFocus()
+				end
 			}),
 
 			SearchTextBox = Roact.createElement("TextBox", {
@@ -39,10 +39,6 @@ return function()
 				[Roact.Ref] = self.textBoxRef
 			}),
 		})
-	end
-
-	function SearchBar:didMount()
-		print("Ref width:", self.textBoxRef.current.AbsoluteSize.X)
 	end
 
 	local app = Roact.createElement("ScreenGui", nil, {

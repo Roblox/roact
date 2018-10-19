@@ -4,7 +4,6 @@ return function()
 	local Binding = require(script.Parent.Binding)
 
 	describe("Binding.create", function()
-
 		it("should return object with Type 'Binding'", function()
 			local binding = Binding.create(1)
 

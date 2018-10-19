@@ -12,9 +12,6 @@
 		disconnect()
 ]]
 
-local DEBUG_SIGNAL = true
-local debug_globalSubs = 0
-
 local function addToMap(map, addKey, addValue)
 	local new = {}
 
@@ -23,11 +20,6 @@ local function addToMap(map, addKey, addValue)
 	end
 
 	new[addKey] = addValue
-
-	if DEBUG_SIGNAL then
-		debug_globalSubs = debug_globalSubs + 1
-		print("Signal subscriptions:", debug_globalSubs)
-	end
 
 	return new
 end
@@ -39,11 +31,6 @@ local function removeFromMap(map, removeKey)
 		if key ~= removeKey then
 			new[key] = value
 		end
-	end
-
-	if DEBUG_SIGNAL then
-		debug_globalSubs = debug_globalSubs - 1
-		print("Signal subscriptions:", debug_globalSubs)
 	end
 
 	return new

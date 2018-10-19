@@ -4,13 +4,12 @@
 	renderer that does anything.
 ]]
 
-local ElementKind = require(script.Parent.ElementKind)
-local Type = require(script.Parent.Type)
 local Binding = require(script.Parent.Binding)
-local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local Children = require(script.Parent.PropMarkers.Children)
-
+local ElementKind = require(script.Parent.ElementKind)
 local Ref = require(script.Parent.PropMarkers.Ref)
+local Type = require(script.Parent.Type)
+local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 
 local function bindHostProperty(node, key, newBinding)
 

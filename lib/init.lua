@@ -20,13 +20,12 @@ local Roact = strict {
 	None = require(script.None),
 	Portal = require(script.Portal),
 	createRef = require(script.createRef),
+	createBinding = Binding.create,
 
 	Change = require(script.PropMarkers.Change),
 	Children = require(script.PropMarkers.Children),
 	Event = require(script.PropMarkers.Event),
 	Ref = require(script.PropMarkers.Ref),
-
-	createBinding = Binding.create,
 
 	-- TODO: This is exposed in `master` as a way to figure out if something is
 	-- an element. We should replace this with dedicated typecheck functions!

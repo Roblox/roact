@@ -66,14 +66,6 @@ local function createSignal()
 
 			connection.disconnected = true
 			connections = removeFromMap(connections, callback)
-
-			--[[
-				We return nil here to make it easier to clear connections and nil out their references:
-
-					local disconnect = mapOfConnections[key]
-					mapOfConnections[key] = disconnect()
-			]]
-			return nil
 		end
 
 		return disconnect

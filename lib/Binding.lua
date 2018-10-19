@@ -83,6 +83,10 @@ function Binding.createFromSource(source, mapFunc)
 		local disconnect = changeSignal:subscribe(handler)
 		subCount = subCount + 1
 
+		--[[
+			We wrap the disconnect function so that we can manage our subscriptions
+			when the disconnect is triggered
+		]]
 		return function()
 			disconnect()
 			subCount = subCount - 1

@@ -42,8 +42,9 @@ local function setHostProperty(node, key, newValue, oldValue)
 		-- If either value is a Binding, detach or attach it as expected
 		if Type.of(oldValue) == Type.Binding then
 			local disconnect = node.bindings[key]
+			disconnect()
 
-			node.bindings[key] = disconnect()
+			node.bindings[key] = nil
 		end
 
 		if Type.of(newValue) == Type.Binding then
@@ -159,7 +160,16 @@ function RobloxRenderer.updateHostNode(reconciler, node, newElement)
 		end
 	end
 
-	-- TODO: Reconcile refs appropriately
+	-- Detach old refs and attach new ones
+	if oldProps[Ref] ~= newProps[Ref] then
+		if oldProps[Ref] ~= nil then
+			Binding.update(oldProps[Ref], nil)
+		end
+
+		if newProps[Ref] ~= nil then
+			Binding.update(newProps[Ref], node.hostObject)
+		end
+	end
 
 	reconciler.updateVirtualNodeChildren(node, newElement.props[Children])
 

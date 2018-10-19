@@ -7,7 +7,6 @@ local createSignal = require(script.Parent.createSignal)
 	Markers for fields and methods that are hidden from external users
 ]]
 local Internal = {
-	changeSignal = Symbol.named("changeSignal"),
 	value = Symbol.named("value"),
 
 	update = Symbol.named("update"),
@@ -52,37 +51,46 @@ function Binding.createFromSource(source, mapFunc)
 
 	local subCount = 0
 	local disconnectSource = nil
+	local changeSignal = createSignal()
 
 	local binding = {
 		[Type] = Type.Binding,
 
 		[Internal.value] = mapFunc(initialValue),
-		[Internal.changeSignal] = createSignal(),
 	}
 
 	binding[Internal.update] = function(self, newValue)
-		assert(self ~= newValue, "Really? Come on...")
+		assert(Type.of(newValue) ~= Type.Binding, "Cannot bind value of type Binding")
 
 		newValue = mapFunc(newValue)
 
 		self[Internal.value] = newValue
-		self[Internal.changeSignal]:fire(newValue)
+		changeSignal:fire(newValue)
 	end
 
 	binding[Internal.subscribe] = function(self, handler)
+		--[[
+			If this binding is mapped to another and does not have any subscribers,
+			we need to create a subscription to our source binding so that updates
+			get passed along to us
+		]]
 		if Type.of(source) == Type.Binding and subCount == 0 then
 			disconnectSource = source[Internal.subscribe](source, function(value)
 				self[Internal.update](self, value)
 			end)
 		end
 
-		local disconnect = self[Internal.changeSignal]:subscribe(handler)
+		local disconnect = changeSignal:subscribe(handler)
 		subCount = subCount + 1
 
 		return function()
 			disconnect()
 			subCount = subCount - 1
 
+			--[[
+				If our subscribers count drops to 0, we can safely unsubscribe from
+				our source binding
+			]]
 			if subCount == 0 and disconnectSource ~= nil then
 				disconnectSource()
 				disconnectSource = nil
@@ -114,10 +122,18 @@ function Binding.createFromSource(source, mapFunc)
 	return binding
 end
 
+--[[
+	Invoke a binding's internal update method. Used by Roact, but
+	not exposed in Roact's public interface.
+]]
 function Binding.update(binding, newValue)
 	return binding[Internal.update](binding, newValue)
 end
 
+--[[
+	Invoke a binding's internal subscribe method. Used by Roact, but
+	not exposed in Roact's public interface.
+]]
 function Binding.subscribe(binding, handler)
 	return binding[Internal.subscribe](binding, handler)
 end

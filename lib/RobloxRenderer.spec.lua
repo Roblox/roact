@@ -2,6 +2,7 @@ return function()
 	local createReconciler = require(script.Parent.createReconciler)
 	local createElement = require(script.Parent.createElement)
 	local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
+	local Binding = require(script.Parent.Binding)
 
 	local RobloxRenderer = require(script.Parent.RobloxRenderer)
 
@@ -70,6 +71,33 @@ return function()
 			expect(childA.Value).to.equal(childValue)
 
 			expect(childB.ClassName).to.equal("Folder")
+		end)
+
+		it("should attach Bindings to Roblox properties", function()
+			local parent = Instance.new("Folder")
+			local key = "Some Key"
+
+			local binding, update = Binding.create(10)
+			local element = createElement("IntValue", {
+				Value = binding,
+			})
+
+			local node = reconciler.createVirtualNode(element, parent, key)
+
+			RobloxRenderer.mountHostNode(reconciler, node)
+
+			expect(#parent:GetChildren()).to.equal(1)
+
+			local instance = parent:GetChildren()[1]
+
+			expect(instance.ClassName).to.equal("IntValue")
+			expect(instance.Value).to.equal(10)
+
+			update(20)
+
+			expect(instance.Value).to.equal(20)
+
+			RobloxRenderer.unmountHostNode(reconciler, node)
 		end)
 	end)
 
@@ -144,6 +172,43 @@ return function()
 
 			local childE = root.ChildE
 			expect(childE.ClassName).to.equal("Folder")
+		end)
+
+		it("should update Bindings", function()
+			local parent = Instance.new("Folder")
+			local key = "Some Key"
+
+			local bindingA, updateA = Binding.create(10)
+			local element = createElement("IntValue", {
+				Value = bindingA,
+			})
+
+			local node = reconciler.createVirtualNode(element, parent, key)
+
+			RobloxRenderer.mountHostNode(reconciler, node)
+
+			local instance = parent:GetChildren()[1]
+
+			expect(instance.Value).to.equal(10)
+
+			local bindingB, updateB = Binding.create(99)
+			local newElement = createElement("IntValue", {
+				Value = bindingB,
+			})
+
+			RobloxRenderer.updateHostNode(reconciler, node, newElement)
+
+			expect(instance.Value).to.equal(99)
+
+			updateA(123)
+
+			expect(instance.Value).to.equal(99)
+
+			updateB(123)
+
+			expect(instance.Value).to.equal(123)
+
+			RobloxRenderer.unmountHostNode(reconciler, node)
 		end)
 	end)
 

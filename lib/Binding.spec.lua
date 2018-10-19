@@ -27,7 +27,6 @@ return function()
 	end)
 
 	describe("Binding object", function()
-
 		it("should provide a getter and setter", function()
 			local binding, update = Binding.create(1)
 

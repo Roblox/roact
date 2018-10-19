@@ -113,7 +113,6 @@ function RobloxRenderer.mountHostNode(reconciler, node)
 		Binding.update(ref, instance)
 	end
 
-	return
 end
 
 function RobloxRenderer.unmountHostNode(reconciler, node)

@@ -17,7 +17,7 @@ local Internal = {
 local bindingMetatable = {
 	__tostring = function(self)
 		return ("RoactBinding(%s)"):format(tostring(self[Internal.value]))
-	end
+	end,
 }
 
 local Binding = {}

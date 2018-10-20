@@ -2,25 +2,13 @@ local Type = require(script.Parent.Type)
 
 local createSignal = require(script.Parent.createSignal)
 
-<<<<<<< HEAD
 --[[
-	Markers for fields and methods that are hidden from external users
+	Default mapping function used for non-mapped bindings
 ]]
-local Internal = {
-	value = Symbol.named("value"),
+local function mapIdentity(value)
+	return value
+end
 
-	update = Symbol.named("update"),
-	subscribe = Symbol.named("subscribe"),
-}
-
-local bindingMetatable = {
-	__tostring = function(self)
-		return ("RoactBinding(%s)"):format(tostring(self[Internal.value]))
-	end,
-}
-
-=======
->>>>>>> Simplify, but remove privacy. Will try to reintroduced more sanely
 local Binding = {}
 local BindingInternal = {}
 BindingInternal.__index = BindingInternal
@@ -28,47 +16,9 @@ BindingInternal.__tostring = function(self)
 	return ("RoactBinding(%s)"):format(tostring(self._value))
 end
 
-function BindingInternal:_update(newValue)
-	newValue = self._mapFunc(newValue)
-
-	self._value = newValue
-	self._changeSignal:fire(newValue)
-end
-
-function BindingInternal:_subscribe(handler)
-		--[[
-			If this binding is mapped to another and does not have any subscribers,
-			we need to create a subscription to our source binding so that updates
-			get passed along to us
-		]]
-		if Type.of(self._source) == Type.Binding and self._subCount == 0 then
-			self._disconnectSource = self._source:_subscribe(function(value)
-				self:_update(value)
-			end)
-		end
-
-		local disconnect = self._changeSignal:subscribe(handler)
-		self._subCount = self._subCount + 1
-
-		--[[
-			We wrap the disconnect function so that we can manage our subscriptions
-			when the disconnect is triggered
-		]]
-		return function()
-			disconnect()
-			self._subCount = self._subCount - 1
-
-			--[[
-				If our subscribers count drops to 0, we can safely unsubscribe from
-				our source binding
-			]]
-			if self._subCount == 0 and self._disconnectSource ~= nil then
-				self._disconnectSource()
-				self._disconnectSource = nil
-			end
-		end
-end
-
+--[[
+	Get the current value from a binding
+]]
 function BindingInternal:getValue()
 	--[[
 		If our source is another binding but we're not subscribed, we'll
@@ -78,7 +28,7 @@ function BindingInternal:getValue()
 		has subscribed to us, and avoid creating dangling connections
 	]]
 	if Type.of(self._source) == Type.Binding and self._disconnectSource == nil then
-		self:_update(self._source:getValue())
+		Binding.update(self, self._source:getValue())
 	end
 
 	return self._value
@@ -96,8 +46,51 @@ function BindingInternal:map(mapFunc)
 	return binding
 end
 
-local function noMap(value)
-	return value
+--[[
+	Update a binding's value
+]]
+function Binding.update(binding, newValue)
+	newValue = binding._mapFunc(newValue)
+
+	binding._value = newValue
+	binding._changeSignal:fire(newValue)
+end
+
+--[[
+	Subscribe to a binding's change signal
+]]
+function Binding.subscribe(binding, handler)
+	--[[
+		If this binding is mapped to another and does not have any subscribers,
+		we need to create a subscription to our source binding so that updates
+		get passed along to us
+	]]
+	if Type.of(binding._source) == Type.Binding and binding._subCount == 0 then
+		binding._disconnectSource = Binding.subscribe(binding._source, function(value)
+			Binding.update(binding, value)
+		end)
+	end
+
+	local disconnect = binding._changeSignal:subscribe(handler)
+	binding._subCount = binding._subCount + 1
+
+	--[[
+		We wrap the disconnect function so that we can manage our subscriptions
+		when the disconnect is triggered
+	]]
+	return function()
+		disconnect()
+		binding._subCount = binding._subCount - 1
+
+		--[[
+			If our subscribers count drops to 0, we can safely unsubscribe from
+			our source binding
+		]]
+		if binding._subCount == 0 and binding._disconnectSource ~= nil then
+			binding._disconnectSource()
+			binding._disconnectSource = nil
+		end
+	end
 end
 
 --[[
@@ -110,33 +103,17 @@ function Binding.create(initialValue)
 
 		_value = initialValue,
 		_changeSignal = createSignal(),
-		_mapFunc = noMap,
+		_mapFunc = mapIdentity,
 		_subCount = 0,
 	}
 
 	setmetatable(binding, BindingInternal)
 
 	local updater = function(newValue)
-		binding:_update(newValue)
+		Binding.update(binding, newValue)
 	end
 
 	return binding, updater
-end
-
---[[
-	Invoke a binding's internal update method. Used by Roact, but
-	not exposed in Roact's public interface.
-]]
-function Binding.update(binding, newValue)
-	return binding:_update(newValue)
-end
-
---[[
-	Invoke a binding's internal subscribe method. Used by Roact, but
-	not exposed in Roact's public interface.
-]]
-function Binding.subscribe(binding, handler)
-	return binding:_subscribe(handler)
 end
 
 return Binding

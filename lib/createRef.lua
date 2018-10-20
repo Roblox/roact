@@ -6,11 +6,13 @@ local Binding = require(script.Parent.Binding)
 
 local function createRef()
 	local binding, _ = Binding.create(nil)
+	local ref = newproxy(true)
 
-	getmetatable(binding).__index = function(self, key)
-		-- TODO: Throw errors if attempting to access invalid fields
+	getmetatable(ref).__index = function(self, key)
 		if key == "current" then
-			return self:getValue()
+			return binding:getValue()
+		else
+			return binding[key]
 		end
 	end
 

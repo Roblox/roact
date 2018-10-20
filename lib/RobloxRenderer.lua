@@ -11,21 +11,6 @@ local Ref = require(script.Parent.PropMarkers.Ref)
 local Type = require(script.Parent.Type)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 
-local function bindHostProperty(node, key, newBinding)
-
-	local function updateBoundProperty(newValue)
-		node.hostObject[key] = newValue
-	end
-
-	if node.bindings == nil then
-		node.bindings = {}
-	end
-
-	node.bindings[key] = Binding.subscribe(newBinding, updateBoundProperty)
-
-	return newBinding:getValue()
-end
-
 local function setHostProperty(node, key, newValue, oldValue)
 	if newValue == oldValue then
 		return
@@ -36,18 +21,6 @@ local function setHostProperty(node, key, newValue, oldValue)
 			local hostClass = node.hostObject.ClassName
 			local _, defaultValue = getDefaultPropertyValue(hostClass, key)
 			newValue = defaultValue
-		end
-
-		-- If either value is a Binding, detach or attach it as expected
-		if Type.of(oldValue) == Type.Binding then
-			local disconnect = node.bindings[key]
-			disconnect()
-
-			node.bindings[key] = nil
-		end
-
-		if Type.of(newValue) == Type.Binding then
-			newValue = bindHostProperty(node, key, newValue)
 		end
 
 		-- Assign the new value to the object
@@ -72,6 +45,21 @@ local function setHostProperty(node, key, newValue, oldValue)
 	error(("Unknown prop %q"):format(tostring(key)))
 end
 
+local function bindHostProperty(node, key, newBinding)
+
+	local function updateBoundProperty(newValue)
+		setHostProperty(node, key, newValue, nil)
+	end
+
+	if node.bindings == nil then
+		node.bindings = {}
+	end
+
+	node.bindings[key] = Binding.subscribe(newBinding, updateBoundProperty)
+
+	setHostProperty(node, key, newBinding:getValue(), nil)
+end
+
 local RobloxRenderer = {}
 
 function RobloxRenderer.mountHostNode(reconciler, node)
@@ -89,7 +77,11 @@ function RobloxRenderer.mountHostNode(reconciler, node)
 	node.hostObject = instance
 
 	for propKey, value in pairs(element.props) do
-		setHostProperty(node, propKey, value, nil)
+		if Type.of(value) == Type.Binding then
+			bindHostProperty(node, propKey, value)
+		else
+			setHostProperty(node, propKey, value, nil)
+		end
 	end
 
 	instance.Name = key
@@ -112,7 +104,6 @@ function RobloxRenderer.mountHostNode(reconciler, node)
 		-- TODO: Verify ref object is correct type?
 		Binding.update(ref, instance)
 	end
-
 end
 
 function RobloxRenderer.unmountHostNode(reconciler, node)
@@ -146,7 +137,17 @@ function RobloxRenderer.updateHostNode(reconciler, node, newElement)
 		local oldValue = oldProps[propKey]
 
 		if newValue ~= oldValue then
-			setHostProperty(node, propKey, newValue, oldValue)
+			if Type.of(oldValue) == Type.Binding then
+				local disconnect = node.bindings[propKey]
+				disconnect()
+				node.bindings[propKey] = nil
+			end
+
+			if Type.of(newValue) == Type.Binding then
+				bindHostProperty(node, propKey, newValue)
+			else
+				setHostProperty(node, propKey, newValue, oldValue)
+			end
 		end
 	end
 
@@ -155,6 +156,12 @@ function RobloxRenderer.updateHostNode(reconciler, node, newElement)
 		local newValue = newProps[propKey]
 
 		if newValue == nil then
+			if Type.of(oldValue) == Type.Binding then
+				local disconnect = node.bindings[propKey]
+				disconnect()
+				node.bindings[propKey] = nil
+			end
+
 			setHostProperty(node, propKey, nil, oldValue)
 		end
 	end

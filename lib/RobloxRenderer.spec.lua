@@ -240,5 +240,25 @@ return function()
 			expect(child.Parent).to.equal(nil)
 			expect(root.Parent).to.equal(nil)
 		end)
+
+		it("should unsubscribe from any Bindings", function()
+			local parent = Instance.new("Folder")
+			local key = "Some Key"
+
+			local binding, _ = Binding.create(10)
+			local element = createElement("IntValue", {
+				Value = binding,
+			})
+
+			local node = reconciler.createVirtualNode(element, parent, key)
+
+			RobloxRenderer.mountHostNode(reconciler, node)
+
+			expect(binding._subCount).to.equal(1)
+
+			RobloxRenderer.unmountHostNode(reconciler, node)
+
+			expect(binding._subCount).to.equal(0)
+		end)
 	end)
 end

@@ -21,6 +21,9 @@ local function createRef()
 			end
 		end,
 		__newindex = function(self, key, value)
+			if key == "current" then
+				error("Cannot assign to a ref.current", 2)
+			end
 			binding[key] = value
 		end,
 	})

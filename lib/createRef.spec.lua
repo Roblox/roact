@@ -19,4 +19,19 @@ return function()
 		Binding.update(ref, 10)
 		expect(ref.current).to.equal(10)
 	end)
+
+	it("should not allow assignments to the 'current' field", function()
+		local ref = createRef()
+
+		expect(ref.current).to.equal(nil)
+
+		Binding.update(ref, 99)
+		expect(ref.current).to.equal(99)
+
+		expect(function()
+			ref.current = 77
+		end).to.throw()
+
+		expect(ref.current).to.equal(99)
+	end)
 end

@@ -16,11 +16,12 @@ local function applyRef(ref, newRbx)
 		return
 	end
 
-	if type(ref) == "function" then
+	if typeof(ref) == "function" then
 		ref(newRbx)
 	elseif Type.of(ref) == Type.Binding then
 		Binding.update(ref, newRbx)
 	else
+		-- TODO: Better error message
 		error(("Invalid ref: Expected type Binding but got %s"):format(
 			typeof(ref)
 		))

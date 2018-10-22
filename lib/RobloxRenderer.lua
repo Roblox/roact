@@ -11,6 +11,22 @@ local Ref = require(script.Parent.PropMarkers.Ref)
 local Type = require(script.Parent.Type)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 
+local function applyRef(ref, newRbx)
+	if ref == nil then
+		return
+	end
+
+	if type(ref) == "function" then
+		ref(newRbx)
+	elseif Type.of(ref) == Type.Binding then
+		Binding.update(ref, newRbx)
+	else
+		error(("Invalid ref: Expected type Binding but got %s"):format(
+			typeof(ref)
+		))
+	end
+end
+
 local function setHostProperty(node, key, newValue, oldValue)
 	if newValue == oldValue then
 		return
@@ -99,21 +115,13 @@ function RobloxRenderer.mountHostNode(reconciler, node)
 	instance.Parent = hostParent
 	node.hostObject = instance
 
-	local ref = element.props[Ref]
-	if ref ~= nil then
-		-- TODO: Verify ref object is correct type?
-		Binding.update(ref, instance)
-	end
+	applyRef(element.props[Ref], instance)
 end
 
 function RobloxRenderer.unmountHostNode(reconciler, node)
 	local element = node.currentElement
-	local ref = element.props[Ref]
 
-	if ref ~= nil then
-		-- TODO: Verify correct type?
-		Binding.update(ref, nil)
-	end
+	applyRef(element.props[Ref], nil)
 
 	for _, childNode in pairs(node.children) do
 		reconciler.unmountVirtualNode(childNode)
@@ -131,6 +139,12 @@ end
 function RobloxRenderer.updateHostNode(reconciler, node, newElement)
 	local oldProps = node.currentElement.props
 	local newProps = newElement.props
+
+	-- If refs changed, detach the old ref and attach the new one
+	if oldProps[Ref] ~= newProps[Ref] then
+		applyRef(oldProps[Ref], nil)
+		applyRef(newProps[Ref], node.hostObject)
+	end
 
 	-- Apply props that were added or updated
 	for propKey, newValue in pairs(newProps) do
@@ -163,17 +177,6 @@ function RobloxRenderer.updateHostNode(reconciler, node, newElement)
 			end
 
 			setHostProperty(node, propKey, nil, oldValue)
-		end
-	end
-
-	-- Detach old refs and attach new ones
-	if oldProps[Ref] ~= newProps[Ref] then
-		if oldProps[Ref] ~= nil then
-			Binding.update(oldProps[Ref], nil)
-		end
-
-		if newProps[Ref] ~= nil then
-			Binding.update(newProps[Ref], node.hostObject)
 		end
 	end
 

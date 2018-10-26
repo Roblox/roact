@@ -1,3 +1,4 @@
+local Symbol = require(script.Parent.Symbol)
 local Type = require(script.Parent.Type)
 
 local createSignal = require(script.Parent.createSignal)
@@ -10,69 +11,81 @@ local function mapIdentity(value)
 end
 
 local Binding = {}
-local BindingInternal = {}
-BindingInternal.__index = BindingInternal
-BindingInternal.__tostring = function(self)
-	return ("RoactBinding(%s)"):format(tostring(self._value))
+
+--[[
+	Set of keys for fields that are internal to Bindings
+]]
+local InternalData = Symbol.named("InternalData")
+
+local bindingPrototype = {}
+bindingPrototype.__index = bindingPrototype
+bindingPrototype.__tostring = function(self)
+	return ("RoactBinding(%s)"):format(tostring(self[InternalData].value))
 end
 
 --[[
 	Get the current value from a binding
 ]]
-function BindingInternal:getValue()
+function bindingPrototype:getValue()
+	local internalData = self[InternalData]
+
 	--[[
 		If our source is another binding but we're not subscribed, we'll
-		manually update ourselves before returning a value.
+		return the mapped value from our upstream binding.
 
 		This allows us to avoid subscribing to our source until someone
-		has subscribed to us, and avoid creating dangling connections
+		has subscribed to us, and avoid creating dangling connections.
 	]]
-	if Type.of(self._source) == Type.Binding and self._disconnectSource == nil then
-		Binding.update(self, self._source:getValue())
+	if internalData.upstreamBinding ~= nil and internalData.disconnectSource == nil then
+		return internalData.mapFunc(internalData.upstreamBinding:getValue())
 	end
 
-	return self._value
+	return internalData.value
 end
 
 --[[
 	Creates a new binding from this one with the given mapping.
 ]]
-function BindingInternal:map(mapFunc)
+function bindingPrototype:map(mapFunc)
 	local binding = Binding.create(mapFunc(self:getValue()))
 
-	binding._mapFunc = mapFunc
-	binding._source = self
+	binding[InternalData].mapFunc = mapFunc
+	binding[InternalData].upstreamBinding = self
 
 	return binding
 end
 
 --[[
-	Update a binding's value
+	Update a binding's value. This is only accessible by Roact.
 ]]
 function Binding.update(binding, newValue)
-	newValue = binding._mapFunc(newValue)
+	local internalData = binding[InternalData]
 
-	binding._value = newValue
-	binding._changeSignal:fire(newValue)
+	newValue = internalData.mapFunc(newValue)
+
+	internalData.value = newValue
+	internalData.changeSignal:fire(newValue)
 end
 
 --[[
-	Subscribe to a binding's change signal
+	Subscribe to a binding's change signal. This is only accessible by Roact.
 ]]
 function Binding.subscribe(binding, handler)
+	local internalData = binding[InternalData]
+
 	--[[
 		If this binding is mapped to another and does not have any subscribers,
 		we need to create a subscription to our source binding so that updates
 		get passed along to us
 	]]
-	if Type.of(binding._source) == Type.Binding and binding._subCount == 0 then
-		binding._disconnectSource = Binding.subscribe(binding._source, function(value)
+	if internalData.upstreamBinding ~= nil and internalData.subCount == 0 then
+		internalData.disconnectSource = Binding.subscribe(internalData.upstreamBinding, function(value)
 			Binding.update(binding, value)
 		end)
 	end
 
-	local disconnect = binding._changeSignal:subscribe(handler)
-	binding._subCount = binding._subCount + 1
+	local disconnect = internalData.changeSignal:subscribe(handler)
+	internalData.subCount = internalData.subCount + 1
 
 	--[[
 		We wrap the disconnect function so that we can manage our subscriptions
@@ -80,15 +93,15 @@ function Binding.subscribe(binding, handler)
 	]]
 	return function()
 		disconnect()
-		binding._subCount = binding._subCount - 1
+		internalData.subCount = internalData.subCount - 1
 
 		--[[
 			If our subscribers count drops to 0, we can safely unsubscribe from
 			our source binding
 		]]
-		if binding._subCount == 0 and binding._disconnectSource ~= nil then
-			binding._disconnectSource()
-			binding._disconnectSource = nil
+		if internalData.subCount == 0 and internalData.disconnectSource ~= nil then
+			internalData.disconnectSource()
+			internalData.disconnectSource = nil
 		end
 	end
 end
@@ -101,13 +114,18 @@ function Binding.create(initialValue)
 	local binding = {
 		[Type] = Type.Binding,
 
-		_value = initialValue,
-		_changeSignal = createSignal(),
-		_mapFunc = mapIdentity,
-		_subCount = 0,
+		[InternalData] = {
+			value = initialValue,
+			changeSignal = createSignal(),
+			subCount = 0,
+
+			mapFunc = mapIdentity,
+			upstreamBinding = nil,
+			disconnectSource = nil,
+		},
 	}
 
-	setmetatable(binding, BindingInternal)
+	setmetatable(binding, bindingPrototype)
 
 	local updater = function(newValue)
 		Binding.update(binding, newValue)

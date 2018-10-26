@@ -62,19 +62,19 @@ local function setHostProperty(virtualNode, key, newValue, oldValue)
 	error(("Unknown prop %q"):format(tostring(key)))
 end
 
-local function bindHostProperty(node, key, newBinding)
+local function bindHostProperty(virtualNode, key, newBinding)
 
 	local function updateBoundProperty(newValue)
-		setHostProperty(node, key, newValue, nil)
+		setHostProperty(virtualNode, key, newValue, nil)
 	end
 
-	if node.bindings == nil then
-		node.bindings = {}
+	if virtualNode.bindings == nil then
+		virtualNode.bindings = {}
 	end
 
-	node.bindings[key] = Binding.subscribe(newBinding, updateBoundProperty)
+	virtualNode.bindings[key] = Binding.subscribe(newBinding, updateBoundProperty)
 
-	setHostProperty(node, key, newBinding:getValue(), nil)
+	setHostProperty(virtualNode, key, newBinding:getValue(), nil)
 end
 
 local RobloxRenderer = {}

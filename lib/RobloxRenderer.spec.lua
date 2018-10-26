@@ -358,10 +358,10 @@ return function()
 				[Ref] = spyRef.value,
 			})
 
+			RobloxRenderer.updateHostNode(reconciler, node, newElement)
+
 			-- Not called again
 			expect(spyRef.callCount).to.equal(1)
-
-			RobloxRenderer.updateHostNode(reconciler, node, newElement)
 		end)
 	end)
 
@@ -398,7 +398,7 @@ return function()
 			local parent = Instance.new("Folder")
 			local key = "Some Key"
 
-			local binding, _ = Binding.create(10)
+			local binding, update = Binding.create(10)
 			local element = createElement("IntValue", {
 				Value = binding,
 			})
@@ -407,11 +407,14 @@ return function()
 
 			RobloxRenderer.mountHostNode(reconciler, node)
 
-			expect(binding._subCount).to.equal(1)
+			local instance = parent:GetChildren()[1]
+
+			expect(instance.Value).to.equal(10)
 
 			RobloxRenderer.unmountHostNode(reconciler, node)
+			update(56)
 
-			expect(binding._subCount).to.equal(0)
+			expect(instance.Value).to.equal(10)
 		end)
 
 		it("should clear Binding refs", function()

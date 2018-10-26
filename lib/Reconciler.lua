@@ -32,7 +32,7 @@ local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 local SingleEventManager = require(script.Parent.SingleEventManager)
 local Symbol = require(script.Parent.Symbol)
 local GlobalConfig = require(script.Parent.GlobalConfig)
-local Ref = require(script.Parent.Ref)
+local Binding = require(script.Parent.Binding)
 
 local isInstanceHandle = Symbol.named("isInstanceHandle")
 
@@ -75,6 +75,18 @@ local function getElementKind(element)
 	return componentTypesToKinds[componentType]
 end
 
+local function applyRef(ref, newRbx)
+	if ref == nil then
+		return
+	end
+
+	if type(ref) == "table" then
+		Binding.update(ref, newRbx)
+	else
+		ref(newRbx)
+	end
+end
+
 local Reconciler = {}
 
 Reconciler._singleEventManager = SingleEventManager.new()
@@ -100,7 +112,7 @@ function Reconciler.unmount(instanceHandle)
 
 		-- Kill refs before we make changes, since any mutations past this point
 		-- aren't relevant to components.
-		Ref.apply(element.props[Core.Ref], nil)
+		applyRef(element.props[Core.Ref], nil)
 
 		for _, child in pairs(instanceHandle._children) do
 			Reconciler.unmount(child)
@@ -185,7 +197,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 		rbx.Parent = parent
 
 		-- Attach ref values, since the instance is initialized now.
-		Ref.apply(element.props[Core.Ref], rbx)
+		applyRef(element.props[Core.Ref], rbx)
 
 		return {
 			[isInstanceHandle] = true,
@@ -348,8 +360,8 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 		-- Roact doesn't provide any guarantees with regards to the sequencing
 		-- between refs and other changes in the commit phase.
 		if newRef ~= oldRef then
-			Ref.apply(oldRef, nil)
-			Ref.apply(newRef, instanceHandle._rbx)
+			applyRef(oldRef, nil)
+			applyRef(newRef, instanceHandle._rbx)
 		end
 
 		-- Update properties and children of the Roblox object.
@@ -452,7 +464,7 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 		local newValue = toElement.props[key]
 
 		if oldValue ~= newValue then
-			if Ref.isRef(oldValue) and Ref.isRef(newValue) then
+			if Binding.is(oldValue) and Binding.is(newValue) then
 				print("Reconciling a binding!!")
 			end
 			Reconciler._setRbxProp(rbx, key, newValue, toElement)
@@ -514,7 +526,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 		end
 
 		-- special case for bindings
-		if Ref.isRef(value) then
+		if Binding.is(value) then
 			Reconciler._setRefBinding(rbx, key, value, element)
 		else
 			local success, err = pcall(set, rbx, key, value)
@@ -580,10 +592,10 @@ function Reconciler._setRefBinding(rbx, key, refValue, element)
 		element._bindings = {}
 	end
 
-	local disconnectOldRef = element._bindings[key]
-	if disconnectOldRef ~= nil then
+	local disconnectOld = element._bindings[key]
+	if disconnectOld ~= nil then
 		print("A binding exists! Unbind before rebinding!")
-		disconnectOldRef()
+		disconnectOld()
 	end
 
 	local function refChanged(refRbx)
@@ -606,7 +618,7 @@ function Reconciler._setRefBinding(rbx, key, refValue, element)
 		end
 	end
 
-	local disconnect = refValue.changed:subscribe(refChanged)
+	local disconnect = Binding.subscribe(refValue, refChanged)
 
 	if refValue.current ~= nil then
 		refChanged(refValue.current)

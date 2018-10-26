@@ -28,20 +28,20 @@ local function applyRef(ref, newRbx)
 	end
 end
 
-local function setHostProperty(node, key, newValue, oldValue)
+local function setHostProperty(virtualNode, key, newValue, oldValue)
 	if newValue == oldValue then
 		return
 	end
 
 	if typeof(key) == "string" then
 		if newValue == nil then
-			local hostClass = node.hostObject.ClassName
+			local hostClass = virtualNode.hostObject.ClassName
 			local _, defaultValue = getDefaultPropertyValue(hostClass, key)
 			newValue = defaultValue
 		end
 
 		-- Assign the new value to the object
-		node.hostObject[key] = newValue
+		virtualNode.hostObject[key] = newValue
 
 		return
 	end
@@ -79,10 +79,10 @@ end
 
 local RobloxRenderer = {}
 
-function RobloxRenderer.mountHostNode(reconciler, node)
-	local element = node.currentElement
-	local hostParent = node.hostParent
-	local key = node.key
+function RobloxRenderer.mountHostNode(reconciler, virtualNode)
+	local element = virtualNode.currentElement
+	local hostParent = virtualNode.hostParent
+	local hostKey = virtualNode.hostKey
 
 	assert(ElementKind.of(element) == ElementKind.Host)
 
@@ -91,17 +91,17 @@ function RobloxRenderer.mountHostNode(reconciler, node)
 	assert(element.props.Parent == nil)
 
 	local instance = Instance.new(element.component)
-	node.hostObject = instance
+	virtualNode.hostObject = instance
 
 	for propKey, value in pairs(element.props) do
 		if Type.of(value) == Type.Binding then
-			bindHostProperty(node, propKey, value)
+			bindHostProperty(virtualNode, propKey, value)
 		else
-			setHostProperty(node, propKey, value, nil)
+			setHostProperty(virtualNode, propKey, value, nil)
 		end
 	end
 
-	instance.Name = key
+	instance.Name = hostKey
 
 	local children = element.props[Children]
 
@@ -109,42 +109,42 @@ function RobloxRenderer.mountHostNode(reconciler, node)
 		for childKey, childElement in pairs(children) do
 			local childNode = reconciler.mountVirtualNode(childElement, instance, childKey)
 
-			node.children[childKey] = childNode
+			virtualNode.children[childKey] = childNode
 		end
 	end
 
 	instance.Parent = hostParent
-	node.hostObject = instance
+	virtualNode.hostObject = instance
 
 	applyRef(element.props[Ref], instance)
 end
 
-function RobloxRenderer.unmountHostNode(reconciler, node)
-	local element = node.currentElement
+function RobloxRenderer.unmountHostNode(reconciler, virtualNode)
+	local element = virtualNode.currentElement
 
 	applyRef(element.props[Ref], nil)
 
-	for _, childNode in pairs(node.children) do
+	for _, childNode in pairs(virtualNode.children) do
 		reconciler.unmountVirtualNode(childNode)
 	end
 
-	if node.bindings ~= nil then
-		for _, disconnect in pairs(node.bindings) do
+	if virtualNode.bindings ~= nil then
+		for _, disconnect in pairs(virtualNode.bindings) do
 			disconnect()
 		end
 	end
 
-	node.hostObject:Destroy()
+	virtualNode.hostObject:Destroy()
 end
 
-function RobloxRenderer.updateHostNode(reconciler, node, newElement)
-	local oldProps = node.currentElement.props
+function RobloxRenderer.updateHostNode(reconciler, virtualNode, newElement)
+	local oldProps = virtualNode.currentElement.props
 	local newProps = newElement.props
 
 	-- If refs changed, detach the old ref and attach the new one
 	if oldProps[Ref] ~= newProps[Ref] then
 		applyRef(oldProps[Ref], nil)
-		applyRef(newProps[Ref], node.hostObject)
+		applyRef(newProps[Ref], virtualNode.hostObject)
 	end
 
 	-- Apply props that were added or updated
@@ -153,15 +153,15 @@ function RobloxRenderer.updateHostNode(reconciler, node, newElement)
 
 		if newValue ~= oldValue then
 			if Type.of(oldValue) == Type.Binding then
-				local disconnect = node.bindings[propKey]
+				local disconnect = virtualNode.bindings[propKey]
 				disconnect()
-				node.bindings[propKey] = nil
+				virtualNode.bindings[propKey] = nil
 			end
 
 			if Type.of(newValue) == Type.Binding then
-				bindHostProperty(node, propKey, newValue)
+				bindHostProperty(virtualNode, propKey, newValue)
 			else
-				setHostProperty(node, propKey, newValue, oldValue)
+				setHostProperty(virtualNode, propKey, newValue, oldValue)
 			end
 		end
 	end
@@ -172,18 +172,18 @@ function RobloxRenderer.updateHostNode(reconciler, node, newElement)
 
 		if newValue == nil then
 			if Type.of(oldValue) == Type.Binding then
-				local disconnect = node.bindings[propKey]
+				local disconnect = virtualNode.bindings[propKey]
 				disconnect()
-				node.bindings[propKey] = nil
+				virtualNode.bindings[propKey] = nil
 			end
 
-			setHostProperty(node, propKey, nil, oldValue)
+			setHostProperty(virtualNode, propKey, nil, oldValue)
 		end
 	end
 
-	reconciler.updateVirtualNodeChildren(node, newElement.props[Children])
+	reconciler.updateVirtualNodeChildren(virtualNode, newElement.props[Children])
 
-	return node
+	return virtualNode
 end
 
 return RobloxRenderer

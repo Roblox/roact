@@ -136,7 +136,7 @@ function Component:__mount(reconciler, virtualNode)
 
 	local element = virtualNode.currentElement
 	local hostParent = virtualNode.hostParent
-	local key = virtualNode.key
+	local hostKey = virtualNode.hostKey
 
 	-- Contains all the information that we want to keep from consumers of
 	-- Roact, or even other parts of the codebase like the reconciler.
@@ -191,7 +191,7 @@ function Component:__mount(reconciler, virtualNode)
 	for childKey, childElement in ChildUtils.iterateChildren(renderResult) do
 		local concreteKey = childKey
 		if childKey == ChildUtils.UseParentKey then
-			concreteKey = key
+			concreteKey = hostKey
 		end
 
 		local childNode = reconciler.mountVirtualNode(childElement, hostParent, concreteKey)

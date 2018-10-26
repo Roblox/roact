@@ -77,20 +77,20 @@ end
 		is ChildUtils.UseParentKey.
 	* If `elements` is a table of elements, this will return `elements[key]`.
 ]]
-function ChildUtils.getChildByKey(elements, key)
+function ChildUtils.getChildByKey(elements, hostKey)
 	if elements == nil or typeof(elements) == "boolean" then
 		return nil
 	end
 
 	if Type.of(elements) == Type.Element then
-		if key == ChildUtils.UseParentKey then
+		if hostKey == ChildUtils.UseParentKey then
 			return elements
 		end
 
 		return nil
 	end
 
-	return elements[key]
+	return elements[hostKey]
 end
 
 return ChildUtils

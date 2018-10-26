@@ -50,7 +50,7 @@ local function createReconciler(renderer)
 
 			local concreteKey = childKey
 			if childKey == ChildUtils.UseParentKey then
-				concreteKey = virtualNode.key
+				concreteKey = virtualNode.hostKey
 			end
 
 			if childNode == nil then
@@ -114,10 +114,10 @@ local function createReconciler(renderer)
 			warn("Component changed type!")
 
 			local hostParent = virtualNode.hostParent
-			local key = virtualNode.key
+			local hostKey = virtualNode.hostKey
 
 			unmountVirtualNode(virtualNode)
-			return mountVirtualNode(newElement, hostParent, key)
+			return mountVirtualNode(newElement, hostParent, hostKey)
 		end
 
 		local kind = ElementKind.of(newElement)
@@ -142,10 +142,10 @@ local function createReconciler(renderer)
 	--[[
 		Constructs a new virtual node but not does mount it.
 	]]
-	local function createVirtualNode(element, hostParent, key)
+	local function createVirtualNode(element, hostParent, hostKey)
 		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
 		assert(typeof(hostParent) == "Instance" or hostParent == nil)
-		assert(typeof(key) == "string")
+		assert(typeof(hostKey) == "string")
 
 		return {
 			[Type] = Type.VirtualNode,
@@ -156,21 +156,21 @@ local function createReconciler(renderer)
 
 			-- Less certain about these properties:
 			hostParent = hostParent,
-			key = key,
+			hostKey = hostKey,
 		}
 	end
 
 	local function mountFunctionVirtualNode(virtualNode)
 		local element = virtualNode.currentElement
 		local hostParent = virtualNode.hostParent
-		local key = virtualNode.key
+		local hostKey = virtualNode.hostKey
 
 		local renderResult = element.component(element.props)
 
 		for childKey, childElement in ChildUtils.iterateChildren(renderResult) do
 			local concreteKey = childKey
 			if childKey == ChildUtils.UseParentKey then
-				concreteKey = key
+				concreteKey = hostKey
 			end
 
 			local childNode = reconciler.mountVirtualNode(childElement, hostParent, concreteKey)
@@ -183,10 +183,10 @@ local function createReconciler(renderer)
 		Constructs a new virtual node and mounts it, but does not place it into
 		the tree.
 	]]
-	function mountVirtualNode(element, hostParent, key)
+	function mountVirtualNode(element, hostParent, hostKey)
 		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
 		assert(typeof(hostParent) == "Instance" or hostParent == nil)
-		assert(typeof(key) == "string")
+		assert(typeof(hostKey) == "string")
 
 		-- Boolean values render as nil to enable terse conditional rendering.
 		if typeof(element) == "boolean" then
@@ -195,7 +195,7 @@ local function createReconciler(renderer)
 
 		local kind = ElementKind.of(element)
 
-		local virtualNode = createVirtualNode(element, hostParent, key)
+		local virtualNode = createVirtualNode(element, hostParent, hostKey)
 
 		if kind == ElementKind.Host then
 			renderer.mountHostNode(reconciler, virtualNode)
@@ -220,13 +220,13 @@ local function createReconciler(renderer)
 		Constructs a new Roact virtual tree, constructs a root node for
 		it, and mounts it.
 	]]
-	local function mountVirtualTree(element, hostParent, key)
+	local function mountVirtualTree(element, hostParent, hostKey)
 		assert(Type.of(element) == Type.Element)
 		assert(typeof(hostParent) == "Instance" or hostParent == nil)
-		assert(typeof(key) == "string" or key == nil)
+		assert(typeof(hostKey) == "string" or hostKey == nil)
 
-		if key == nil then
-			key = "Foo"
+		if hostKey == nil then
+			hostKey = "Foo"
 		end
 
 		local tree = {
@@ -241,7 +241,7 @@ local function createReconciler(renderer)
 			mounted = true,
 		}
 
-		tree.rootNode = mountVirtualNode(element, hostParent, key)
+		tree.rootNode = mountVirtualNode(element, hostParent, hostKey)
 
 		return tree
 	end

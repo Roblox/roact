@@ -10,20 +10,20 @@ local Type = require(script.Parent.Type)
 local Children = require(script.Parent.PropMarkers.Children)
 local Ref = require(script.Parent.PropMarkers.Ref)
 
-local function setHostProperty(node, key, newValue, oldValue)
+local function setHostProperty(virtualNode, key, newValue, oldValue)
 	if newValue == oldValue then
 		return
 	end
 
 	if typeof(key) == "string" then
 		if newValue == nil then
-			local hostClass = node.hostObject.ClassName
+			local hostClass = virtualNode.hostObject.ClassName
 			local _, defaultValue = getDefaultPropertyValue(hostClass, key)
 			newValue = defaultValue
 		end
 
 		-- TODO: Handle errors from Roblox setting unknown keys on instances
-		node.hostObject[key] = newValue
+		virtualNode.hostObject[key] = newValue
 		return
 	end
 

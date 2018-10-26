@@ -45,10 +45,10 @@ end
 
 local RobloxRenderer = {}
 
-function RobloxRenderer.mountHostNode(reconciler, node)
-	local element = node.currentElement
-	local hostParent = node.hostParent
-	local key = node.key
+function RobloxRenderer.mountHostNode(reconciler, virtualNode)
+	local element = virtualNode.currentElement
+	local hostParent = virtualNode.hostParent
+	local hostKey = virtualNode.hostKey
 
 	assert(ElementKind.of(element) == ElementKind.Host)
 
@@ -57,13 +57,13 @@ function RobloxRenderer.mountHostNode(reconciler, node)
 	assert(element.props.Parent == nil)
 
 	local instance = Instance.new(element.component)
-	node.hostObject = instance
+	virtualNode.hostObject = instance
 
 	for propKey, value in pairs(element.props) do
-		setHostProperty(node, propKey, value, nil)
+		setHostProperty(virtualNode, propKey, value, nil)
 	end
 
-	instance.Name = key
+	instance.Name = hostKey
 
 	local children = element.props[Children]
 
@@ -71,28 +71,28 @@ function RobloxRenderer.mountHostNode(reconciler, node)
 		for childKey, childElement in pairs(children) do
 			local childNode = reconciler.mountVirtualNode(childElement, instance, childKey)
 
-			node.children[childKey] = childNode
+			virtualNode.children[childKey] = childNode
 		end
 	end
 
 	instance.Parent = hostParent
-	node.hostObject = instance
+	virtualNode.hostObject = instance
 
 	-- TODO: Attach ref
 end
 
-function RobloxRenderer.unmountHostNode(reconciler, node)
+function RobloxRenderer.unmountHostNode(reconciler, virtualNode)
 	-- TODO: Detach ref
 
-	for _, childNode in pairs(node.children) do
+	for _, childNode in pairs(virtualNode.children) do
 		reconciler.unmountVirtualNode(childNode)
 	end
 
-	node.hostObject:Destroy()
+	virtualNode.hostObject:Destroy()
 end
 
-function RobloxRenderer.updateHostNode(reconciler, node, newElement)
-	local oldProps = node.currentElement.props
+function RobloxRenderer.updateHostNode(reconciler, virtualNode, newElement)
+	local oldProps = virtualNode.currentElement.props
 	local newProps = newElement.props
 
 	-- Apply props that were added or updated
@@ -100,7 +100,7 @@ function RobloxRenderer.updateHostNode(reconciler, node, newElement)
 		local oldValue = oldProps[propKey]
 
 		if newValue ~= oldValue then
-			setHostProperty(node, propKey, newValue, oldValue)
+			setHostProperty(virtualNode, propKey, newValue, oldValue)
 		end
 	end
 
@@ -109,13 +109,13 @@ function RobloxRenderer.updateHostNode(reconciler, node, newElement)
 		local newValue = newProps[propKey]
 
 		if newValue == nil then
-			setHostProperty(node, propKey, nil, oldValue)
+			setHostProperty(virtualNode, propKey, nil, oldValue)
 		end
 	end
 
-	reconciler.updateVirtualNodeChildren(node, newElement.props[Children])
+	reconciler.updateVirtualNodeChildren(virtualNode, newElement.props[Children])
 
-	return node
+	return virtualNode
 end
 
 return RobloxRenderer

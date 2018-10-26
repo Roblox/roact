@@ -20,6 +20,16 @@ return function()
 		expect(ref.current).to.equal(10)
 	end)
 
+	it("should support tostring on refs", function()
+		local ref = createRef()
+
+		expect(ref.current).to.equal(nil)
+		expect(tostring(ref)).to.equal("RoactRef(nil)")
+
+		Binding.update(ref, 10)
+		expect(tostring(ref)).to.equal("RoactRef(10)")
+	end)
+
 	it("should not allow assignments to the 'current' field", function()
 		local ref = createRef()
 

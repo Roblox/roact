@@ -27,6 +27,9 @@ local function createRef()
 			end
 			binding[key] = value
 		end,
+		__tostring = function(self)
+			return ("RoactRef(%s)"):format(tostring(binding:getValue()))
+		end,
 	})
 
 	return ref

@@ -212,34 +212,6 @@ return function()
 	describe("Portal", function()
 		SKIP()
 
-		it("should place all children as children of the target Roblox instance", function()
-			local target = Instance.new("Folder")
-
-			local function FunctionalComponent(props)
-				local intValue = props.value
-
-				return Roact.createElement("IntValue", {
-					Value = intValue,
-				})
-			end
-
-			local portal = Roact.createElement(Roact.Portal, {
-				target = target
-			}, {
-				folderOne = Roact.createElement("Folder"),
-				folderTwo = Roact.createElement("Folder"),
-				intValueOne = Roact.createElement(FunctionalComponent, {
-					value = 42,
-				}),
-			})
-			Roact.mount(portal)
-
-			expect(target:FindFirstChild("folderOne")).to.be.ok()
-			expect(target:FindFirstChild("folderTwo")).to.be.ok()
-			expect(target:FindFirstChild("intValueOne")).to.be.ok()
-			expect(target:FindFirstChild("intValueOne").Value).to.equal(42)
-		end)
-
 		it("should error if the target is nil", function()
 			local portal = Roact.createElement(Roact.Portal, {}, {
 				folderOne = Roact.createElement("Folder"),
@@ -363,32 +335,6 @@ return function()
 
 			expect(target:FindFirstChild("TestStringValue")).to.be.ok()
 			expect(target:FindFirstChild("TestStringValue").Value).to.equal("newStringValue")
-		end)
-
-		it("should properly teardown the Portal", function()
-			local target = Instance.new("Folder")
-
-			local portal = Roact.createElement(Roact.Portal, {
-				target = target
-			}, {
-				folderOne = Roact.createElement("Folder"),
-				folderTwo = Roact.createElement("Folder"),
-			})
-			local instance = Roact.mount(portal)
-
-			local folderThree = Instance.new("Folder")
-			folderThree.Name = "folderThree"
-			folderThree.Parent = target
-
-			expect(target:FindFirstChild("folderOne")).to.be.ok()
-			expect(target:FindFirstChild("folderTwo")).to.be.ok()
-			expect(target:FindFirstChild("folderThree")).to.be.ok()
-
-			Roact.unmount(instance)
-
-			expect(target:FindFirstChild("folderOne")).never.to.be.ok()
-			expect(target:FindFirstChild("folderTwo")).never.to.be.ok()
-			expect(target:FindFirstChild("folderThree")).to.be.ok()
 		end)
 	end)
 end

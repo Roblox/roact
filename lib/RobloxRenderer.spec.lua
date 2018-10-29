@@ -1,7 +1,8 @@
 return function()
-	local createReconciler = require(script.Parent.createReconciler)
 	local createElement = require(script.Parent.createElement)
+	local createReconciler = require(script.Parent.createReconciler)
 	local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
+	local Portal = require(script.Parent.Portal)
 
 	local RobloxRenderer = require(script.Parent.RobloxRenderer)
 
@@ -174,6 +175,46 @@ return function()
 			expect(grandchild.Parent).to.equal(nil)
 			expect(child.Parent).to.equal(nil)
 			expect(root.Parent).to.equal(nil)
+		end)
+	end)
+
+	describe("Portals", function()
+		it("should place all children as children of the target Roblox instance", function()
+			local target = Instance.new("Folder")
+
+			local function FunctionComponent(props)
+				return createElement("IntValue", {
+					Value = props.value,
+				})
+			end
+
+			local element = createElement(Portal, {
+				target = target,
+			}, {
+				folderOne = createElement("Folder"),
+				folderTwo = createElement("Folder"),
+				intValueOne = createElement(FunctionComponent, {
+					value = 42,
+				}),
+			})
+			local hostParent = nil
+			local key = "Some Key"
+			local node = reconciler.mountVirtualNode(element, hostParent, key)
+
+			for _, value in ipairs(target:GetChildren()) do
+				print("child:", value.Name)
+			end
+
+			expect(#target:GetChildren()).to.equal(3)
+
+			expect(target:FindFirstChild("folderOne")).to.be.ok()
+			expect(target:FindFirstChild("folderTwo")).to.be.ok()
+			expect(target:FindFirstChild("intValueOne")).to.be.ok()
+			expect(target:FindFirstChild("intValueOne").Value).to.equal(42)
+
+			reconciler.unmountVirtualNode(node)
+
+			expect(#target:GetChildren()).to.equal(0)
 		end)
 	end)
 end

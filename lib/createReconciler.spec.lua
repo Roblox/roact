@@ -1,7 +1,8 @@
 return function()
-	local NoopRenderer = require(script.Parent.NoopRenderer)
 	local createElement = require(script.Parent.createElement)
 	local createSpy = require(script.Parent.createSpy)
+	local NoopRenderer = require(script.Parent.NoopRenderer)
+	local Portal = require(script.Parent.Portal)
 	local Type = require(script.Parent.Type)
 
 	local createReconciler = require(script.Parent.createReconciler)

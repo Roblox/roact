@@ -85,13 +85,15 @@ local function createReconciler(renderer)
 		if kind == ElementKind.Host then
 			renderer.unmountHostNode(reconciler, virtualNode)
 		elseif kind == ElementKind.Function then
-			for _, child in pairs(virtualNode.children) do
-				unmountVirtualNode(child)
+			for _, childNode in pairs(virtualNode.children) do
+				unmountVirtualNode(childNode)
 			end
 		elseif kind == ElementKind.Stateful then
 			virtualNode.instance:__unmount()
 		elseif kind == ElementKind.Portal then
-			error("NYI")
+			for _, childNode in pairs(virtualNode.children) do
+				unmountVirtualNode(childNode)
+			end
 		else
 			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
 		end

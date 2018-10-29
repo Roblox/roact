@@ -45,6 +45,10 @@ end
 
 local RobloxRenderer = {}
 
+function RobloxRenderer.isHostObject(target)
+	return typeof(target) == "Instance"
+end
+
 function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 	local element = virtualNode.currentElement
 	local hostParent = virtualNode.hostParent

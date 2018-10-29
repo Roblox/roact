@@ -111,7 +111,8 @@ local function createReconciler(renderer)
 
 		local targetHostParent = newElement.props.target
 
-		-- TODO: Validate targetHostParent? This needs renderer support.
+		-- TODO: Error message
+		assert(renderer.isHostObject(targetHostParent))
 
 		if targetHostParent ~= oldTargetHostParent then
 			-- TODO: Better warning
@@ -187,9 +188,7 @@ local function createReconciler(renderer)
 	]]
 	local function createVirtualNode(element, hostParent, hostKey)
 		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
-
-		-- TODO: Ask renderer if this hostParent is valid instead?
-		assert(typeof(hostParent) == "Instance" or hostParent == nil)
+		assert(renderer.isHostObject(hostParent) or hostParent == nil)
 		assert(typeof(hostKey) == "string")
 
 		return {
@@ -219,7 +218,7 @@ local function createReconciler(renderer)
 		local targetHostParent = element.props.target
 		local children = element.props[Children]
 
-		-- TODO: Validate targetHostParent? This needs renderer support.
+		assert(renderer.isHostObject(targetHostParent))
 
 		mountVirtualNodeChildren(virtualNode, targetHostParent, children)
 	end

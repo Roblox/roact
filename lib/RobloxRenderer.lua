@@ -36,6 +36,7 @@ local function setRobloxInstanceProperty(hostObject, key, newValue)
 	end
 
 	-- Assign the new value to the object
+	-- TODO: Handle errors if `key` is not a valid Instance property
 	hostObject[key] = newValue
 
 	return

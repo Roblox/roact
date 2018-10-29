@@ -167,21 +167,23 @@ local function createReconciler(renderer)
 
 		local kind = ElementKind.of(newElement)
 
+		local resultNode = virtualNode
+
 		if kind == ElementKind.Host then
-			return renderer.updateHostNode(reconciler, virtualNode, newElement)
+			resultNode = renderer.updateHostNode(reconciler, virtualNode, newElement)
 		elseif kind == ElementKind.Function then
 			updateFunctionVirtualNode(virtualNode, newElement)
-
-			return virtualNode
 		elseif kind == ElementKind.Stateful then
 			virtualNode.instance:__update(newElement, nil)
-
-			return virtualNode
 		elseif kind == ElementKind.Portal then
-			return updatePortalVirtualNode(virtualNode, newElement)
+			resultNode = updatePortalVirtualNode(virtualNode, newElement)
 		else
 			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
 		end
+
+		virtualNode.currentElement = newElement
+
+		return resultNode
 	end
 
 	--[[

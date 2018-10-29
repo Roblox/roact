@@ -28,15 +28,15 @@ local function applyRef(ref, newHostObject)
 	end
 end
 
-local function setRobloxInstanceProperty(virtualNode, key, newValue)
+local function setRobloxInstanceProperty(hostObject, key, newValue)
 	if newValue == nil then
-		local hostClass = virtualNode.hostObject.ClassName
+		local hostClass = hostObject.ClassName
 		local _, defaultValue = getDefaultInstanceProperty(hostClass, key)
 		newValue = defaultValue
 	end
 
 	-- Assign the new value to the object
-	virtualNode.hostObject[key] = newValue
+	hostObject[key] = newValue
 
 	return
 end
@@ -49,7 +49,7 @@ end
 
 local function attachBinding(virtualNode, key, newBinding)
 	local function updateBoundProperty(newValue)
-		setRobloxInstanceProperty(virtualNode, key, newValue, nil)
+		setRobloxInstanceProperty(virtualNode.hostObject, key, newValue)
 	end
 
 	if virtualNode.bindings == nil then
@@ -58,7 +58,7 @@ local function attachBinding(virtualNode, key, newBinding)
 
 	virtualNode.bindings[key] = Binding.subscribe(newBinding, updateBoundProperty)
 
-	setRobloxInstanceProperty(virtualNode, key, newBinding:getValue(), nil)
+	setRobloxInstanceProperty(virtualNode.hostObject, key, newBinding:getValue())
 end
 
 local function detachAllBindings(virtualNode)
@@ -75,13 +75,14 @@ local function applyProp(virtualNode, key, newValue, oldValue)
 	end
 
 	if key == Ref or key == Children then
+		-- Refs and children are handled in a separate pass
 		return
 	end
 
 	local internalKeyType = Type.of(key)
 
 	if internalKeyType == Type.HostEvent or internalKeyType == Type.HostChangeEvent then
-		-- TODO: Event stuff
+		-- TODO: Apply events
 		return
 	end
 
@@ -95,7 +96,7 @@ local function applyProp(virtualNode, key, newValue, oldValue)
 	if newIsBinding then
 		attachBinding(virtualNode, key, newValue)
 	else
-		setRobloxInstanceProperty(virtualNode, key, newValue)
+		setRobloxInstanceProperty(virtualNode.hostObject, key, newValue)
 	end
 end
 

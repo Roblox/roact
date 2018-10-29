@@ -7,9 +7,9 @@
 local Binding = require(script.Parent.Binding)
 local Children = require(script.Parent.PropMarkers.Children)
 local ElementKind = require(script.Parent.ElementKind)
+local getDefaultInstanceProperty = require(script.Parent.getDefaultInstanceProperty)
 local Ref = require(script.Parent.PropMarkers.Ref)
 local Type = require(script.Parent.Type)
-local getDefaultInstanceProperty = require(script.Parent.getDefaultInstanceProperty)
 
 local function applyRef(ref, newHostObject)
 	if ref == nil then

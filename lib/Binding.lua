@@ -1,7 +1,6 @@
+local createSignal = require(script.Parent.createSignal)
 local Symbol = require(script.Parent.Symbol)
 local Type = require(script.Parent.Type)
-
-local createSignal = require(script.Parent.createSignal)
 
 --[[
 	Default mapping function used for non-mapped bindings

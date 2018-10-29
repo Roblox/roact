@@ -134,11 +134,11 @@ function Binding.create(initialValue)
 
 	setmetatable(binding, bindingPrototype)
 
-	local updater = function(newValue)
+	local setter = function(newValue)
 		Binding.update(binding, newValue)
 	end
 
-	return binding, updater
+	return binding, setter
 end
 
 return Binding

@@ -1,7 +1,8 @@
 return function()
-	local NoopRenderer = require(script.Parent.NoopRenderer)
+	local assign = require(script.Parent.assign)
 	local createElement = require(script.Parent.createElement)
 	local createSpy = require(script.Parent.createSpy)
+	local NoopRenderer = require(script.Parent.NoopRenderer)
 	local Type = require(script.Parent.Type)
 
 	local createReconciler = require(script.Parent.createReconciler)
@@ -52,9 +53,9 @@ return function()
 		it("should invoke the renderer to mount host nodes", function()
 			local mountHostNode = createSpy(NoopRenderer.mountHostNode)
 
-			local renderer = {
+			local renderer = assign({}, NoopRenderer, {
 				mountHostNode = mountHostNode.value,
-			}
+			})
 
 			local reconciler = createReconciler(renderer)
 
@@ -76,10 +77,10 @@ return function()
 		it("should invoke the renderer to update host nodes", function()
 			local updateHostNode = createSpy(NoopRenderer.updateHostNode)
 
-			local renderer = {
+			local renderer = assign({}, NoopRenderer, {
 				mountHostNode = NoopRenderer.mountHostNode,
 				updateHostNode = updateHostNode.value,
-			}
+			})
 
 			local reconciler = createReconciler(renderer)
 
@@ -107,10 +108,10 @@ return function()
 		it("should invoke the renderer to unmount host nodes", function()
 			local unmountHostNode = createSpy(NoopRenderer.unmountHostNode)
 
-			local renderer = {
+			local renderer = assign({}, NoopRenderer, {
 				mountHostNode = NoopRenderer.mountHostNode,
 				unmountHostNode = unmountHostNode.value,
-			}
+			})
 
 			local reconciler = createReconciler(renderer)
 

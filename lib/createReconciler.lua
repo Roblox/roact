@@ -1,6 +1,8 @@
 local Type = require(script.Parent.Type)
 local ElementKind = require(script.Parent.ElementKind)
 local ChildUtils = require(script.Parent.ChildUtils)
+local Children = require(script.Parent.PropMarkers.Children)
+local Logging = require(script.Parent.Logging)
 
 --[[
 	The reconciler is the mechanism in Roact that constructs the virtual tree
@@ -19,11 +21,25 @@ local function createReconciler(renderer)
 	local mountVirtualNode
 	local updateVirtualNode
 
+	local function mountVirtualNodeChildren(virtualNode, hostParent, childElements)
+		assert(Type.of(virtualNode) == Type.VirtualNode)
+
+		for childKey, childElement in ChildUtils.iterateChildren(childElements) do
+			local concreteKey = childKey
+			if childKey == ChildUtils.UseParentKey then
+				concreteKey = virtualNode.hostKey
+			end
+
+			local childNode = reconciler.mountVirtualNode(childElement, hostParent, concreteKey)
+			virtualNode.children[childKey] = childNode
+		end
+	end
+
 	--[[
 		Utility to update the children of a virtual node based on zero or more
 		updated children given as elements.
 	]]
-	local function updateVirtualNodeChildren(virtualNode, newChildElements)
+	local function updateVirtualNodeChildren(virtualNode, hostParent, newChildElements)
 		assert(Type.of(virtualNode) == Type.VirtualNode)
 
 		local removeKeys = {}
@@ -54,7 +70,7 @@ local function createReconciler(renderer)
 			end
 
 			if childNode == nil then
-				virtualNode.children[childKey] = mountVirtualNode(newElement, virtualNode.hostObject, concreteKey)
+				virtualNode.children[childKey] = mountVirtualNode(newElement, hostParent, concreteKey)
 			end
 		end
 	end
@@ -70,22 +86,51 @@ local function createReconciler(renderer)
 		if kind == ElementKind.Host then
 			renderer.unmountHostNode(reconciler, virtualNode)
 		elseif kind == ElementKind.Function then
-			for _, child in pairs(virtualNode.children) do
-				unmountVirtualNode(child)
+			for _, childNode in pairs(virtualNode.children) do
+				unmountVirtualNode(childNode)
 			end
 		elseif kind == ElementKind.Stateful then
 			virtualNode.instance:__unmount()
 		elseif kind == ElementKind.Portal then
-			error("NYI")
+			for _, childNode in pairs(virtualNode.children) do
+				unmountVirtualNode(childNode)
+			end
 		else
 			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
 		end
 	end
 
 	local function updateFunctionVirtualNode(virtualNode, newElement)
-		local renderResult = newElement.component(newElement.props)
+		local children = newElement.component(newElement.props)
 
-		updateVirtualNodeChildren(virtualNode, renderResult)
+		updateVirtualNodeChildren(virtualNode, virtualNode.hostParent, children)
+	end
+
+	local function updatePortalVirtualNode(virtualNode, newElement)
+		local oldElement = virtualNode.currentElement
+		local oldTargetHostParent = oldElement.props.target
+
+		local targetHostParent = newElement.props.target
+
+		-- TODO: Error message
+		assert(renderer.isHostObject(targetHostParent))
+
+		if targetHostParent ~= oldTargetHostParent then
+			-- TODO: Better warning
+			Logging.warn("Portal changed target!")
+
+			local hostParent = virtualNode.hostParent
+			local hostKey = virtualNode.hostKey
+
+			unmountVirtualNode(virtualNode)
+			return mountVirtualNode(newElement, hostParent, hostKey)
+		end
+
+		local children = newElement.props[Children]
+
+		updateVirtualNodeChildren(virtualNode, targetHostParent, children)
+
+		return virtualNode
 	end
 
 	--[[
@@ -111,7 +156,7 @@ local function createReconciler(renderer)
 
 		if virtualNode.currentElement.component ~= newElement.component then
 			-- TODO: Better message
-			warn("Component changed type!")
+			Logging.warn("Component changed type!")
 
 			local hostParent = virtualNode.hostParent
 			local hostKey = virtualNode.hostKey
@@ -133,7 +178,7 @@ local function createReconciler(renderer)
 
 			return virtualNode
 		elseif kind == ElementKind.Portal then
-			error("NYI")
+			return updatePortalVirtualNode(virtualNode, newElement)
 		else
 			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
 		end
@@ -144,7 +189,7 @@ local function createReconciler(renderer)
 	]]
 	local function createVirtualNode(element, hostParent, hostKey)
 		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
-		assert(typeof(hostParent) == "Instance" or hostParent == nil)
+		assert(renderer.isHostObject(hostParent) or hostParent == nil)
 		assert(typeof(hostKey) == "string")
 
 		return {
@@ -162,21 +207,21 @@ local function createReconciler(renderer)
 
 	local function mountFunctionVirtualNode(virtualNode)
 		local element = virtualNode.currentElement
-		local hostParent = virtualNode.hostParent
-		local hostKey = virtualNode.hostKey
 
-		local renderResult = element.component(element.props)
+		local children = element.component(element.props)
 
-		for childKey, childElement in ChildUtils.iterateChildren(renderResult) do
-			local concreteKey = childKey
-			if childKey == ChildUtils.UseParentKey then
-				concreteKey = hostKey
-			end
+		mountVirtualNodeChildren(virtualNode, virtualNode.hostParent, children)
+	end
 
-			local childNode = reconciler.mountVirtualNode(childElement, hostParent, concreteKey)
+	local function mountPortalVirtualNode(virtualNode)
+		local element = virtualNode.currentElement
 
-			virtualNode.children[childKey] = childNode
-		end
+		local targetHostParent = element.props.target
+		local children = element.props[Children]
+
+		assert(renderer.isHostObject(targetHostParent))
+
+		mountVirtualNodeChildren(virtualNode, targetHostParent, children)
 	end
 
 	--[[
@@ -199,21 +244,17 @@ local function createReconciler(renderer)
 
 		if kind == ElementKind.Host then
 			renderer.mountHostNode(reconciler, virtualNode)
-
-			return virtualNode
 		elseif kind == ElementKind.Function then
 			mountFunctionVirtualNode(virtualNode)
-
-			return virtualNode
 		elseif kind == ElementKind.Stateful then
 			element.component:__mount(reconciler, virtualNode)
-
-			return virtualNode
 		elseif kind == ElementKind.Portal then
-			error("NYI")
+			mountPortalVirtualNode(virtualNode)
 		else
 			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
 		end
+
+		return virtualNode
 	end
 
 	--[[
@@ -285,6 +326,7 @@ local function createReconciler(renderer)
 		mountVirtualNode = mountVirtualNode,
 		unmountVirtualNode = unmountVirtualNode,
 		updateVirtualNode = updateVirtualNode,
+		mountVirtualNodeChildren = mountVirtualNodeChildren,
 		updateVirtualNodeChildren = updateVirtualNodeChildren,
 	}
 

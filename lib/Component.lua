@@ -302,7 +302,7 @@ function Component:__update(updatedElement, updatedState)
 	local renderResult = virtualNode.instance:render()
 	internalData.setStateBlockedReason = nil
 
-	reconciler.updateVirtualNodeChildren(virtualNode, renderResult)
+	reconciler.updateVirtualNodeChildren(virtualNode, virtualNode.hostParent, renderResult)
 
 	if self.didUpdate ~= nil then
 		self:didUpdate(oldProps, oldState)

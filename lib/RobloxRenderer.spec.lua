@@ -5,6 +5,8 @@ return function()
 	local createRef = require(script.Parent.createRef)
 	local createSpy = require(script.Parent.createSpy)
 	local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
+	local Logging = require(script.Parent.Logging)
+	local Portal = require(script.Parent.Portal)
 	local Ref = require(script.Parent.PropMarkers.Ref)
 
 	local RobloxRenderer = require(script.Parent.RobloxRenderer)
@@ -152,6 +154,8 @@ return function()
 
 	describe("updateHostNode", function()
 		it("should update node props and children", function()
+			-- TODO: Break up test
+
 			local parent = Instance.new("Folder")
 			local key = "updateHostNodeTest"
 			local firstValue = "foo"
@@ -456,6 +460,158 @@ return function()
 
 			expect(spyRef.callCount).to.equal(2)
 			spyRef:assertCalledWith(nil)
+		end)
+	end)
+
+	describe("Portals", function()
+		it("should create and destroy instances as children of `target`", function()
+			local target = Instance.new("Folder")
+
+			local function FunctionComponent(props)
+				return createElement("IntValue", {
+					Value = props.value,
+				})
+			end
+
+			local element = createElement(Portal, {
+				target = target,
+			}, {
+				folderOne = createElement("Folder"),
+				folderTwo = createElement("Folder"),
+				intValueOne = createElement(FunctionComponent, {
+					value = 42,
+				}),
+			})
+			local hostParent = nil
+			local hostKey = "Some Key"
+			local node = reconciler.mountVirtualNode(element, hostParent, hostKey)
+
+			expect(#target:GetChildren()).to.equal(3)
+
+			expect(target:FindFirstChild("folderOne")).to.be.ok()
+			expect(target:FindFirstChild("folderTwo")).to.be.ok()
+			expect(target:FindFirstChild("intValueOne")).to.be.ok()
+			expect(target:FindFirstChild("intValueOne").Value).to.equal(42)
+
+			reconciler.unmountVirtualNode(node)
+
+			expect(#target:GetChildren()).to.equal(0)
+		end)
+
+		it("should pass prop updates through to children", function()
+			local target = Instance.new("Folder")
+
+			local firstElement = createElement(Portal, {
+				target = target,
+			}, {
+				ChildValue = createElement("IntValue", {
+					Value = 1,
+				}),
+			})
+
+			local secondElement = createElement(Portal, {
+				target = target,
+			}, {
+				ChildValue = createElement("IntValue", {
+					Value = 2,
+				}),
+			})
+
+			local hostParent = nil
+			local hostKey = "A Host Key"
+			local node = reconciler.mountVirtualNode(firstElement, hostParent, hostKey)
+
+			expect(#target:GetChildren()).to.equal(1)
+
+			local firstValue = target.ChildValue
+			expect(firstValue.Value).to.equal(1)
+
+			node = reconciler.updateVirtualNode(node, secondElement)
+
+			expect(#target:GetChildren()).to.equal(1)
+
+			local secondValue = target.ChildValue
+			expect(firstValue).to.equal(secondValue)
+			expect(secondValue.Value).to.equal(2)
+
+			reconciler.unmountVirtualNode(node)
+
+			expect(#target:GetChildren()).to.equal(0)
+		end)
+
+		it("should throw if `target` is nil", function()
+			-- TODO: Relax this restriction?
+			local element = createElement(Portal)
+			local hostParent = nil
+			local hostKey = "Keys for Everyone"
+
+			expect(function()
+				reconciler.mountVirtualNode(element, hostParent, hostKey)
+			end).to.throw()
+		end)
+
+		it("should throw if `target` is not a Roblox instance", function()
+			local element = createElement(Portal, {
+				target = {},
+			})
+			local hostParent = nil
+			local hostKey = "Unleash the keys!"
+
+			expect(function()
+				reconciler.mountVirtualNode(element, hostParent, hostKey)
+			end).to.throw()
+		end)
+
+		it("should recreate instances if `target` changes in an update", function()
+			local firstTarget = Instance.new("Folder")
+			local secondTarget = Instance.new("Folder")
+
+			local firstElement = createElement(Portal, {
+				target = firstTarget,
+			}, {
+				ChildValue = createElement("IntValue", {
+					Value = 1,
+				}),
+			})
+
+			local secondElement = createElement(Portal, {
+				target = secondTarget,
+			}, {
+				ChildValue = createElement("IntValue", {
+					Value = 2,
+				}),
+			})
+
+			local hostParent = nil
+			local hostKey = "Some Key"
+			local node = reconciler.mountVirtualNode(firstElement, hostParent, hostKey)
+
+			expect(#firstTarget:GetChildren()).to.equal(1)
+			expect(#secondTarget:GetChildren()).to.equal(0)
+
+			local firstChild = firstTarget.ChildValue
+			expect(firstChild.Value).to.equal(1)
+
+			local logs = Logging.capture(function()
+				node = reconciler.updateVirtualNode(node, secondElement)
+			end)
+
+			expect(#logs.warnings).to.equal(1)
+			expect(#logs.infos).to.equal(0)
+			expect(#logs.errors).to.equal(0)
+			expect(logs.warnings[1]:find("Portal")).to.be.ok()
+			expect(logs.warnings[1]:find("target")).to.be.ok()
+
+			expect(#firstTarget:GetChildren()).to.equal(0)
+			expect(#secondTarget:GetChildren()).to.equal(1)
+
+			local secondChild = secondTarget.ChildValue
+			expect(secondChild.Value).to.equal(2)
+
+			reconciler.unmountVirtualNode(node)
+
+			expect(#firstTarget:GetChildren()).to.equal(0)
+			expect(#secondTarget:GetChildren()).to.equal(0)
 		end)
 	end)
 end

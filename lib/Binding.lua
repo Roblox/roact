@@ -6,7 +6,7 @@ local createSignal = require(script.Parent.createSignal)
 --[[
 	Default mapping function used for non-mapped bindings
 ]]
-local function mapIdentity(value)
+local function identity(value)
 	return value
 end
 
@@ -36,8 +36,8 @@ function bindingPrototype:getValue()
 		This allows us to avoid subscribing to our source until someone
 		has subscribed to us, and avoid creating dangling connections.
 	]]
-	if internalData.upstreamBinding ~= nil and internalData.disconnectSource == nil then
-		return internalData.mapFunc(internalData.upstreamBinding:getValue())
+	if internalData.upstreamBinding ~= nil and internalData.upstreamDisconnect == nil then
+		return internalData.valueTransform(internalData.upstreamBinding:getValue())
 	end
 
 	return internalData.value
@@ -46,10 +46,10 @@ end
 --[[
 	Creates a new binding from this one with the given mapping.
 ]]
-function bindingPrototype:map(mapFunc)
-	local binding = Binding.create(mapFunc(self:getValue()))
+function bindingPrototype:map(valueTransform)
+	local binding = Binding.create(valueTransform(self:getValue()))
 
-	binding[InternalData].mapFunc = mapFunc
+	binding[InternalData].valueTransform = valueTransform
 	binding[InternalData].upstreamBinding = self
 
 	return binding
@@ -61,7 +61,7 @@ end
 function Binding.update(binding, newValue)
 	local internalData = binding[InternalData]
 
-	newValue = internalData.mapFunc(newValue)
+	newValue = internalData.valueTransform(newValue)
 
 	internalData.value = newValue
 	internalData.changeSignal:fire(newValue)
@@ -78,30 +78,37 @@ function Binding.subscribe(binding, handler)
 		we need to create a subscription to our source binding so that updates
 		get passed along to us
 	]]
-	if internalData.upstreamBinding ~= nil and internalData.subCount == 0 then
-		internalData.disconnectSource = Binding.subscribe(internalData.upstreamBinding, function(value)
+	if internalData.upstreamBinding ~= nil and internalData.subscriberCount == 0 then
+		internalData.upstreamDisconnect = Binding.subscribe(internalData.upstreamBinding, function(value)
 			Binding.update(binding, value)
 		end)
 	end
 
 	local disconnect = internalData.changeSignal:subscribe(handler)
-	internalData.subCount = internalData.subCount + 1
+	internalData.subscriberCount = internalData.subscriberCount + 1
+
+	local disconnected = false
 
 	--[[
 		We wrap the disconnect function so that we can manage our subscriptions
 		when the disconnect is triggered
 	]]
 	return function()
+		if disconnected then
+			return
+		end
+
+		disconnected = true
 		disconnect()
-		internalData.subCount = internalData.subCount - 1
+		internalData.subscriberCount = internalData.subscriberCount - 1
 
 		--[[
 			If our subscribers count drops to 0, we can safely unsubscribe from
 			our source binding
 		]]
-		if internalData.subCount == 0 and internalData.disconnectSource ~= nil then
-			internalData.disconnectSource()
-			internalData.disconnectSource = nil
+		if internalData.subscriberCount == 0 and internalData.upstreamDisconnect ~= nil then
+			internalData.upstreamDisconnect()
+			internalData.upstreamDisconnect = nil
 		end
 	end
 end
@@ -117,11 +124,11 @@ function Binding.create(initialValue)
 		[InternalData] = {
 			value = initialValue,
 			changeSignal = createSignal(),
-			subCount = 0,
+			subscriberCount = 0,
 
-			mapFunc = mapIdentity,
+			valueTransform = identity,
 			upstreamBinding = nil,
-			disconnectSource = nil,
+			upstreamDisconnect = nil,
 		},
 	}
 

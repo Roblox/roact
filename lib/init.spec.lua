@@ -212,17 +212,6 @@ return function()
 	describe("Portal", function()
 		SKIP()
 
-		it("should error if the target is nil", function()
-			local portal = Roact.createElement(Roact.Portal, {}, {
-				folderOne = Roact.createElement("Folder"),
-				folderTwo = Roact.createElement("Folder"),
-			})
-
-			expect(function()
-				Roact.mount(portal)
-			end).to.throw()
-		end)
-
 		it("should error if the target is not a Roblox instance", function()
 			local portal = Roact.createElement(Roact.Portal, {
 					target = "NotARobloxInstance",
@@ -234,107 +223,6 @@ return function()
 			expect(function()
 				Roact.mount(portal)
 			end).to.throw()
-		end)
-
-		it("should update if parent changes the target", function()
-			local targetOne = Instance.new("Folder")
-			local targetTwo = Instance.new("Folder")
-			local countWillUnmount = 0
-			local changeState
-
-			local TestUnmountComponent = Roact.Component:extend("TestUnmountComponent")
-
-			function TestUnmountComponent:render()
-				return nil
-			end
-
-			function TestUnmountComponent:willUnmount()
-				countWillUnmount = countWillUnmount + 1
-			end
-
-			local PortalContainer = Roact.Component:extend("PortalContainer")
-
-			function PortalContainer:init()
-				self.state = {
-					target = targetOne,
-				}
-			end
-
-			function PortalContainer:render()
-				return Roact.createElement(Roact.Portal, {
-					target = self.state.target,
-				}, {
-					folderOne = Roact.createElement("Folder"),
-					folderTwo = Roact.createElement("Folder"),
-					testUnmount = Roact.createElement(TestUnmountComponent),
-				})
-			end
-
-			function PortalContainer:didMount()
-				expect(self.state.target:FindFirstChild("folderOne")).to.be.ok()
-				expect(self.state.target:FindFirstChild("folderTwo")).to.be.ok()
-
-				changeState = function(newState)
-					self:setState(newState)
-				end
-			end
-
-			Roact.mount(Roact.createElement(PortalContainer))
-
-			expect(targetOne:FindFirstChild("folderOne")).to.be.ok()
-			expect(targetOne:FindFirstChild("folderTwo")).to.be.ok()
-
-			changeState({
-				target = targetTwo,
-			})
-
-			expect(countWillUnmount).to.equal(1)
-
-			expect(targetOne:FindFirstChild("folderOne")).never.to.be.ok()
-			expect(targetOne:FindFirstChild("folderTwo")).never.to.be.ok()
-			expect(targetTwo:FindFirstChild("folderOne")).to.be.ok()
-			expect(targetTwo:FindFirstChild("folderTwo")).to.be.ok()
-		end)
-
-		it("should update Roblox instance properties when relevant parent props are changed", function()
-			local target = Instance.new("Folder")
-			local changeState
-
-			local PortalContainer = Roact.Component:extend("PortalContainer")
-
-			function PortalContainer:init()
-				self.state = {
-					value = "initialStringValue",
-				}
-			end
-
-			function PortalContainer:render()
-				return Roact.createElement(Roact.Portal, {
-					target = target,
-				}, {
-					TestStringValue = Roact.createElement("StringValue", {
-						Value = self.state.value,
-					})
-				})
-			end
-
-			function PortalContainer:didMount()
-				changeState = function(newState)
-					self:setState(newState)
-				end
-			end
-
-			Roact.mount(Roact.createElement(PortalContainer))
-
-			expect(target:FindFirstChild("TestStringValue")).to.be.ok()
-			expect(target:FindFirstChild("TestStringValue").Value).to.equal("initialStringValue")
-
-			changeState({
-				value = "newStringValue",
-			})
-
-			expect(target:FindFirstChild("TestStringValue")).to.be.ok()
-			expect(target:FindFirstChild("TestStringValue").Value).to.equal("newStringValue")
 		end)
 	end)
 end

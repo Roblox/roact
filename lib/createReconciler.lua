@@ -127,7 +127,7 @@ local function createReconciler(renderer)
 
 		local children = newElement.props[Children]
 
-		mountVirtualNodeChildren(virtualNode, targetHostParent, children)
+		updateVirtualNodeChildren(virtualNode, targetHostParent, children)
 
 		return virtualNode
 	end

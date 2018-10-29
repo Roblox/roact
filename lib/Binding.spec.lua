@@ -5,7 +5,7 @@ return function()
 	local Binding = require(script.Parent.Binding)
 
 	describe("Binding.create", function()
-		it("should return object with Type `Binding`", function()
+		it("should return a Binding object and an update function", function()
 			local binding, update = Binding.create(1)
 
 			expect(Type.of(binding)).to.equal(Type.Binding)

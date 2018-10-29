@@ -11,15 +11,15 @@ local Ref = require(script.Parent.PropMarkers.Ref)
 local Type = require(script.Parent.Type)
 local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 
-local function applyRef(ref, newRbx)
+local function applyRef(ref, newHostObject)
 	if ref == nil then
 		return
 	end
 
 	if typeof(ref) == "function" then
-		ref(newRbx)
+		ref(newHostObject)
 	elseif Type.of(ref) == Type.Binding then
-		Binding.update(ref, newRbx)
+		Binding.update(ref, newHostObject)
 	else
 		-- TODO: Better error message
 		error(("Invalid ref: Expected type Binding but got %s"):format(
@@ -28,44 +28,28 @@ local function applyRef(ref, newRbx)
 	end
 end
 
-local function setHostProperty(virtualNode, key, newValue, oldValue)
-	if newValue == oldValue then
-		return
+local function setRobloxInstanceProperty(virtualNode, key, newValue)
+	if newValue == nil then
+		local hostClass = virtualNode.hostObject.ClassName
+		local _, defaultValue = getDefaultPropertyValue(hostClass, key)
+		newValue = defaultValue
 	end
 
-	if typeof(key) == "string" then
-		if newValue == nil then
-			local hostClass = virtualNode.hostObject.ClassName
-			local _, defaultValue = getDefaultPropertyValue(hostClass, key)
-			newValue = defaultValue
-		end
+	-- Assign the new value to the object
+	virtualNode.hostObject[key] = newValue
 
-		-- Assign the new value to the object
-		virtualNode.hostObject[key] = newValue
-
-		return
-	end
-
-	if key == Children or key == Ref then
-		-- Children and refs are handled elsewhere in the renderer
-		return
-	end
-
-	local internalKeyType = Type.of(key)
-
-	if internalKeyType == Type.HostEvent or internalKeyType == Type.HostChangeEvent then
-		-- Event connections are handled in a separate pass
-		return
-	end
-
-	-- TODO: Better error message
-	error(("Unknown prop %q"):format(tostring(key)))
+	return
 end
 
-local function bindHostProperty(virtualNode, key, newBinding)
+local function removeBinding(virtualNode, key)
+	local disconnect = virtualNode.bindings[key]
+	disconnect()
+	virtualNode.bindings[key] = nil
+end
 
+local function attachBinding(virtualNode, key, newBinding)
 	local function updateBoundProperty(newValue)
-		setHostProperty(virtualNode, key, newValue, nil)
+		setRobloxInstanceProperty(virtualNode, key, newValue, nil)
 	end
 
 	if virtualNode.bindings == nil then
@@ -74,7 +58,45 @@ local function bindHostProperty(virtualNode, key, newBinding)
 
 	virtualNode.bindings[key] = Binding.subscribe(newBinding, updateBoundProperty)
 
-	setHostProperty(virtualNode, key, newBinding:getValue(), nil)
+	setRobloxInstanceProperty(virtualNode, key, newBinding:getValue(), nil)
+end
+
+local function detachAllBindings(virtualNode)
+	if virtualNode.bindings ~= nil then
+		for _, disconnect in pairs(virtualNode.bindings) do
+			disconnect()
+		end
+	end
+end
+
+local function applyProp(virtualNode, key, newValue, oldValue)
+	if newValue == oldValue then
+		return
+	end
+
+	if key == Ref or key == Children then
+		return
+	end
+
+	local internalKeyType = Type.of(key)
+
+	if internalKeyType == Type.HostEvent or internalKeyType == Type.HostChangeEvent then
+		-- TODO: Event stuff
+		return
+	end
+
+	local newIsBinding = Type.of(newValue) == Type.Binding
+	local oldIsBinding = Type.of(oldValue) == Type.Binding
+
+	if oldIsBinding then
+		removeBinding(virtualNode, key)
+	end
+
+	if newIsBinding then
+		attachBinding(virtualNode, key, newValue)
+	else
+		setRobloxInstanceProperty(virtualNode, key, newValue)
+	end
 end
 
 local RobloxRenderer = {}
@@ -94,11 +116,7 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 	virtualNode.hostObject = instance
 
 	for propKey, value in pairs(element.props) do
-		if Type.of(value) == Type.Binding then
-			bindHostProperty(virtualNode, propKey, value)
-		else
-			setHostProperty(virtualNode, propKey, value, nil)
-		end
+		applyProp(virtualNode, propKey, value, nil)
 	end
 
 	instance.Name = hostKey
@@ -128,11 +146,7 @@ function RobloxRenderer.unmountHostNode(reconciler, virtualNode)
 		reconciler.unmountVirtualNode(childNode)
 	end
 
-	if virtualNode.bindings ~= nil then
-		for _, disconnect in pairs(virtualNode.bindings) do
-			disconnect()
-		end
-	end
+	detachAllBindings(virtualNode)
 
 	virtualNode.hostObject:Destroy()
 end
@@ -151,33 +165,15 @@ function RobloxRenderer.updateHostNode(reconciler, virtualNode, newElement)
 	for propKey, newValue in pairs(newProps) do
 		local oldValue = oldProps[propKey]
 
-		if newValue ~= oldValue then
-			if Type.of(oldValue) == Type.Binding then
-				local disconnect = virtualNode.bindings[propKey]
-				disconnect()
-				virtualNode.bindings[propKey] = nil
-			end
-
-			if Type.of(newValue) == Type.Binding then
-				bindHostProperty(virtualNode, propKey, newValue)
-			else
-				setHostProperty(virtualNode, propKey, newValue, oldValue)
-			end
-		end
+		applyProp(virtualNode, propKey, newValue, oldValue)
 	end
 
-	-- Apply props that were removed
+	-- Clean up props that were removed
 	for propKey, oldValue in pairs(oldProps) do
 		local newValue = newProps[propKey]
 
 		if newValue == nil then
-			if Type.of(oldValue) == Type.Binding then
-				local disconnect = virtualNode.bindings[propKey]
-				disconnect()
-				virtualNode.bindings[propKey] = nil
-			end
-
-			setHostProperty(virtualNode, propKey, nil, oldValue)
+			applyProp(virtualNode, propKey, nil, oldValue)
 		end
 	end
 

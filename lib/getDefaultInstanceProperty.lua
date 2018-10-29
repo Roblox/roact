@@ -13,7 +13,7 @@ local Symbol = require(script.Parent.Symbol)
 local Nil = Symbol.named("Nil")
 local _cachedPropertyValues = {}
 
-local function getDefaultPropertyValue(className, propertyName)
+local function getDefaultInstanceProperty(className, propertyName)
 	local classCache = _cachedPropertyValues[className]
 
 	if classCache then
@@ -51,4 +51,4 @@ local function getDefaultPropertyValue(className, propertyName)
 	return ok, defaultValue
 end
 
-return getDefaultPropertyValue
+return getDefaultInstanceProperty

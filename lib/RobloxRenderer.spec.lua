@@ -4,7 +4,6 @@ return function()
 	local createReconciler = require(script.Parent.createReconciler)
 	local createRef = require(script.Parent.createRef)
 	local createSpy = require(script.Parent.createSpy)
-	local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
 	local Logging = require(script.Parent.Logging)
 	local Portal = require(script.Parent.Portal)
 	local Ref = require(script.Parent.PropMarkers.Ref)
@@ -161,7 +160,7 @@ return function()
 			local firstValue = "foo"
 			local newValue = "bar"
 
-			local _, defaultStringValue = getDefaultPropertyValue("StringValue", "Value")
+			local defaultStringValue = Instance.new("StringValue").Value
 
 			local element = createElement("StringValue", {
 				Value = firstValue

@@ -9,7 +9,7 @@ local Children = require(script.Parent.PropMarkers.Children)
 local ElementKind = require(script.Parent.ElementKind)
 local Ref = require(script.Parent.PropMarkers.Ref)
 local Type = require(script.Parent.Type)
-local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
+local getDefaultInstanceProperty = require(script.Parent.getDefaultInstanceProperty)
 
 local function applyRef(ref, newHostObject)
 	if ref == nil then
@@ -31,7 +31,7 @@ end
 local function setRobloxInstanceProperty(virtualNode, key, newValue)
 	if newValue == nil then
 		local hostClass = virtualNode.hostObject.ClassName
-		local _, defaultValue = getDefaultPropertyValue(hostClass, key)
+		local _, defaultValue = getDefaultInstanceProperty(hostClass, key)
 		newValue = defaultValue
 	end
 

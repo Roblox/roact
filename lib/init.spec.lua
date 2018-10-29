@@ -208,21 +208,4 @@ return function()
 			expect(currentRef).to.equal(nil)
 		end)
 	end)
-
-	describe("Portal", function()
-		SKIP()
-
-		it("should error if the target is not a Roblox instance", function()
-			local portal = Roact.createElement(Roact.Portal, {
-					target = "NotARobloxInstance",
-				}, {
-				folderOne = Roact.createElement("Folder"),
-				folderTwo = Roact.createElement("Folder"),
-			})
-
-			expect(function()
-				Roact.mount(portal)
-			end).to.throw()
-		end)
-	end)
 end

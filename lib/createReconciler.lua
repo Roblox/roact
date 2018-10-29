@@ -2,6 +2,7 @@ local Type = require(script.Parent.Type)
 local ElementKind = require(script.Parent.ElementKind)
 local ChildUtils = require(script.Parent.ChildUtils)
 local Children = require(script.Parent.PropMarkers.Children)
+local Logging = require(script.Parent.Logging)
 
 --[[
 	The reconciler is the mechanism in Roact that constructs the virtual tree
@@ -116,7 +117,7 @@ local function createReconciler(renderer)
 
 		if targetHostParent ~= oldTargetHostParent then
 			-- TODO: Better warning
-			warn("Portal changed target!")
+			Logging.warn("Portal changed target!")
 
 			local hostParent = virtualNode.hostParent
 			local hostKey = virtualNode.hostKey
@@ -155,7 +156,7 @@ local function createReconciler(renderer)
 
 		if virtualNode.currentElement.component ~= newElement.component then
 			-- TODO: Better message
-			warn("Component changed type!")
+			Logging.warn("Component changed type!")
 
 			local hostParent = virtualNode.hostParent
 			local hostKey = virtualNode.hostKey

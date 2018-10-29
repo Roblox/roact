@@ -21,7 +21,6 @@ local function addType(name)
 end
 
 addType("Element")
-addType("Fragment")
 addType("HostChangeEvent")
 addType("HostEvent")
 addType("Ref")

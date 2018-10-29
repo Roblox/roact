@@ -2,6 +2,7 @@ return function()
 	local createElement = require(script.Parent.createElement)
 	local createReconciler = require(script.Parent.createReconciler)
 	local getDefaultPropertyValue = require(script.Parent.getDefaultPropertyValue)
+	local Logging = require(script.Parent.Logging)
 	local Portal = require(script.Parent.Portal)
 
 	local RobloxRenderer = require(script.Parent.RobloxRenderer)
@@ -76,6 +77,8 @@ return function()
 
 	describe("updateHostNode", function()
 		it("should update node props and children", function()
+			-- TODO: Break up test
+
 			local parent = Instance.new("Folder")
 			local key = "updateHostNodeTest"
 			local firstValue = "foo"
@@ -307,7 +310,15 @@ return function()
 			local firstChild = firstTarget.ChildValue
 			expect(firstChild.Value).to.equal(1)
 
-			node = reconciler.updateVirtualNode(node, secondElement)
+			local logs = Logging.capture(function()
+				node = reconciler.updateVirtualNode(node, secondElement)
+			end)
+
+			expect(#logs.warnings).to.equal(1)
+			expect(#logs.infos).to.equal(0)
+			expect(#logs.errors).to.equal(0)
+			expect(logs.warnings[1]:find("Portal")).to.be.ok()
+			expect(logs.warnings[1]:find("target")).to.be.ok()
 
 			expect(#firstTarget:GetChildren()).to.equal(0)
 			expect(#secondTarget:GetChildren()).to.equal(1)

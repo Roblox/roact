@@ -464,9 +464,6 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 		local newValue = toElement.props[key]
 
 		if oldValue ~= newValue then
-			if Binding.is(oldValue) and Binding.is(newValue) then
-				print("Reconciling a binding!!")
-			end
 			Reconciler._setRbxProp(rbx, key, newValue, toElement)
 		end
 	end
@@ -519,7 +516,6 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 
 			local disconnectOldRef = element._bindings[key]
 			if disconnectOldRef ~= nil then
-				print("Remove binding:", rbx.name, key)
 				disconnectOldRef()
 				element._bindings[key] = nil
 			end
@@ -594,13 +590,11 @@ function Reconciler._setRefBinding(rbx, key, refValue, element)
 
 	local disconnectOld = element._bindings[key]
 	if disconnectOld ~= nil then
-		print("A binding exists! Unbind before rebinding!")
 		disconnectOld()
 	end
 
 	local function refChanged(refRbx)
 		local refName = refValue.current and refValue.current.Name or "nil"
-		print(("Update binding: %s.%s -> %s"):format(rbx.Name, key, refName))
 
 		local success, err = pcall(set, rbx, key, refRbx);
 

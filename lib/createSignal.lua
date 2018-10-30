@@ -12,8 +12,6 @@
 		disconnect()
 ]]
 
-local globalSubs = 0
-
 local function addToMap(map, addKey, addValue)
 	local new = {}
 
@@ -22,9 +20,6 @@ local function addToMap(map, addKey, addValue)
 	end
 
 	new[addKey] = addValue
-
-	globalSubs = globalSubs + 1
-	print("Signal subscriptions:", globalSubs)
 
 	return new
 end
@@ -37,9 +32,6 @@ local function removeFromMap(map, removeKey)
 			new[key] = value
 		end
 	end
-
-	globalSubs = globalSubs - 1
-	print("Signal subscriptions:", globalSubs)
 
 	return new
 end

@@ -5,7 +5,7 @@
 local Binding = require(script.Parent.Binding)
 
 local function createRef()
-	local binding, _ = Binding.create(nil)
+	local binding = Binding.create(nil)
 
 	local ref = {}
 

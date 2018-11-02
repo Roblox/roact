@@ -521,7 +521,8 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 			end
 		end
 
-		-- special case for bindings
+		-- Special case for bindings; note that they are currently only supported for
+		-- string keys, a.k.a. normal Roblox Instance properties
 		if Binding.is(value) then
 			Reconciler._setRefBinding(rbx, key, value, element)
 		else
@@ -594,8 +595,6 @@ function Reconciler._setRefBinding(rbx, key, refValue, element)
 	end
 
 	local function refChanged(refRbx)
-		local refName = refValue.current and refValue.current.Name or "nil"
-
 		local success, err = pcall(set, rbx, key, refRbx);
 
 		if not success then

@@ -23,7 +23,6 @@ local Roact = {
 	None = Core.None,
 	Portal = Core.Portal,
 	Ref = Core.Ref,
-	Binding = Core.Binding,
 
 	mount = Reconciler.mount,
 	unmount = Reconciler.unmount,

@@ -22,7 +22,7 @@ local function createRef()
 		end,
 		__newindex = function(self, key, value)
 			if key == "current" then
-				-- TODO: Confirm that this will not break any functionality
+				-- TODO: Confirm that this will not break any existing behavior
 				error("Assigning to ref.current is not allowed!", 2)
 			end
 			binding[key] = value

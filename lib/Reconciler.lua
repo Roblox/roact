@@ -46,6 +46,22 @@ local ElementKind = {
 	Stateful = Symbol.named("ElementKind.Stateful"),
 }
 
+--[[
+	Sets the value of a reference to a new rendered object.
+	Correctly handles both function-style and object-style refs (which are now bindings).
+]]
+local function applyRef(ref, newRbx)
+	if ref == nil then
+		return
+	end
+
+	if type(ref) == "table" then
+		Binding.update(ref, newRbx)
+	else
+		ref(newRbx)
+	end
+end
+
 local componentTypesToKinds = {
 	["string"] = ElementKind.Primitive,
 	["function"] = ElementKind.Functional,
@@ -75,18 +91,6 @@ local function getElementKind(element)
 	return componentTypesToKinds[componentType]
 end
 
-local function applyRef(ref, newRbx)
-	if ref == nil then
-		return
-	end
-
-	if type(ref) == "table" then
-		Binding.update(ref, newRbx)
-	else
-		ref(newRbx)
-	end
-end
-
 local Reconciler = {}
 
 Reconciler._singleEventManager = SingleEventManager.new()
@@ -103,7 +107,7 @@ function Reconciler.unmount(instanceHandle)
 	if elementKind == ElementKind.Primitive then
 		-- We're destroying a Roblox Instance-based object
 
-		-- Remove bindings to refs
+		-- Disconnect all bindings
 		if element._bindings ~= nil then
 			for _, disconnect in pairs(element._bindings) do
 				disconnect()
@@ -499,7 +503,9 @@ end
 	was created.
 ]]
 function Reconciler._setRbxProp(rbx, key, value, element)
-	if type(key) == "string" then
+	if Binding.is(value) then
+		Reconciler._bindRbxProp(rbx, key, value, element)
+	elseif type(key) == "string" then
 		-- Regular property
 
 		if value == nil then
@@ -514,6 +520,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 				value = defaultValue
 			end
 
+			-- If the old value was a binding, we need to disconnect it here
 			local disconnectOldRef = element._bindings[key]
 			if disconnectOldRef ~= nil then
 				disconnectOldRef()
@@ -523,25 +530,20 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 
 		-- Special case for bindings; note that they are currently only supported for
 		-- string keys, a.k.a. normal Roblox Instance properties
-		if Binding.is(value) then
-			Reconciler._setRefBinding(rbx, key, value, element)
-		else
-			local success, err = pcall(set, rbx, key, value)
+		local success, err = pcall(set, rbx, key, value)
 
-			if not success then
-				local source = element.source or DEFAULT_SOURCE
+		if not success then
+			local source = element.source or DEFAULT_SOURCE
 
-				local message = ("Failed to set property %s on primitive instance of class %s\n%s\n%s"):format(
-					key,
-					rbx.ClassName,
-					err,
-					source
-				)
+			local message = ("Failed to set property %s on primitive instance of class %s\n%s\n%s"):format(
+				key,
+				rbx.ClassName,
+				err,
+				source
+			)
 
-				error(message, 0)
-			end
+			error(message, 0)
 		end
-
 	elseif type(key) == "table" then
 		-- Special property with extra data attached.
 
@@ -584,7 +586,7 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 	end
 end
 
-function Reconciler._setRefBinding(rbx, key, refValue, element)
+function Reconciler._bindRbxProp(rbx, key, binding, element)
 	if element._bindings == nil then
 		element._bindings = {}
 	end
@@ -594,27 +596,14 @@ function Reconciler._setRefBinding(rbx, key, refValue, element)
 		disconnectOld()
 	end
 
-	local function refChanged(refRbx)
-		local success, err = pcall(set, rbx, key, refRbx);
-
-		if not success then
-			local source = element.source or DEFAULT_SOURCE
-
-			local message = ("Failed to set binding %s on primitive instance of class %s\n%s\n%s"):format(
-				key,
-				rbx.ClassName,
-				err,
-				source
-			)
-
-			error(message, 0)
-		end
+	local function updateBinding(newValue)
+		Reconciler._setRbxProp(rbx, key, newValue, element)
 	end
 
-	local disconnect = Binding.subscribe(refValue, refChanged)
+	local disconnect = Binding.subscribe(binding, updateBinding)
 
-	if refValue.current ~= nil then
-		refChanged(refValue.current)
+	if binding:getValue() ~= nil then
+		updateBinding(binding:getValue())
 	end
 
 	element._bindings[key] = disconnect

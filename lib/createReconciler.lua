@@ -31,6 +31,7 @@ local function createReconciler(renderer)
 			end
 
 			local childNode = reconciler.mountVirtualNode(childElement, hostParent, concreteKey)
+			childNode.depth = virtualNode.depth + 1
 			virtualNode.children[childKey] = childNode
 		end
 	end
@@ -62,15 +63,15 @@ local function createReconciler(renderer)
 
 		-- Added children
 		for childKey, newElement in ChildUtils.iterateChildren(newChildElements) do
-			local childNode = virtualNode.children[childKey]
-
 			local concreteKey = childKey
 			if childKey == ChildUtils.UseParentKey then
 				concreteKey = virtualNode.hostKey
 			end
 
-			if childNode == nil then
-				virtualNode.children[childKey] = mountVirtualNode(newElement, hostParent, concreteKey)
+			if virtualNode.children[childKey] == nil then
+				local childNode = mountVirtualNode(newElement, hostParent, concreteKey)
+				childNode.depth = virtualNode.depth + 1
+				virtualNode.children[childKey] = childNode
 			end
 		end
 	end
@@ -197,6 +198,7 @@ local function createReconciler(renderer)
 		return {
 			[Type] = Type.VirtualNode,
 			currentElement = element,
+			depth = 1,
 
 			-- TODO: Allow children to be a single node?
 			children = {},

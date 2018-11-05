@@ -10,7 +10,7 @@ local function createRef()
 	local ref = {}
 
 	--[[
-		A ref is just redirected to a binding via its metatable
+		A ref is just redirected to a binding via metatable
 	]]
 	setmetatable(ref, {
 		__index = function(self, key)
@@ -22,8 +22,15 @@ local function createRef()
 		end,
 		__newindex = function(self, key, value)
 			if key == "current" then
-				-- TODO: Confirm that this will not break any existing behavior
-				error("Assigning to ref.current is not allowed!", 2)
+				--[[
+					While previously refs did not have any special behavior if users assigned to
+					current, we'll have it trigger normal updating, so that it functions as a getter
+					AND a setter. This shouldn't change any previous behavior with refs, but will
+					make First-Class Refs respond to user assignments to 'current'.
+
+					Assigning to current is of course still highly discouraged!
+				]]
+				Binding.update(binding, value)
 			end
 			binding[key] = value
 		end,

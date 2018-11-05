@@ -28,7 +28,7 @@ return function()
 		expect(tostring(ref)).to.equal("RoactRef(10)")
 	end)
 
-	it("should not allow assignments to the 'current' field", function()
+	it("should allow assignments to the 'current' field for compatibility", function()
 		local ref = createRef()
 
 		expect(ref.current).to.equal(nil)
@@ -36,10 +36,10 @@ return function()
 		Binding.update(ref, 99)
 		expect(ref.current).to.equal(99)
 
-		expect(function()
-			ref.current = 77
-		end).to.throw()
+		ref.current = 77
+		expect(ref.current).to.equal(77)
 
-		expect(ref.current).to.equal(99)
+		Binding.update(ref, 44)
+		expect(ref.current).to.equal(44)
 	end)
 end

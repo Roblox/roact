@@ -3,6 +3,7 @@ local ElementKind = require(script.Parent.ElementKind)
 local ChildUtils = require(script.Parent.ChildUtils)
 local Children = require(script.Parent.PropMarkers.Children)
 local Logging = require(script.Parent.Logging)
+local createSyncScheduler = require(script.Parent.createSyncScheduler)
 
 --[[
 	The reconciler is the mechanism in Roact that constructs the virtual tree
@@ -16,7 +17,11 @@ local Logging = require(script.Parent.Logging)
 	spies replacing some methods. The default (and only) reconciler interface
 	exposed by Roact right now uses `RobloxRenderer`.
 ]]
-local function createReconciler(renderer)
+local function createReconciler(renderer, createScheduler)
+	if createScheduler == nil then
+		createScheduler = createSyncScheduler
+	end
+
 	local reconciler
 	local mountVirtualNode
 	local updateVirtualNode
@@ -150,6 +155,10 @@ local function createReconciler(renderer)
 		assert(Type.of(virtualNode) == Type.VirtualNode)
 		assert(Type.of(newElement) == Type.Element or typeof(newElement) == "boolean" or newElement == nil)
 
+		if virtualNode.currentElement == newElement and newState == nil then
+			return virtualNode
+		end
+
 		if typeof(newElement) == "boolean" or newElement == nil then
 			unmountVirtualNode(virtualNode)
 			return nil
@@ -178,7 +187,7 @@ local function createReconciler(renderer)
 			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
 		end
 
-		virtualNode.currentElement = newElement
+		resultNode.currentElement = newElement
 
 		return resultNode
 	end
@@ -328,6 +337,9 @@ local function createReconciler(renderer)
 		updateVirtualNode = updateVirtualNode,
 		updateVirtualNodeChildren = updateVirtualNodeChildren,
 	}
+
+	local scheduler = createScheduler(reconciler)
+	reconciler.scheduler = scheduler
 
 	return reconciler
 end

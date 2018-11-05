@@ -93,7 +93,9 @@ function Component:setState(mapState)
 	if internalData.setStateShouldSkipUpdate then
 		self.state = newState
 	else
-		self:__update(nil, newState)
+		local virtualNode = internalData.virtualNode
+		local reconciler = internalData.reconciler
+		reconciler.scheduler.scheduleUpdateVirtualNode(virtualNode, virtualNode.currentElement, newState)
 	end
 end
 

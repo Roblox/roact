@@ -11,11 +11,11 @@ function SyncScheduler.new(reconciler)
 	return self
 end
 
-function SyncScheduler:scheduleUnmount(virtualNode)
+function SyncScheduler:scheduleUnmountVirtualNode(virtualNode)
 	self.reconciler.unmountVirtualNode(virtualNode)
 end
 
-function SyncScheduler:scheduleUpdate(virtualNode, newElement, newState)
+function SyncScheduler:scheduleUpdateVirtualNode(virtualNode, newElement, newState)
 	self.reconciler.updateVirtualNode(virtualNode, newElement, newState)
 end
 

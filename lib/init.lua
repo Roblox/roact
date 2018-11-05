@@ -32,8 +32,8 @@ local Roact = strict {
 	-- Element = Core.Element,
 
 	mount = robloxReconciler.mountVirtualTree,
-	unmount = robloxReconciler.unmountVirtualTree,
-	update = robloxReconciler.updateVirtualTree,
+	unmount = robloxReconciler.scheduler.scheduleUnmountVirtualTree,
+	update = robloxReconciler.scheduler.scheduleUpdateVirtualTree,
 
 	reify = reconcilerCompat.reify,
 	teardown = reconcilerCompat.teardown,

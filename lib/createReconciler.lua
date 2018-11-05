@@ -21,21 +21,6 @@ local function createReconciler(renderer)
 	local mountVirtualNode
 	local updateVirtualNode
 
-	local function mountVirtualNodeChildren(virtualNode, hostParent, childElements)
-		assert(Type.of(virtualNode) == Type.VirtualNode)
-
-		for childKey, childElement in ChildUtils.iterateChildren(childElements) do
-			local concreteKey = childKey
-			if childKey == ChildUtils.UseParentKey then
-				concreteKey = virtualNode.hostKey
-			end
-
-			local childNode = reconciler.mountVirtualNode(childElement, hostParent, concreteKey)
-			childNode.depth = virtualNode.depth + 1
-			virtualNode.children[childKey] = childNode
-		end
-	end
-
 	--[[
 		Utility to update the children of a virtual node based on zero or more
 		updated children given as elements.
@@ -214,7 +199,7 @@ local function createReconciler(renderer)
 
 		local children = element.component(element.props)
 
-		mountVirtualNodeChildren(virtualNode, virtualNode.hostParent, children)
+		updateVirtualNodeChildren(virtualNode, virtualNode.hostParent, children)
 	end
 
 	local function mountPortalVirtualNode(virtualNode)
@@ -225,7 +210,7 @@ local function createReconciler(renderer)
 
 		assert(renderer.isHostObject(targetHostParent))
 
-		mountVirtualNodeChildren(virtualNode, targetHostParent, children)
+		updateVirtualNodeChildren(virtualNode, targetHostParent, children)
 	end
 
 	--[[
@@ -330,7 +315,6 @@ local function createReconciler(renderer)
 		mountVirtualNode = mountVirtualNode,
 		unmountVirtualNode = unmountVirtualNode,
 		updateVirtualNode = updateVirtualNode,
-		mountVirtualNodeChildren = mountVirtualNodeChildren,
 		updateVirtualNodeChildren = updateVirtualNodeChildren,
 	}
 

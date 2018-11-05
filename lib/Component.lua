@@ -185,19 +185,10 @@ function Component:__mount(reconciler, virtualNode)
 	end
 
 	internalData.setStateBlockedReason = "render"
-	local renderResult = instance:render()
+	local children = instance:render()
 	internalData.setStateBlockedReason = nil
 
-	for childKey, childElement in ChildUtils.iterateChildren(renderResult) do
-		local concreteKey = childKey
-		if childKey == ChildUtils.UseParentKey then
-			concreteKey = hostKey
-		end
-
-		local childNode = reconciler.mountVirtualNode(childElement, hostParent, concreteKey)
-
-		virtualNode.children[childKey] = childNode
-	end
+	reconciler.updateVirtualNodeChildren(virtualNode, hostParent, children)
 
 	if instance.didMount ~= nil then
 		instance:didMount()

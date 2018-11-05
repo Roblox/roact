@@ -88,6 +88,79 @@ return function()
 		expect(bRef.current).to.never.be.ok()
 	end)
 
+	it("should assign underlying instances to properties when given refs", function()
+		local parent = Instance.new("Folder")
+
+		local ref = createRef()
+
+		local element = createElement("Folder", {
+			[Core.Ref] = ref
+		}, {
+			SetToRef = createElement("ObjectValue", {
+				Value = ref,
+			})
+		})
+
+		local handle = Reconciler.mount(element, parent, "TestFolder")
+		local testFolderInstance = parent:FindFirstChild("TestFolder")
+
+		expect(testFolderInstance).to.be.ok()
+		expect(testFolderInstance).to.equal(ref.current)
+
+		local objectValue = testFolderInstance:FindFirstChild("SetToRef")
+
+		expect(objectValue).to.be.ok()
+		expect(objectValue.Value).to.equal(ref.current)
+
+		Reconciler.unmount(handle)
+	end)
+
+	it("should update assigned instance properties when refs change", function()
+		local parent = Instance.new("Folder")
+
+		local ref = createRef()
+
+		local element = createElement("Folder", nil, {
+			ChildA = createElement("Frame", {
+				[Core.Ref] = ref
+			}),
+			ChildB = createElement("TextLabel", {}),
+			SetToRef = createElement("ObjectValue", {
+				Value = ref,
+			})
+		})
+
+		local handle = Reconciler.mount(element, parent, "TestFolder")
+
+		local childA = parent:FindFirstChild("TestFolder"):FindFirstChild("ChildA")
+		local childB = parent:FindFirstChild("TestFolder"):FindFirstChild("ChildB")
+		local objectValue = parent:FindFirstChild("TestFolder"):FindFirstChild("SetToRef")
+
+		expect(childA).to.be.ok()
+		expect(childB).to.be.ok()
+		expect(ref.current).to.equal(childA)
+		expect(objectValue.Value).to.equal(childA)
+
+		local updatedElement = createElement("Folder", nil, {
+			ChildA = createElement("Frame", {}),
+			ChildB = createElement("TextLabel", {
+				[Core.Ref] = ref
+			}),
+			SetToRef = createElement("ObjectValue", {
+				Value = ref,
+			})
+		})
+
+		Reconciler.reconcile(handle, updatedElement)
+
+		expect(childA).to.be.ok()
+		expect(childB).to.be.ok()
+		expect(ref.current).to.equal(childB)
+		expect(objectValue.Value).to.equal(childB)
+
+		Reconciler.unmount(handle)
+	end)
+
 	it("should clean up Event references properly", function()
 		local sizeChangedCount = 0
 

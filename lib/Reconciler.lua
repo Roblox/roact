@@ -176,7 +176,7 @@ function Reconciler._mountInternal(element, parent, key, context)
 
 		-- Update Roblox properties
 		for key, value in pairs(element.props) do
-			Reconciler._setRbxProp(rbx, key, value, element)
+			Reconciler._applyProp(rbx, key, nil, value, nil, element)
 		end
 
 		-- Create children!
@@ -467,8 +467,9 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 
 		local newValue = toElement.props[key]
 
+		print(("Reconciling old prop %s.%s from %s to %s"):format(tostring(rbx), tostring(key), tostring(oldValue), tostring(newValue)))
 		if oldValue ~= newValue then
-			Reconciler._setRbxProp(rbx, key, newValue, toElement)
+			Reconciler._applyProp(rbx, key, oldValue, newValue, fromElement, toElement)
 		end
 	end
 
@@ -477,8 +478,9 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 		if not seenProps[key] then
 			local oldValue = fromElement.props[key]
 
+			print(("Reconciling new prop %s.%s from %s to %s"):format(tostring(rbx), tostring(key), tostring(oldValue), tostring(newValue)))
 			if oldValue ~= newValue then
-				Reconciler._setRbxProp(rbx, key, newValue, toElement)
+				Reconciler._applyProp(rbx, key, oldValue, newValue, fromElement, toElement)
 			end
 		end
 	end
@@ -502,10 +504,8 @@ end
 	element, created using debug.traceback(), that points to where the element
 	was created.
 ]]
-function Reconciler._setRbxProp(rbx, key, value, element)
-	if Binding.is(value) then
-		Reconciler._bindRbxProp(rbx, key, value, element)
-	elseif type(key) == "string" then
+local function setRbxProp(rbx, key, value, element)
+	if type(key) == "string" then
 		-- Regular property
 
 		if value == nil then
@@ -518,13 +518,6 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 
 			if hasProperty then
 				value = defaultValue
-			end
-
-			-- If the old value was a binding, we need to disconnect it here
-			local disconnectOldRef = element._bindings[key]
-			if disconnectOldRef ~= nil then
-				disconnectOldRef()
-				element._bindings[key] = nil
 			end
 		end
 
@@ -586,18 +579,24 @@ function Reconciler._setRbxProp(rbx, key, value, element)
 	end
 end
 
-function Reconciler._bindRbxProp(rbx, key, binding, element)
+local function removeBinding(element, key)
+	local disconnectOld = element._bindings[key]
+	if disconnectOld ~= nil then
+		print(("Disconnecting old binding for %s"):format(tostring(key)))
+		disconnectOld()
+	end
+end
+
+local function attachBinding(rbx, key, binding, element)
 	if element._bindings == nil then
 		element._bindings = {}
 	end
 
-	local disconnectOld = element._bindings[key]
-	if disconnectOld ~= nil then
-		disconnectOld()
-	end
+	print(("Connecting new binding for %s.%s"):format(tostring(rbx), tostring(key)))
 
 	local function updateBinding(newValue)
-		Reconciler._setRbxProp(rbx, key, newValue, element)
+		print(("Updating binding from %s.%s to %s"):format(tostring(rbx), tostring(key), tostring(newValue)))
+		setRbxProp(rbx, key, newValue, element)
 	end
 
 	local disconnect = Binding.subscribe(binding, updateBinding)
@@ -607,6 +606,18 @@ function Reconciler._bindRbxProp(rbx, key, binding, element)
 	end
 
 	element._bindings[key] = disconnect
+end
+
+function Reconciler._applyProp(rbx, key, oldValue, newValue, fromElement, toElement)
+	if Binding.is(oldValue) then
+		removeBinding(fromElement, key)
+	end
+
+	if Binding.is(newValue) then
+		attachBinding(rbx, key, newValue, toElement)
+	else
+		setRbxProp(rbx, key, newValue, toElement)
+	end
 end
 
 return Reconciler

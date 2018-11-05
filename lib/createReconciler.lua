@@ -304,7 +304,7 @@ local function createReconciler(renderer)
 		Unmounts the virtual tree, freeing all of its resources.
 
 		No further operations should be done on the tree after it's been
-		unmounted, as indictaed by its the `mounted` field.
+		unmounted, as indicated by its the `mounted` field.
 	]]
 	local function unmountVirtualTree(tree)
 		assert(Type.of(tree) == Type.VirtualTree)

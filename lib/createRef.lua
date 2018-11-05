@@ -31,8 +31,9 @@ local function createRef()
 					Assigning to current is of course still highly discouraged!
 				]]
 				Binding.update(binding, value)
+			else
+				binding[key] = value
 			end
-			binding[key] = value
 		end,
 		__tostring = function(self)
 			return ("RoactRef(%s)"):format(tostring(binding:getValue()))

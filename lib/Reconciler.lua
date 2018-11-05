@@ -467,7 +467,6 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 
 		local newValue = toElement.props[key]
 
-		print(("Reconciling old prop %s.%s from %s to %s"):format(tostring(rbx), tostring(key), tostring(oldValue), tostring(newValue)))
 		if oldValue ~= newValue then
 			Reconciler._applyProp(rbx, key, oldValue, newValue, fromElement, toElement)
 		end
@@ -478,7 +477,6 @@ function Reconciler._reconcilePrimitiveProps(fromElement, toElement, rbx)
 		if not seenProps[key] then
 			local oldValue = fromElement.props[key]
 
-			print(("Reconciling new prop %s.%s from %s to %s"):format(tostring(rbx), tostring(key), tostring(oldValue), tostring(newValue)))
 			if oldValue ~= newValue then
 				Reconciler._applyProp(rbx, key, oldValue, newValue, fromElement, toElement)
 			end
@@ -582,7 +580,6 @@ end
 local function removeBinding(element, key)
 	local disconnectOld = element._bindings[key]
 	if disconnectOld ~= nil then
-		print(("Disconnecting old binding for %s"):format(tostring(key)))
 		disconnectOld()
 	end
 end
@@ -592,10 +589,8 @@ local function attachBinding(rbx, key, binding, element)
 		element._bindings = {}
 	end
 
-	print(("Connecting new binding for %s.%s"):format(tostring(rbx), tostring(key)))
 
 	local function updateBinding(newValue)
-		print(("Updating binding from %s.%s to %s"):format(tostring(rbx), tostring(key), tostring(newValue)))
 		setRbxProp(rbx, key, newValue, element)
 	end
 

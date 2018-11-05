@@ -589,7 +589,6 @@ local function attachBinding(rbx, key, binding, element)
 		element._bindings = {}
 	end
 
-
 	local function updateBinding(newValue)
 		setRbxProp(rbx, key, newValue, element)
 	end

@@ -132,9 +132,11 @@ return function()
 
 		local handle = Reconciler.mount(element, parent, "TestFolder")
 
-		local childA = parent:FindFirstChild("TestFolder"):FindFirstChild("ChildA")
-		local childB = parent:FindFirstChild("TestFolder"):FindFirstChild("ChildB")
-		local objectValue = parent:FindFirstChild("TestFolder"):FindFirstChild("SetToRef")
+		local testFolder = parent:FindFirstChild("TestFolder")
+
+		local childA = testFolder:FindFirstChild("ChildA")
+		local childB = testFolder:FindFirstChild("ChildB")
+		local objectValue = testFolder:FindFirstChild("SetToRef")
 
 		expect(childA).to.be.ok()
 		expect(childB).to.be.ok()
@@ -152,6 +154,10 @@ return function()
 		})
 
 		Reconciler.reconcile(handle, updatedElement)
+
+		childA = testFolder:FindFirstChild("ChildA")
+		childB = testFolder:FindFirstChild("ChildB")
+		objectValue = testFolder:FindFirstChild("SetToRef")
 
 		expect(childA).to.be.ok()
 		expect(childB).to.be.ok()

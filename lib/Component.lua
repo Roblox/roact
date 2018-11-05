@@ -104,7 +104,7 @@ end
 	Intended to be used primarily by diagnostic tools.
 ]]
 function Component:getElementTraceback()
-	return self[InternalData].element.source
+	return self[InternalData].virtualNode.currentElement.source
 end
 
 --[[
@@ -133,7 +133,7 @@ function Component:__mount(reconciler, virtualNode)
 	assert(reconciler ~= nil)
 	assert(Type.of(virtualNode) == Type.VirtualNode)
 
-	local element = virtualNode.currentElement
+	local currentElement = virtualNode.currentElement
 	local hostParent = virtualNode.hostParent
 
 	-- Contains all the information that we want to keep from consumers of
@@ -141,7 +141,6 @@ function Component:__mount(reconciler, virtualNode)
 	local internalData = {
 		reconciler = reconciler,
 		virtualNode = virtualNode,
-		element = element,
 		componentClass = self,
 
 		setStateBlockedReason = nil,
@@ -157,7 +156,7 @@ function Component:__mount(reconciler, virtualNode)
 
 	virtualNode.instance = instance
 
-	local props = element.props
+	local props = currentElement.props
 
 	if self.defaultProps ~= nil then
 		props = assign({}, self.defaultProps, props)
@@ -245,8 +244,6 @@ function Component:__update(updatedElement, updatedState)
 	if updatedElement ~= nil then
 		newProps = updatedElement.props
 
-		internalData.element = updatedElement
-
 		if componentClass.defaultProps ~= nil then
 			newProps = assign({}, componentClass.defaultProps, newProps)
 		end
@@ -272,9 +269,7 @@ function Component:__update(updatedElement, updatedState)
 		internalData.setStateBlockedReason = nil
 
 		if not continueWithUpdate then
-			-- TODO: Do we need to reset internalData.element so that
-			-- getElementTraceback stays correct?
-			return
+			return false
 		end
 	end
 
@@ -296,6 +291,8 @@ function Component:__update(updatedElement, updatedState)
 	if self.didUpdate ~= nil then
 		self:didUpdate(oldProps, oldState)
 	end
+
+	return true
 end
 
 return Component

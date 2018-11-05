@@ -109,6 +109,8 @@ local function createReconciler(renderer)
 		local children = newElement.component(newElement.props)
 
 		updateVirtualNodeChildren(virtualNode, virtualNode.hostParent, children)
+
+		return virtualNode
 	end
 
 	local function updatePortalVirtualNode(virtualNode, newElement)
@@ -138,9 +140,9 @@ local function createReconciler(renderer)
 		Update the given virtual node using a new element describing what it
 		should transform into.
 
-		`updateVirtualNode` will return a new virtual node that should replace the
-		passed in virtual node. This is because a virtual node can be updated
-		with an element referencing a different component!
+		`updateVirtualNode` will return a new virtual node that should replace
+		the passed in virtual node. This is because a virtual node can be
+		updated with an element referencing a different component!
 
 		In that case, `updateVirtualNode` will unmount the input virtual node,
 		mount a new virtual node, and return it in this case, while also issuing
@@ -149,6 +151,11 @@ local function createReconciler(renderer)
 	function updateVirtualNode(virtualNode, newElement, newState)
 		assert(Type.of(virtualNode) == Type.VirtualNode)
 		assert(Type.of(newElement) == Type.Element or typeof(newElement) == "boolean" or newElement == nil)
+
+		-- If nothing changed, we can skip this update
+		if virtualNode.currentElement == newElement and newState == nil then
+			return virtualNode
+		end
 
 		if typeof(newElement) == "boolean" or newElement == nil then
 			unmountVirtualNode(virtualNode)
@@ -164,23 +171,29 @@ local function createReconciler(renderer)
 
 		local kind = ElementKind.of(newElement)
 
-		local resultNode = virtualNode
+		local shouldContinueUpdate = true
 
 		if kind == ElementKind.Host then
-			resultNode = renderer.updateHostNode(reconciler, virtualNode, newElement)
+			virtualNode = renderer.updateHostNode(reconciler, virtualNode, newElement)
 		elseif kind == ElementKind.Function then
-			updateFunctionVirtualNode(virtualNode, newElement)
+			virtualNode = updateFunctionVirtualNode(virtualNode, newElement)
 		elseif kind == ElementKind.Stateful then
-			virtualNode.instance:__update(newElement, newState)
+			shouldContinueUpdate = virtualNode.instance:__update(newElement, newState)
 		elseif kind == ElementKind.Portal then
-			resultNode = updatePortalVirtualNode(virtualNode, newElement)
+			virtualNode = updatePortalVirtualNode(virtualNode, newElement)
 		else
 			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
 		end
 
+		-- Stateful components can abort updates via shouldUpdate. If that
+		-- happens, we should stop doing stuff at this point.
+		if not shouldContinueUpdate then
+			return virtualNode
+		end
+
 		virtualNode.currentElement = newElement
 
-		return resultNode
+		return virtualNode
 	end
 
 	--[[

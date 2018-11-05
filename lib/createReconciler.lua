@@ -20,6 +20,25 @@ local function createReconciler(renderer)
 	local reconciler
 	local mountVirtualNode
 	local updateVirtualNode
+	local unmountVirtualNode
+
+	--[[
+		Unmount the given virtualNode, replacing it with a new node described by
+		the given element.
+
+		Preserves host properties and depth.
+	]]
+	local function replaceVirtualNode(virtualNode, newElement)
+		local hostParent = virtualNode.hostParent
+		local hostKey = virtualNode.hostKey
+		local depth = virtualNode.depth
+
+		unmountVirtualNode(virtualNode)
+		local newNode = mountVirtualNode(newElement, hostParent, hostKey)
+		newNode.depth = depth
+
+		return newNode
+	end
 
 	--[[
 		Utility to update the children of a virtual node based on zero or more
@@ -64,7 +83,7 @@ local function createReconciler(renderer)
 	--[[
 		Unmounts the given virtual node and releases any held resources.
 	]]
-	local function unmountVirtualNode(virtualNode)
+	function unmountVirtualNode(virtualNode)
 		assert(Type.of(virtualNode) == Type.VirtualNode)
 
 		local kind = ElementKind.of(virtualNode.currentElement)
@@ -105,11 +124,7 @@ local function createReconciler(renderer)
 			-- TODO: Better warning
 			Logging.warn("Portal changed target!")
 
-			local hostParent = virtualNode.hostParent
-			local hostKey = virtualNode.hostKey
-
-			unmountVirtualNode(virtualNode)
-			return mountVirtualNode(newElement, hostParent, hostKey)
+			return replaceVirtualNode(virtualNode, newElement)
 		end
 
 		local children = newElement.props[Children]
@@ -144,11 +159,7 @@ local function createReconciler(renderer)
 			-- TODO: Better message
 			Logging.warn("Component changed type!")
 
-			local hostParent = virtualNode.hostParent
-			local hostKey = virtualNode.hostKey
-
-			unmountVirtualNode(virtualNode)
-			return mountVirtualNode(newElement, hostParent, hostKey)
+			return replaceVirtualNode(virtualNode, newElement)
 		end
 
 		local kind = ElementKind.of(newElement)

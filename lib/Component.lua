@@ -1,6 +1,5 @@
 local assign = require(script.Parent.assign)
 local Type = require(script.Parent.Type)
-local ChildUtils = require(script.Parent.ChildUtils)
 local Symbol = require(script.Parent.Symbol)
 local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
 
@@ -136,7 +135,6 @@ function Component:__mount(reconciler, virtualNode)
 
 	local element = virtualNode.currentElement
 	local hostParent = virtualNode.hostParent
-	local hostKey = virtualNode.hostKey
 
 	-- Contains all the information that we want to keep from consumers of
 	-- Roact, or even other parts of the codebase like the reconciler.

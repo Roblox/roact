@@ -145,7 +145,7 @@ local function createReconciler(renderer)
 		mount a new virtual node, and return it in this case, while also issuing
 		a warning to the user.
 	]]
-	function updateVirtualNode(virtualNode, newElement)
+	function updateVirtualNode(virtualNode, newElement, newState)
 		assert(Type.of(virtualNode) == Type.VirtualNode)
 		assert(Type.of(newElement) == Type.Element or typeof(newElement) == "boolean" or newElement == nil)
 
@@ -174,7 +174,7 @@ local function createReconciler(renderer)
 		elseif kind == ElementKind.Function then
 			updateFunctionVirtualNode(virtualNode, newElement)
 		elseif kind == ElementKind.Stateful then
-			virtualNode.instance:__update(newElement, nil)
+			virtualNode.instance:__update(newElement, newState)
 		elseif kind == ElementKind.Portal then
 			resultNode = updatePortalVirtualNode(virtualNode, newElement)
 		else

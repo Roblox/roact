@@ -1,6 +1,6 @@
 --[[
 	A ref is nothing more than a binding with a special field 'current'
-	that maps to the getValue method of the binding
+	for compatibility
 ]]
 local Binding = require(script.Parent.Binding)
 
@@ -10,7 +10,7 @@ local function createRef()
 	local ref = {}
 
 	--[[
-		A ref is just redirected to a binding via metatable
+		We return a ref that's redirected to a binding via metatable
 	]]
 	setmetatable(ref, {
 		__index = function(self, key)
@@ -23,12 +23,13 @@ local function createRef()
 		__newindex = function(self, key, value)
 			if key == "current" then
 				--[[
-					While previously refs did not have any special behavior if users assigned to
-					current, we'll have it trigger normal updating, so that it functions as a getter
-					AND a setter. This shouldn't change any previous behavior with refs, but will
-					make First-Class Refs respond to user assignments to 'current'.
+					Previously, refs did not have any special behavior if users assigned to
+					'current'. Now, we'll have it trigger normal updating, so that the 'current'
+					field functions as both a getter AND a setter.
 
-					Assigning to current is of course still highly discouraged!
+					This shouldn't change any previous behavior with refs, but will make
+					First-Class Refs respond to user assignments to 'current'. Assigning to
+					'current' is, of course, still highly discouraged!
 				]]
 				Binding.update(binding, value)
 			else

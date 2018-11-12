@@ -1,8 +1,6 @@
 # Roact Changelog
 
 ## Current `master` branch
-* Added "first-class refs" to Roact. ([#158](https://github.com/Roblox/roact/issues/158))
-	* This changes the way the reconciler interprets refs when they're assigned to Roblox Instance properties, which was previously unsupported/unspecified behavior.
 * Renamed `Roact.reify` to `Roact.mount` and `Roact.teardown` to `Roact.unmount` ([#82](https://github.com/Roblox/roact/issues/82))
 	* The old methods are still present as aliases, but will output a warning when used.
 * Added `Roact.Change` for subscribing to `GetPropertyChangedSignal` ([#51](https://github.com/Roblox/roact/pull/51))
@@ -15,6 +13,8 @@
 * Ref switching now occurs in one pass, which should fix edge cases where the result of a ref is `nil`, especially in property changed events ([#98](https://github.com/Roblox/roact/pull/98))
 * `setState` can now be called inside `init` and `willUpdate`. Instead of triggering a new render, it will affect the currently scheduled one. ([#139](https://github.com/Roblox/roact/pull/139))
 * Roll back changes that allowed `setState` to be called inside `willUpdate`, which created state update scenarios with difficult-to-determine behavior. ([#157](https://github.com/Roblox/roact/pull/157))
+* Added "first-class refs" to Roact. ([#158](https://github.com/Roblox/roact/issues/158))
+	* This changes the way the reconciler interprets refs when they're assigned to Roblox Instance properties, which was previously unsupported/unspecified behavior.
 
 ## 1.0.0 Prerelease 2 (March 22, 2018)
 * Removed `is*Element` methods, this is unlikely to affect anyone ([#50](https://github.com/Roblox/roact/pull/50))

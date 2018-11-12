@@ -1,6 +1,8 @@
 # Roact Changelog
 
 ## Current `master` branch
+* Added "first-class refs" to Roact. ([#158](https://github.com/Roblox/roact/issues/158))
+	* This changes the way the reconciler interprets refs when they're assigned to Roblox Instance properties, which was previously unsupported/unspecified behavior.
 * Renamed `Roact.reify` to `Roact.mount` and `Roact.teardown` to `Roact.unmount` ([#82](https://github.com/Roblox/roact/issues/82))
 	* The old methods are still present as aliases, but will output a warning when used.
 * Added `Roact.Change` for subscribing to `GetPropertyChangedSignal` ([#51](https://github.com/Roblox/roact/pull/51))

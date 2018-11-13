@@ -7,6 +7,7 @@
 local Binding = require(script.Parent.Binding)
 local Children = require(script.Parent.PropMarkers.Children)
 local ElementKind = require(script.Parent.ElementKind)
+local SingleEventManager = require(script.Parent.SingleEventManager)
 local getDefaultInstanceProperty = require(script.Parent.getDefaultInstanceProperty)
 local Ref = require(script.Parent.PropMarkers.Ref)
 local Type = require(script.Parent.Type)
@@ -83,7 +84,18 @@ local function applyProp(virtualNode, key, newValue, oldValue)
 	local internalKeyType = Type.of(key)
 
 	if internalKeyType == Type.HostEvent or internalKeyType == Type.HostChangeEvent then
-		-- TODO: Apply events
+		if virtualNode.eventManager == nil then
+			virtualNode.eventManager = SingleEventManager.new(virtualNode.hostObject)
+		end
+
+		local eventName = key.name
+
+		if internalKeyType == Type.HostChangeEvent then
+			virtualNode.eventManager:connectEvent(eventName, newValue)
+		else
+			virtualNode.eventManager:connectPropertyChange(eventName, newValue)
+		end
+
 		return
 	end
 

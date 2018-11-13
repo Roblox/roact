@@ -1,158 +1,88 @@
 --[[
-	An interface to have one event listener at a time on an event.
-
-	One listener can be registered per SingleEventManager/Instance/Event triple.
-
-	For example:
-
-		myManager:connect(myPart, "Touched", touchedListener)
-		myManager:connect(myPart, "Touched", otherTouchedListener)
-
-	If myPart is touched, only `otherTouchedListener` will fire, because the
-	first listener was disconnected during the second connect call.
-
-	The hooks provided by SingleEventManager pass the associated Roblox object
-	as the first parameter to the callback. This differs from normal
-	Roblox events.
-
-	SingleEventManager's public methods operate in terms of instances and string
-	keys, differentiating between regular events and property changed signals
-	by calling different methods.
-
-	In the internal implementation, everything is handled via indexing by
-	instances and event objects themselves. This allows the code to use the same
-	structures for both kinds of instance event.
+	A manager for a single host virtual node's connected events.
 ]]
+
+local CHANGE_PREFIX = "Change."
 
 local SingleEventManager = {}
+SingleEventManager.SuspensionStatus = {
+	-- No events are processed at all; they're silently discarded
+	Disabled = 1,
+	-- Events are stored in a queue; listeners are invoked when the manager is resumed
+	Suspended = 2,
+	-- Event listeners are invoked as the events fire
+	Enabled = 3,
+}
 
-SingleEventManager.__index = SingleEventManager
+local SingleEventManagerPrototype = {}
+SingleEventManagerPrototype.__index = SingleEventManagerPrototype
 
---[[
-	Constructs a `Hook`, which is a bundle containing a method that can be
-	updated, as well as the signal connection.
-]]
-local function createHook(instance, event, method)
-	local hook = {
-		method = method,
-	}
-
-	hook.connection = event:Connect(function(...)
-		hook.method(instance, ...)
-	end)
-
-	return hook
-end
-
-function SingleEventManager.new()
-	local self = {
-		-- Map<Instance, Map<Event, Hook>>
-		_hooks = {},
-	}
-
-	setmetatable(self, SingleEventManager)
+function SingleEventManager.new(instance)
+	local self = setmetatable({
+		-- The queue of suspended events
+		_queue = {},
+		-- All the event connections being managed
+		-- Events are indexed by a string key
+		_connections = {},
+		-- All the listeners being managed
+		-- These are stored distinctly from the connections
+		-- Connections can have their listeners replaced at runtime
+		_listeners = {},
+		-- The suspension status of the manager
+		-- Managers start disabled and are "resumed" after the initial render
+		_state = SingleEventManager.SuspensionStatus.Disabled,
+		_instance = instance,
+	}, SingleEventManagerPrototype)
 
 	return self
 end
 
-function SingleEventManager:connect(instance, key, method)
-	self:_connectInternal(instance, instance[key], key, method)
+function SingleEventManagerPrototype:connectEvent(key, listener)
+	self:_connect(key, self._instance[key], listener)
 end
 
-function SingleEventManager:connectProperty(instance, key, method)
-	self:_connectInternal(instance, instance:GetPropertyChangedSignal(key), "Property:" .. key, method)
+function SingleEventManagerPrototype:connectPropertyChange(key, listener)
+	self:_connect(CHANGE_PREFIX..key, self._instance:GetPropertyChangedSignal(key), listener)
 end
 
---[[
-	Disconnects the hook attached to the event named `key` on the given
-	`instance` if there is one, otherwise does nothing.
-
-	Note that `key` must identify a valid property on `instance`, or this method
-	will throw.
-]]
-function SingleEventManager:disconnect(instance, key)
-	self:_disconnectInternal(instance, key)
-end
-
---[[
-	Disconnects the hook attached to the property changed signal on `instance`
-	with the name `key` if there is one, otherwise does nothing.
-
-	Note that `key` must identify a valid property on `instance`, or this method
-	will throw.
-]]
-function SingleEventManager:disconnectProperty(instance, key)
-	self:_disconnectInternal(instance, "Property:" .. key)
-end
-
---[[
-	Disconnects any hooks managed by SingleEventManager associated with
-	`instance`.
-
-	Calling disconnectAll with an untracked instance won't do anything.
-]]
-function SingleEventManager:disconnectAll(instance)
-	local instanceHooks = self._hooks[instance]
-
-	if instanceHooks == nil then
-		return
-	end
-
-	for _, hook in pairs(instanceHooks) do
-		hook.connection:Disconnect()
-	end
-
-	self._hooks[instance] = nil
-end
-
---[[
-	Creates a hook using the given event and method and associates it with the
-	given instance.
-
-	Generally, `event` should directly associated with `instance`, but that's
-	unchecked in this code.
-]]
-function SingleEventManager:_connectInternal(instance, event, key, method)
-	local instanceHooks = self._hooks[instance]
-
-	if instanceHooks == nil then
-		instanceHooks = {}
-		self._hooks[instance] = instanceHooks
-	end
-
-	local existingHook = instanceHooks[key]
-
-	if existingHook ~= nil then
-		existingHook.method = method
+function SingleEventManagerPrototype:_connect(eventKey, event, listener)
+	-- If the listener doesn't exist we can just disconnect the existing connection
+	if listener == nil then
+		if self._connections[eventKey] ~= nil then
+			self._connections[eventKey]:Disconnect()
+		end
 	else
-		instanceHooks[key] = createHook(instance, event, method)
+		if self._connections[eventKey] == nil then
+			self._connections[eventKey] = event:Connect(function(...)
+				if self._state == SingleEventManager.SuspensionStatus.Enabled then
+					self._listeners[eventKey](self._instance, ...)
+				elseif self._state == SingleEventManager.SuspensionStatus.Suspended then
+					-- Store event key (so we know which listener to invoke), count of arguments (so unpack())
+					-- doesn't freak out with nils), and finally the arguments themselves.
+					table.insert(self._queue, { eventKey, select("#", ...), ... })
+				end
+			end)
+		end
+
+		self._listeners[eventKey] = listener
 	end
 end
 
---[[
-	Disconnects a hook associated with the given instance and event if it's
-	present, otherwise does nothing.
-]]
-function SingleEventManager:_disconnectInternal(instance, key)
-	local instanceHooks = self._hooks[instance]
+function SingleEventManagerPrototype:suspend()
+	self._state = SingleEventManager.SuspensionStatus.Suspended
+end
 
-	if instanceHooks == nil then
-		return
+function SingleEventManagerPrototype:resume()
+	self._state = SingleEventManager.SuspensionStatus.Enabled
+
+	for i = 1, #self._queue do
+		local record = self._queue[i]
+		local listener = self._listeners[record[1]]
+		local count = record[2]
+		listener(self._instance, unpack(record, 3))
 	end
 
-	local hook = instanceHooks[key]
-
-	if hook == nil then
-		return
-	end
-
-	hook.connection:Disconnect()
-	instanceHooks[key] = nil
-
-	-- If there are no hooks left for this instance, we don't need this record.
-	if next(instanceHooks) == nil then
-		self._hooks[instance] = nil
-	end
+	self._queue = {}
 end
 
 return SingleEventManager

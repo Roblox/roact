@@ -79,7 +79,7 @@ function SingleEventManagerPrototype:resume()
 		local record = self._queue[i]
 		local listener = self._listeners[record[1]]
 		local count = record[2]
-		listener(self._instance, unpack(record, 3))
+		listener(self._instance, unpack(record, 3, count))
 	end
 
 	self._queue = {}

@@ -57,9 +57,8 @@ function SingleEventManagerPrototype:_connect(eventKey, event, listener)
 				if self._state == SingleEventManager.SuspensionStatus.Enabled then
 					self._listeners[eventKey](self._instance, ...)
 				elseif self._state == SingleEventManager.SuspensionStatus.Suspended then
-					-- Store event key (so we know which listener to invoke), count of arguments (so unpack())
-					-- doesn't freak out with nils), and finally the arguments themselves.
-					table.insert(self._queue, { eventKey, select("#", ...), ... })
+					-- Store event key (so we know which listener to invoke) along with the arguments.
+					table.insert(self._queue, { eventKey, ... })
 				end
 			end)
 		end
@@ -79,7 +78,7 @@ function SingleEventManagerPrototype:resume()
 		local record = self._queue[i]
 		local listener = self._listeners[record[1]]
 		local count = record[2]
-		listener(self._instance, unpack(record, 3, count))
+		listener(self._instance, unpack(record, 2))
 	end
 
 	self._queue = {}

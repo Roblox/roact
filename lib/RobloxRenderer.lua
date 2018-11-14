@@ -91,9 +91,9 @@ local function applyProp(virtualNode, key, newValue, oldValue)
 		local eventName = key.name
 
 		if internalKeyType == Type.HostChangeEvent then
-			virtualNode.eventManager:connectEvent(eventName, newValue)
-		else
 			virtualNode.eventManager:connectPropertyChange(eventName, newValue)
+		else
+			virtualNode.eventManager:connectEvent(eventName, newValue)
 		end
 
 		return

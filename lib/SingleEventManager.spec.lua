@@ -68,6 +68,12 @@ return function()
 			manager:resume()
 			expect(callCount).to.equal(1)
 		end)
+
+		-- TODO: Test that events fired during manager resumption get fired
+		-- TODO: Test that events fired during suspension and disconnected
+		-- before resume aren't fired
+		-- TODO: Test that events that yield don't yield through the manager
+		-- TODO: Test that events that throw don't throw through the manager
 	end)
 
 	describe("connectPropertyChange", function()

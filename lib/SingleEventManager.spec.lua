@@ -1,5 +1,6 @@
 return function()
 	local createSpy = require(script.Parent.createSpy)
+	local assertDeepEqual = require(script.Parent.assertDeepEqual)
 
 	local SingleEventManager = require(script.Parent.SingleEventManager)
 
@@ -74,7 +75,32 @@ return function()
 			eventSpy:assertCalledWith(target, "bar")
 		end)
 
-		-- TODO: Test that events fired during manager resumption get fired
+		it("should invoke events triggered during resumption in the correct order", function()
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
+
+			local recordedValues = {}
+			local eventSpy = createSpy(function(_, value)
+				table.insert(recordedValues, value)
+
+				if value == 2 then
+					instance:Fire(3)
+				elseif value == 3 then
+					instance:Fire(4)
+				end
+			end)
+
+			manager:connectEvent("Event", eventSpy.value)
+			manager:suspend()
+
+			instance:Fire(1)
+			instance:Fire(2)
+
+			manager:resume()
+			expect(eventSpy.callCount).to.equal(4)
+			assertDeepEqual(recordedValues, {1, 2, 3, 4})
+		end)
+
 		-- TODO: Test that events fired during suspension and disconnected
 		-- before resume aren't fired
 		-- TODO: Test that events that yield don't yield through the manager

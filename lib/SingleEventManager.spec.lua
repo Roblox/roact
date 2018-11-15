@@ -178,6 +178,9 @@ return function()
 	end)
 
 	describe("connectPropertyChange", function()
+		-- Since property changes utilize the same mechanisms as other events,
+		-- the tests here are slimmed down to reduce redundancy.
+
 		it("should connect to property changes", function()
 			local instance = Instance.new("Folder")
 			local manager = SingleEventManager.new(instance)

@@ -60,52 +60,6 @@ return function()
 		end
 	end)
 
-	describe("Context", function()
-		SKIP()
-
-		it("should be passed to children through primitive and functional components", function()
-			local testValue = {}
-
-			local callCount = 0
-
-			local ContextConsumer = Roact.Component:extend("ContextConsumer")
-
-			function ContextConsumer:init(props)
-				expect(self._context.testValue).to.equal(testValue)
-
-				callCount = callCount + 1
-			end
-
-			function ContextConsumer:render()
-				return
-			end
-
-			local function ContextBarrier(props)
-				return Roact.createElement(ContextConsumer)
-			end
-
-			local ContextProvider = Roact.Component:extend("ContextProvider")
-
-			function ContextProvider:init(props)
-				self._context.testValue = props.testValue
-			end
-
-			function ContextProvider:render()
-				return Roact.createElement("Frame", {}, {
-					Child = Roact.createElement(ContextBarrier),
-				})
-			end
-
-			local element = Roact.createElement(ContextProvider, {
-				testValue = testValue,
-			})
-
-			Roact.mount(element)
-
-			expect(callCount).to.equal(1)
-		end)
-	end)
-
 	describe("Ref", function()
 		SKIP()
 

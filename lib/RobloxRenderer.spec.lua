@@ -1,5 +1,7 @@
 return function()
+	local assertDeepEqual = require(script.Parent.assertDeepEqual)
 	local Binding = require(script.Parent.Binding)
+	local Component = require(script.Parent.Component)
 	local createElement = require(script.Parent.createElement)
 	local createReconciler = require(script.Parent.createReconciler)
 	local createRef = require(script.Parent.createRef)
@@ -611,6 +613,38 @@ return function()
 
 			expect(#firstTarget:GetChildren()).to.equal(0)
 			expect(#secondTarget:GetChildren()).to.equal(0)
+		end)
+	end)
+
+	describe("Context", function()
+		it("should pass context values through Roblox host nodes", function()
+			local Consumer = Component:extend("Consumer")
+
+			local capturedContext
+			function Consumer:init()
+				capturedContext = self._context
+			end
+
+			function Consumer:render()
+			end
+
+			local element = createElement("Folder", nil, {
+				Consumer = createElement(Consumer)
+			})
+			local hostParent = nil
+			local hostKey = "Context Test"
+			local context = {
+				hello = "world",
+			}
+			local node = reconciler.mountVirtualNode(element, hostParent, hostKey, context)
+
+			expect(capturedContext).never.to.equal(context)
+			assertDeepEqual(capturedContext, context)
+
+			reconciler.unmountVirtualNode(node)
+		end)
+
+		itSKIP("should pass context values through portal nodes", function()
 		end)
 	end)
 end

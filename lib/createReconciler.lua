@@ -203,6 +203,7 @@ local function createReconciler(renderer)
 		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
 		assert(renderer.isHostObject(hostParent) or hostParent == nil)
 		assert(typeof(hostKey) == "string")
+		assert(typeof(context) == "table" or context == nil)
 
 		return {
 			[Type] = Type.VirtualNode,

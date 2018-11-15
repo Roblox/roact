@@ -1,4 +1,6 @@
 return function()
+	local createSpy = require(script.Parent.createSpy)
+
 	local SingleEventManager = require(script.Parent.SingleEventManager)
 
 	describe("new", function()
@@ -11,66 +13,67 @@ return function()
 
 	describe("connectEvent", function()
 		it("should connect to events", function()
-			local target = Instance.new("BindableEvent")
-			local manager = SingleEventManager.new(target)
-			local callCount = 0
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
+			local eventSpy = createSpy()
 
-			manager:connectEvent("Event", function(rbx, arg)
-				expect(rbx).to.equal(target)
-				expect(arg).to.equal("foo")
-				callCount = callCount + 1
-			end)
-
+			manager:connectEvent("Event", eventSpy.value)
 			manager:resume()
 
-			target:Fire("foo")
+			instance:Fire("foo")
+			expect(eventSpy.callCount).to.equal(1)
+			eventSpy:assertCalledWith(instance, "foo")
 
-			expect(callCount).to.equal(1)
+			instance:Fire("bar")
+			expect(eventSpy.callCount).to.equal(2)
+			eventSpy:assertCalledWith(instance, "bar")
 
-			target:Fire("foo")
+			manager:connectEvent("Event", nil)
 
-			expect(callCount).to.equal(2)
+			instance:Fire("baz")
+			expect(eventSpy.callCount).to.equal(2)
 		end)
 
 		it("should drop events until resumed initially", function()
 			local target = Instance.new("BindableEvent")
 			local manager = SingleEventManager.new(target)
-			local callCount = 0
+			local eventSpy = createSpy()
 
-			manager:connectEvent("Event", function(rbx, arg)
-				callCount = callCount + 1
-			end)
+			manager:connectEvent("Event", eventSpy.value)
 
 			target:Fire("foo")
-			expect(callCount).to.equal(0)
+			expect(eventSpy.callCount).to.equal(0)
 
 			manager:resume()
-			target:Fire("foo")
-			expect(callCount).to.equal(1)
+
+			target:Fire("bar")
+			expect(eventSpy.callCount).to.equal(1)
+			eventSpy:assertCalledWith(target, "bar")
 		end)
 
 		it("should invoke suspended events when resumed", function()
 			local target = Instance.new("BindableEvent")
 			local manager = SingleEventManager.new(target)
-			local callCount = 0
+			local eventSpy = createSpy()
 
-			manager:connectEvent("Event", function(rbx, arg)
-				expect(rbx).to.equal(target)
-				expect(arg).to.equal("foo")
-				callCount = callCount + 1
-			end)
+			manager:connectEvent("Event", eventSpy.value)
+
+			manager:resume()
+
+			target:Fire("foo")
+			expect(eventSpy.callCount).to.equal(1)
+			eventSpy:assertCalledWith(target, "foo")
 
 			manager:suspend()
 
-			target:Fire("foo")
-			expect(callCount).to.equal(0)
+			target:Fire("bar")
+			expect(eventSpy.callCount).to.equal(1)
 
 			manager:resume()
-			expect(callCount).to.equal(1)
+			expect(eventSpy.callCount).to.equal(2)
+			eventSpy:assertCalledWith(target, "bar")
 		end)
 
-		-- TODO: Port tests to createSpy
-		-- TODO: Reduce property changed signal tests, since they overlap
 		-- TODO: Test that events fired during manager resumption get fired
 		-- TODO: Test that events fired during suspension and disconnected
 		-- before resume aren't fired
@@ -82,56 +85,25 @@ return function()
 
 	describe("connectPropertyChange", function()
 		it("should connect to property changes", function()
-			local target = Instance.new("Folder")
-			local manager = SingleEventManager.new(target)
-			local changeCount = 0
+			local instance = Instance.new("Folder")
+			local manager = SingleEventManager.new(instance)
+			local eventSpy = createSpy()
 
-			manager:connectPropertyChange("Name", function(rbx, arg)
-				changeCount = changeCount + 1
-			end)
-
+			manager:connectPropertyChange("Name", eventSpy.value)
 			manager:resume()
 
-			target.Name = "foo"
-			expect(changeCount).to.equal(1)
+			instance.Name = "foo"
+			expect(eventSpy.callCount).to.equal(1)
+			eventSpy:assertCalledWith(instance)
 
-			target.Name = "bar"
-			expect(changeCount).to.equal(2)
-		end)
+			instance.Name = "bar"
+			expect(eventSpy.callCount).to.equal(2)
+			eventSpy:assertCalledWith(instance)
 
-		it("should drop events until resumed initially", function()
-			local target = Instance.new("Folder")
-			local manager = SingleEventManager.new(target)
-			local changeCount = 0
+			manager:connectPropertyChange("Name")
 
-			manager:connectPropertyChange("Name", function(rbx, arg)
-				changeCount = changeCount + 1
-			end)
-
-			target.Name = "foo"
-			expect(changeCount).to.equal(0)
-
-			manager:resume()
-			target.Name = "bar"
-			expect(changeCount).to.equal(1)
-		end)
-
-		it("should invoke suspended events when resumed", function()
-			local target = Instance.new("Folder")
-			local manager = SingleEventManager.new(target)
-			local changeCount = 0
-
-			manager:connectPropertyChange("Name", function(rbx, arg)
-				changeCount = changeCount + 1
-			end)
-
-			manager:suspend()
-
-			target.Name = "foo"
-			expect(changeCount).to.equal(0)
-
-			manager:resume()
-			expect(changeCount).to.equal(1)
+			instance.Name = "baz"
+			expect(eventSpy.callCount).to.equal(2)
 		end)
 	end)
 end

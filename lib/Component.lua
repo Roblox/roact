@@ -175,11 +175,17 @@ function Component:__mount(reconciler, virtualNode)
 		end
 	end
 
+	local newContext = assign({}, virtualNode.context)
+	instance._context = newContext
+
 	if instance.init ~= nil then
 		internalData.setStateShouldSkipUpdate = true
 		instance:init(instance.props)
 		internalData.setStateShouldSkipUpdate = false
 	end
+
+	-- It's possible for init() to redefine _context!
+	virtualNode.context = instance._context
 
 	internalData.setStateBlockedReason = "render"
 	local children = instance:render()

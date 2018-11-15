@@ -73,7 +73,7 @@ local function createReconciler(renderer)
 			end
 
 			if virtualNode.children[childKey] == nil then
-				local childNode = mountVirtualNode(newElement, hostParent, concreteKey)
+				local childNode = mountVirtualNode(newElement, hostParent, concreteKey, virtualNode.context)
 				childNode.depth = virtualNode.depth + 1
 				virtualNode.children[childKey] = childNode
 			end
@@ -199,7 +199,7 @@ local function createReconciler(renderer)
 	--[[
 		Constructs a new virtual node but not does mount it.
 	]]
-	local function createVirtualNode(element, hostParent, hostKey)
+	local function createVirtualNode(element, hostParent, hostKey, context)
 		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
 		assert(renderer.isHostObject(hostParent) or hostParent == nil)
 		assert(typeof(hostKey) == "string")
@@ -215,6 +215,7 @@ local function createReconciler(renderer)
 			-- Less certain about these properties:
 			hostParent = hostParent,
 			hostKey = hostKey,
+			context = context,
 		}
 	end
 
@@ -241,10 +242,11 @@ local function createReconciler(renderer)
 		Constructs a new virtual node and mounts it, but does not place it into
 		the tree.
 	]]
-	function mountVirtualNode(element, hostParent, hostKey)
+	function mountVirtualNode(element, hostParent, hostKey, context)
 		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
 		assert(typeof(hostParent) == "Instance" or hostParent == nil)
 		assert(typeof(hostKey) == "string")
+		assert(typeof(context) == "table" or context == nil)
 
 		-- Boolean values render as nil to enable terse conditional rendering.
 		if typeof(element) == "boolean" then

@@ -10,11 +10,13 @@ local function assign(target, ...)
 	for index = 1, select("#", ...) do
 		local source = select(index, ...)
 
-		for key, value in pairs(source) do
-			if value == None then
-				target[key] = nil
-			else
-				target[key] = value
+		if source ~= nil then
+			for key, value in pairs(source) do
+				if value == None then
+					target[key] = nil
+				else
+					target[key] = value
+				end
 			end
 		end
 	end

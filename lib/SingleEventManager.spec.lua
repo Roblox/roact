@@ -36,43 +36,42 @@ return function()
 		end)
 
 		it("should drop events until resumed initially", function()
-			local target = Instance.new("BindableEvent")
-			local manager = SingleEventManager.new(target)
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
 			local eventSpy = createSpy()
 
 			manager:connectEvent("Event", eventSpy.value)
 
-			target:Fire("foo")
+			instance:Fire("foo")
 			expect(eventSpy.callCount).to.equal(0)
 
 			manager:resume()
 
-			target:Fire("bar")
+			instance:Fire("bar")
 			expect(eventSpy.callCount).to.equal(1)
-			eventSpy:assertCalledWith(target, "bar")
+			eventSpy:assertCalledWith(instance, "bar")
 		end)
 
 		it("should invoke suspended events when resumed", function()
-			local target = Instance.new("BindableEvent")
-			local manager = SingleEventManager.new(target)
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
 			local eventSpy = createSpy()
 
 			manager:connectEvent("Event", eventSpy.value)
-
 			manager:resume()
 
-			target:Fire("foo")
+			instance:Fire("foo")
 			expect(eventSpy.callCount).to.equal(1)
-			eventSpy:assertCalledWith(target, "foo")
+			eventSpy:assertCalledWith(instance, "foo")
 
 			manager:suspend()
 
-			target:Fire("bar")
+			instance:Fire("bar")
 			expect(eventSpy.callCount).to.equal(1)
 
 			manager:resume()
 			expect(eventSpy.callCount).to.equal(2)
-			eventSpy:assertCalledWith(target, "bar")
+			eventSpy:assertCalledWith(instance, "bar")
 		end)
 
 		it("should invoke events triggered during resumption in the correct order", function()

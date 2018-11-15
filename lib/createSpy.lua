@@ -26,7 +26,12 @@ local function createSpy(inner)
 	self.assertCalledWith = function(_, ...)
 		local len = select("#", ...)
 
-		assert(self.valuesLength == len, "length of expected values differs from stored values")
+		if self.valuesLength ~= len then
+			error(("Expected %d arguments, but was called with %d arguments"):format(
+				self.valuesLength,
+				len
+			), 2)
+		end
 
 		for i = 1, len do
 			local expected = select(i, ...)

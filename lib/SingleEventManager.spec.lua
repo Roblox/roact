@@ -1,6 +1,7 @@
 return function()
-	local createSpy = require(script.Parent.createSpy)
 	local assertDeepEqual = require(script.Parent.assertDeepEqual)
+	local createSpy = require(script.Parent.createSpy)
+	local Logging = require(script.Parent.Logging)
 
 	local SingleEventManager = require(script.Parent.SingleEventManager)
 
@@ -143,7 +144,35 @@ return function()
 			expect(coroutine.status(co)).to.equal("dead")
 		end)
 
-		-- TODO: Test that events that throw don't throw through the manager
+		it("should not throw errors through SingleEventManager when resuming", function()
+			local errorText = "Error from SingleEventManager test"
+
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
+			manager:resume()
+
+			manager:connectEvent("Event", function()
+				error(errorText)
+			end)
+
+			-- If we call instance:Fire() here, the error message will leak to
+			-- the console since the thread's resumption will be handled by
+			-- Roblox's scheduler.
+
+			manager:suspend()
+			instance:Fire(5)
+
+			local logInfo = Logging.capture(function()
+				manager:resume()
+			end)
+
+			expect(#logInfo.errors).to.equal(0)
+			expect(#logInfo.warnings).to.equal(1)
+			expect(#logInfo.infos).to.equal(0)
+
+			expect(logInfo.warnings[1]:find(errorText)).to.be.ok()
+		end)
+
 		-- TODO: Test that manager:resume() fired from a suspended event
 		-- listener won't double-fire events.
 	end)

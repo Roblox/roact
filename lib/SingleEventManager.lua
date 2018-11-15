@@ -2,6 +2,8 @@
 	A manager for a single host virtual node's connected events.
 ]]
 
+local Logging = require(script.Parent.Logging)
+
 local CHANGE_PREFIX = "Change."
 
 local EventStatus = {
@@ -98,7 +100,17 @@ function SingleEventManager:resume()
 			-- Wrap the listener in a coroutine to catch errors and handle
 			-- yielding correctly.
 			local listenerCo = coroutine.create(listener)
-			coroutine.resume(listenerCo, self._instance, unpack(eventInvocation, 3, 2 + argumentCount))
+			local success, result = coroutine.resume(
+				listenerCo,
+				self._instance,
+				unpack(eventInvocation, 3, 2 + argumentCount))
+
+			-- If the listener threw an error, we log it as a warning, since
+			-- there's no way to write error text in Roblox Lua without killing
+			-- our thread!
+			if not success then
+				Logging.warn("%s", result)
+			end
 		end
 
 		index = index + 1

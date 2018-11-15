@@ -100,8 +100,22 @@ return function()
 			assertDeepEqual(recordedValues, {1, 2, 3, 4})
 		end)
 
-		-- TODO: Test that events fired during suspension and disconnected
-		-- before resume aren't fired
+		it("should not invoke events fired during suspension but disconnected before resumption", function()
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
+			local eventSpy = createSpy()
+
+			manager:connectEvent("Event", eventSpy.value)
+			manager:suspend()
+
+			instance:Fire(1)
+
+			manager:connectEvent("Event", nil)
+
+			manager:resume()
+			expect(eventSpy.callCount).to.equal(0)
+		end)
+
 		-- TODO: Test that events that yield don't yield through the manager
 		-- TODO: Test that events that throw don't throw through the manager
 		-- TODO: Test that manager:resume() fired from a suspended event

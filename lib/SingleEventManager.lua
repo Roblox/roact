@@ -57,7 +57,10 @@ function SingleEventManager:_connect(eventKey, event, listener)
 	if listener == nil then
 		if self._connections[eventKey] ~= nil then
 			self._connections[eventKey]:Disconnect()
+			self._connections[eventKey] = nil
 		end
+
+		self._listeners[eventKey] = nil
 	else
 		if self._connections[eventKey] == nil then
 			self._connections[eventKey] = event:Connect(function(...)

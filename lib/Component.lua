@@ -265,7 +265,7 @@ function Component:__update(updatedElement, updatedState)
 		if derivedState ~= nil then
 			assert(typeof(derivedState) == "table", "getDerivedStateFromProps must return a table!")
 
-			assign(updatedState, derivedState)
+			newState = assign({}, newState, derivedState)
 		end
 	end
 

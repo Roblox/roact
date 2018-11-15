@@ -72,8 +72,10 @@ function SingleEventManager:_connect(eventKey, event, listener)
 				if self._status == EventStatus.Enabled then
 					self._listeners[eventKey](self._instance, ...)
 				elseif self._status == EventStatus.Suspended then
+					-- Store this event invocation to be fired when resume is
+					-- called.
+
 					local argumentCount = select("#", ...)
-					-- Store event key (so we know which listener to invoke) along with the arguments.
 					table.insert(self._suspendedEventQueue, { eventKey, argumentCount, ... })
 				end
 			end)

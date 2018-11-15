@@ -120,11 +120,12 @@ return function()
 		it("should not yield events through the SingleEventManager when resuming", function()
 			local instance = Instance.new("BindableEvent")
 			local manager = SingleEventManager.new(instance)
-			manager:resume()
 
 			manager:connectEvent("Event", function()
 				coroutine.yield()
 			end)
+
+			manager:resume()
 
 			local co = coroutine.create(function()
 				instance:Fire(5)
@@ -149,11 +150,12 @@ return function()
 
 			local instance = Instance.new("BindableEvent")
 			local manager = SingleEventManager.new(instance)
-			manager:resume()
 
 			manager:connectEvent("Event", function()
 				error(errorText)
 			end)
+
+			manager:resume()
 
 			-- If we call instance:Fire() here, the error message will leak to
 			-- the console since the thread's resumption will be handled by
@@ -173,8 +175,30 @@ return function()
 			expect(logInfo.warnings[1]:find(errorText)).to.be.ok()
 		end)
 
-		-- TODO: Test that manager:resume() fired from a suspended event
-		-- listener won't double-fire events.
+		it("should not overflow with events if manager:resume() is invoked when resuming a suspended event", function()
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
+
+			-- This connection emulates what happens if reconciliation is
+			-- triggered again in response to reconciliation. Without
+			-- appropriate guards, the inner resume() call will process the
+			-- Fire(1) event again, causing a nasty stack overflow.
+			local eventSpy = createSpy(function(_, value)
+				if value == 1 then
+					manager:suspend()
+					instance:Fire(2)
+					manager:resume()
+				end
+			end)
+
+			manager:connectEvent("Event", eventSpy.value)
+
+			manager:suspend()
+			instance:Fire(1)
+			manager:resume()
+
+			expect(eventSpy.callCount).to.equal(2)
+		end)
 	end)
 
 	describe("connectPropertyChange", function()

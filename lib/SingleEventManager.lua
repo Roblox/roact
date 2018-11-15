@@ -38,6 +38,9 @@ function SingleEventManager.new(instance)
 		-- Managers start disabled and are "resumed" after the initial render
 		_status = EventStatus.Disabled,
 
+		-- If true, the manager is processing queued events right now.
+		_isResuming = false,
+
 		-- The Roblox instance the manager is managing
 		_instance = instance,
 	}, SingleEventManager)
@@ -85,6 +88,14 @@ function SingleEventManager:suspend()
 end
 
 function SingleEventManager:resume()
+	-- If we're already resuming events for this instance, trying to resume
+	-- again would cause a disaster.
+	if self._isResuming then
+		return
+	end
+
+	self._isResuming = true
+
 	local index = 1
 
 	-- More events might be added to the queue when evaluating events, so we
@@ -116,8 +127,8 @@ function SingleEventManager:resume()
 		index = index + 1
 	end
 
+	self._isResuming = false
 	self._status = EventStatus.Enabled
-
 	self._suspendedEventQueue = {}
 end
 

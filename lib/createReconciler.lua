@@ -255,7 +255,7 @@ local function createReconciler(renderer)
 
 		local kind = ElementKind.of(element)
 
-		local virtualNode = createVirtualNode(element, hostParent, hostKey)
+		local virtualNode = createVirtualNode(element, hostParent, hostKey, context)
 
 		if kind == ElementKind.Host then
 			renderer.mountHostNode(reconciler, virtualNode)

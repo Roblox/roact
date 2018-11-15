@@ -116,7 +116,33 @@ return function()
 			expect(eventSpy.callCount).to.equal(0)
 		end)
 
-		-- TODO: Test that events that yield don't yield through the manager
+		it("should not yield events through the SingleEventManager when resuming", function()
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
+			manager:resume()
+
+			manager:connectEvent("Event", function()
+				coroutine.yield()
+			end)
+
+			local co = coroutine.create(function()
+				instance:Fire(5)
+			end)
+
+			assert(coroutine.resume(co))
+			expect(coroutine.status(co)).to.equal("dead")
+
+			manager:suspend()
+			instance:Fire(5)
+
+			co = coroutine.create(function()
+				manager:resume()
+			end)
+
+			assert(coroutine.resume(co))
+			expect(coroutine.status(co)).to.equal("dead")
+		end)
+
 		-- TODO: Test that events that throw don't throw through the manager
 		-- TODO: Test that manager:resume() fired from a suspended event
 		-- listener won't double-fire events.

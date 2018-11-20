@@ -139,4 +139,11 @@ return function()
 		assertDeepEqual(node.context, expectedContext)
 		assertDeepEqual(capturedContext, expectedContext)
 	end)
+
+	itSKIP("should transfer context to children that are replaced", function()
+		-- TODO: Write a test that
+		-- 1. Renders a component tree with a context consumer component
+		-- 2. Updates that tree with a different consumer component at the same key
+		-- 3. Confirm that context captured from initial consumer deep-equals context captured from new consumer
+	end)
 end

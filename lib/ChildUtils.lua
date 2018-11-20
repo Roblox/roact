@@ -39,8 +39,12 @@ ChildUtils.UseParentKey = Symbol.named("UseParentKey")
 function ChildUtils.iterateChildren(childrenOrChild)
 	local richType = Type.of(childrenOrChild)
 
-	-- Single child, the simplest case!
-	if richType ~= nil then
+	if richType == Type.Fragment then
+		return pairs(childrenOrChild.elements)
+	end
+
+	-- Single child
+	if richType == Type.Element then
 		local called = false
 
 		return function()
@@ -54,12 +58,6 @@ function ChildUtils.iterateChildren(childrenOrChild)
 	end
 
 	local regularType = typeof(childrenOrChild)
-
-	-- A dictionary of children, hopefully!
-	-- TODO: Is this too flaky? Should we introduce a Fragment type like React?
-	if regularType == "table" then
-		return pairs(childrenOrChild)
-	end
 
 	if childrenOrChild == nil or regularType == "boolean" then
 		return noop

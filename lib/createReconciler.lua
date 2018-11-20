@@ -32,9 +32,10 @@ local function createReconciler(renderer)
 		local hostParent = virtualNode.hostParent
 		local hostKey = virtualNode.hostKey
 		local depth = virtualNode.depth
+		local context = virtualNode.context
 
 		unmountVirtualNode(virtualNode)
-		local newNode = mountVirtualNode(newElement, hostParent, hostKey)
+		local newNode = mountVirtualNode(newElement, hostParent, hostKey, context)
 		newNode.depth = depth
 
 		return newNode

@@ -28,14 +28,13 @@ local function createReconciler(renderer)
 
 		Preserves host properties and depth.
 	]]
-	local function replaceVirtualNode(virtualNode, newElement)
+	local function replaceVirtualNode(virtualNode, newElement, parentContext)
 		local hostParent = virtualNode.hostParent
 		local hostKey = virtualNode.hostKey
 		local depth = virtualNode.depth
-		local context = virtualNode.context
 
 		unmountVirtualNode(virtualNode)
-		local newNode = mountVirtualNode(newElement, hostParent, hostKey, context)
+		local newNode = mountVirtualNode(newElement, hostParent, hostKey, parentContext)
 		newNode.depth = depth
 
 		return newNode
@@ -53,7 +52,7 @@ local function createReconciler(renderer)
 		-- Changed or removed children
 		for childKey, childNode in pairs(virtualNode.children) do
 			local newElement = ChildUtils.getChildByKey(newChildElements, childKey)
-			local newNode = updateVirtualNode(childNode, newElement)
+			local newNode = updateVirtualNode(childNode, newElement, nil, virtualNode.context)
 
 			if newNode ~= nil then
 				virtualNode.children[childKey] = newNode
@@ -114,7 +113,7 @@ local function createReconciler(renderer)
 		return virtualNode
 	end
 
-	local function updatePortalVirtualNode(virtualNode, newElement)
+	local function updatePortalVirtualNode(virtualNode, newElement, context)
 		local oldElement = virtualNode.currentElement
 		local oldTargetHostParent = oldElement.props.target
 
@@ -127,7 +126,7 @@ local function createReconciler(renderer)
 			-- TODO: Better warning
 			Logging.warn("Portal changed target!")
 
-			return replaceVirtualNode(virtualNode, newElement)
+			return replaceVirtualNode(virtualNode, newElement, context)
 		end
 
 		local children = newElement.props[Children]
@@ -149,7 +148,7 @@ local function createReconciler(renderer)
 		mount a new virtual node, and return it in this case, while also issuing
 		a warning to the user.
 	]]
-	function updateVirtualNode(virtualNode, newElement, newState)
+	function updateVirtualNode(virtualNode, newElement, newState, context)
 		assert(Type.of(virtualNode) == Type.VirtualNode)
 		assert(Type.of(newElement) == Type.Element or typeof(newElement) == "boolean" or newElement == nil)
 
@@ -167,7 +166,7 @@ local function createReconciler(renderer)
 			-- TODO: Better message
 			Logging.warn("Component changed type!")
 
-			return replaceVirtualNode(virtualNode, newElement)
+			return replaceVirtualNode(virtualNode, newElement, context)
 		end
 
 		local kind = ElementKind.of(newElement)

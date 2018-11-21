@@ -59,7 +59,9 @@ end
 
 function SingleEventManager:_connect(eventKey, event, listener)
 	-- If the listener doesn't exist we can just disconnect the existing connection
-	if listener == nil then
+	-- We also treat boolean values as disconnections, the same way we allow boolean
+	-- elements to represent absent elements
+	if typeof(listener) == "boolean" or listener == nil then
 		if self._connections[eventKey] ~= nil then
 			self._connections[eventKey]:Disconnect()
 			self._connections[eventKey] = nil

@@ -36,6 +36,20 @@ return function()
 			expect(eventSpy.callCount).to.equal(2)
 		end)
 
+		it("should treat boolean values as nil and disconnect the event", function()
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
+			local eventSpy = createSpy()
+
+			manager:connectEvent("Event", eventSpy.value)
+			manager:resume()
+
+			manager:connectEvent("Event", false)
+
+			instance:Fire("foo")
+			expect(eventSpy.callCount).to.equal(0)
+		end)
+
 		it("should drop events until resumed initially", function()
 			local instance = Instance.new("BindableEvent")
 			local manager = SingleEventManager.new(instance)

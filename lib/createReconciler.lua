@@ -26,15 +26,16 @@ local function createReconciler(renderer)
 		Unmount the given virtualNode, replacing it with a new node described by
 		the given element.
 
-		Preserves host properties and depth.
+		Preserves host properties, depth, and context from parent.
 	]]
 	local function replaceVirtualNode(virtualNode, newElement)
 		local hostParent = virtualNode.hostParent
 		local hostKey = virtualNode.hostKey
 		local depth = virtualNode.depth
+		local parentContext = virtualNode.parentContext
 
 		unmountVirtualNode(virtualNode)
-		local newNode = mountVirtualNode(newElement, hostParent, hostKey)
+		local newNode = mountVirtualNode(newElement, hostParent, hostKey, parentContext)
 		newNode.depth = depth
 
 		return newNode
@@ -217,6 +218,9 @@ local function createReconciler(renderer)
 			hostParent = hostParent,
 			hostKey = hostKey,
 			context = context,
+			-- This copy of context is useful if the element gets replaced
+			-- with an element of a different component type
+			parentContext = context,
 		}
 	end
 

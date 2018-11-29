@@ -32,7 +32,7 @@ local function createReconciler(renderer)
 		local hostParent = virtualNode.hostParent
 		local hostKey = virtualNode.hostKey
 		local depth = virtualNode.depth
-		local context = virtualNode.context
+		local context = virtualNode.parentContext
 
 		unmountVirtualNode(virtualNode)
 		local newNode = mountVirtualNode(newElement, hostParent, hostKey, context)
@@ -218,6 +218,9 @@ local function createReconciler(renderer)
 			hostParent = hostParent,
 			hostKey = hostKey,
 			context = context,
+			-- This copy of context is useful if the element gets replaced
+			-- with an element of a different component type
+			parentContext = context,
 		}
 	end
 

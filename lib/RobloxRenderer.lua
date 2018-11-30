@@ -141,6 +141,7 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 
 	local children = element.props[Children]
 
+	-- FIXME: Calling updateVirtualNodeChildren with a 'children' value that is not a render result
 	reconciler.updateVirtualNodeChildren(virtualNode, virtualNode.hostObject, children)
 
 	instance.Parent = hostParent
@@ -199,6 +200,7 @@ function RobloxRenderer.updateHostNode(reconciler, virtualNode, newElement)
 		end
 	end
 
+	-- FIXME: Calling updateVirtualNodeChildren with a 'children' value that is not a render result
 	reconciler.updateVirtualNodeChildren(virtualNode, virtualNode.hostObject, newElement.props[Children])
 
 	-- Resume event firing now that everything's updated successfully

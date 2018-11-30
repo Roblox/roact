@@ -1,6 +1,7 @@
 return function()
 	local assign = require(script.Parent.assign)
 	local createElement = require(script.Parent.createElement)
+	local createFragment = require(script.Parent.createFragment)
 	local createSpy = require(script.Parent.createSpy)
 	local NoopRenderer = require(script.Parent.NoopRenderer)
 	local Type = require(script.Parent.Type)
@@ -198,7 +199,7 @@ return function()
 			expect(childComponentSpy.callCount).to.equal(1)
 		end)
 
-		it("should mount multiple children of function components", function()
+		it("should mount fragments returned by function components", function()
 			local childAComponentSpy = createSpy(function(props)
 				return nil
 			end)
@@ -208,14 +209,14 @@ return function()
 			end)
 
 			local parentComponentSpy = createSpy(function(props)
-				return {
+				return createFragment({
 					A = createElement(childAComponentSpy.value, {
 						value = props.value + 1,
 					}),
 					B = createElement(childBComponentSpy.value, {
 						value = props.value + 5,
 					}),
-				}
+				})
 			end)
 
 			local element = createElement(parentComponentSpy.value, {

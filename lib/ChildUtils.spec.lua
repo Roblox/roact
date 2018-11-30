@@ -1,6 +1,7 @@
 return function()
 	local ChildUtils = require(script.Parent.ChildUtils)
 	local createElement = require(script.Parent.createElement)
+	local createFragment = require(script.Parent.createFragment)
 	local Type = require(script.Parent.Type)
 
 	describe("iterateElements", function()
@@ -16,11 +17,11 @@ return function()
 			expect(iteratedKey).to.equal(nil)
 		end)
 
-		it("should iterate over multiple children", function()
-			local children = {
+		it("should iterate over fragments", function()
+			local children = createFragment({
 				a = createElement("TextLabel"),
 				b = createElement("TextLabel"),
-			}
+			})
 
 			local seenChildren = {}
 			local count = 0
@@ -33,8 +34,8 @@ return function()
 			end
 
 			expect(count).to.equal(2)
-			expect(seenChildren[children.a]).to.equal("a")
-			expect(seenChildren[children.b]).to.equal("b")
+			expect(seenChildren[children.elements.a]).to.equal("a")
+			expect(seenChildren[children.elements.b]).to.equal("b")
 		end)
 
 		it("should return a zero-element iterator for booleans", function()
@@ -76,17 +77,17 @@ return function()
 		end)
 
 		it("should return the corresponding element", function()
-			local children = {
+			local children = createFragment({
 				a = createElement("TextLabel"),
 				b = createElement("TextLabel"),
-			}
+			})
 
-			expect(ChildUtils.getChildByKey(children, "a")).to.equal(children.a)
-			expect(ChildUtils.getChildByKey(children, "b")).to.equal(children.b)
+			expect(ChildUtils.getChildByKey(children, "a")).to.equal(children.elements.a)
+			expect(ChildUtils.getChildByKey(children, "b")).to.equal(children.elements.b)
 		end)
 
 		it("should return nil if the key does not exist", function()
-			local children = {}
+			local children = createFragment({})
 
 			expect(ChildUtils.getChildByKey(children, "a")).to.equal(nil)
 		end)

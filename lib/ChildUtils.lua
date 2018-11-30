@@ -95,7 +95,13 @@ function ChildUtils.getChildByKey(elements, hostKey)
 		return nil
 	end
 
-	return elements[hostKey]
+	if Type.of(elements) == Type.Fragment then
+		return elements.elements[hostKey]
+	end
+
+	error("Invalid elements")
+	-- TODO: Let's fix this case; it should work for fragments(?), but not arbitrary tables
+	-- return elements[hostKey]
 end
 
 return ChildUtils

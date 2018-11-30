@@ -1,8 +1,24 @@
 local Type = require(script.Parent.Type)
 local ElementKind = require(script.Parent.ElementKind)
-local ChildUtils = require(script.Parent.ChildUtils)
+local ElementUtils = require(script.Parent.ElementUtils)
 local Children = require(script.Parent.PropMarkers.Children)
 local Logging = require(script.Parent.Logging)
+
+local ElementTable = {}
+
+function ElementTable.getElementByKey(elements, key)
+	return elements[key]
+end
+
+function ElementTable.iterateElements(elements)
+	if elements ~= nil then
+		return pairs(elements)
+	else
+		return function()
+			return nil
+		end
+	end
+end
 
 --[[
 	The reconciler is the mechanism in Roact that constructs the virtual tree
@@ -49,14 +65,14 @@ local function createReconciler(renderer)
 		Utility to update the children of a virtual node based on zero or more
 		updated children given as elements.
 	]]
-	local function updateVirtualNodeChildrenInternal(virtualNode, hostParent, childContainer)
+	local function updateVirtualNodeChildrenInternal(virtualNode, hostParent, newChildElements, utils)
 		assert(Type.of(virtualNode) == Type.VirtualNode)
 
 		local removeKeys = {}
 
 		-- Changed or removed children
 		for childKey, childNode in pairs(virtualNode.children) do
-			local newElement = childContainer.getChildByKey(childKey)
+			local newElement = utils.getElementByKey(newChildElements, childKey)
 			local newNode = updateVirtualNode(childNode, newElement)
 
 			if newNode ~= nil then
@@ -71,9 +87,9 @@ local function createReconciler(renderer)
 		end
 
 		-- Added children
-		for childKey, newElement in childContainer.getIterator() do
+		for childKey, newElement in utils.iterateElements(newChildElements) do
 			local concreteKey = childKey
-			if childKey == ChildUtils.UseParentKey then
+			if childKey == ElementUtils.UseParentKey then
 				concreteKey = virtualNode.hostKey
 			end
 
@@ -94,20 +110,7 @@ local function createReconciler(renderer)
 		updated children given as elements.
 	]]
 	local function updateVirtualNodeChildren(virtualNode, hostParent, newChildElements)
-		updateVirtualNodeChildrenInternal(virtualNode, hostParent, {
-			getChildByKey = function(key)
-				return newChildElements[key]
-			end,
-			getIterator = function()
-				if newChildElements ~= nil then
-					return pairs(newChildElements)
-				else
-					return function()
-						return nil
-					end
-				end
-			end,
-		})
+		updateVirtualNodeChildrenInternal(virtualNode, hostParent, newChildElements, ElementTable)
 	end
 
 	--[[
@@ -115,14 +118,7 @@ local function createReconciler(renderer)
 		updated children given as an element or a fragment
 	]]
 	local function updateVirtualNodeWithElements(virtualNode, hostParent, newChildElements)
-		updateVirtualNodeChildrenInternal(virtualNode, hostParent, {
-			getChildByKey = function(key)
-				return ChildUtils.getChildByKey(newChildElements, key)
-			end,
-			getIterator = function()
-				return ChildUtils.iterateElements(newChildElements)
-			end,
-		})
+		updateVirtualNodeChildrenInternal(virtualNode, hostParent, newChildElements, ElementUtils)
 	end
 
 	--[[

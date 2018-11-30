@@ -5,7 +5,7 @@ local function noop()
 	return nil
 end
 
-local ChildUtils = {}
+local ElementUtils = {}
 
 --[[
 	A signal value indicating that a child should use its parent's key, because
@@ -14,7 +14,7 @@ local ChildUtils = {}
 	This occurs when you return only one element from a function component or
 	stateful render function.
 ]]
-ChildUtils.UseParentKey = Symbol.named("UseParentKey")
+ElementUtils.UseParentKey = Symbol.named("UseParentKey")
 
 --[[
 	Returns an iterator over the children of an element.
@@ -29,7 +29,7 @@ ChildUtils.UseParentKey = Symbol.named("UseParentKey")
 	zero elements.
 
 	If `elementOrElements` is a single element, this will return an iterator with
-	one element: a tuple where the first value is ChildUtils.UseParentKey, and
+	one element: a tuple where the first value is ElementUtils.UseParentKey, and
 	the second is the value of `elementOrElements`.
 
 	If `elementOrElements` is a fragment or a table, this will return an iterator
@@ -37,7 +37,7 @@ ChildUtils.UseParentKey = Symbol.named("UseParentKey")
 
 	If `elementOrElements` is none of the above, this function will throw.
 ]]
-function ChildUtils.iterateElements(elementOrElements)
+function ElementUtils.iterateElements(elementOrElements)
 	local richType = Type.of(elementOrElements)
 
 	if richType == Type.Fragment then
@@ -53,7 +53,7 @@ function ChildUtils.iterateElements(elementOrElements)
 				return nil
 			else
 				called = true
-				return ChildUtils.UseParentKey, elementOrElements
+				return ElementUtils.UseParentKey, elementOrElements
 			end
 		end
 	end
@@ -79,16 +79,16 @@ end
 	* If `elements` is nil or a boolean, this will return `nil`, regardless of
 		the key given.
 	* If `elements` is a single element, this will return `nil`, unless the key
-		is ChildUtils.UseParentKey.
+		is ElementUtils.UseParentKey.
 	* If `elements` is a table of elements, this will return `elements[key]`.
 ]]
-function ChildUtils.getChildByKey(elements, hostKey)
+function ElementUtils.getElementByKey(elements, hostKey)
 	if elements == nil or typeof(elements) == "boolean" then
 		return nil
 	end
 
 	if Type.of(elements) == Type.Element then
-		if hostKey == ChildUtils.UseParentKey then
+		if hostKey == ElementUtils.UseParentKey then
 			return elements
 		end
 
@@ -104,4 +104,4 @@ function ChildUtils.getChildByKey(elements, hostKey)
 	-- return elements[hostKey]
 end
 
-return ChildUtils
+return ElementUtils

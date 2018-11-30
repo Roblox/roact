@@ -1,6 +1,7 @@
 return function()
 	local assertDeepEqual = require(script.Parent.assertDeepEqual)
 	local Binding = require(script.Parent.Binding)
+	local Children = require(script.Parent.PropMarkers.Children)
 	local Component = require(script.Parent.Component)
 	local createElement = require(script.Parent.createElement)
 	local createReconciler = require(script.Parent.createReconciler)
@@ -644,7 +645,44 @@ return function()
 			reconciler.unmountVirtualNode(node)
 		end)
 
-		itSKIP("should pass context values through portal nodes", function()
+		it("should pass context values through portal nodes", function()
+			local target = Instance.new("Folder")
+
+			local Provider = Component:extend("Provider")
+
+			function Provider:init()
+				self._context.foo = "bar"
+			end
+
+			function Provider:render()
+				return createElement("Folder", nil, self.props[Children])
+			end
+
+			local Consumer = Component:extend("Consumer")
+
+			local capturedContext
+			function Consumer:init()
+				capturedContext = self._context
+			end
+
+			function Consumer:render()
+				return nil
+			end
+
+			local element = createElement(Provider, nil, {
+				Portal = createElement(Portal, {
+					target = target,
+				}, {
+					Consumer = createElement(Consumer),
+				})
+			})
+			local hostParent = nil
+			local hostKey = "Some Key"
+			reconciler.mountVirtualNode(element, hostParent, hostKey)
+
+			assertDeepEqual(capturedContext, {
+				foo = "bar"
+			})
 		end)
 	end)
 end

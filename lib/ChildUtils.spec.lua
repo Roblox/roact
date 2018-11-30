@@ -3,10 +3,10 @@ return function()
 	local createElement = require(script.Parent.createElement)
 	local Type = require(script.Parent.Type)
 
-	describe("iterateChildren", function()
+	describe("iterateElements", function()
 		it("should iterate once for a single child", function()
 			local child = createElement("TextLabel")
-			local iterator = ChildUtils.iterateChildren(child)
+			local iterator = ChildUtils.iterateElements(child)
 			local iteratedKey, iteratedChild = iterator()
 			-- For single elements, the key should be UseParentKey
 			expect(iteratedKey).to.equal(ChildUtils.UseParentKey)
@@ -25,7 +25,7 @@ return function()
 			local seenChildren = {}
 			local count = 0
 
-			for key, child in ChildUtils.iterateChildren(children) do
+			for key, child in ChildUtils.iterateElements(children) do
 				expect(typeof(key)).to.equal("string")
 				expect(Type.of(child)).to.equal(Type.Element)
 				seenChildren[child] = key
@@ -38,18 +38,18 @@ return function()
 		end)
 
 		it("should return a zero-element iterator for booleans", function()
-			local booleanIterator = ChildUtils.iterateChildren(false)
+			local booleanIterator = ChildUtils.iterateElements(false)
 			expect(booleanIterator()).to.equal(nil)
 		end)
 
 		it("should return a zero-element iterator for nil", function()
-			local nilIterator = ChildUtils.iterateChildren(nil)
+			local nilIterator = ChildUtils.iterateElements(nil)
 			expect(nilIterator()).to.equal(nil)
 		end)
 
 		it("should throw if given an illegal value", function()
 			expect(function()
-				ChildUtils.iterateChildren(1)
+				ChildUtils.iterateElements(1)
 			end).to.throw()
 		end)
 	end)

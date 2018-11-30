@@ -18,29 +18,29 @@ ChildUtils.UseParentKey = Symbol.named("UseParentKey")
 
 --[[
 	Returns an iterator over the children of an element.
-	`childrenOrChild` may be one of:
+	`elementOrElements` may be one of:
 	* a boolean
 	* nil
 	* a single element
 	* a table of elements
 
-	If `childrenOrChild` is a boolean or nil, this will return an iterator with
+	If `elementOrElements` is a boolean or nil, this will return an iterator with
 	zero elements.
 
-	If `childrenOrChild` is a single element, this will return an iterator with
+	If `elementOrElements` is a single element, this will return an iterator with
 	one element: a tuple where the first value is ChildUtils.UseParentKey, and
-	the second is the value of `childrenOrChild`.
+	the second is the value of `elementOrElements`.
 
-	If `childrenOrChild` is a table, this will return an iterator over all the
-	elements of the array, equivalent to `pairs(childrenOrChild)`.
+	If `elementOrElements` is a table, this will return an iterator over all the
+	elements of the array, equivalent to `pairs(elementOrElements)`.
 
-	If `childrenOrChild` is none of the above, this function will throw.
+	If `elementOrElements` is none of the above, this function will throw.
 ]]
-function ChildUtils.iterateChildren(childrenOrChild)
-	local richType = Type.of(childrenOrChild)
+function ChildUtils.iterateElements(elementOrElements)
+	local richType = Type.of(elementOrElements)
 
 	if richType == Type.Fragment then
-		return pairs(childrenOrChild.elements)
+		return pairs(elementOrElements.elements)
 	end
 
 	-- Single child
@@ -52,14 +52,14 @@ function ChildUtils.iterateChildren(childrenOrChild)
 				return nil
 			else
 				called = true
-				return ChildUtils.UseParentKey, childrenOrChild
+				return ChildUtils.UseParentKey, elementOrElements
 			end
 		end
 	end
 
-	local regularType = typeof(childrenOrChild)
+	local regularType = typeof(elementOrElements)
 
-	if childrenOrChild == nil or regularType == "boolean" then
+	if elementOrElements == nil or regularType == "boolean" then
 		return noop
 	end
 

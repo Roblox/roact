@@ -71,7 +71,7 @@ local function createReconciler(renderer)
 		end
 
 		-- Added children
-		for childKey, newElement in ChildUtils.iterateChildren(newChildElements) do
+		for childKey, newElement in ChildUtils.iterateElements(newChildElements) do
 			local concreteKey = childKey
 			if childKey == ChildUtils.UseParentKey then
 				concreteKey = virtualNode.hostKey

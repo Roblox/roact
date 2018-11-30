@@ -60,12 +60,6 @@ function ElementUtils.iterateElements(elementOrElements)
 
 	local regularType = typeof(elementOrElements)
 
-	-- This is the format we expect for the children of an element
-	-- provided when calling `createElement`
-	if regularType == "table" then
-		return pairs(elementOrElements)
-	end
-
 	if elementOrElements == nil or regularType == "boolean" then
 		return noop
 	end
@@ -100,8 +94,6 @@ function ElementUtils.getElementByKey(elements, hostKey)
 	end
 
 	error("Invalid elements")
-	-- TODO: Let's fix this case; it should work for fragments(?), but not arbitrary tables
-	-- return elements[hostKey]
 end
 
 return ElementUtils

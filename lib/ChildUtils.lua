@@ -22,6 +22,7 @@ ChildUtils.UseParentKey = Symbol.named("UseParentKey")
 	* a boolean
 	* nil
 	* a single element
+	* a fragment
 	* a table of elements
 
 	If `elementOrElements` is a boolean or nil, this will return an iterator with
@@ -31,8 +32,8 @@ ChildUtils.UseParentKey = Symbol.named("UseParentKey")
 	one element: a tuple where the first value is ChildUtils.UseParentKey, and
 	the second is the value of `elementOrElements`.
 
-	If `elementOrElements` is a table, this will return an iterator over all the
-	elements of the array, equivalent to `pairs(elementOrElements)`.
+	If `elementOrElements` is a fragment or a table, this will return an iterator
+	over all the elements of the array.
 
 	If `elementOrElements` is none of the above, this function will throw.
 ]]
@@ -58,6 +59,12 @@ function ChildUtils.iterateElements(elementOrElements)
 	end
 
 	local regularType = typeof(elementOrElements)
+
+	-- This is the format we expect for the children of an element
+	-- provided when calling `createElement`
+	if regularType == "table" then
+		return pairs(elementOrElements)
+	end
 
 	if elementOrElements == nil or regularType == "boolean" then
 		return noop

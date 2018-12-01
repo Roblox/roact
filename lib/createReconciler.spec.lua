@@ -52,28 +52,37 @@ return function()
 
 	describe("elements", function()
 		it("should throw errors when attempting to mount invalid element values", function()
-			local stringElement = "Hello"
-			local numberElement = 1
-			local functionElement = function() end
-			local tableElement = {}
+			-- These function components return values with incorrect types
+			local returnsString = function()
+				return "Hello"
+			end
+			local returnsNumber = function()
+				return 1
+			end
+			local returnsFunction = function()
+				return function() end
+			end
+			local returnsTable = function()
+				return {}
+			end
 
 			local hostParent = nil
 			local key = "Some Key"
 
 			expect(function()
-				noopReconciler.mountVirtualNode(stringElement, hostParent, key)
+				noopReconciler.mountVirtualNode(createElement(returnsString), hostParent, key)
 			end).to.throw()
 
 			expect(function()
-				noopReconciler.mountVirtualNode(numberElement, hostParent, key)
+				noopReconciler.mountVirtualNode(createElement(returnsNumber), hostParent, key)
 			end).to.throw()
 
 			expect(function()
-				noopReconciler.mountVirtualNode(functionElement, hostParent, key)
+				noopReconciler.mountVirtualNode(createElement(returnsFunction), hostParent, key)
 			end).to.throw()
 
 			expect(function()
-				noopReconciler.mountVirtualNode(tableElement, hostParent, key)
+				noopReconciler.mountVirtualNode(createElement(returnsTable), hostParent, key)
 			end).to.throw()
 		end)
 	end)

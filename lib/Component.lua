@@ -188,7 +188,7 @@ function Component:__mount(reconciler, virtualNode)
 	local children = instance:render()
 	internalData.setStateBlockedReason = nil
 
-	reconciler.updateVirtualNodeWithElements(virtualNode, hostParent, children)
+	reconciler.updateVirtualNodeChildrenFromElements(virtualNode, hostParent, children)
 
 	if instance.didMount ~= nil then
 		instance:didMount()
@@ -289,7 +289,7 @@ function Component:__update(updatedElement, updatedState)
 	local renderResult = virtualNode.instance:render()
 	internalData.setStateBlockedReason = nil
 
-	reconciler.updateVirtualNodeWithElements(virtualNode, virtualNode.hostParent, renderResult)
+	reconciler.updateVirtualNodeChildrenFromElements(virtualNode, virtualNode.hostParent, renderResult)
 
 	if self.didUpdate ~= nil then
 		self:didUpdate(oldProps, oldState)

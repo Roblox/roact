@@ -64,7 +64,11 @@ function ElementUtils.iterateElements(elementOrElements)
 		return noop
 	end
 
-	error("Invalid children")
+	if regularType == "table" then
+		return pairs(elementOrElements)
+	end
+
+	error("Invalid elements")
 end
 
 --[[
@@ -91,6 +95,10 @@ function ElementUtils.getElementByKey(elements, hostKey)
 
 	if Type.of(elements) == Type.Fragment then
 		return elements.elements[hostKey]
+	end
+
+	if typeof(elements) == "table" then
+		return elements[hostKey]
 	end
 
 	error("Invalid elements")

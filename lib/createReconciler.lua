@@ -4,22 +4,6 @@ local ElementUtils = require(script.Parent.ElementUtils)
 local Children = require(script.Parent.PropMarkers.Children)
 local Logging = require(script.Parent.Logging)
 
-local ElementTable = {}
-
-function ElementTable.getElementByKey(elements, key)
-	return elements[key]
-end
-
-function ElementTable.iterateElements(elements)
-	if elements ~= nil then
-		return pairs(elements)
-	else
-		return function()
-			return nil
-		end
-	end
-end
-
 --[[
 	The reconciler is the mechanism in Roact that constructs the virtual tree
 	that later gets turned into concrete objects by the renderer.
@@ -65,14 +49,14 @@ local function createReconciler(renderer)
 		Utility to update the children of a virtual node based on zero or more
 		updated children given as elements.
 	]]
-	local function updateVirtualNodeChildrenInternal(virtualNode, hostParent, newChildElements, utils)
+	local function updateVirtualNodeChildren(virtualNode, hostParent, newChildElements)
 		assert(Type.of(virtualNode) == Type.VirtualNode)
 
 		local removeKeys = {}
 
 		-- Changed or removed children
 		for childKey, childNode in pairs(virtualNode.children) do
-			local newElement = utils.getElementByKey(newChildElements, childKey)
+			local newElement = ElementUtils.getElementByKey(newChildElements, childKey)
 			local newNode = updateVirtualNode(childNode, newElement)
 
 			if newNode ~= nil then
@@ -87,7 +71,7 @@ local function createReconciler(renderer)
 		end
 
 		-- Added children
-		for childKey, newElement in utils.iterateElements(newChildElements) do
+		for childKey, newElement in ElementUtils.iterateElements(newChildElements) do
 			local concreteKey = childKey
 			if childKey == ElementUtils.UseParentKey then
 				concreteKey = virtualNode.hostKey
@@ -105,20 +89,17 @@ local function createReconciler(renderer)
 		end
 	end
 
-	--[[
-		Utility to update the children of a virtual node based on zero or more
-		updated children given as elements.
-	]]
-	local function updateVirtualNodeChildren(virtualNode, hostParent, newChildElements)
-		updateVirtualNodeChildrenInternal(virtualNode, hostParent, newChildElements, ElementTable)
-	end
-
-	--[[
-		Utility to update the children of a virtual node based on zero or more
-		updated children given as an element or a fragment
-	]]
-	local function updateVirtualNodeWithElements(virtualNode, hostParent, newChildElements)
-		updateVirtualNodeChildrenInternal(virtualNode, hostParent, newChildElements, ElementUtils)
+	local function updateVirtualNodeChildrenFromElements(virtualNode, hostParent, newChildElements)
+		if newChildElements == nil
+			or typeof(newChildElements) == "boolean"
+			or Type.of(newChildElements) == Type.Element
+			or Type.of(newChildElements) == Type.Fragment
+		then
+			updateVirtualNodeChildren(virtualNode, hostParent, newChildElements)
+		else
+			-- TODO: Better error message
+			error(("%s\n%s"):format("Component returned invalid children:", virtualNode.currentElement.source), 0)
+		end
 	end
 
 	--[[
@@ -149,7 +130,7 @@ local function createReconciler(renderer)
 	local function updateFunctionVirtualNode(virtualNode, newElement)
 		local children = newElement.component(newElement.props)
 
-		updateVirtualNodeWithElements(virtualNode, virtualNode.hostParent, children)
+		updateVirtualNodeChildrenFromElements(virtualNode, virtualNode.hostParent, children)
 
 		return virtualNode
 	end
@@ -172,7 +153,6 @@ local function createReconciler(renderer)
 
 		local children = newElement.props[Children]
 
-		-- FIXME: Calling updateVirtualNodeChildren with a 'children' value that is not a render result
 		updateVirtualNodeChildren(virtualNode, targetHostParent, children)
 
 		return virtualNode
@@ -270,7 +250,7 @@ local function createReconciler(renderer)
 
 		local children = element.component(element.props)
 
-		updateVirtualNodeWithElements(virtualNode, virtualNode.hostParent, children)
+		updateVirtualNodeChildrenFromElements(virtualNode, virtualNode.hostParent, children)
 	end
 
 	local function mountPortalVirtualNode(virtualNode)
@@ -281,7 +261,6 @@ local function createReconciler(renderer)
 
 		assert(renderer.isHostObject(targetHostParent))
 
-		-- FIXME: Calling updateVirtualNodeChildren with a 'children' value that is not a render result
 		updateVirtualNodeChildren(virtualNode, targetHostParent, children)
 	end
 
@@ -388,7 +367,7 @@ local function createReconciler(renderer)
 		unmountVirtualNode = unmountVirtualNode,
 		updateVirtualNode = updateVirtualNode,
 		updateVirtualNodeChildren = updateVirtualNodeChildren,
-		updateVirtualNodeWithElements = updateVirtualNodeWithElements,
+		updateVirtualNodeChildrenFromElements = updateVirtualNodeChildrenFromElements,
 	}
 
 	return reconciler

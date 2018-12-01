@@ -50,6 +50,34 @@ return function()
 		end)
 	end)
 
+	describe("elements", function()
+		it("should throw errors when attempting to mount invalid element values", function()
+			local stringElement = "Hello"
+			local numberElement = 1
+			local functionElement = function() end
+			local tableElement = {}
+
+			local hostParent = nil
+			local key = "Some Key"
+
+			expect(function()
+				noopReconciler.mountVirtualNode(stringElement, hostParent, key)
+			end).to.throw()
+
+			expect(function()
+				noopReconciler.mountVirtualNode(numberElement, hostParent, key)
+			end).to.throw()
+
+			expect(function()
+				noopReconciler.mountVirtualNode(functionElement, hostParent, key)
+			end).to.throw()
+
+			expect(function()
+				noopReconciler.mountVirtualNode(tableElement, hostParent, key)
+			end).to.throw()
+		end)
+	end)
+
 	describe("Host components", function()
 		it("should invoke the renderer to mount host nodes", function()
 			local mountHostNode = createSpy(NoopRenderer.mountHostNode)

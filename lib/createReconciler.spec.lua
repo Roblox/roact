@@ -50,8 +50,8 @@ return function()
 		end)
 	end)
 
-	describe("elements", function()
-		it("should throw errors when attempting to mount invalid element values", function()
+	describe("elements and fragments", function()
+		it("should throw errors when attempting to mount invalid elements", function()
 			-- These function components return values with incorrect types
 			local returnsString = function()
 				return "Hello"

@@ -38,6 +38,27 @@ return function()
 			expect(seenChildren[children.elements.b]).to.equal("b")
 		end)
 
+		it("should iterate over tables", function()
+			local children = {
+				a = createElement("TextLabel"),
+				b = createElement("TextLabel"),
+			}
+
+			local seenChildren = {}
+			local count = 0
+
+			for key, child in ElementUtils.iterateElements(children) do
+				expect(typeof(key)).to.equal("string")
+				expect(Type.of(child)).to.equal(Type.Element)
+				seenChildren[child] = key
+				count = count + 1
+			end
+
+			expect(count).to.equal(2)
+			expect(seenChildren[children.a]).to.equal("a")
+			expect(seenChildren[children.b]).to.equal("b")
+		end)
+
 		it("should return a zero-element iterator for booleans", function()
 			local booleanIterator = ElementUtils.iterateElements(false)
 			expect(booleanIterator()).to.equal(nil)
@@ -76,7 +97,7 @@ return function()
 			end)
 		end)
 
-		it("should return the corresponding element", function()
+		it("should return the corresponding element from a fragment", function()
 			local children = createFragment({
 				a = createElement("TextLabel"),
 				b = createElement("TextLabel"),
@@ -84,6 +105,16 @@ return function()
 
 			expect(ElementUtils.getElementByKey(children, "a")).to.equal(children.elements.a)
 			expect(ElementUtils.getElementByKey(children, "b")).to.equal(children.elements.b)
+		end)
+
+		it("should return the corresponding element from a table", function()
+			local children = {
+				a = createElement("TextLabel"),
+				b = createElement("TextLabel"),
+			}
+
+			expect(ElementUtils.getElementByKey(children, "a")).to.equal(children.a)
+			expect(ElementUtils.getElementByKey(children, "b")).to.equal(children.b)
 		end)
 
 		it("should return nil if the key does not exist", function()

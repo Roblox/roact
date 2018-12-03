@@ -98,7 +98,7 @@ local function createReconciler(renderer)
 			updateVirtualNodeChildren(virtualNode, hostParent, newChildElements)
 		else
 			-- TODO: Better error message
-			error(("%s\n%s"):format(
+			Logging.error(("%s\n%s"):format(
 				"Component returned invalid children:",
 				virtualNode.currentElement.source or ""
 			), 0)

@@ -89,13 +89,13 @@ local function createReconciler(renderer)
 		end
 	end
 
-	local function updateVirtualNodeChildrenFromElements(virtualNode, hostParent, newChildElements)
-		if newChildElements == nil
-			or typeof(newChildElements) == "boolean"
-			or Type.of(newChildElements) == Type.Element
-			or Type.of(newChildElements) == Type.Fragment
+	local function updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
+		if renderResult == nil
+			or typeof(renderResult) == "boolean"
+			or Type.of(renderResult) == Type.Element
+			or Type.of(renderResult) == Type.Fragment
 		then
-			updateVirtualNodeChildren(virtualNode, hostParent, newChildElements)
+			updateVirtualNodeChildren(virtualNode, hostParent, renderResult)
 		else
 			-- TODO: Better error message
 			Logging.error(("%s\n%s"):format(
@@ -133,7 +133,7 @@ local function createReconciler(renderer)
 	local function updateFunctionVirtualNode(virtualNode, newElement)
 		local children = newElement.component(newElement.props)
 
-		updateVirtualNodeChildrenFromElements(virtualNode, virtualNode.hostParent, children)
+		updateVirtualNodeWithRenderResult(virtualNode, virtualNode.hostParent, children)
 
 		return virtualNode
 	end
@@ -253,7 +253,7 @@ local function createReconciler(renderer)
 
 		local children = element.component(element.props)
 
-		updateVirtualNodeChildrenFromElements(virtualNode, virtualNode.hostParent, children)
+		updateVirtualNodeWithRenderResult(virtualNode, virtualNode.hostParent, children)
 	end
 
 	local function mountPortalVirtualNode(virtualNode)
@@ -370,7 +370,7 @@ local function createReconciler(renderer)
 		unmountVirtualNode = unmountVirtualNode,
 		updateVirtualNode = updateVirtualNode,
 		updateVirtualNodeChildren = updateVirtualNodeChildren,
-		updateVirtualNodeChildrenFromElements = updateVirtualNodeChildrenFromElements,
+		updateVirtualNodeWithRenderResult = updateVirtualNodeWithRenderResult,
 	}
 
 	return reconciler

@@ -70,8 +70,6 @@ function Component:setState(mapState)
 		error(message, 2)
 	end
 
-	-- TODO: Do something different in init and willUpdate
-
 	local partialState
 
 	if typeof(mapState) == "function" then
@@ -88,8 +86,7 @@ function Component:setState(mapState)
 
 	local newState = assign({}, self.state, partialState)
 
-	-- If `setState` is called in `init` or `willUpdate`, we can skip triggering
-	-- another update!
+	-- If `setState` is called in `init`, we can skip triggering an update!
 	if internalData.setStateShouldSkipUpdate then
 		self.state = newState
 	else

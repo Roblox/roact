@@ -203,7 +203,7 @@ local function createReconciler(renderer)
 	local function createVirtualNode(element, hostParent, hostKey, context)
 		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
 		assert(renderer.isHostObject(hostParent) or hostParent == nil)
-		assert(typeof(hostKey) == "string")
+		assert(hostKey ~= nil)
 		assert(typeof(context) == "table" or context == nil)
 
 		return {
@@ -250,7 +250,7 @@ local function createReconciler(renderer)
 	function mountVirtualNode(element, hostParent, hostKey, context)
 		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
 		assert(typeof(hostParent) == "Instance" or hostParent == nil)
-		assert(typeof(hostKey) == "string")
+		assert(hostKey ~= nil)
 		assert(typeof(context) == "table" or context == nil)
 
 		-- Boolean values render as nil to enable terse conditional rendering.
@@ -284,10 +284,9 @@ local function createReconciler(renderer)
 	local function mountVirtualTree(element, hostParent, hostKey)
 		assert(Type.of(element) == Type.Element)
 		assert(typeof(hostParent) == "Instance" or hostParent == nil)
-		assert(typeof(hostKey) == "string" or hostKey == nil)
-
+		
 		if hostKey == nil then
-			hostKey = "Foo"
+			hostKey = "RoactTree"
 		end
 
 		local tree = {

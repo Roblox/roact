@@ -36,7 +36,11 @@ local function createReconciler(renderer)
 
 		unmountVirtualNode(virtualNode)
 		local newNode = mountVirtualNode(newElement, hostParent, hostKey, parentContext)
-		newNode.depth = depth
+
+		-- mountVirtualNode can return nil if the element is a boolean
+		if newNode ~= nil then
+			newNode.depth = depth
+		end
 
 		return newNode
 	end
@@ -75,8 +79,12 @@ local function createReconciler(renderer)
 
 			if virtualNode.children[childKey] == nil then
 				local childNode = mountVirtualNode(newElement, hostParent, concreteKey, virtualNode.context)
-				childNode.depth = virtualNode.depth + 1
-				virtualNode.children[childKey] = childNode
+
+				-- mountVirtualNode can return nil if the element is a boolean
+				if childNode ~= nil then
+					childNode.depth = virtualNode.depth + 1
+					virtualNode.children[childKey] = childNode
+				end
 			end
 		end
 	end

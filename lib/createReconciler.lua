@@ -284,7 +284,7 @@ local function createReconciler(renderer)
 	local function mountVirtualTree(element, hostParent, hostKey)
 		assert(Type.of(element) == Type.Element)
 		assert(typeof(hostParent) == "Instance" or hostParent == nil)
-		
+
 		if hostKey == nil then
 			hostKey = "RoactTree"
 		end

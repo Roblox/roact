@@ -139,4 +139,71 @@ return function()
 		assertDeepEqual(node.context, expectedContext)
 		assertDeepEqual(capturedContext, expectedContext)
 	end)
+
+	it("should transfer context to children that are replaced", function()
+		local ConsumerA = Component:extend("ConsumerA")
+
+		local capturedContextA
+		function ConsumerA:init()
+			self._context.A = "hello"
+
+			capturedContextA = self._context
+		end
+
+		function ConsumerA:render()
+		end
+
+		local ConsumerB = Component:extend("ConsumerB")
+
+		local capturedContextB
+		function ConsumerB:init()
+			self._context.B = "hello"
+
+			capturedContextB = self._context
+		end
+
+		function ConsumerB:render()
+		end
+
+		local Provider = Component:extend("Provider")
+
+		function Provider:init()
+			self._context.frob = "ulator"
+		end
+
+		function Provider:render()
+			local useConsumerB = self.props.useConsumerB
+
+			if useConsumerB then
+				return createElement(ConsumerB)
+			else
+				return createElement(ConsumerA)
+			end
+		end
+
+		local hostParent = nil
+		local hostKey = "Consumer"
+
+		local element = createElement(Provider)
+		local node = noopReconciler.mountVirtualNode(element, hostParent, hostKey)
+
+		local expectedContextA = {
+			frob = "ulator",
+			A = "hello",
+		}
+
+		assertDeepEqual(capturedContextA, expectedContextA)
+
+		local expectedContextB = {
+			frob = "ulator",
+			B = "hello",
+		}
+
+		local replacedElement = createElement(Provider, {
+			useConsumerB = true,
+		})
+		noopReconciler.updateVirtualNode(node, replacedElement)
+
+		assertDeepEqual(capturedContextB, expectedContextB)
+	end)
 end

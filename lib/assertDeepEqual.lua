@@ -40,7 +40,7 @@ local function deepEqual(a, b)
 						:gsub("{1}", ("{1}[%s]"):format(tostring(key)))
 						:gsub("{2}", ("{2}[%s]"):format(tostring(key)))
 
-					return message
+					return false, message
 				end
 			end
 		end

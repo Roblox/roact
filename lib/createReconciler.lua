@@ -26,15 +26,16 @@ local function createReconciler(renderer)
 		Unmount the given virtualNode, replacing it with a new node described by
 		the given element.
 
-		Preserves host properties and depth.
+		Preserves host properties, depth, and context from parent.
 	]]
 	local function replaceVirtualNode(virtualNode, newElement)
 		local hostParent = virtualNode.hostParent
 		local hostKey = virtualNode.hostKey
 		local depth = virtualNode.depth
+		local parentContext = virtualNode.parentContext
 
 		unmountVirtualNode(virtualNode)
-		local newNode = mountVirtualNode(newElement, hostParent, hostKey)
+		local newNode = mountVirtualNode(newElement, hostParent, hostKey, parentContext)
 
 		-- mountVirtualNode can return nil if the element is a boolean
 		if newNode ~= nil then
@@ -210,7 +211,7 @@ local function createReconciler(renderer)
 	local function createVirtualNode(element, hostParent, hostKey, context)
 		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
 		assert(renderer.isHostObject(hostParent) or hostParent == nil)
-		assert(typeof(hostKey) == "string")
+		assert(hostKey ~= nil)
 		assert(typeof(context) == "table" or context == nil)
 
 		return {
@@ -225,6 +226,9 @@ local function createReconciler(renderer)
 			hostParent = hostParent,
 			hostKey = hostKey,
 			context = context,
+			-- This copy of context is useful if the element gets replaced
+			-- with an element of a different component type
+			parentContext = context,
 		}
 	end
 
@@ -254,7 +258,7 @@ local function createReconciler(renderer)
 	function mountVirtualNode(element, hostParent, hostKey, context)
 		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
 		assert(typeof(hostParent) == "Instance" or hostParent == nil)
-		assert(typeof(hostKey) == "string")
+		assert(hostKey ~= nil)
 		assert(typeof(context) == "table" or context == nil)
 
 		-- Boolean values render as nil to enable terse conditional rendering.
@@ -288,10 +292,9 @@ local function createReconciler(renderer)
 	local function mountVirtualTree(element, hostParent, hostKey)
 		assert(Type.of(element) == Type.Element)
 		assert(typeof(hostParent) == "Instance" or hostParent == nil)
-		assert(typeof(hostKey) == "string" or hostKey == nil)
 
 		if hostKey == nil then
-			hostKey = "Foo"
+			hostKey = "RoactTree"
 		end
 
 		local tree = {

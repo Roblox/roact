@@ -137,7 +137,7 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 		applyProp(virtualNode, propKey, value, nil)
 	end
 
-	instance.Name = hostKey
+	instance.Name = tostring(hostKey)
 
 	local children = element.props[Children]
 

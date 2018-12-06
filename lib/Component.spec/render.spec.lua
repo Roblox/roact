@@ -144,8 +144,8 @@ return function()
 		expect(capturedState).never.to.equal(firstState)
 	end)
 
-	-- TODO: Test defaultProps on initial render
-	-- TODO: Test defaultProps on prop update
-	-- TODO: Test defaultProps on state update
-	-- TODO: Test that setState throws
+	itSKIP("Test defaultProps on initial render", function() end)
+	itSKIP("Test defaultProps on prop update", function() end)
+	itSKIP("Test defaultProps on state update", function() end)
+	itSKIP("Test that setState throws", function() end)
 end

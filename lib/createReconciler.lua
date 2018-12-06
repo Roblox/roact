@@ -49,7 +49,7 @@ local function createReconciler(renderer)
 		Utility to update the children of a virtual node based on zero or more
 		updated children given as elements.
 	]]
-	local function updateVirtualNodeChildren(virtualNode, hostParent, newChildElements)
+	local function updateChildren(virtualNode, hostParent, newChildElements)
 		assert(Type.of(virtualNode) == Type.VirtualNode)
 
 		local removeKeys = {}
@@ -89,13 +89,17 @@ local function createReconciler(renderer)
 		end
 	end
 
+	local function updateVirtualNodeWithChildren(virtualNode, hostParent, newChildElements)
+		updateChildren(virtualNode, hostParent, newChildElements)
+	end
+
 	local function updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
 		if renderResult == nil
 			or typeof(renderResult) == "boolean"
 			or Type.of(renderResult) == Type.Element
 			or Type.of(renderResult) == Type.Fragment
 		then
-			updateVirtualNodeChildren(virtualNode, hostParent, renderResult)
+			updateChildren(virtualNode, hostParent, renderResult)
 		else
 			-- TODO: Better error message
 			Logging.error(("%s\n%s"):format(
@@ -156,7 +160,7 @@ local function createReconciler(renderer)
 
 		local children = newElement.props[Children]
 
-		updateVirtualNodeChildren(virtualNode, targetHostParent, children)
+		updateVirtualNodeWithChildren(virtualNode, targetHostParent, children)
 
 		return virtualNode
 	end
@@ -264,7 +268,7 @@ local function createReconciler(renderer)
 
 		assert(renderer.isHostObject(targetHostParent))
 
-		updateVirtualNodeChildren(virtualNode, targetHostParent, children)
+		updateVirtualNodeWithChildren(virtualNode, targetHostParent, children)
 	end
 
 	--[[
@@ -369,7 +373,7 @@ local function createReconciler(renderer)
 		mountVirtualNode = mountVirtualNode,
 		unmountVirtualNode = unmountVirtualNode,
 		updateVirtualNode = updateVirtualNode,
-		updateVirtualNodeChildren = updateVirtualNodeChildren,
+		updateVirtualNodeWithChildren = updateVirtualNodeWithChildren,
 		updateVirtualNodeWithRenderResult = updateVirtualNodeWithRenderResult,
 	}
 

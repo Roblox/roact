@@ -1,6 +1,6 @@
 local Type = require(script.Parent.Type)
 local ElementKind = require(script.Parent.ElementKind)
-local ChildUtils = require(script.Parent.ChildUtils)
+local ElementUtils = require(script.Parent.ElementUtils)
 local Children = require(script.Parent.PropMarkers.Children)
 local Logging = require(script.Parent.Logging)
 
@@ -49,14 +49,14 @@ local function createReconciler(renderer)
 		Utility to update the children of a virtual node based on zero or more
 		updated children given as elements.
 	]]
-	local function updateVirtualNodeChildren(virtualNode, hostParent, newChildElements)
+	local function updateChildren(virtualNode, hostParent, newChildElements)
 		assert(Type.of(virtualNode) == Type.VirtualNode)
 
 		local removeKeys = {}
 
 		-- Changed or removed children
 		for childKey, childNode in pairs(virtualNode.children) do
-			local newElement = ChildUtils.getChildByKey(newChildElements, childKey)
+			local newElement = ElementUtils.getElementByKey(newChildElements, childKey)
 			local newNode = updateVirtualNode(childNode, newElement)
 
 			if newNode ~= nil then
@@ -71,9 +71,9 @@ local function createReconciler(renderer)
 		end
 
 		-- Added children
-		for childKey, newElement in ChildUtils.iterateChildren(newChildElements) do
+		for childKey, newElement in ElementUtils.iterateElements(newChildElements) do
 			local concreteKey = childKey
-			if childKey == ChildUtils.UseParentKey then
+			if childKey == ElementUtils.UseParentKey then
 				concreteKey = virtualNode.hostKey
 			end
 
@@ -86,6 +86,26 @@ local function createReconciler(renderer)
 					virtualNode.children[childKey] = childNode
 				end
 			end
+		end
+	end
+
+	local function updateVirtualNodeWithChildren(virtualNode, hostParent, newChildElements)
+		updateChildren(virtualNode, hostParent, newChildElements)
+	end
+
+	local function updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
+		if renderResult == nil
+			or typeof(renderResult) == "boolean"
+			or Type.of(renderResult) == Type.Element
+			or Type.of(renderResult) == Type.Fragment
+		then
+			updateChildren(virtualNode, hostParent, renderResult)
+		else
+			-- TODO: Better error message
+			Logging.error(("%s\n%s"):format(
+				"Component returned invalid children:",
+				virtualNode.currentElement.source or ""
+			), 0)
 		end
 	end
 
@@ -117,7 +137,7 @@ local function createReconciler(renderer)
 	local function updateFunctionVirtualNode(virtualNode, newElement)
 		local children = newElement.component(newElement.props)
 
-		updateVirtualNodeChildren(virtualNode, virtualNode.hostParent, children)
+		updateVirtualNodeWithRenderResult(virtualNode, virtualNode.hostParent, children)
 
 		return virtualNode
 	end
@@ -140,7 +160,7 @@ local function createReconciler(renderer)
 
 		local children = newElement.props[Children]
 
-		updateVirtualNodeChildren(virtualNode, targetHostParent, children)
+		updateVirtualNodeWithChildren(virtualNode, targetHostParent, children)
 
 		return virtualNode
 	end
@@ -237,7 +257,7 @@ local function createReconciler(renderer)
 
 		local children = element.component(element.props)
 
-		updateVirtualNodeChildren(virtualNode, virtualNode.hostParent, children)
+		updateVirtualNodeWithRenderResult(virtualNode, virtualNode.hostParent, children)
 	end
 
 	local function mountPortalVirtualNode(virtualNode)
@@ -248,7 +268,7 @@ local function createReconciler(renderer)
 
 		assert(renderer.isHostObject(targetHostParent))
 
-		updateVirtualNodeChildren(virtualNode, targetHostParent, children)
+		updateVirtualNodeWithChildren(virtualNode, targetHostParent, children)
 	end
 
 	--[[
@@ -353,7 +373,8 @@ local function createReconciler(renderer)
 		mountVirtualNode = mountVirtualNode,
 		unmountVirtualNode = unmountVirtualNode,
 		updateVirtualNode = updateVirtualNode,
-		updateVirtualNodeChildren = updateVirtualNodeChildren,
+		updateVirtualNodeWithChildren = updateVirtualNodeWithChildren,
+		updateVirtualNodeWithRenderResult = updateVirtualNodeWithRenderResult,
 	}
 
 	return reconciler

@@ -20,10 +20,11 @@ local function addType(name)
 	TypeInternal[name] = Symbol.named("Roact" .. name)
 end
 
+addType("Binding")
 addType("Element")
+addType("Fragment")
 addType("HostChangeEvent")
 addType("HostEvent")
-addType("Binding")
 addType("StatefulComponentClass")
 addType("StatefulComponentInstance")
 addType("VirtualNode")

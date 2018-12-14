@@ -22,8 +22,8 @@ install:
   - luarocks install luacheck
 
 script:
-  - luacheck lib
-  - lua -lluacov spec.lua
+  - luacheck lib benchmarks examples
+  - lua -lluacov bin/spec.lua
 
 after_success:
   - luacov-coveralls -e $TRAVIS_BUILD_DIR/lua_install

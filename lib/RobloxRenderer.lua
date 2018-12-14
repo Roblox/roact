@@ -12,6 +12,20 @@ local getDefaultInstanceProperty = require(script.Parent.getDefaultInstancePrope
 local Ref = require(script.Parent.PropMarkers.Ref)
 local Type = require(script.Parent.Type)
 
+local applyPropsError = [[
+Error applying props:
+	%s
+In element:
+%s
+]]
+
+local updatePropsError = [[
+Error updating props:
+	%s
+In element:
+%s
+]]
+
 local function applyRef(ref, newHostObject)
 	if ref == nil then
 		return
@@ -113,6 +127,30 @@ local function applyProp(virtualNode, key, newValue, oldValue)
 	end
 end
 
+local function applyProps(virtualNode, props)
+	for propKey, value in pairs(props) do
+		applyProp(virtualNode, propKey, value, nil)
+	end
+end
+
+local function updateProps(virtualNode, oldProps, newProps)
+	-- Apply props that were added or updated
+	for propKey, newValue in pairs(newProps) do
+		local oldValue = oldProps[propKey]
+
+		applyProp(virtualNode, propKey, newValue, oldValue)
+	end
+
+	-- Clean up props that were removed
+	for propKey, oldValue in pairs(oldProps) do
+		local newValue = newProps[propKey]
+
+		if newValue == nil then
+			applyProp(virtualNode, propKey, nil, oldValue)
+		end
+	end
+end
+
 local RobloxRenderer = {}
 
 function RobloxRenderer.isHostObject(target)
@@ -133,8 +171,17 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 	local instance = Instance.new(element.component)
 	virtualNode.hostObject = instance
 
-	for propKey, value in pairs(element.props) do
-		applyProp(virtualNode, propKey, value, nil)
+	local success, errorMessage = pcall(applyProps, virtualNode, element.props)
+
+	if not success then
+		local source = element.source
+
+		if source == nil then
+			source = "<enable element tracebacks>"
+		end
+
+		local fullMessage = applyPropsError:format(errorMessage, source)
+		error(fullMessage, 0)
 	end
 
 	instance.Name = tostring(hostKey)
@@ -183,20 +230,17 @@ function RobloxRenderer.updateHostNode(reconciler, virtualNode, newElement)
 		applyRef(newProps[Ref], virtualNode.hostObject)
 	end
 
-	-- Apply props that were added or updated
-	for propKey, newValue in pairs(newProps) do
-		local oldValue = oldProps[propKey]
+	local success, errorMessage = pcall(updateProps, virtualNode, oldProps, newProps)
 
-		applyProp(virtualNode, propKey, newValue, oldValue)
-	end
+	if not success then
+		local source = newElement.source
 
-	-- Clean up props that were removed
-	for propKey, oldValue in pairs(oldProps) do
-		local newValue = newProps[propKey]
-
-		if newValue == nil then
-			applyProp(virtualNode, propKey, nil, oldValue)
+		if source == nil then
+			source = "<enable element tracebacks>"
 		end
+
+		local fullMessage = updatePropsError:format(errorMessage, source)
+		error(fullMessage, 0)
 	end
 
 	reconciler.updateVirtualNodeWithChildren(virtualNode, virtualNode.hostObject, newElement.props[Children])

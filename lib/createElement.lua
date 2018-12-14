@@ -60,7 +60,9 @@ local function createElement(component, props, children)
 	}
 
 	if GlobalConfig.getValue("elementTracing") then
-		element.source = ("\n%s\n"):format(debug.traceback())
+		-- We trim out the leading newline since there's no way to specify the
+		-- trace level without also specifying a message.
+		element.source = debug.traceback("", 2):sub(2)
 	end
 
 	return element

@@ -7,6 +7,7 @@ return function()
 	local createReconciler = require(script.Parent.createReconciler)
 	local createRef = require(script.Parent.createRef)
 	local createSpy = require(script.Parent.createSpy)
+	local GlobalConfig = require(script.Parent.GlobalConfig)
 	local Logging = require(script.Parent.Logging)
 	local Portal = require(script.Parent.Portal)
 	local Ref = require(script.Parent.PropMarkers.Ref)
@@ -151,6 +152,30 @@ return function()
 			spyRef:assertCalledWith(instance)
 
 			RobloxRenderer.unmountHostNode(reconciler, node)
+		end)
+
+		it("should throw if setting invalid instance properties", function()
+			local configValues = {
+				elementTracing = true,
+			}
+
+			GlobalConfig.scoped(configValues, function()
+				local parent = Instance.new("Folder")
+				local key = "Some Key"
+
+				local element = createElement("Frame", {
+					Frob = 6,
+				})
+
+				local node = reconciler.createVirtualNode(element, parent, key)
+
+				local success, message = pcall(RobloxRenderer.mountHostNode, reconciler, node)
+				assert(not success, "Expected call to fail")
+
+				expect(message:find("Frob")).to.be.ok()
+				expect(message:find("Frame")).to.be.ok()
+				expect(message:find("RobloxRenderer%.spec")).to.be.ok()
+			end)
 		end)
 	end)
 
@@ -368,6 +393,32 @@ return function()
 
 			-- Not called again
 			expect(spyRef.callCount).to.equal(1)
+		end)
+
+		it("should throw if setting invalid instance properties", function()
+			local configValues = {
+				elementTracing = true,
+			}
+
+			GlobalConfig.scoped(configValues, function()
+				local parent = Instance.new("Folder")
+				local key = "Some Key"
+
+				local firstElement = createElement("Frame")
+				local secondElement = createElement("Frame", {
+					Frob = 6,
+				})
+
+				local node = reconciler.createVirtualNode(firstElement, parent, key)
+				RobloxRenderer.mountHostNode(reconciler, node)
+
+				local success, message = pcall(RobloxRenderer.updateHostNode, reconciler, node, secondElement)
+				assert(not success, "Expected call to fail")
+
+				expect(message:find("Frob")).to.be.ok()
+				expect(message:find("Frame")).to.be.ok()
+				expect(message:find("RobloxRenderer%.spec")).to.be.ok()
+			end)
 		end)
 	end)
 

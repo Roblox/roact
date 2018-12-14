@@ -32,7 +32,7 @@ local exampleData = {
 }
 
 for _, example in ipairs(exampleData) do
-	example.source = script.Parent:WaitForChild(example.name)
+	example.source = script:WaitForChild(example.name)
 	example.start = require(example.source)
 end
 

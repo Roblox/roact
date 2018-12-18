@@ -125,6 +125,44 @@ function Component:render()
 end
 
 --[[
+	Tries to update the component's children, correctly handling the presence of
+	an error boundary.
+]]
+function Component:__updateChildren(reconciler, virtualNode)
+	local hostParent = virtualNode.hostParent
+	local instance = virtualNode.instance
+	local internalData = instance[InternalData]
+
+	internalData.setStateBlockedReason = "render"
+	local children = instance:render()
+	internalData.setStateBlockedReason = nil
+
+	-- Only bother with pcall if we actually have something to handle the error.
+	if self.getDerivedStateFromError ~= nil then
+		local success, message = pcall(reconciler.updateVirtualNodeChildren, virtualNode, hostParent, children)
+
+		if not success then
+			local stateDelta = self.getDerivedStateFromError(message)
+			-- Use setState here to preserve any semantics that setState has.
+			-- This also means getDerivedStateFromError can return a mapper
+			-- function, not just a delta table.
+			internalData.setStateShouldSkipUpdate = true
+			instance:setState(stateDelta)
+			internalData.setStateShouldSkipUpdate = false
+
+			internalData.setStateBlockedReason = "render"
+			children = instance:render()
+			internalData.setStateBlockedReason = nil
+			-- Don't try to handle errors at this point - the component should
+			-- be in a position to render a non-throwing fallback by now.
+			reconciler.updateVirtualNodeChildren(virtualNode, hostParent, children)
+		end
+	else
+		reconciler.updateVirtualNodeChildren(virtualNode, hostParent, children)
+	end
+end
+
+--[[
 	An internal method used by the reconciler to construct a new component
 	instance and attach it to the given virtualNode.
 ]]
@@ -134,7 +172,6 @@ function Component:__mount(reconciler, virtualNode)
 	assert(Type.of(virtualNode) == Type.VirtualNode)
 
 	local currentElement = virtualNode.currentElement
-	local hostParent = virtualNode.hostParent
 
 	-- Contains all the information that we want to keep from consumers of
 	-- Roact, or even other parts of the codebase like the reconciler.
@@ -187,11 +224,7 @@ function Component:__mount(reconciler, virtualNode)
 	-- It's possible for init() to redefine _context!
 	virtualNode.context = instance._context
 
-	internalData.setStateBlockedReason = "render"
-	local children = instance:render()
-	internalData.setStateBlockedReason = nil
-
-	reconciler.updateVirtualNodeChildren(virtualNode, hostParent, children)
+	self:__updateChildren(reconciler, virtualNode)
 
 	if instance.didMount ~= nil then
 		instance:didMount()
@@ -288,11 +321,7 @@ function Component:__update(updatedElement, updatedState)
 	self.props = newProps
 	self.state = newState
 
-	internalData.setStateBlockedReason = "render"
-	local renderResult = virtualNode.instance:render()
-	internalData.setStateBlockedReason = nil
-
-	reconciler.updateVirtualNodeChildren(virtualNode, virtualNode.hostParent, renderResult)
+	self:__updateChildren(reconciler, virtualNode)
 
 	if self.didUpdate ~= nil then
 		self:didUpdate(oldProps, oldState)

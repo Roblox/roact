@@ -148,7 +148,7 @@ function Component:__updateChildren(reconciler, virtualNode)
 			internalData.setStateShouldSkipUpdate = false
 
 			internalData.setStateBlockedReason = "render"
-			children = instance:render()
+			renderResult = instance:render()
 			internalData.setStateBlockedReason = nil
 			-- Don't try to handle errors at this point - the component should
 			-- be in a position to render a non-throwing fallback by now.

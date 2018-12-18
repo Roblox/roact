@@ -10,14 +10,6 @@
       "path": "client",
       "target": "StarterPlayer.StarterPlayerScripts.RoactTestClient"
     },
-    "benches": {
-      "path": "benchmarks",
-      "target": "ReplicatedStorage.Benchmarks"
-    },
-    "start-benchmarks": {
-      "path": "start-benchmarks.server.lua",
-      "target": "ServerScriptService.start-benchmarks"
-    },
     "examples": {
       "path": "examples",
       "target": "StarterPlayer.StarterPlayerScripts.RoactExamples"
@@ -25,6 +17,10 @@
     "benchmarks": {
       "path": "benchmarks",
       "target": "ServerScriptService.RoactBenchmark"
+    },
+    "tests": {
+      "path": "bin/run-tests.server.lua",
+      "target": "ServerScriptService.RoactTests"
     },
     "testez": {
       "path": "modules/testez/lib",

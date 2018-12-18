@@ -46,5 +46,5 @@ return function()
 		assertDeepEqual(values.newState, {})
 	end)
 
-	-- TODO: it should be invoked when updated via setState
+	itSKIP("it should be invoked when updated via setState", function() end)
 end

@@ -42,12 +42,12 @@ table.sort(benchmarkModules, function(a, b)
 	return a.Name < b.Name
 end)
 
-local message = (
+local startMessage = (
 	"Starting %d benchmarks..."
 ):format(
 	#benchmarkModules
 )
-print(message)
+print(startMessage)
 print()
 
 for _, module in ipairs(benchmarkModules) do

@@ -1,6 +1,7 @@
 return function()
 	local assign = require(script.Parent.assign)
 	local createElement = require(script.Parent.createElement)
+	local createFragment = require(script.Parent.createFragment)
 	local createSpy = require(script.Parent.createSpy)
 	local NoopRenderer = require(script.Parent.NoopRenderer)
 	local Type = require(script.Parent.Type)
@@ -46,6 +47,43 @@ return function()
 			node = noopReconciler.updateVirtualNode(node, true)
 
 			expect(node).to.equal(nil)
+		end)
+	end)
+
+	describe("elements and fragments", function()
+		it("should throw errors when attempting to mount invalid elements", function()
+			-- These function components return values with incorrect types
+			local returnsString = function()
+				return "Hello"
+			end
+			local returnsNumber = function()
+				return 1
+			end
+			local returnsFunction = function()
+				return function() end
+			end
+			local returnsTable = function()
+				return {}
+			end
+
+			local hostParent = nil
+			local key = "Some Key"
+
+			expect(function()
+				noopReconciler.mountVirtualNode(createElement(returnsString), hostParent, key)
+			end).to.throw()
+
+			expect(function()
+				noopReconciler.mountVirtualNode(createElement(returnsNumber), hostParent, key)
+			end).to.throw()
+
+			expect(function()
+				noopReconciler.mountVirtualNode(createElement(returnsFunction), hostParent, key)
+			end).to.throw()
+
+			expect(function()
+				noopReconciler.mountVirtualNode(createElement(returnsTable), hostParent, key)
+			end).to.throw()
 		end)
 	end)
 
@@ -198,7 +236,7 @@ return function()
 			expect(childComponentSpy.callCount).to.equal(1)
 		end)
 
-		it("should mount multiple children of function components", function()
+		it("should mount fragments returned by function components", function()
 			local childAComponentSpy = createSpy(function(props)
 				return nil
 			end)
@@ -208,14 +246,14 @@ return function()
 			end)
 
 			local parentComponentSpy = createSpy(function(props)
-				return {
+				return createFragment({
 					A = createElement(childAComponentSpy.value, {
 						value = props.value + 1,
 					}),
 					B = createElement(childBComponentSpy.value, {
 						value = props.value + 5,
 					}),
-				}
+				})
 			end)
 
 			local element = createElement(parentComponentSpy.value, {

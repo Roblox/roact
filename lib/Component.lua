@@ -70,8 +70,6 @@ function Component:setState(mapState)
 		error(message, 2)
 	end
 
-	-- TODO: Do something different in init and willUpdate
-
 	local partialState
 
 	if typeof(mapState) == "function" then
@@ -88,8 +86,7 @@ function Component:setState(mapState)
 
 	local newState = assign({}, self.state, partialState)
 
-	-- If `setState` is called in `init` or `willUpdate`, we can skip triggering
-	-- another update!
+	-- If `setState` is called in `init`, we can skip triggering an update!
 	if internalData.setStateShouldSkipUpdate then
 		self.state = newState
 	else
@@ -134,12 +131,12 @@ function Component:__updateChildren(reconciler, virtualNode)
 	local internalData = instance[InternalData]
 
 	internalData.setStateBlockedReason = "render"
-	local children = instance:render()
+	local renderResult = instance:render()
 	internalData.setStateBlockedReason = nil
 
 	-- Only bother with pcall if we actually have something to handle the error.
 	if self.getDerivedStateFromError ~= nil then
-		local success, message = pcall(reconciler.updateVirtualNodeChildren, virtualNode, hostParent, children)
+		local success, message = pcall(reconciler.updateVirtualNodeWithRenderResult, virtualNode, hostParent, renderResult)
 
 		if not success then
 			local stateDelta = self.getDerivedStateFromError(message)
@@ -155,10 +152,10 @@ function Component:__updateChildren(reconciler, virtualNode)
 			internalData.setStateBlockedReason = nil
 			-- Don't try to handle errors at this point - the component should
 			-- be in a position to render a non-throwing fallback by now.
-			reconciler.updateVirtualNodeChildren(virtualNode, hostParent, children)
+			reconciler.updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
 		end
 	else
-		reconciler.updateVirtualNodeChildren(virtualNode, hostParent, children)
+		reconciler.updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
 	end
 end
 

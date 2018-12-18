@@ -1,11 +1,13 @@
 return function()
 	local assertDeepEqual = require(script.Parent.assertDeepEqual)
 	local Binding = require(script.Parent.Binding)
+	local Children = require(script.Parent.PropMarkers.Children)
 	local Component = require(script.Parent.Component)
 	local createElement = require(script.Parent.createElement)
 	local createReconciler = require(script.Parent.createReconciler)
 	local createRef = require(script.Parent.createRef)
 	local createSpy = require(script.Parent.createSpy)
+	local GlobalConfig = require(script.Parent.GlobalConfig)
 	local Logging = require(script.Parent.Logging)
 	local Portal = require(script.Parent.Portal)
 	local Ref = require(script.Parent.PropMarkers.Ref)
@@ -150,6 +152,30 @@ return function()
 			spyRef:assertCalledWith(instance)
 
 			RobloxRenderer.unmountHostNode(reconciler, node)
+		end)
+
+		it("should throw if setting invalid instance properties", function()
+			local configValues = {
+				elementTracing = true,
+			}
+
+			GlobalConfig.scoped(configValues, function()
+				local parent = Instance.new("Folder")
+				local key = "Some Key"
+
+				local element = createElement("Frame", {
+					Frob = 6,
+				})
+
+				local node = reconciler.createVirtualNode(element, parent, key)
+
+				local success, message = pcall(RobloxRenderer.mountHostNode, reconciler, node)
+				assert(not success, "Expected call to fail")
+
+				expect(message:find("Frob")).to.be.ok()
+				expect(message:find("Frame")).to.be.ok()
+				expect(message:find("RobloxRenderer%.spec")).to.be.ok()
+			end)
 		end)
 	end)
 
@@ -367,6 +393,32 @@ return function()
 
 			-- Not called again
 			expect(spyRef.callCount).to.equal(1)
+		end)
+
+		it("should throw if setting invalid instance properties", function()
+			local configValues = {
+				elementTracing = true,
+			}
+
+			GlobalConfig.scoped(configValues, function()
+				local parent = Instance.new("Folder")
+				local key = "Some Key"
+
+				local firstElement = createElement("Frame")
+				local secondElement = createElement("Frame", {
+					Frob = 6,
+				})
+
+				local node = reconciler.createVirtualNode(firstElement, parent, key)
+				RobloxRenderer.mountHostNode(reconciler, node)
+
+				local success, message = pcall(RobloxRenderer.updateHostNode, reconciler, node, secondElement)
+				assert(not success, "Expected call to fail")
+
+				expect(message:find("Frob")).to.be.ok()
+				expect(message:find("Frame")).to.be.ok()
+				expect(message:find("RobloxRenderer%.spec")).to.be.ok()
+			end)
 		end)
 	end)
 
@@ -644,7 +696,44 @@ return function()
 			reconciler.unmountVirtualNode(node)
 		end)
 
-		itSKIP("should pass context values through portal nodes", function()
+		it("should pass context values through portal nodes", function()
+			local target = Instance.new("Folder")
+
+			local Provider = Component:extend("Provider")
+
+			function Provider:init()
+				self._context.foo = "bar"
+			end
+
+			function Provider:render()
+				return createElement("Folder", nil, self.props[Children])
+			end
+
+			local Consumer = Component:extend("Consumer")
+
+			local capturedContext
+			function Consumer:init()
+				capturedContext = self._context
+			end
+
+			function Consumer:render()
+				return nil
+			end
+
+			local element = createElement(Provider, nil, {
+				Portal = createElement(Portal, {
+					target = target,
+				}, {
+					Consumer = createElement(Consumer),
+				})
+			})
+			local hostParent = nil
+			local hostKey = "Some Key"
+			reconciler.mountVirtualNode(element, hostParent, hostKey)
+
+			assertDeepEqual(capturedContext, {
+				foo = "bar"
+			})
 		end)
 	end)
 end

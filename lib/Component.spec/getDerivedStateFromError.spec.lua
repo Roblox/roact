@@ -1,6 +1,7 @@
 return function()
     local createElement = require(script.Parent.Parent.createElement)
     local createReconciler = require(script.Parent.Parent.createReconciler)
+    local createSpy = require(script.Parent.Parent.createSpy)
     local NoopRenderer = require(script.Parent.Parent.NoopRenderer)
 
     local Component = require(script.Parent.Parent.Component)
@@ -8,13 +9,13 @@ return function()
     local noopReconciler = createReconciler(NoopRenderer)
 
     it("should not be called if the component doesn't throw", function()
-        local callCount = 0
-
         local Boundary = Component:extend("Boundary")
 
-        function Boundary.getDerivedStateFromError(message)
-            callCount = callCount + 1
-        end
+        local getDerivedSpy = createSpy(function(message)
+            return {}
+        end)
+
+        Boundary.getDerivedStateFromError = getDerivedSpy.value
 
         function Boundary:render()
             return nil
@@ -25,26 +26,25 @@ return function()
         local key = "Test"
 
         noopReconciler.mountVirtualNode(element, hostParent, key)
-        expect(callCount).to.equal(0)
+        expect(getDerivedSpy.callCount).to.equal(0)
     end)
 
     it("should be called with the error message", function()
-        local callCount = 0
-
         local function Bug()
             error("test error")
         end
 
         local Boundary = Component:extend("Boundary")
 
-        function Boundary.getDerivedStateFromError(message)
-            callCount = callCount + 1
-            -- the error message will not be the same as what's thrown because a
+        local getDerivedSpy = createSpy(function(message)
+            -- The error message will not be the same as what's thrown because a
             -- line/source object as well as stack trace will be attached to it
             expect(message).to.be.ok()
 
             return {}
-        end
+        end)
+
+        Boundary.getDerivedStateFromError = getDerivedSpy.value
 
         function Boundary:render()
             return createElement(Bug)
@@ -60,12 +60,10 @@ return function()
         expect(function()
             noopReconciler.mountVirtualNode(element, hostParent, key)
         end).to.throw()
-        expect(callCount).to.equal(1)
+        expect(getDerivedSpy.callCount).to.equal(1)
     end)
 
     it("should throw an error if the fallback render throws", function()
-        local renderCount = 0
-
         local function Bug()
             error("test error")
         end
@@ -76,10 +74,11 @@ return function()
             return {}
         end
 
-        function Boundary:render()
-            renderCount = renderCount + 1
+        local renderSpy = createSpy(function(self)
             return createElement(Bug)
-        end
+        end)
+
+        Boundary.render = renderSpy.value
 
         local element = createElement(Boundary)
         local hostParent = nil
@@ -88,11 +87,10 @@ return function()
         expect(function()
             noopReconciler.mountVirtualNode(element, hostParent, key)
         end).to.throw()
-        expect(renderCount).to.equal(2)
+        expect(renderSpy.callCount).to.equal(2)
     end)
 
     it("should return a state delta for the component", function()
-        local renderCount = 0
         local getStateCallback = nil
 
         local function Bug()
@@ -113,9 +111,9 @@ return function()
             end
         end
 
-        function Boundary:render()
-            renderCount = renderCount + 1
-            if renderCount > 1 then
+        local renderSpy
+        renderSpy = createSpy(function(self)
+            if renderSpy.callCount > 1 then
                 expect(self.state.errored).to.equal(true)
             end
 
@@ -124,20 +122,20 @@ return function()
             else
                 return createElement(Bug)
             end
-        end
+        end)
+
+        Boundary.render = renderSpy.value
 
         local element = createElement(Boundary)
         local hostParent = nil
         local key = "Test"
 
         noopReconciler.mountVirtualNode(element, hostParent, key)
-        expect(renderCount).to.equal(2)
+        expect(renderSpy.callCount).to.equal(2)
         expect(getStateCallback().errored).to.equal(true)
     end)
 
     it("should not interrupt the lifecycle methods", function()
-        local didMountCount = 0
-        local didUpdateCount = 0
         local setStateCallback = nil
 
         local function Bug()
@@ -166,25 +164,26 @@ return function()
             end
         end
 
-        function Boundary:didMount()
-            didMountCount = didMountCount + 1
-        end
+        local didMountSpy = createSpy()
+        Boundary.didMount = didMountSpy.value
 
-        function Boundary:didUpdate()
-            didUpdateCount = didUpdateCount + 1
-        end
+        local didUpdateSpy = createSpy()
+        Boundary.didUpdate = didUpdateSpy.value
 
         local element = createElement(Boundary)
         local hostParent = nil
         local key = "Test"
 
         noopReconciler.mountVirtualNode(element, hostParent, key)
-        expect(didMountCount).to.equal(1)
-        expect(didUpdateCount).to.equal(0)
+
+        expect(didMountSpy.callCount).to.equal(1)
+        expect(didUpdateSpy.callCount).to.equal(0)
+
         setStateCallback({
             errored = false
         })
 
-        expect(didUpdateCount).to.equal(1)
+        expect(didMountSpy.callCount).to.equal(1)
+        expect(didUpdateSpy.callCount).to.equal(1)
     end)
 end

@@ -47,17 +47,17 @@ return function()
         local key = "Test"
 
         local node = noopReconciler.mountVirtualNode(element, hostParent, key)
-        local values = validatePropsSpy:captureValues("props")
         expect(validatePropsSpy.callCount).to.equal(1)
-        expect(values.props).to.be.ok()
-        expect(values.props.a).to.equal(1)
+        validatePropsSpy:assertCalledWithDeepEqual({
+            a = 1,
+        })
 
         local newElement = createElement(MyComponent, { a = 2 })
         noopReconciler.updateVirtualNode(node, newElement)
-        values = validatePropsSpy:captureValues("props")
         expect(validatePropsSpy.callCount).to.equal(2)
-        expect(values.props).to.be.ok()
-        expect(values.props.a).to.equal(2)
+        validatePropsSpy:assertCalledWithDeepEqual({
+            a = 2,
+        })
     end)
 
     it("should not be invoked when state changes", function()
@@ -85,10 +85,10 @@ return function()
         local key = "Test"
 
         noopReconciler.mountVirtualNode(element, hostParent, key)
-        local values = validatePropsSpy:captureValues("props")
         expect(validatePropsSpy.callCount).to.equal(1)
-        expect(values.props).to.be.ok()
-        expect(values.props.a).to.equal(1)
+        validatePropsSpy:assertCalledWithDeepEqual({
+            a = 1
+        })
 
         setStateCallback({
             b = 1

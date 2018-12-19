@@ -122,10 +122,10 @@ function Component:render()
 end
 
 --[[
-	Tries to update the component's children, correctly handling the presence of
-	an error boundary.
+	Tries to render a tree and update the virtual node, correctly handling the
+	presence of an error boundary.
 ]]
-function Component:__updateChildren(reconciler, virtualNode)
+function Component:__updateVirtualNode(reconciler, virtualNode)
 	local hostParent = virtualNode.hostParent
 	local instance = virtualNode.instance
 	local internalData = instance[InternalData]
@@ -221,7 +221,7 @@ function Component:__mount(reconciler, virtualNode)
 	-- It's possible for init() to redefine _context!
 	virtualNode.context = instance._context
 
-	self:__updateChildren(reconciler, virtualNode)
+	self:__updateVirtualNode(reconciler, virtualNode)
 
 	if instance.didMount ~= nil then
 		instance:didMount()
@@ -318,7 +318,7 @@ function Component:__update(updatedElement, updatedState)
 	self.props = newProps
 	self.state = newState
 
-	self:__updateChildren(reconciler, virtualNode)
+	self:__updateVirtualNode(reconciler, virtualNode)
 
 	if self.didUpdate ~= nil then
 		self:didUpdate(oldProps, oldState)

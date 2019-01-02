@@ -71,7 +71,7 @@ If `children` is `nil` or contains no children, `oneChild` will return `nil`.
 
 ### Roact.createBinding
 ```
-Roact.createBinding -> Binding, updateFunction
+Roact.createBinding(initialValue) -> Binding, updateFunction
 where
 	updateFunction: (newValue) -> ()
 ```

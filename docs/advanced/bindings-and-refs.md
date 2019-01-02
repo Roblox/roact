@@ -1,8 +1,8 @@
-Sometimes, Roact's reconciliation process is ill-suited for setting certain properties. For cases like this, Roact provides the Bindings feature, and a specialized version of them called Refs (an analog for React's Ref feature).
+Sometimes, Roact's reconciliation process is ill-suited for managing certain properties. For cases like this, Roact provides the Bindings feature, and a specialized version of it called Refs (an analog for React's Ref feature).
 
 ## Bindings
 
-Bindings are intended to be used in cases where Roact cannot solve a problem directly, or its solution might not be performant enough, like:
+Bindings and Refs are intended to be used in cases where Roact cannot solve a problem directly, or its solution might not be performant enough, like:
 
 * Resizing a box to fit its contents dynamically
 * Gamepad selection
@@ -12,7 +12,7 @@ Bindings are intended to be used in cases where Roact cannot solve a problem dir
 
 Bindings can be used to provide an external source for a prop value, or to update them outside of the Roact reconciler.
 
-First, we create a binding and an updater using `Roact.createBinding()` and put the results somewhere persistent. This function returns a binding object and an updater function, which can be called to modify the bound value.
+To do this, create a binding and an updater using `Roact.createBinding()` and put the results somewhere persistent. This function returns two results: a binding object and an updater function (which can be called to modify the bound value).
 
 ```lua
 local Foo = Roact.Component:extend("Foo")
@@ -23,7 +23,7 @@ function Foo:init()
 end
 ```
 
-Then, we connect the binding value to something that we're rendering. We also connect the updater to something.
+Then, we connect the binding value to something that we're rendering and the updater to something that will invoke it.
 
 ```lua
 function Foo:render()
@@ -38,7 +38,7 @@ function Foo:render()
 end
 ```
 
-The result is a `TextButton` that displays the number of times it's been clicked. In this case, we connect the updater to the button's `Activated` event, but it could be something we subscribe to in didMount, a callback passed to a child, or anything else we want.
+The result is a `TextButton` that displays the number of times it's been clicked. In this case, we connect the updater to the button's `Activated` event, but it could be used with something we subscribe to in `didMount`, as a callback passed to a child, or anything else we want.
 
 ### Mapped Bindings
 

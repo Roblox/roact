@@ -14,6 +14,13 @@ The `children` argument is shorthand for adding a `Roact.Children` key to `props
 !!! caution
 	Once `props` or `children` are passed into the `createElement`, make sure not to modify them!
 
+### Roact.createFragment
+```
+Roact.createFragment(elements) -> RoactFragment
+```
+
+Creates a new Roact fragment, which can contain multiple elements. Fragments allow a component to group elements together by returning them to external groups instead of needing create nested groupings.
+
 ### Roact.mount
 ```
 Roact.mount(element, [parent, [key]]) -> ComponentInstanceHandle

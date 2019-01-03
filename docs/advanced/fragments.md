@@ -1,9 +1,7 @@
 !!! info
 	This section is a work in progress.
 
-Fragments are a tool for organizing components without unnecessary nesting.
-
-Typically, Roact components will render a single element by returning the result of a call to `createElement`.
+Fragments are a tool for avoiding unnecessary nesting when organizing components. Typically, Roact components will render a single element by returning the result of a call to `createElement`.
 
 For example, suppose for a multiplayer game we define a list component like this:
 ```lua
@@ -44,7 +42,7 @@ Frame:
 		TextLabel
 ```
 
-Suppose we'd instead like to create a Roact component that renders a collection of elements. That sort of component could be used to inject items into a list or frame without additional nesting. That's where `Roact.createFragment` comes in:
+Suppose we'd instead like to create a Roact component that renders a collection of elements. That sort of component could be used to inject items into a list or frame without additional nesting. That's where fragments come in:
 ```lua hl_lines="2"
 local function ListItems(props)
 	return Roact.createFragment({
@@ -58,7 +56,7 @@ local function ListItems(props)
 end
 ```
 
-When used in combination with the above `TeamList` component, this will generate the desired Roblox hierarchy:
+We call `Roact.createFragment` and provide it a table of elements. When used in combination with the above `TeamList` component, this will generate the desired Roblox hierarchy:
 ```
 Frame:
 	UIListLayout

@@ -19,12 +19,10 @@ The `children` argument is shorthand for adding a `Roact.Children` key to `props
 Roact.createFragment(elements) -> RoactFragment
 ```
 
-Creates a new Roact fragment with the provided table of elements. A fragment represents a collection of elements that will be parented together.
-
-The `elements` argument should look exactly like the table of children that you might pass as the third argument of `createElement`.
+Creates a new Roact fragment with the provided table of elements. Fragments allow grouping of elements without the need for intermediate containing objects like `Frame`s.
 
 !!! caution
-	Make sure not to modify `children` after they're passed into `createFragment`!
+	Make sure not to modify `elements` after they're passed into `createFragment`!
 
 ### Roact.mount
 ```

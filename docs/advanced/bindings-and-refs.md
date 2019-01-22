@@ -1,18 +1,21 @@
-Sometimes, Roact's reconciliation process is ill-suited for managing certain properties. For cases like this, Roact provides the Bindings feature, and a specialized version of it called Refs (an analog for React's Ref feature).
-
-## Bindings
+In certain situations, Roact's reconciliation process is ill-suited for managing some Instance properties. For cases like this, Roact provides escape hatches in the form of Bindings and Refs.
 
 Bindings and Refs are intended to be used in cases where Roact cannot solve a problem directly, or its solution might not be performant enough, like:
 
-* Resizing a box to fit its contents dynamically
+* Invoking functions on Roblox Instances
+* Dynamically resizing a host component to fit its contents
 * Gamepad selection
 * Animations
 
+## Bindings
+
+Bindings are special objects that the Roact reconciler automatically unwraps into values. When a binding is updated, Roact will change only the specific properties that are subscribed to it.
+
 ### Binding Properties
 
-Bindings can be used to provide an external source for a prop value, or to update them outside of the Roact reconciler.
+Bindings can be used to provide an external source for a prop value, or to update those values outside of the Roact reconciliation process.
 
-To do this, create a binding and an updater using `Roact.createBinding()` and put the results somewhere persistent. This function returns two results: a binding object and an updater function (which can be called to modify the bound value).
+First, create a binding and an updater using `Roact.createBinding()` and put the results somewhere persistent. `createBinding` returns two results: a binding object and an updater function, which is used to update the binding's value.
 
 ```lua
 local Foo = Roact.Component:extend("Foo")
@@ -23,28 +26,30 @@ function Foo:init()
 end
 ```
 
-Then, we connect the binding value to something that we're rendering and the updater to something that will invoke it.
+Then, connect the binding value to something that we're rendering and the updater to something that will invoke it.
 
 ```lua
 function Foo:render()
 	return Roact.createElement("TextButton", {
-		-- Roact unwraps the binding, sets the property, and subscribes to changes
+		-- Roact unwraps the binding, sets the Text property to the binding's value,
+		-- and subscribes to the binding
 		Text = self.clickCount,
 		[Roact.Event.Activated] = function()
-			-- When the user clicks the button, the count will be incremented
+			-- When the user clicks the button, the count will be incremented and
+			-- Roact will update any properties that are subscribed to the binding
 			self.updateClickCount(self.clickCount:getValue() + 1)
 		end
 	})
 end
 ```
 
-The result is a `TextButton` that displays the number of times it's been clicked. In this case, we connect the updater to the button's `Activated` event, but it could be used with something we subscribe to in `didMount`, as a callback passed to a child, or anything else we want.
+The result of this example is a `TextButton` that displays the number of times it's been clicked. In this case, we connect the updater to the button's `Activated` event. Other use cases could be connecting it to some external property in `didMount` or passing it to a child component as a callback.
 
 ### Mapped Bindings
 
-Often, a binding's value isn't useful by itself. It needs to be transformed into some other value in order to be a useful property. For example, setting the `Size` prop of a host component based on its Layout's `AbsoluteContentSize` (`Size` is a `UDim2`, and `AbsoluteContentSize` is a `Vector2`)
+Often, a binding's value isn't useful by itself. It needs to be transformed into some other value in order to be useful when assigned to an Instance property.
 
-As a simpler, let's modify the above component:
+Let's modify the above component to make use of a mapped binding:
 
 ```lua hl_lines="3 4 5 6"
 function Foo:render()
@@ -61,15 +66,15 @@ function Foo:render()
 end
 ```
 
-Now the `TextButton` will display "Clicks: 0" instead of just the number!
+Our mapped binding transforms the number of clicks into a string. Now the `TextButton` will display "Clicks: 0" instead of just the number!
 
 ## Refs
 
-While bindings are most helpful for individual props, we often want to access and entire Roblox Instance and its methods.
+While bindings are most helpful for individual props, we often want to access an entire Roblox Instance and its methods.
 
-*Refs* are a special type of binding that point to the Roblox Instance objects that are created by Roact. They're a useful escape hatch for when something is difficult or impossible to correctly express with the Roact API.
+*Refs* are a special type of binding that point to Roblox Instance objects that are created by Roact.
 
-Refs can only be attached to host components. This is different than React, where refs can be used to call members of composite components.
+Refs can only be attached to host components. This is different from React, where refs can be used to call members of composite components.
 
 ### Refs in Action
 To use a ref, call `Roact.createRef()` and put the result somewhere persistent. Generally, that means that refs are only used inside stateful components.
@@ -104,7 +109,7 @@ end
 ```
 
 ### Refs as Host Properties
-In addition to providing access to underlying Roblox objects, refs also provide a handy shortcut for Roblox Instance properties that expect another Instance as their value. The most commonly-encountered example is `NextSelectionLeft` and its counterparts.
+In addition to providing access to underlying Roblox objects, refs also provide a handy shortcut for Roblox Instance properties that expect another Instance as their value. One commonly-encountered example is `NextSelectionLeft` and its counterparts.
 
 Roact's Roblox renderer knows that bindings are not valid Roblox Instance values, so it will unwrap them for you:
 

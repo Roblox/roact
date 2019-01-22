@@ -85,7 +85,7 @@ A `Binding` has the following API:
 Binding:getValue() -> value
 ```
 
-Returns the internal value. This isn't typically useful, but can be helpful if a Binding needs to be updated relative to its current value.
+Returns the internal value. This isn't typically necessary, but can be helpful when updating a binding relative to its current value.
 
 #### map
 ```

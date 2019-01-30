@@ -85,7 +85,10 @@ A `Binding` has the following API:
 Binding:getValue() -> value
 ```
 
-Returns the internal value. This isn't typically necessary, but can be helpful when updating a binding relative to its current value.
+Returns the internal value of the binding. This is helpful when updating a binding relative to its current value.
+
+!!! warning
+	Using `getValue` inside a component's `render` method is dangerous! Using the unwrapped value directly won't allow Roact to subscribe to a binding's updates. To guarantee that a bound value will update, use the binding itself for your prop value.
 
 #### map
 ```

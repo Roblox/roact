@@ -15,6 +15,7 @@ local reconcilerCompat = createReconcilerCompat(robloxReconciler)
 local Roact = strict {
 	Component = require(script.Component),
 	createElement = require(script.createElement),
+	createFragment = require(script.createFragment),
 	oneChild = require(script.oneChild),
 	PureComponent = require(script.PureComponent),
 	None = require(script.None),

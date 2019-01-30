@@ -81,13 +81,7 @@ end
 
 function Config:set(configValues)
 	if self._lastConfigTraceback then
-		local message = (
-			"Global configuration can only be set once. Configuration was already set at:%s"
-		):format(
-			self._lastConfigTraceback
-		)
-
-		error(message, 3)
+		error("Global configuration can only be set once. Configuration was already set at:" .. self._lastConfigTraceback, 3)
 	end
 
 	-- We use 3 as our traceback and error level because all of the methods are

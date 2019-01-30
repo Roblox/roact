@@ -111,10 +111,10 @@ Creates a new reference object that can be used with [Roact.Ref](#roactref).
 ### Roact.Children
 This is the key that Roact uses internally to store the children that are attached to a Roact element.
 
-If you're writing a new functional or stateful element that needs to be used like a primitive component, you can access `Roact.Children` in your props table.
+If you're writing a new functional or stateful element that needs to be used like a host component, you can access `Roact.Children` in your props table.
 
 ### Roact.Ref
-Use `Roact.Ref` as a key into the props of a primitive element to receive a handle to the underlying Roblox Instance.
+Use `Roact.Ref` as a key into the props of a host element to receive a handle to the underlying Roblox Instance.
 
 Assign this key to a reference object created with [createRef](#roactcreateref):
 ```lua
@@ -157,7 +157,7 @@ Roact.createElement("Frame", {
 See [the refs guide](/advanced/refs.md) for more details.
 
 ### Roact.Event
-Index into `Roact.Event` to receive a key that can be used to connect to events when creating primitive elements:
+Index into `Roact.Event` to receive a key that can be used to connect to events when creating host elements:
 
 ```lua
 Roact.createElement("ImageButton", {

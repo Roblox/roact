@@ -4,6 +4,7 @@ return function()
 	it("should load with all public APIs", function()
 		local publicApi = {
 			createElement = "function",
+			createFragment = "function",
 			createRef = "function",
 			createBinding = "function",
 			mount = "function",

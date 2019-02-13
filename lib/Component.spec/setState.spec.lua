@@ -237,4 +237,46 @@ return function()
 			noopReconciler.unmountVirtualNode(instance)
 		end)
 	end)
+
+	describe("setState suspension", function()
+		it("should defer setState triggered in callbacks", function()
+			local Child = Component:extend("Child")
+			local capturedChildState = nil
+
+			function Child:render()
+				capturedChildState = self.state
+				return nil
+			end
+
+			function Child:didMount()
+				self.props.callback()
+			end
+
+			local Parent = Component:extend("Parent")
+
+			function Parent:render()
+				return createElement(Child, {
+					callback = function()
+						if self.state.foo == nil then
+							print("Calling setState")
+							self:setState({
+								foo = "bar"
+							})
+						end
+					end,
+				})
+			end
+
+			local element = createElement(Parent)
+			local hostParent = nil
+			local key = "Test"
+
+			local result = noopReconciler.mountVirtualNode(element, hostParent, key)
+
+			expect(result).to.be.ok()
+
+			expect(capturedChildState).to.be.ok()
+			expect(capturedChildState.foo).to.equal("bar")
+		end)
+	end)
 end

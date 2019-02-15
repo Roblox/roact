@@ -1,10 +1,10 @@
 return function()
-	local createElement = require(script.Parent.createElement)
-	local createReconciler = require(script.Parent.createReconciler)
-	local None = require(script.Parent.None)
-	local NoopRenderer = require(script.Parent.NoopRenderer)
+	local createElement = require(script.Parent.Parent.createElement)
+	local createReconciler = require(script.Parent.Parent.createReconciler)
+	local None = require(script.Parent.Parent.None)
+	local NoopRenderer = require(script.Parent.Parent.NoopRenderer)
 
-	local Component = require(script.Parent.Component)
+	local Component = require(script.Parent.Parent.Component)
 
 	local noopReconciler = createReconciler(NoopRenderer)
 
@@ -241,10 +241,9 @@ return function()
 	describe("setState suspension", function()
 		it("should defer setState triggered in callbacks", function()
 			local Child = Component:extend("Child")
-			local capturedChildState = nil
+			local captureParentState = nil
 
 			function Child:render()
-				capturedChildState = self.state
 				return nil
 			end
 
@@ -258,13 +257,16 @@ return function()
 				return createElement(Child, {
 					callback = function()
 						if self.state.foo == nil then
-							print("Calling setState")
 							self:setState({
 								foo = "bar"
 							})
 						end
 					end,
 				})
+			end
+
+			function Parent:didUpdate()
+				captureParentState = self.state
 			end
 
 			local element = createElement(Parent)
@@ -274,9 +276,7 @@ return function()
 			local result = noopReconciler.mountVirtualNode(element, hostParent, key)
 
 			expect(result).to.be.ok()
-
-			expect(capturedChildState).to.be.ok()
-			expect(capturedChildState.foo).to.equal("bar")
+			expect(captureParentState.foo).to.equal("bar")
 		end)
 	end)
 end

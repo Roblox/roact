@@ -32,16 +32,6 @@ render must be a pure function that only depends on props and state.
 
 Check the definition of render in the component %q.]]
 
-invalidSetStateMessages["reconcile"] = [[
-setState cannot be called while a component is being reified or reconciled.
-This is the step where Roact constructs Roblox instances, and starting another
-render here would introduce bugs.
-
-Check the component %q to see if setState is being called by:
-* a child Ref
-* a child Changed event
-* a child's render method]]
-
 invalidSetStateMessages["default"] = [[
 setState can not be used in the current situation, but Roact couldn't find a
 message to display.

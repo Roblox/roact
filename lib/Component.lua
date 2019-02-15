@@ -5,19 +5,31 @@ local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
 
 local InternalData = Symbol.named("InternalData")
 
-local SetStateStatus = {
-	-- setState calls will accumulate a queue of pending state updates that will
-	-- be resolved together
-	Suspended = "Suspended",
+-- local SetStateStatus = {
+-- 	-- setState calls will accumulate a queue of pending state updates that will
+-- 	-- be resolved together
+-- 	Suspended = "Suspended",
 
-	-- setState will resolve as soon as it's invoked
-	Enabled = "Enabled",
+-- 	-- setState will resolve as soon as it's invoked
+-- 	Enabled = "Enabled",
 
-	-- setState is not allowed, and will throw an error
-	DisallowedRendering = "DisallowedRendering",
+-- 	-- setState is not allowed, and will throw an error
+-- 	DisallowedRendering = "DisallowedRendering",
 
-	-- setState is not allowed, and will throw an error
-	DisallowedUnmounting = "DisallowedUnmounting",
+-- 	-- setState is not allowed, and will throw an error
+-- 	DisallowedUnmounting = "DisallowedUnmounting",
+-- }
+
+local LifecyclePhase = {
+	Init = "init",
+	Render = "render",
+	ShouldUpdate = "shouldUpdate",
+	WillUpdate = "willUpdate",
+	DidMount = "didMount",
+	DidUpdate = "didUpdate",
+	WillUnmount = "willUnmount",
+	ReconcileChildren = "reconcileChildren",
+	Done = "done",
 }
 
 local componentMissingRenderMessage = [[
@@ -80,7 +92,7 @@ function Component:__resolveStateUpdate(targetState, mapState)
 	elseif typeof(mapState) == "table" then
 		partialState = mapState
 	else
-		error("Invalid argument to setState, expected function or table", 2)
+		error("Invalid argument to setState, expected function or table", 3)
 	end
 
 	return assign({}, targetState, partialState)
@@ -90,18 +102,35 @@ function Component:setState(mapState)
 	assert(Type.of(self) == Type.StatefulComponentInstance)
 
 	local internalData = self[InternalData]
+	local lifecyclePhase = internalData.lifecyclePhase
 
-	-- This value will be set when we're in a place that `setState` should not
-	-- be used. It will be set to the name of a message to display to the user.
-	if internalData.setStateStatus == SetStateStatus.DisallowedRendering
-		or internalData.setStateStatus == SetStateStatus.DisallowedUnmounting then
-		-- TODO: real error message here
-		local messageTemplate = internalData.setStateStatus
+	if lifecyclePhase == LifecyclePhase.ShouldUpdate or
+		lifecyclePhase == LifecyclePhase.WillUpdate or
+		lifecyclePhase == LifecyclePhase.Render or
+		lifecyclePhase == LifecyclePhase.WillUpdate or
+		lifecyclePhase == LifecyclePhase.WillUnmount
+	then
+		--[[
+			When preparing to update, rendering, or unmounting, it is not safe
+			to call `setState` as it will interrupt existing updates
+		]]
+		local messageTemplate = invalidSetStateMessages[internalData.lifecyclePhase]
+
+		if messageTemplate == nil then
+			messageTemplate = invalidSetStateMessages["default"]
+		end
 
 		local message = messageTemplate:format(tostring(internalData.componentClass))
 
 		error(message, 2)
-	elseif internalData.setStateStatus == SetStateStatus.Suspended then
+	elseif internalData.lifecyclePhase == LifecyclePhase.DidMount or
+		internalData.lifecyclePhase == LifecyclePhase.DidUpdate or
+		internalData.lifecyclePhase == LifecyclePhase.ReconcileChildren
+	then
+		--[[
+			During certain phases of the component lifecycle, it's acceptable to
+			allow `setState` but defer the update until we're done with ones in flight
+		]]
 		local targetState
 
 		if internalData.pendingStateUpdate == nil then
@@ -115,20 +144,22 @@ function Component:setState(mapState)
 		if stateUpdate ~= nil then
 			internalData.pendingStateUpdate = stateUpdate
 		end
-
-		return
-	end
-
-	local targetState = internalData.pendingStateUpdate or self.state
-
-	local newState = self:__resolveStateUpdate(targetState, mapState)
-
-	-- If `setState` is called in `init`, we can skip triggering an update!
-	if internalData.setStateShouldSkipUpdate then
-		self.state = newState
 	else
+		--[[
+			State updates are safe to make. Resolve state by combining our
+			existing state, any pending updates, and the newly provided state
+		]]
+		local targetState = internalData.pendingStateUpdate or self.state
+
+		local newState = self:__resolveStateUpdate(targetState, mapState)
+
 		if newState ~= nil then
-			self:__update(nil, newState)
+			-- If `setState` is called in `init`, we can skip triggering an update!
+			if lifecyclePhase == LifecyclePhase.Init then
+				self.state = newState
+			else
+				self:__update(nil, newState)
+			end
 		end
 	end
 end
@@ -178,9 +209,18 @@ function Component:__mount(reconciler, virtualNode)
 		reconciler = reconciler,
 		virtualNode = virtualNode,
 		componentClass = self,
-
-		setStateShouldSkipUpdate = false,
+		lifecyclePhase = LifecyclePhase.Init,
 	}
+
+	--DEBUG BEGIN
+	setmetatable(internalData, {
+		__newindex = function(self, key, value)
+			if key == "lifecylePhase" then
+				print("Lifecycle change:", tostring(value))
+			end
+		end
+	})
+	--DEBUG END
 
 	local instance = {
 		[Type] = Type.StatefulComponentInstance,
@@ -214,30 +254,28 @@ function Component:__mount(reconciler, virtualNode)
 	instance._context = newContext
 
 	if instance.init ~= nil then
-		internalData.setStateShouldSkipUpdate = true
 		instance:init(instance.props)
-		internalData.setStateShouldSkipUpdate = false
 	end
 
 	-- It's possible for init() to redefine _context!
 	virtualNode.context = instance._context
 
-	internalData.setStateStatus = SetStateStatus.DisallowedRendering
+	internalData.lifecyclePhase = LifecyclePhase.Render
 	local renderResult = instance:render()
-	internalData.setStateStatus = SetStateStatus.Suspended
 
+	internalData.lifecyclePhase = LifecyclePhase.ReconcileChildren
 	reconciler.updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
 
 	if instance.didMount ~= nil then
+		internalData.lifecyclePhase = LifecyclePhase.DidMount
 		instance:didMount()
 	end
-
-	internalData.setStateStatus = SetStateStatus.Enabled
 
 	if internalData.pendingStateUpdate ~= nil then
 		instance:__update(renderResult, internalData.pendingStateUpdate)
 	end
 
+	internalData.lifecyclePhase = LifecyclePhase.Done
 end
 
 --[[
@@ -254,14 +292,16 @@ function Component:__unmount()
 	-- TODO: Set unmounted flag to disallow setState after this point
 
 	if self.willUnmount ~= nil then
-		internalData.setStateStatus = SetStateStatus.DisallowedUnmounting
+		internalData.lifecyclePhase = LifecyclePhase.WillUnmount
 		self:willUnmount()
-		internalData.setStateStatus = SetStateStatus.Enabled
 	end
 
 	for _, childNode in pairs(virtualNode.children) do
 		reconciler.unmountVirtualNode(childNode)
 	end
+
+	-- ?? not sure about this???
+	internalData.lifecyclePhase = LifecyclePhase.Done
 end
 
 --[[
@@ -282,18 +322,6 @@ function Component:__update(updatedElement, updatedState)
 	local reconciler = internalData.reconciler
 	local componentClass = internalData.componentClass
 
-	if internalData.pendingStateUpdate ~= nil then
-		local pendingState = internalData.pendingStateUpdate
-
-		local collapsedPendingUpdate = self:__resolveStateUpdate(updatedState, pendingState)
-
-		if collapsedPendingUpdate ~= nil then
-			updatedState = collapsedPendingUpdate
-		end
-
-		internalData.pendingStateUpdate = nil
-	end
-
 	local oldProps = self.props
 	local oldState = self.state
 
@@ -307,6 +335,18 @@ function Component:__update(updatedElement, updatedState)
 		if componentClass.defaultProps ~= nil then
 			newProps = assign({}, componentClass.defaultProps, newProps)
 		end
+	end
+
+	if internalData.pendingStateUpdate ~= nil then
+		local pendingState = internalData.pendingStateUpdate
+
+		local collapsedPendingUpdate = self:__resolveStateUpdate(pendingState, updatedState)
+
+		if collapsedPendingUpdate ~= nil then
+			updatedState = collapsedPendingUpdate
+		end
+
+		internalData.pendingStateUpdate = nil
 	end
 
 	if updatedState ~= nil then
@@ -324,38 +364,39 @@ function Component:__update(updatedElement, updatedState)
 	end
 
 	-- During shouldUpdate, willUpdate, and render, setState calls are suspended
-	internalData.setStateStatus = SetStateStatus.DisallowedRendering
 	if self.shouldUpdate ~= nil then
+		internalData.lifecyclePhase = LifecyclePhase.ShouldUpdate
 		local continueWithUpdate = self:shouldUpdate(newProps, newState)
 
 		if not continueWithUpdate then
-			print("State update aborted")
 			return false
 		end
 	end
 
 	if self.willUpdate ~= nil then
+		internalData.lifecyclePhase = LifecyclePhase.WillUpdate
 		self:willUpdate(newProps, newState)
 	end
 
 	self.props = newProps
 	self.state = newState
 
+	internalData.lifecyclePhase = LifecyclePhase.Render
 	local renderResult = virtualNode.instance:render()
 
-	internalData.setStateStatus = SetStateStatus.Suspended
-
+	internalData.lifecyclePhase = LifecyclePhase.ReconcileChildren
 	reconciler.updateVirtualNodeWithRenderResult(virtualNode, virtualNode.hostParent, renderResult)
 
 	if self.didUpdate ~= nil then
+		internalData.lifecyclePhase = LifecyclePhase.DidUpdate
 		self:didUpdate(oldProps, oldState)
 	end
-
-	internalData.setStateStatus = SetStateStatus.Enabled
 
 	if internalData.pendingStateUpdate ~= nil then
 		self:__update(nil, nil)
 	end
+
+	internalData.lifecyclePhase = LifecyclePhase.Done
 
 	return true
 end

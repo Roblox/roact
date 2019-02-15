@@ -95,7 +95,7 @@ function Component:__resolveStateUpdate(targetState, mapState)
 		error("Invalid argument to setState, expected function or table", 3)
 	end
 
-	return assign({}, targetState, partialState)
+	return assign(targetState, partialState)
 end
 
 function Component:setState(mapState)
@@ -104,16 +104,16 @@ function Component:setState(mapState)
 	local internalData = self[InternalData]
 	local lifecyclePhase = internalData.lifecyclePhase
 
+	--[[
+		When preparing to update, rendering, or unmounting, it is not safe
+		to call `setState` as it will interfere with in-flight updates. It's
+		also disallowed during unmounting
+	]]
 	if lifecyclePhase == LifecyclePhase.ShouldUpdate or
 		lifecyclePhase == LifecyclePhase.WillUpdate or
 		lifecyclePhase == LifecyclePhase.Render or
-		lifecyclePhase == LifecyclePhase.WillUpdate or
 		lifecyclePhase == LifecyclePhase.WillUnmount
 	then
-		--[[
-			When preparing to update, rendering, or unmounting, it is not safe
-			to call `setState` as it will interrupt existing updates
-		]]
 		local messageTemplate = invalidSetStateMessages[internalData.lifecyclePhase]
 
 		if messageTemplate == nil then
@@ -123,43 +123,33 @@ function Component:setState(mapState)
 		local message = messageTemplate:format(tostring(internalData.componentClass))
 
 		error(message, 2)
-	elseif internalData.lifecyclePhase == LifecyclePhase.DidMount or
-		internalData.lifecyclePhase == LifecyclePhase.DidUpdate or
-		internalData.lifecyclePhase == LifecyclePhase.ReconcileChildren
-	then
-		--[[
-			During certain phases of the component lifecycle, it's acceptable to
-			allow `setState` but defer the update until we're done with ones in flight
-		]]
-		local targetState
+	end
 
-		if internalData.pendingStateUpdate == nil then
-			targetState = self.state
-		else
-			targetState = internalData.pendingStateUpdate
-		end
+	local targetState = internalData.pendingStateUpdate or assign({}, self.state)
+	local stateUpdate = self:__resolveStateUpdate(targetState, mapState)
 
-		local stateUpdate = self:__resolveStateUpdate(targetState, mapState)
-
-		if stateUpdate ~= nil then
-			internalData.pendingStateUpdate = stateUpdate
-		end
-	else
-		--[[
-			State updates are safe to make. Resolve state by combining our
-			existing state, any pending updates, and the newly provided state
-		]]
-		local targetState = internalData.pendingStateUpdate or self.state
-
-		local newState = self:__resolveStateUpdate(targetState, mapState)
-
-		if newState ~= nil then
+	if stateUpdate ~= nil then
+		if lifecyclePhase == LifecyclePhase.Init then
 			-- If `setState` is called in `init`, we can skip triggering an update!
-			if lifecyclePhase == LifecyclePhase.Init then
-				self.state = newState
-			else
-				self:__update(nil, newState)
-			end
+			self.state = stateUpdate
+
+		elseif lifecyclePhase == LifecyclePhase.DidMount or
+			lifecyclePhase == LifecyclePhase.DidUpdate or
+			lifecyclePhase == LifecyclePhase.ReconcileChildren
+		then
+			--[[
+				During certain phases of the component lifecycle, it's acceptable to
+				allow `setState` but defer the update until we're done with ones in flight.
+				We do this by collapsing it into any pending updates we have.
+			]]
+			internalData.pendingStateUpdate = stateUpdate
+
+		else
+			-- Since we're about to resolve any pending state we had, we clear it
+			internalData.pendingStateUpdate = nil
+
+			-- Outside of our lifecycle, the state update is safe to make
+			self:__update(nil, stateUpdate)
 		end
 	end
 end
@@ -211,16 +201,6 @@ function Component:__mount(reconciler, virtualNode)
 		componentClass = self,
 		lifecyclePhase = LifecyclePhase.Init,
 	}
-
-	--DEBUG BEGIN
-	setmetatable(internalData, {
-		__newindex = function(self, key, value)
-			if key == "lifecylePhase" then
-				print("Lifecycle change:", tostring(value))
-			end
-		end
-	})
-	--DEBUG END
 
 	local instance = {
 		[Type] = Type.StatefulComponentInstance,
@@ -340,10 +320,14 @@ function Component:__update(updatedElement, updatedState)
 	if internalData.pendingStateUpdate ~= nil then
 		local pendingState = internalData.pendingStateUpdate
 
-		local collapsedPendingUpdate = self:__resolveStateUpdate(pendingState, updatedState)
+		if updatedState ~= nil then
+			local collapsedPendingUpdate = self:__resolveStateUpdate(pendingState, updatedState)
 
-		if collapsedPendingUpdate ~= nil then
-			updatedState = collapsedPendingUpdate
+			if collapsedPendingUpdate ~= nil then
+				updatedState = collapsedPendingUpdate
+			end
+		else
+			updatedState = internalData.pendingStateUpdate
 		end
 
 		internalData.pendingStateUpdate = nil

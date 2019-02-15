@@ -1,6 +1,7 @@
 return function()
 	local createElement = require(script.Parent.Parent.createElement)
 	local createReconciler = require(script.Parent.Parent.createReconciler)
+	local createSpy = require(script.Parent.Parent.createSpy)
 	local None = require(script.Parent.Parent.None)
 	local NoopRenderer = require(script.Parent.Parent.NoopRenderer)
 
@@ -239,9 +240,9 @@ return function()
 	end)
 
 	describe("setState suspension", function()
-		it("should defer setState triggered in callbacks", function()
+		it("should defer setState triggered while reconciling", function()
 			local Child = Component:extend("Child")
-			local captureParentState = nil
+			local getParentStateCallback
 
 			function Child:render()
 				return nil
@@ -253,20 +254,20 @@ return function()
 
 			local Parent = Component:extend("Parent")
 
+			function Parent:init()
+				getParentStateCallback = function()
+					return self.state
+				end
+			end
+
 			function Parent:render()
 				return createElement(Child, {
 					callback = function()
-						if self.state.foo == nil then
-							self:setState({
-								foo = "bar"
-							})
-						end
+						self:setState({
+							foo = "bar"
+						})
 					end,
 				})
-			end
-
-			function Parent:didUpdate()
-				captureParentState = self.state
 			end
 
 			local element = createElement(Parent)
@@ -276,7 +277,57 @@ return function()
 			local result = noopReconciler.mountVirtualNode(element, hostParent, key)
 
 			expect(result).to.be.ok()
-			expect(captureParentState.foo).to.equal("bar")
+			expect(getParentStateCallback().foo).to.equal("bar")
+		end)
+
+		it("should defer setState triggered while reconciling during an update", function()
+			local Child = Component:extend("Child")
+			local getParentStateCallback
+
+			function Child:render()
+				return nil
+			end
+
+			function Child:didUpdate()
+				self.props.callback()
+			end
+
+			local Parent = Component:extend("Parent")
+
+			function Parent:init()
+				getParentStateCallback = function()
+					return self.state
+				end
+			end
+
+			function Parent:render()
+				return createElement(Child, {
+					callback = function()
+						-- This guards against a stack overflow that would be OUR fault
+						if not self.state.foo then
+							self:setState({
+								foo = "bar"
+							})
+						end
+					end,
+				})
+			end
+
+			local element = createElement(Parent)
+			local hostParent = nil
+			local key = "Test"
+
+			local result = noopReconciler.mountVirtualNode(element, hostParent, key)
+
+			expect(result).to.be.ok()
+			expect(getParentStateCallback().foo).to.equal(nil)
+
+			result = noopReconciler.updateVirtualNode(result, createElement(Parent))
+
+			expect(result).to.be.ok()
+			expect(getParentStateCallback().foo).to.equal("bar")
+
+			noopReconciler.unmountVirtualNode(result)
 		end)
 	end)
 end

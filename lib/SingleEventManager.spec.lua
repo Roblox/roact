@@ -20,7 +20,6 @@ return function()
 			local eventSpy = createSpy()
 
 			manager:connectEvent("Event", eventSpy.value)
-			manager:resume()
 
 			instance:Fire("foo")
 			expect(eventSpy.callCount).to.equal(1)
@@ -36,7 +35,7 @@ return function()
 			expect(eventSpy.callCount).to.equal(2)
 		end)
 
-		it("should drop events until resumed initially", function()
+		itSKIP("should drop events until resumed initially", function()
 			local instance = Instance.new("BindableEvent")
 			local manager = SingleEventManager.new(instance)
 			local eventSpy = createSpy()
@@ -53,7 +52,7 @@ return function()
 			eventSpy:assertCalledWith(instance, "bar")
 		end)
 
-		it("should invoke suspended events when resumed", function()
+		itSKIP("should invoke suspended events when resumed", function()
 			local instance = Instance.new("BindableEvent")
 			local manager = SingleEventManager.new(instance)
 			local eventSpy = createSpy()
@@ -75,7 +74,7 @@ return function()
 			eventSpy:assertCalledWith(instance, "bar")
 		end)
 
-		it("should invoke events triggered during resumption in the correct order", function()
+		itSKIP("should invoke events triggered during resumption in the correct order", function()
 			local instance = Instance.new("BindableEvent")
 			local manager = SingleEventManager.new(instance)
 
@@ -101,7 +100,7 @@ return function()
 			assertDeepEqual(recordedValues, {1, 2, 3, 4})
 		end)
 
-		it("should not invoke events fired during suspension but disconnected before resumption", function()
+		itSKIP("should not invoke events fired during suspension but disconnected before resumption", function()
 			local instance = Instance.new("BindableEvent")
 			local manager = SingleEventManager.new(instance)
 			local eventSpy = createSpy()
@@ -117,7 +116,7 @@ return function()
 			expect(eventSpy.callCount).to.equal(0)
 		end)
 
-		it("should not yield events through the SingleEventManager when resuming", function()
+		itSKIP("should not yield events through the SingleEventManager when resuming", function()
 			local instance = Instance.new("BindableEvent")
 			local manager = SingleEventManager.new(instance)
 
@@ -145,7 +144,7 @@ return function()
 			expect(coroutine.status(co)).to.equal("dead")
 		end)
 
-		it("should not throw errors through SingleEventManager when resuming", function()
+		itSKIP("should not throw errors through SingleEventManager when resuming", function()
 			local errorText = "Error from SingleEventManager test"
 
 			local instance = Instance.new("BindableEvent")
@@ -175,7 +174,7 @@ return function()
 			expect(logInfo.warnings[1]:find(errorText)).to.be.ok()
 		end)
 
-		it("should not overflow with events if manager:resume() is invoked when resuming a suspended event", function()
+		itSKIP("should not overflow with events if manager:resume() is invoked when resuming a suspended event", function()
 			local instance = Instance.new("BindableEvent")
 			local manager = SingleEventManager.new(instance)
 
@@ -211,7 +210,6 @@ return function()
 			local eventSpy = createSpy()
 
 			manager:connectPropertyChange("Name", eventSpy.value)
-			manager:resume()
 
 			instance.Name = "foo"
 			expect(eventSpy.callCount).to.equal(1)

@@ -5,6 +5,21 @@ local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
 
 local InternalData = Symbol.named("InternalData")
 
+local SetStateStatus = {
+	-- setState calls will accumulate a queue of pending state updates that will
+	-- be resolved together
+	Suspended = "Suspended",
+
+	-- setState will resolve as soon as it's invoked
+	Enabled = "Enabled",
+
+	-- setState is not allowed, and will throw an error
+	DisallowedRendering = "DisallowedRendering",
+
+	-- setState is not allowed, and will throw an error
+	DisallowedUnmounting = "DisallowedUnmounting",
+}
+
 local componentMissingRenderMessage = [[
 The component %q is missing the `render` method.
 `render` must be defined when creating a Roact component!]]
@@ -51,24 +66,8 @@ function Component:extend(name)
 	return class
 end
 
-function Component:setState(mapState)
+function Component:__resolveStateUpdate(targetState, mapState)
 	assert(Type.of(self) == Type.StatefulComponentInstance)
-
-	local internalData = self[InternalData]
-
-	-- This value will be set when we're in a place that `setState` should not
-	-- be used. It will be set to the name of a message to display to the user.
-	if internalData.setStateBlockedReason ~= nil then
-		local messageTemplate = invalidSetStateMessages[internalData.setStateBlockedReason]
-
-		if messageTemplate == nil then
-			messageTemplate = invalidSetStateMessages.default
-		end
-
-		local message = messageTemplate:format(tostring(internalData.componentClass))
-
-		error(message, 2)
-	end
 
 	local partialState
 
@@ -76,7 +75,7 @@ function Component:setState(mapState)
 		partialState = mapState(self.state, self.props)
 
 		if partialState == nil then
-			return
+			return nil
 		end
 	elseif typeof(mapState) == "table" then
 		partialState = mapState
@@ -84,13 +83,53 @@ function Component:setState(mapState)
 		error("Invalid argument to setState, expected function or table", 2)
 	end
 
-	local newState = assign({}, self.state, partialState)
+	return assign({}, targetState, partialState)
+end
+
+function Component:setState(mapState)
+	assert(Type.of(self) == Type.StatefulComponentInstance)
+
+	local internalData = self[InternalData]
+
+	-- This value will be set when we're in a place that `setState` should not
+	-- be used. It will be set to the name of a message to display to the user.
+	if internalData.setStateStatus == SetStateStatus.DisallowedRendering
+		or internalData.setStateStatus == SetStateStatus.DisallowedUnmounting then
+		-- TODO: real error message here
+		local messageTemplate = internalData.setStateStatus
+
+		local message = messageTemplate:format(tostring(internalData.componentClass))
+
+		error(message, 2)
+	elseif internalData.setStateStatus == SetStateStatus.Suspended then
+		local targetState
+
+		if internalData.pendingStateUpdate == nil then
+			targetState = self.state
+		else
+			targetState = internalData.pendingStateUpdate
+		end
+
+		local stateUpdate = self:__resolveStateUpdate(targetState, mapState)
+
+		if stateUpdate ~= nil then
+			internalData.pendingStateUpdate = stateUpdate
+		end
+
+		return
+	end
+
+	local targetState = internalData.pendingStateUpdate or self.state
+
+	local newState = self:__resolveStateUpdate(targetState, mapState)
 
 	-- If `setState` is called in `init`, we can skip triggering an update!
 	if internalData.setStateShouldSkipUpdate then
 		self.state = newState
 	else
-		self:__update(nil, newState)
+		if newState ~= nil then
+			self:__update(nil, newState)
+		end
 	end
 end
 
@@ -106,7 +145,7 @@ end
 
 --[[
 	Returns a snapshot of this component given the current props and state. Must
-	be overriden by consumers of Roact and should be a pure function with
+	be overridden by consumers of Roact and should be a pure function with
 	regards to props and state.
 
 	TODO: Accept props and state as arguments.
@@ -140,7 +179,6 @@ function Component:__mount(reconciler, virtualNode)
 		virtualNode = virtualNode,
 		componentClass = self,
 
-		setStateBlockedReason = nil,
 		setStateShouldSkipUpdate = false,
 	}
 
@@ -184,15 +222,22 @@ function Component:__mount(reconciler, virtualNode)
 	-- It's possible for init() to redefine _context!
 	virtualNode.context = instance._context
 
-	internalData.setStateBlockedReason = "render"
+	internalData.setStateStatus = SetStateStatus.DisallowedRendering
 	local renderResult = instance:render()
-	internalData.setStateBlockedReason = nil
+	internalData.setStateStatus = SetStateStatus.Suspended
 
 	reconciler.updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
 
 	if instance.didMount ~= nil then
 		instance:didMount()
 	end
+
+	internalData.setStateStatus = SetStateStatus.Enabled
+
+	if internalData.pendingStateUpdate ~= nil then
+		instance:__update(renderResult, internalData.pendingStateUpdate)
+	end
+
 end
 
 --[[
@@ -209,9 +254,9 @@ function Component:__unmount()
 	-- TODO: Set unmounted flag to disallow setState after this point
 
 	if self.willUnmount ~= nil then
-		internalData.setStateBlockedReason = "willUnmount"
+		internalData.setStateStatus = SetStateStatus.DisallowedUnmounting
 		self:willUnmount()
-		internalData.setStateBlockedReason = nil
+		internalData.setStateStatus = SetStateStatus.Enabled
 	end
 
 	for _, childNode in pairs(virtualNode.children) do
@@ -236,6 +281,18 @@ function Component:__update(updatedElement, updatedState)
 	local virtualNode = internalData.virtualNode
 	local reconciler = internalData.reconciler
 	local componentClass = internalData.componentClass
+
+	if internalData.pendingStateUpdate ~= nil then
+		local pendingState = internalData.pendingStateUpdate
+
+		local collapsedPendingUpdate = self:__resolveStateUpdate(updatedState, pendingState)
+
+		if collapsedPendingUpdate ~= nil then
+			updatedState = collapsedPendingUpdate
+		end
+
+		internalData.pendingStateUpdate = nil
+	end
 
 	local oldProps = self.props
 	local oldState = self.state
@@ -266,33 +323,38 @@ function Component:__update(updatedElement, updatedState)
 		end
 	end
 
+	-- During shouldUpdate, willUpdate, and render, setState calls are suspended
+	internalData.setStateStatus = SetStateStatus.DisallowedRendering
 	if self.shouldUpdate ~= nil then
-		internalData.setStateBlockedReason = "shouldUpdate"
 		local continueWithUpdate = self:shouldUpdate(newProps, newState)
-		internalData.setStateBlockedReason = nil
 
 		if not continueWithUpdate then
+			print("State update aborted")
 			return false
 		end
 	end
 
 	if self.willUpdate ~= nil then
-		internalData.setStateBlockedReason = "willUpdate"
 		self:willUpdate(newProps, newState)
-		internalData.setStateBlockedReason = nil
 	end
 
 	self.props = newProps
 	self.state = newState
 
-	internalData.setStateBlockedReason = "render"
 	local renderResult = virtualNode.instance:render()
-	internalData.setStateBlockedReason = nil
+
+	internalData.setStateStatus = SetStateStatus.Suspended
 
 	reconciler.updateVirtualNodeWithRenderResult(virtualNode, virtualNode.hostParent, renderResult)
 
 	if self.didUpdate ~= nil then
 		self:didUpdate(oldProps, oldState)
+	end
+
+	internalData.setStateStatus = SetStateStatus.Enabled
+
+	if internalData.pendingStateUpdate ~= nil then
+		self:__update(nil, nil)
 	end
 
 	return true

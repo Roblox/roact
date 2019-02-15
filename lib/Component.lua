@@ -81,10 +81,13 @@ end
 function Component:__resolveStateUpdate(targetState, mapState)
 	assert(Type.of(self) == Type.StatefulComponentInstance)
 
+	local internalData = self[InternalData]
+
 	local partialState
 
 	if typeof(mapState) == "function" then
-		partialState = mapState(self.state, self.props)
+		local currentState = internalData.pendingStateUpdate or self.state
+		partialState = mapState(currentState, self.props)
 
 		if partialState == nil then
 			return nil
@@ -252,7 +255,7 @@ function Component:__mount(reconciler, virtualNode)
 	end
 
 	if internalData.pendingStateUpdate ~= nil then
-		instance:__update(renderResult, internalData.pendingStateUpdate)
+		instance:__update(nil, internalData.pendingStateUpdate)
 	end
 
 	internalData.lifecyclePhase = LifecyclePhase.Done

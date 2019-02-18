@@ -2,6 +2,7 @@ return function()
 	local assertDeepEqual = require(script.Parent.Parent.assertDeepEqual)
 	local createSpy = require(script.Parent.Parent.createSpy)
 	local createElement = require(script.Parent.Parent.createElement)
+	local createFragment = require(script.Parent.Parent.createFragment)
 	local createReconciler = require(script.Parent.Parent.createReconciler)
 	local NoopRenderer = require(script.Parent.Parent.NoopRenderer)
 
@@ -144,5 +145,51 @@ return function()
 			someDefaultProp = "foo",
 			someProp = 2,
 		})
+	end)
+
+	itFOCUS("should derive state for all setState updates", function()
+		local Child = Component:extend("Child")
+		local stateUpdaterSpy = createSpy(function()
+			return {}
+		end)
+		local stateDerivedSpy = createSpy()
+
+		function Child:render()
+			return nil
+		end
+
+		function Child:didMount()
+			self.props.callback()
+		end
+
+		local Parent = Component:extend("Parent")
+
+		Parent.getDerivedStateFromProps = stateDerivedSpy.value
+
+		function Parent:render()
+			local callback = function()
+				self:setState(stateUpdaterSpy.value)
+			end
+
+			return createFragment({
+				ChildA = createElement(Child, {
+					callback = callback,
+				}),
+				ChildB = createElement(Child, {
+					callback = callback,
+				}),
+			})
+		end
+
+		local element = createElement(Parent)
+		local hostParent = nil
+		local key = "Test"
+
+		local result = noopReconciler.mountVirtualNode(element, hostParent, key)
+
+		expect(result).to.be.ok()
+		expect(stateUpdaterSpy.callCount).to.equal(2)
+		-- getDerivedStateFromProps is always called on initial state
+		expect(stateDerivedSpy.callCount).to.equal(3)
 	end)
 end

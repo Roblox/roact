@@ -5,21 +5,6 @@ local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
 
 local InternalData = Symbol.named("InternalData")
 
--- local SetStateStatus = {
--- 	-- setState calls will accumulate a queue of pending state updates that will
--- 	-- be resolved together
--- 	Suspended = "Suspended",
-
--- 	-- setState will resolve as soon as it's invoked
--- 	Enabled = "Enabled",
-
--- 	-- setState is not allowed, and will throw an error
--- 	DisallowedRendering = "DisallowedRendering",
-
--- 	-- setState is not allowed, and will throw an error
--- 	DisallowedUnmounting = "DisallowedUnmounting",
--- }
-
 local LifecyclePhase = {
 	Init = "init",
 	Render = "render",
@@ -78,27 +63,26 @@ function Component:extend(name)
 	return class
 end
 
-function Component:__resolveStateUpdate(targetState, mapState)
+function Component:__getDerivedState(incomingProps, incomingState)
 	assert(Type.of(self) == Type.StatefulComponentInstance)
 
 	local internalData = self[InternalData]
-
-	local partialState
-
-	if typeof(mapState) == "function" then
-		local currentState = internalData.pendingStateUpdate or self.state
-		partialState = mapState(currentState, self.props)
-
-		if partialState == nil then
-			return nil
-		end
-	elseif typeof(mapState) == "table" then
-		partialState = mapState
-	else
-		error("Invalid argument to setState, expected function or table", 3)
+	local componentClass = internalData.componentClass
+	if tostring(componentClass) == "Parent" then
+		print(debug.traceback())
 	end
 
-	return assign(targetState, partialState)
+	if componentClass.getDerivedStateFromProps ~= nil then
+		local derivedState = componentClass.getDerivedStateFromProps(incomingProps, incomingState)
+
+		if derivedState ~= nil then
+			assert(typeof(derivedState) == "table", "getDerivedStateFromProps must return a table!")
+
+			return derivedState
+		end
+	end
+
+	return nil
 end
 
 function Component:setState(mapState)
@@ -129,12 +113,28 @@ function Component:setState(mapState)
 	end
 
 	local targetState = internalData.pendingStateUpdate or assign({}, self.state)
-	local stateUpdate = self:__resolveStateUpdate(targetState, mapState)
+	local stateUpdate
+
+	if typeof(mapState) == "function" then
+		local currentState = internalData.pendingStateUpdate or assign({}, self.state)
+		stateUpdate = mapState(currentState, self.props)
+
+		-- Abort the stateUpdate if the given state updater function returns nil
+		if stateUpdate == nil then
+			return nil
+		end
+	elseif typeof(mapState) == "table" then
+		stateUpdate = mapState
+	else
+		error("Invalid argument to setState, expected function or table", 3)
+	end
+
+	stateUpdate = assign(targetState, stateUpdate)
 
 	if stateUpdate ~= nil then
 		if lifecyclePhase == LifecyclePhase.Init then
 			-- If `setState` is called in `init`, we can skip triggering an update!
-			self.state = stateUpdate
+			self.state = assign(stateUpdate, self:__getDerivedState(self.props, stateUpdate))
 
 		elseif lifecyclePhase == LifecyclePhase.DidMount or
 			lifecyclePhase == LifecyclePhase.DidUpdate or
@@ -145,7 +145,7 @@ function Component:setState(mapState)
 				allow `setState` but defer the update until we're done with ones in flight.
 				We do this by collapsing it into any pending updates we have.
 			]]
-			internalData.pendingStateUpdate = stateUpdate
+			internalData.pendingStateUpdate = assign(stateUpdate, self:__getDerivedState(self.props, stateUpdate))
 
 		else
 			-- Since we're about to resolve any pending state we had, we clear it
@@ -221,23 +221,17 @@ function Component:__mount(reconciler, virtualNode)
 	end
 
 	instance.props = props
-	instance.state = {}
-
-	if self.getDerivedStateFromProps ~= nil then
-		local derivedState = self.getDerivedStateFromProps(instance.props, instance.state)
-
-		if derivedState ~= nil then
-			assert(typeof(derivedState) == "table", "getDerivedStateFromProps must return a table!")
-
-			assign(instance.state, derivedState)
-		end
-	end
 
 	local newContext = assign({}, virtualNode.context)
 	instance._context = newContext
 
 	if instance.init ~= nil then
 		instance:init(instance.props)
+	end
+
+	-- We allow users to define the initial state. If they don't, we'll do it.
+	if instance.state == nil then
+		instance.state = assign({}, instance:__getDerivedState(instance.props, {}))
 	end
 
 	-- It's possible for init() to redefine _context!
@@ -320,34 +314,12 @@ function Component:__update(updatedElement, updatedState)
 		end
 	end
 
-	if internalData.pendingStateUpdate ~= nil then
-		local pendingState = internalData.pendingStateUpdate
-
-		if updatedState ~= nil then
-			local collapsedPendingUpdate = self:__resolveStateUpdate(pendingState, updatedState)
-
-			if collapsedPendingUpdate ~= nil then
-				updatedState = collapsedPendingUpdate
-			end
-		else
-			updatedState = internalData.pendingStateUpdate
-		end
-
-		internalData.pendingStateUpdate = nil
+	if updatedState ~= nil or oldProps ~= newProps then
+		updatedState = assign(updatedState, self:__getDerivedState(newProps, updatedState or oldState))
 	end
 
 	if updatedState ~= nil then
 		newState = updatedState
-	end
-
-	if componentClass.getDerivedStateFromProps ~= nil then
-		local derivedState = componentClass.getDerivedStateFromProps(newProps, newState)
-
-		if derivedState ~= nil then
-			assert(typeof(derivedState) == "table", "getDerivedStateFromProps must return a table!")
-
-			newState = assign({}, newState, derivedState)
-		end
 	end
 
 	-- During shouldUpdate, willUpdate, and render, setState calls are suspended
@@ -380,7 +352,11 @@ function Component:__update(updatedElement, updatedState)
 	end
 
 	if internalData.pendingStateUpdate ~= nil then
-		self:__update(nil, nil)
+		local pendingState = internalData.pendingStateUpdate
+
+		internalData.pendingStateUpdate = nil
+
+		self:__update(nil, pendingState)
 	end
 
 	internalData.lifecyclePhase = LifecyclePhase.Done

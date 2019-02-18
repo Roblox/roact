@@ -112,11 +112,22 @@ function Component:setState(mapState)
 		error(message, 2)
 	end
 
-	local targetState = internalData.pendingStateUpdate or assign({}, self.state)
-	local stateUpdate
+	local pendingUpdate = internalData.pendingStateUpdate
 
+	local currentState
+	if pendingUpdate ~= nil then
+		-- FIXME: This approach is weird, but to resolve organization/sequence issues, this is actually
+		-- deriving the OLD pending state only when new state is collapsed in. It's not impossible that
+		-- the gap in time could make it so that the props passed in here are not the correct props
+		-- that would have been passed in if the pending state was derived atomically at the moment
+		-- it was provided.
+		currentState = assign(pendingUpdate, self:__getDerivedState(self.props, pendingUpdate))
+	else
+		currentState = self.state
+	end
+
+	local stateUpdate
 	if typeof(mapState) == "function" then
-		local currentState = internalData.pendingStateUpdate or assign({}, self.state)
 		stateUpdate = mapState(currentState, self.props)
 
 		-- Abort the stateUpdate if the given state updater function returns nil
@@ -129,7 +140,9 @@ function Component:setState(mapState)
 		error("Invalid argument to setState, expected function or table", 3)
 	end
 
-	stateUpdate = assign(targetState, stateUpdate)
+	-- FIXME: Compromising extra table creation here to avoid complexity, for now. Technically,
+	-- currentState ~= self.state, we could assign directly onto it
+	stateUpdate = assign({}, currentState, stateUpdate)
 
 	if stateUpdate ~= nil then
 		if lifecyclePhase == LifecyclePhase.Init then
@@ -145,7 +158,7 @@ function Component:setState(mapState)
 				allow `setState` but defer the update until we're done with ones in flight.
 				We do this by collapsing it into any pending updates we have.
 			]]
-			internalData.pendingStateUpdate = assign(stateUpdate, self:__getDerivedState(self.props, stateUpdate))
+			internalData.pendingStateUpdate = stateUpdate
 
 		else
 			-- Since we're about to resolve any pending state we had, we clear it
@@ -249,7 +262,11 @@ function Component:__mount(reconciler, virtualNode)
 	end
 
 	if internalData.pendingStateUpdate ~= nil then
-		instance:__update(nil, internalData.pendingStateUpdate)
+		local pendingState = internalData.pendingStateUpdate
+
+		internalData.pendingStateUpdate = nil
+
+		instance:__update(nil, pendingState)
 	end
 
 	internalData.lifecyclePhase = LifecyclePhase.Done

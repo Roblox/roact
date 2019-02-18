@@ -147,7 +147,7 @@ return function()
 		})
 	end)
 
-	itFOCUS("should derive state for all setState updates", function()
+	it("should derive state for all setState updates", function()
 		local Child = Component:extend("Child")
 		local stateUpdaterSpy = createSpy(function()
 			return {}
@@ -185,10 +185,10 @@ return function()
 		local hostParent = nil
 		local key = "Test"
 
-		local result = noopReconciler.mountVirtualNode(element, hostParent, key)
+		noopReconciler.mountVirtualNode(element, hostParent, key)
 
-		expect(result).to.be.ok()
 		expect(stateUpdaterSpy.callCount).to.equal(2)
+
 		-- getDerivedStateFromProps is always called on initial state
 		expect(stateDerivedSpy.callCount).to.equal(3)
 	end)

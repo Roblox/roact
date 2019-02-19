@@ -68,9 +68,6 @@ function Component:__getDerivedState(incomingProps, incomingState)
 
 	local internalData = self[InternalData]
 	local componentClass = internalData.componentClass
-	if tostring(componentClass) == "Parent" then
-		print(debug.traceback())
-	end
 
 	if componentClass.getDerivedStateFromProps ~= nil then
 		local derivedState = componentClass.getDerivedStateFromProps(incomingProps, incomingState)
@@ -112,37 +109,27 @@ function Component:setState(mapState)
 		error(message, 2)
 	end
 
-	local pendingUpdate = internalData.pendingStateUpdate
-
-	local currentState
-	if pendingUpdate ~= nil then
-		-- FIXME: This approach is weird, but to resolve organization/sequence issues, this is actually
-		-- deriving the OLD pending state only when new state is collapsed in. It's not impossible that
-		-- the gap in time could make it so that the props passed in here are not the correct props
-		-- that would have been passed in if the pending state was derived atomically at the moment
-		-- it was provided.
-		currentState = assign(pendingUpdate, self:__getDerivedState(self.props, pendingUpdate))
-	else
-		currentState = self.state
-	end
+	local pendingState = internalData.pendingStateUpdate
 
 	local stateUpdate
 	if typeof(mapState) == "function" then
-		stateUpdate = mapState(currentState, self.props)
+		print("state update with function")
+		stateUpdate = mapState(pendingState or self.state, self.props)
 
 		-- Abort the stateUpdate if the given state updater function returns nil
 		if stateUpdate == nil then
 			return nil
 		end
 	elseif typeof(mapState) == "table" then
+		print("state update with table")
 		stateUpdate = mapState
 	else
-		error("Invalid argument to setState, expected function or table", 3)
+		error("Invalid argument to setState, expected function or table", 2)
 	end
 
-	-- FIXME: Compromising extra table creation here to avoid complexity, for now. Technically,
-	-- currentState ~= self.state, we could assign directly onto it
-	stateUpdate = assign({}, currentState, stateUpdate)
+	if lifecyclePhase ~= LifecyclePhase.Init then
+		print(self.state.value, stateUpdate.value)
+	end
 
 	if stateUpdate ~= nil then
 		if lifecyclePhase == LifecyclePhase.Init then
@@ -158,12 +145,9 @@ function Component:setState(mapState)
 				allow `setState` but defer the update until we're done with ones in flight.
 				We do this by collapsing it into any pending updates we have.
 			]]
-			internalData.pendingStateUpdate = stateUpdate
+			internalData.pendingStateUpdate = assign(stateUpdate, self:__getDerivedState(self.props, stateUpdate))
 
 		else
-			-- Since we're about to resolve any pending state we had, we clear it
-			internalData.pendingStateUpdate = nil
-
 			-- Outside of our lifecycle, the state update is safe to make
 			self:__update(nil, stateUpdate)
 		end
@@ -262,11 +246,7 @@ function Component:__mount(reconciler, virtualNode)
 	end
 
 	if internalData.pendingStateUpdate ~= nil then
-		local pendingState = internalData.pendingStateUpdate
-
-		internalData.pendingStateUpdate = nil
-
-		instance:__update(nil, pendingState)
+		instance:__update(nil, nil)
 	end
 
 	internalData.lifecyclePhase = LifecyclePhase.Done
@@ -298,31 +278,15 @@ function Component:__unmount()
 	internalData.lifecyclePhase = LifecyclePhase.Done
 end
 
---[[
-	Internal method used by `setState` and the reconciler to update the
-	component instance.
-
-	Both `updatedElement` and `updatedState` are optional and indicate different
-	kinds of updates. Both may be supplied to update props and state in a single
-	pass, as in the case of a batched update.
-]]
 function Component:__update(updatedElement, updatedState)
 	assert(Type.of(self) == Type.StatefulComponentInstance)
 	assert(Type.of(updatedElement) == Type.Element or updatedElement == nil)
 	assert(typeof(updatedState) == "table" or updatedState == nil)
 
 	local internalData = self[InternalData]
-	local virtualNode = internalData.virtualNode
-	local reconciler = internalData.reconciler
 	local componentClass = internalData.componentClass
 
-	local oldProps = self.props
-	local oldState = self.state
-
-	-- These will be updated based on `updatedElement` and `updatedState`
-	local newProps = oldProps
-	local newState = oldState
-
+	local newProps = self.props
 	if updatedElement ~= nil then
 		newProps = updatedElement.props
 
@@ -331,12 +295,62 @@ function Component:__update(updatedElement, updatedState)
 		end
 	end
 
-	if updatedState ~= nil or oldProps ~= newProps then
-		updatedState = assign(updatedState, self:__getDerivedState(newProps, updatedState or oldState))
+	local stateToMerge = updatedState
+	local workingState = internalData.pendingStateUpdate
+	internalData.pendingStateUpdate = nil
+
+	local count = 0
+	while true do
+		local derivedState = nil
+		if stateToMerge ~= nil or newProps ~= self.props then
+			derivedState = self:__getDerivedState(newProps, workingState or self.state)
+		end
+
+		if derivedState ~= nil or stateToMerge ~= nil then
+			if workingState == nil then
+				workingState = assign({}, self.state)
+			end
+
+			workingState = assign(workingState, stateToMerge, derivedState)
+		end
+
+		local shouldContinue = self:__resolveUpdate(newProps, workingState)
+		if shouldContinue == false then
+			return false
+		end
+
+		if internalData.pendingStateUpdate ~= nil then
+			stateToMerge = internalData.pendingStateUpdate
+			workingState = nil
+			internalData.pendingStateUpdate = nil
+		else
+			return true
+		end
+
+		count = count + 1
+		if count > 50 then
+			break
+		end
 	end
 
-	if updatedState ~= nil then
-		newState = updatedState
+	error(("Component %s updated itself too many times"):format(tostring(componentClass)), 0)
+end
+
+function Component:__resolveUpdate(newProps, newState)
+	assert(Type.of(self) == Type.StatefulComponentInstance)
+
+	local internalData = self[InternalData]
+	local virtualNode = internalData.virtualNode
+	local reconciler = internalData.reconciler
+
+	local oldProps = self.props
+	local oldState = self.state
+
+	if newProps == nil then
+		newProps = oldProps
+	end
+	if newState == nil then
+		newState = oldState
 	end
 
 	-- During shouldUpdate, willUpdate, and render, setState calls are suspended
@@ -368,17 +382,90 @@ function Component:__update(updatedElement, updatedState)
 		self:didUpdate(oldProps, oldState)
 	end
 
-	if internalData.pendingStateUpdate ~= nil then
-		local pendingState = internalData.pendingStateUpdate
-
-		internalData.pendingStateUpdate = nil
-
-		self:__update(nil, pendingState)
-	end
-
 	internalData.lifecyclePhase = LifecyclePhase.Done
-
-	return true
 end
+
+--[[
+	Internal method used by `setState` and the reconciler to update the
+	component instance.
+
+	Both `updatedElement` and `updatedState` are optional and indicate different
+	kinds of updates. Both may be supplied to update props and state in a single
+	pass, as in the case of a batched update.
+]]
+-- function Component:__updateOLD(updatedElement, updatedState)
+-- 	assert(Type.of(self) == Type.StatefulComponentInstance)
+-- 	assert(Type.of(updatedElement) == Type.Element or updatedElement == nil)
+-- 	assert(typeof(updatedState) == "table" or updatedState == nil)
+
+-- 	local internalData = self[InternalData]
+-- 	local virtualNode = internalData.virtualNode
+-- 	local reconciler = internalData.reconciler
+-- 	local componentClass = internalData.componentClass
+
+-- 	local oldProps = self.props
+-- 	local oldState = self.state
+
+-- 	-- These will be updated based on `updatedElement` and `updatedState`
+-- 	local newProps = oldProps
+-- 	local newState = oldState
+
+-- 	if updatedElement ~= nil then
+-- 		newProps = updatedElement.props
+
+-- 		if componentClass.defaultProps ~= nil then
+-- 			newProps = assign({}, componentClass.defaultProps, newProps)
+-- 		end
+-- 	end
+
+-- 	if updatedState ~= nil or oldProps ~= newProps then
+-- 		updatedState = assign(updatedState, self:__getDerivedState(newProps, updatedState or oldState))
+-- 	end
+
+-- 	if updatedState ~= nil then
+-- 		newState = updatedState
+-- 	end
+
+-- 	-- During shouldUpdate, willUpdate, and render, setState calls are suspended
+-- 	if self.shouldUpdate ~= nil then
+-- 		internalData.lifecyclePhase = LifecyclePhase.ShouldUpdate
+-- 		local continueWithUpdate = self:shouldUpdate(newProps, newState)
+
+-- 		if not continueWithUpdate then
+-- 			return false
+-- 		end
+-- 	end
+
+-- 	if self.willUpdate ~= nil then
+-- 		internalData.lifecyclePhase = LifecyclePhase.WillUpdate
+-- 		self:willUpdate(newProps, newState)
+-- 	end
+
+-- 	self.props = newProps
+-- 	self.state = newState
+
+-- 	internalData.lifecyclePhase = LifecyclePhase.Render
+-- 	local renderResult = virtualNode.instance:render()
+
+-- 	internalData.lifecyclePhase = LifecyclePhase.ReconcileChildren
+-- 	reconciler.updateVirtualNodeWithRenderResult(virtualNode, virtualNode.hostParent, renderResult)
+
+-- 	if self.didUpdate ~= nil then
+-- 		internalData.lifecyclePhase = LifecyclePhase.DidUpdate
+-- 		self:didUpdate(oldProps, oldState)
+-- 	end
+
+-- 	if internalData.pendingStateUpdate ~= nil then
+-- 		local pendingState = internalData.pendingStateUpdate
+
+-- 		internalData.pendingStateUpdate = nil
+
+-- 		self:__update(nil, pendingState)
+-- 	end
+
+-- 	internalData.lifecyclePhase = LifecyclePhase.Done
+
+-- 	return true
+-- end
 
 return Component

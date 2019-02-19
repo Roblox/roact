@@ -128,11 +128,9 @@ function Component:setState(mapState)
 		error(message, 2)
 	end
 
-	local pendingState = internalData.pendingState
-
 	local partialState
 	if typeof(mapState) == "function" then
-		partialState = mapState(pendingState or self.state, self.props)
+		partialState = mapState(internalData.pendingState or self.state, self.props)
 
 		-- Abort the state update if the given state updater function returns nil
 		if partialState == nil then
@@ -144,11 +142,12 @@ function Component:setState(mapState)
 		error("Invalid argument to setState, expected function or table", 2)
 	end
 
-	if lifecyclePhase ~= LifecyclePhase.Init then
-		print(self.state.value, partialState.value)
+	local newState
+	if internalData.pendingState ~= nil then
+		newState = assign(internalData.pendingState, partialState)
+	else
+		newState = assign({}, self.state, partialState)
 	end
-
-	local newState = assign({}, partialState)
 
 	if lifecyclePhase == LifecyclePhase.Init then
 		-- If `setState` is called in `init`, we can skip triggering an update!
@@ -165,7 +164,7 @@ function Component:setState(mapState)
 			We do this by collapsing it into any pending updates we have.
 		]]
 		local derivedState = self:__getDerivedState(self.props, newState)
-		internalData.pendingState = assign(internalData.pendingState, derivedState)
+		internalData.pendingState = assign(newState, derivedState)
 
 	else
 		-- Outside of our lifecycle, the state update is safe to make
@@ -265,6 +264,7 @@ function Component:__mount(reconciler, virtualNode)
 	end
 
 	if internalData.pendingState ~= nil then
+		-- __update will handle pendingState on its own
 		instance:__update(nil, nil)
 	end
 
@@ -314,44 +314,42 @@ function Component:__update(updatedElement, updatedState)
 		end
 	end
 
-	local stateToMerge = updatedState
-	local workingState = internalData.pendingState
-	internalData.pendingState = nil
-
 	local count = 0
-	while true do
-		if stateToMerge ~= nil then
-			workingState = assign(workingState or assign({}, self.state), stateToMerge)
+	repeat
+		local newState = nil
+
+		-- resolve any pending state we might have
+		if internalData.pendingState ~= nil then
+			newState = internalData.pendingState
+			internalData.pendingState = nil
 		end
 
-		if stateToMerge ~= nil or newProps ~= self.props then
-			-- FIXME: Are you kidding me? Gross.
-			local derivedState = self:__getDerivedState(newProps, workingState or self.state)
+		-- resolve a standard update to state or props
+		if updatedState ~= nil or newProps ~= self.props then
+			if newState == nil then
+				newState = updatedState or self.state
+			else
+				newState = assign({}, newState, updatedState)
+			end
+
+			local derivedState = self:__getDerivedState(newProps, newState)
 
 			if derivedState ~= nil then
-				workingState = assign(workingState or assign({}, self.state), derivedState)
+				newState = assign({}, newState, derivedState)
 			end
 		end
 
-		if self:__resolveUpdate(newProps, workingState) == false then
+		if self:__resolveUpdate(newProps, newState) == false then
 			return false
-		end
-
-		if internalData.pendingState ~= nil then
-			stateToMerge = internalData.pendingState
-			workingState = nil
-			internalData.pendingState = nil
-		else
-			return true
 		end
 
 		count = count + 1
 		if count > 50 then
-			break
+			error(("Component %s updated itself too many times"):format(tostring(componentClass)), 0)
 		end
-	end
+	until internalData.pendingState == nil
 
-	error(("Component %s updated itself too many times"):format(tostring(componentClass)), 0)
+	return true
 end
 
 function Component:__resolveUpdate(newProps, newState)

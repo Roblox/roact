@@ -82,6 +82,25 @@ function Component:__getDerivedState(incomingProps, incomingState)
 	return nil
 end
 
+function Component:__deriveState(targetState, incomingProps, incomingState)
+	assert(Type.of(self) == Type.StatefulComponentInstance)
+
+	local internalData = self[InternalData]
+	local componentClass = internalData.componentClass
+
+	if componentClass.getDerivedStateFromProps ~= nil then
+		local derivedState = componentClass.getDerivedStateFromProps(incomingProps, incomingState)
+
+		if derivedState ~= nil then
+			assert(typeof(derivedState) == "table", "getDerivedStateFromProps must return a table!")
+
+			assign(targetState, incomingState, derivedState)
+		end
+	end
+
+	return targetState
+end
+
 function Component:setState(mapState)
 	assert(Type.of(self) == Type.StatefulComponentInstance)
 
@@ -109,48 +128,48 @@ function Component:setState(mapState)
 		error(message, 2)
 	end
 
-	local pendingState = internalData.pendingStateUpdate
+	local pendingState = internalData.pendingState
 
-	local stateUpdate
+	local partialState
 	if typeof(mapState) == "function" then
-		print("state update with function")
-		stateUpdate = mapState(pendingState or self.state, self.props)
+		partialState = mapState(pendingState or self.state, self.props)
 
-		-- Abort the stateUpdate if the given state updater function returns nil
-		if stateUpdate == nil then
+		-- Abort the state update if the given state updater function returns nil
+		if partialState == nil then
 			return nil
 		end
 	elseif typeof(mapState) == "table" then
-		print("state update with table")
-		stateUpdate = mapState
+		partialState = mapState
 	else
 		error("Invalid argument to setState, expected function or table", 2)
 	end
 
 	if lifecyclePhase ~= LifecyclePhase.Init then
-		print(self.state.value, stateUpdate.value)
+		print(self.state.value, partialState.value)
 	end
 
-	if stateUpdate ~= nil then
-		if lifecyclePhase == LifecyclePhase.Init then
-			-- If `setState` is called in `init`, we can skip triggering an update!
-			self.state = assign(stateUpdate, self:__getDerivedState(self.props, stateUpdate))
+	local newState = assign({}, partialState)
 
-		elseif lifecyclePhase == LifecyclePhase.DidMount or
-			lifecyclePhase == LifecyclePhase.DidUpdate or
-			lifecyclePhase == LifecyclePhase.ReconcileChildren
-		then
-			--[[
-				During certain phases of the component lifecycle, it's acceptable to
-				allow `setState` but defer the update until we're done with ones in flight.
-				We do this by collapsing it into any pending updates we have.
-			]]
-			internalData.pendingStateUpdate = assign(stateUpdate, self:__getDerivedState(self.props, stateUpdate))
+	if lifecyclePhase == LifecyclePhase.Init then
+		-- If `setState` is called in `init`, we can skip triggering an update!
+		local derivedState = self:__getDerivedState(self.props, newState)
+		self.state = assign(newState, derivedState)
 
-		else
-			-- Outside of our lifecycle, the state update is safe to make
-			self:__update(nil, stateUpdate)
-		end
+	elseif lifecyclePhase == LifecyclePhase.DidMount or
+		lifecyclePhase == LifecyclePhase.DidUpdate or
+		lifecyclePhase == LifecyclePhase.ReconcileChildren
+	then
+		--[[
+			During certain phases of the component lifecycle, it's acceptable to
+			allow `setState` but defer the update until we're done with ones in flight.
+			We do this by collapsing it into any pending updates we have.
+		]]
+		local derivedState = self:__getDerivedState(self.props, newState)
+		internalData.pendingState = assign(internalData.pendingState, derivedState)
+
+	else
+		-- Outside of our lifecycle, the state update is safe to make
+		self:__update(nil, newState)
 	end
 end
 
@@ -245,7 +264,7 @@ function Component:__mount(reconciler, virtualNode)
 		instance:didMount()
 	end
 
-	if internalData.pendingStateUpdate ~= nil then
+	if internalData.pendingState ~= nil then
 		instance:__update(nil, nil)
 	end
 
@@ -296,33 +315,32 @@ function Component:__update(updatedElement, updatedState)
 	end
 
 	local stateToMerge = updatedState
-	local workingState = internalData.pendingStateUpdate
-	internalData.pendingStateUpdate = nil
+	local workingState = internalData.pendingState
+	internalData.pendingState = nil
 
 	local count = 0
 	while true do
-		local derivedState = nil
+		if stateToMerge ~= nil then
+			workingState = assign(workingState or assign({}, self.state), stateToMerge)
+		end
+
 		if stateToMerge ~= nil or newProps ~= self.props then
-			derivedState = self:__getDerivedState(newProps, workingState or self.state)
-		end
+			-- FIXME: Are you kidding me? Gross.
+			local derivedState = self:__getDerivedState(newProps, workingState or self.state)
 
-		if derivedState ~= nil or stateToMerge ~= nil then
-			if workingState == nil then
-				workingState = assign({}, self.state)
+			if derivedState ~= nil then
+				workingState = assign(workingState or assign({}, self.state), derivedState)
 			end
-
-			workingState = assign(workingState, stateToMerge, derivedState)
 		end
 
-		local shouldContinue = self:__resolveUpdate(newProps, workingState)
-		if shouldContinue == false then
+		if self:__resolveUpdate(newProps, workingState) == false then
 			return false
 		end
 
-		if internalData.pendingStateUpdate ~= nil then
-			stateToMerge = internalData.pendingStateUpdate
+		if internalData.pendingState ~= nil then
+			stateToMerge = internalData.pendingState
 			workingState = nil
-			internalData.pendingStateUpdate = nil
+			internalData.pendingState = nil
 		else
 			return true
 		end
@@ -353,7 +371,6 @@ function Component:__resolveUpdate(newProps, newState)
 		newState = oldState
 	end
 
-	-- During shouldUpdate, willUpdate, and render, setState calls are suspended
 	if self.shouldUpdate ~= nil then
 		internalData.lifecyclePhase = LifecyclePhase.ShouldUpdate
 		local continueWithUpdate = self:shouldUpdate(newProps, newState)
@@ -455,10 +472,10 @@ end
 -- 		self:didUpdate(oldProps, oldState)
 -- 	end
 
--- 	if internalData.pendingStateUpdate ~= nil then
--- 		local pendingState = internalData.pendingStateUpdate
+-- 	if internalData.pendingState ~= nil then
+-- 		local pendingState = internalData.pendingState
 
--- 		internalData.pendingStateUpdate = nil
+-- 		internalData.pendingState = nil
 
 -- 		self:__update(nil, pendingState)
 -- 	end

@@ -357,6 +357,7 @@ function Component:__resolveUpdate(newProps, newState)
 		local continueWithUpdate = self:shouldUpdate(newProps, newState)
 
 		if not continueWithUpdate then
+			internalData.lifecyclePhase = LifecyclePhase.Done
 			return false
 		end
 	end
@@ -366,10 +367,11 @@ function Component:__resolveUpdate(newProps, newState)
 		self:willUpdate(newProps, newState)
 	end
 
+	internalData.lifecyclePhase = LifecyclePhase.Render
+
 	self.props = newProps
 	self.state = newState
 
-	internalData.lifecyclePhase = LifecyclePhase.Render
 	local renderResult = virtualNode.instance:render()
 
 	internalData.lifecyclePhase = LifecyclePhase.ReconcileChildren

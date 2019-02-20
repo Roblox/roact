@@ -101,7 +101,7 @@ function Component:setState(mapState)
 		local messageTemplate = invalidSetStateMessages[internalData.lifecyclePhase]
 
 		if messageTemplate == nil then
-			messageTemplate = invalidSetStateMessages["default"]
+			messageTemplate = invalidSetStateMessages.default
 		end
 
 		local message = messageTemplate:format(tostring(internalData.componentClass))
@@ -109,13 +109,15 @@ function Component:setState(mapState)
 		error(message, 2)
 	end
 
+	local pendingState = internalData.pendingState
+
 	local partialState
 	if typeof(mapState) == "function" then
-		partialState = mapState(internalData.pendingState or self.state, self.props)
+		partialState = mapState(pendingState or self.state, self.props)
 
 		-- Abort the state update if the given state updater function returns nil
 		if partialState == nil then
-			return nil
+			return
 		end
 	elseif typeof(mapState) == "table" then
 		partialState = mapState
@@ -124,15 +126,14 @@ function Component:setState(mapState)
 	end
 
 	local newState
-	if internalData.pendingState ~= nil then
-		newState = assign(internalData.pendingState, partialState)
+	if pendingState ~= nil then
+		newState = assign(pendingState, partialState)
 	else
 		newState = assign({}, self.state, partialState)
 	end
 
 	if lifecyclePhase == LifecyclePhase.Init then
-		-- If `setState` is called in `init`, we can skip triggering an update.
-		-- We need to make sure, though, that we get our derived state.
+		-- If `setState` is called in `init`, we can skip triggering an update!
 		local derivedState = self:__getDerivedState(self.props, newState)
 		self.state = assign(newState, derivedState)
 
@@ -246,7 +247,7 @@ function Component:__mount(reconciler, virtualNode)
 	end
 
 	if internalData.pendingState ~= nil then
-		-- __update will handle pendingState on its own
+		-- __update will handle pendingState, so we don't pass any new element or state
 		instance:__update(nil, nil)
 	end
 
@@ -274,6 +275,10 @@ function Component:__unmount()
 	end
 end
 
+--[[
+	Internal method used by setState to trigger updates based on state and by
+	the reconciler to trigger updates based on props
+]]
 function Component:__update(updatedElement, updatedState)
 	assert(Type.of(self) == Type.StatefulComponentInstance)
 	assert(Type.of(updatedElement) == Type.Element or updatedElement == nil)
@@ -294,13 +299,13 @@ function Component:__update(updatedElement, updatedState)
 	repeat
 		local newState = nil
 
-		-- resolve any pending state we might have
+		-- Resolve any pending state we might have
 		if internalData.pendingState ~= nil then
 			newState = internalData.pendingState
 			internalData.pendingState = nil
 		end
 
-		-- resolve a standard update to state or props
+		-- Resolve a standard update to state or props
 		if updatedState ~= nil or newProps ~= self.props then
 			if newState == nil then
 				newState = updatedState or self.state
@@ -316,15 +321,20 @@ function Component:__update(updatedElement, updatedState)
 		end
 
 		if not self:__resolveUpdate(newProps, newState) then
-			-- if the update was short-circuited, return false
-			-- to indicate this to the caller
+			-- If the update was short-circuited, bubble the result up to the caller
 			return false
 		end
+
+		-- TODO: Consider counting our loop iterations and bailing with an error
+		-- if it reaches an unlikely number
 	until internalData.pendingState == nil
 
 	return true
 end
 
+--[[
+	Internal method used by __update to apply new props and state
+]]
 function Component:__resolveUpdate(newProps, newState)
 	assert(Type.of(self) == Type.StatefulComponentInstance)
 

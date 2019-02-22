@@ -43,19 +43,21 @@ return function()
 		end)
 
 		it("should throw when called in render", function()
-			local RenderComponent = Component:extend("RenderComponent")
+			local TestComponent = Component:extend("TestComponent")
 
-			function RenderComponent:render()
+			function TestComponent:render()
 				self:setState({
 					a = 1
 				})
 			end
 
-			local renderElement = createElement(RenderComponent)
+			local renderElement = createElement(TestComponent)
 
-			expect(function()
-				noopReconciler.mountVirtualTree(renderElement)
-			end).to.throw()
+			local success, result = pcall(noopReconciler.mountVirtualTree, renderElement)
+
+			expect(success).to.equal(false)
+			expect(result:match("render")).to.be.ok()
+			expect(result:match("TestComponent")).to.be.ok()
 		end)
 
 		it("should throw when called in shouldUpdate", function()
@@ -76,9 +78,11 @@ return function()
 
 			local tree = noopReconciler.mountVirtualTree(initialElement)
 
-			expect(function()
-				noopReconciler.updateVirtualTree(tree, updatedElement)
-			end).to.throw()
+			local success, result = pcall(noopReconciler.updateVirtualTree, tree, updatedElement)
+
+			expect(success).to.equal(false)
+			expect(result:match("shouldUpdate")).to.be.ok()
+			expect(result:match("TestComponent")).to.be.ok()
 		end)
 
 		it("should throw when called in willUpdate", function()
@@ -98,9 +102,11 @@ return function()
 			local updatedElement = createElement(TestComponent)
 			local tree = noopReconciler.mountVirtualTree(initialElement)
 
-			expect(function()
-				noopReconciler.updateVirtualTree(tree, updatedElement)
-			end).to.throw()
+			local success, result = pcall(noopReconciler.updateVirtualTree, tree, updatedElement)
+
+			expect(success).to.equal(false)
+			expect(result:match("willUpdate")).to.be.ok()
+			expect(result:match("TestComponent")).to.be.ok()
 		end)
 
 		it("should throw when called in willUnmount", function()
@@ -119,9 +125,11 @@ return function()
 			local element = createElement(TestComponent)
 			local tree = noopReconciler.mountVirtualTree(element)
 
-			expect(function()
-				noopReconciler.unmountVirtualTree(tree)
-			end).to.throw()
+			local success, result = pcall(noopReconciler.unmountVirtualTree, tree)
+
+			expect(success).to.equal(false)
+			expect(result:match("willUnmount")).to.be.ok()
+			expect(result:match("TestComponent")).to.be.ok()
 		end)
 
 		it("should remove values from state when the value is None", function()

@@ -147,5 +147,4 @@ return function()
 	itSKIP("Test defaultProps on initial render", function() end)
 	itSKIP("Test defaultProps on prop update", function() end)
 	itSKIP("Test defaultProps on state update", function() end)
-	itSKIP("Test that setState throws", function() end)
 end

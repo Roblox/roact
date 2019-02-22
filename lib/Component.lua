@@ -1,21 +1,10 @@
 local assign = require(script.Parent.assign)
+local ComponentLifecyclePhase = require(script.Parent.ComponentLifecyclePhase)
 local Type = require(script.Parent.Type)
 local Symbol = require(script.Parent.Symbol)
 local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
 
 local InternalData = Symbol.named("InternalData")
-
-local LifecyclePhase = {
-	Init = "init",
-	Render = "render",
-	ShouldUpdate = "shouldUpdate",
-	WillUpdate = "willUpdate",
-	DidMount = "didMount",
-	DidUpdate = "didUpdate",
-	WillUnmount = "willUnmount",
-	ReconcileChildren = "reconcileChildren",
-	Done = "done",
-}
 
 local componentMissingRenderMessage = [[
 The component %q is missing the `render` method.
@@ -93,10 +82,10 @@ function Component:setState(mapState)
 		to call `setState` as it will interfere with in-flight updates. It's
 		also disallowed during unmounting
 	]]
-	if lifecyclePhase == LifecyclePhase.ShouldUpdate or
-		lifecyclePhase == LifecyclePhase.WillUpdate or
-		lifecyclePhase == LifecyclePhase.Render or
-		lifecyclePhase == LifecyclePhase.WillUnmount
+	if lifecyclePhase == ComponentLifecyclePhase.ShouldUpdate or
+		lifecyclePhase == ComponentLifecyclePhase.WillUpdate or
+		lifecyclePhase == ComponentLifecyclePhase.Render or
+		lifecyclePhase == ComponentLifecyclePhase.WillUnmount
 	then
 		local messageTemplate = invalidSetStateMessages[internalData.lifecyclePhase]
 
@@ -132,14 +121,14 @@ function Component:setState(mapState)
 		newState = assign({}, self.state, partialState)
 	end
 
-	if lifecyclePhase == LifecyclePhase.Init then
+	if lifecyclePhase == ComponentLifecyclePhase.Init then
 		-- If `setState` is called in `init`, we can skip triggering an update!
 		local derivedState = self:__getDerivedState(self.props, newState)
 		self.state = assign(newState, derivedState)
 
-	elseif lifecyclePhase == LifecyclePhase.DidMount or
-		lifecyclePhase == LifecyclePhase.DidUpdate or
-		lifecyclePhase == LifecyclePhase.ReconcileChildren
+	elseif lifecyclePhase == ComponentLifecyclePhase.DidMount or
+		lifecyclePhase == ComponentLifecyclePhase.DidUpdate or
+		lifecyclePhase == ComponentLifecyclePhase.ReconcileChildren
 	then
 		--[[
 			During certain phases of the component lifecycle, it's acceptable to
@@ -200,7 +189,7 @@ function Component:__mount(reconciler, virtualNode)
 		reconciler = reconciler,
 		virtualNode = virtualNode,
 		componentClass = self,
-		lifecyclePhase = LifecyclePhase.Init,
+		lifecyclePhase = ComponentLifecyclePhase.Init,
 	}
 
 	local instance = {
@@ -235,14 +224,14 @@ function Component:__mount(reconciler, virtualNode)
 	-- It's possible for init() to redefine _context!
 	virtualNode.context = instance._context
 
-	internalData.lifecyclePhase = LifecyclePhase.Render
+	internalData.lifecyclePhase = ComponentLifecyclePhase.Render
 	local renderResult = instance:render()
 
-	internalData.lifecyclePhase = LifecyclePhase.ReconcileChildren
+	internalData.lifecyclePhase = ComponentLifecyclePhase.ReconcileChildren
 	reconciler.updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
 
 	if instance.didMount ~= nil then
-		internalData.lifecyclePhase = LifecyclePhase.DidMount
+		internalData.lifecyclePhase = ComponentLifecyclePhase.DidMount
 		instance:didMount()
 	end
 
@@ -251,7 +240,7 @@ function Component:__mount(reconciler, virtualNode)
 		instance:__update(nil, nil)
 	end
 
-	internalData.lifecyclePhase = LifecyclePhase.Done
+	internalData.lifecyclePhase = ComponentLifecyclePhase.Done
 end
 
 --[[
@@ -266,7 +255,7 @@ function Component:__unmount()
 	local reconciler = internalData.reconciler
 
 	if self.willUnmount ~= nil then
-		internalData.lifecyclePhase = LifecyclePhase.WillUnmount
+		internalData.lifecyclePhase = ComponentLifecyclePhase.WillUnmount
 		self:willUnmount()
 	end
 
@@ -353,36 +342,36 @@ function Component:__resolveUpdate(newProps, newState)
 	end
 
 	if self.shouldUpdate ~= nil then
-		internalData.lifecyclePhase = LifecyclePhase.ShouldUpdate
+		internalData.lifecyclePhase = ComponentLifecyclePhase.ShouldUpdate
 		local continueWithUpdate = self:shouldUpdate(newProps, newState)
 
 		if not continueWithUpdate then
-			internalData.lifecyclePhase = LifecyclePhase.Done
+			internalData.lifecyclePhase = ComponentLifecyclePhase.Done
 			return false
 		end
 	end
 
 	if self.willUpdate ~= nil then
-		internalData.lifecyclePhase = LifecyclePhase.WillUpdate
+		internalData.lifecyclePhase = ComponentLifecyclePhase.WillUpdate
 		self:willUpdate(newProps, newState)
 	end
 
-	internalData.lifecyclePhase = LifecyclePhase.Render
+	internalData.lifecyclePhase = ComponentLifecyclePhase.Render
 
 	self.props = newProps
 	self.state = newState
 
 	local renderResult = virtualNode.instance:render()
 
-	internalData.lifecyclePhase = LifecyclePhase.ReconcileChildren
+	internalData.lifecyclePhase = ComponentLifecyclePhase.ReconcileChildren
 	reconciler.updateVirtualNodeWithRenderResult(virtualNode, virtualNode.hostParent, renderResult)
 
 	if self.didUpdate ~= nil then
-		internalData.lifecyclePhase = LifecyclePhase.DidUpdate
+		internalData.lifecyclePhase = ComponentLifecyclePhase.DidUpdate
 		self:didUpdate(oldProps, oldState)
 	end
 
-	internalData.lifecyclePhase = LifecyclePhase.Done
+	internalData.lifecyclePhase = ComponentLifecyclePhase.Done
 	return true
 end
 

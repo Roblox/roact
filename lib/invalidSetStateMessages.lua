@@ -5,28 +5,29 @@
 	The indentation may seem odd, but it's necessary to avoid introducing extra
 	whitespace into the error messages themselves.
 ]]
+local ComponentLifecyclePhase = require(script.Parent.ComponentLifecyclePhase)
 
 local invalidSetStateMessages = {}
 
-invalidSetStateMessages["willUpdate"] = [[
+invalidSetStateMessages[ComponentLifecyclePhase.WillUpdate] = [[
 setState cannot be used in the willUpdate lifecycle method.
 Consider using the didUpdate method instead, or using getDerivedStateFromProps.
 
 Check the definition of willUpdate in the component %q.]]
 
-invalidSetStateMessages["willUnmount"] = [[
+invalidSetStateMessages[ComponentLifecyclePhase.WillUnmount] = [[
 setState cannot be used in the willUnmount lifecycle method.
 A component that is being unmounted cannot be updated!
 
 Check the definition of willUnmount in the component %q.]]
 
-invalidSetStateMessages["shouldUpdate"] = [[
+invalidSetStateMessages[ComponentLifecyclePhase.ShouldUpdate] = [[
 setState cannot be used in the shouldUpdate lifecycle method.
 shouldUpdate must be a pure function that only depends on props and state.
 
 Check the definition of shouldUpdate in the component %q.]]
 
-invalidSetStateMessages["render"] = [[
+invalidSetStateMessages[ComponentLifecyclePhase.Render] = [[
 setState cannot be used in the render method.
 render must be a pure function that only depends on props and state.
 

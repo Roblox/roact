@@ -46,5 +46,48 @@ return function()
 		assertDeepEqual(values.newState, {})
 	end)
 
-	itSKIP("it should be invoked when updated via setState", function() end)
+	it("it should be invoked when updated via setState", function()
+		local MyComponent = Component:extend("MyComponent")
+		local setComponentState
+
+		local willUpdateSpy = createSpy()
+
+		MyComponent.willUpdate = willUpdateSpy.value
+
+		function MyComponent:init()
+			setComponentState = function(state)
+				self:setState(state)
+			end
+
+			self:setState({
+				foo = 1
+			})
+		end
+
+		function MyComponent:render()
+			return nil
+		end
+
+		local initialElement = createElement(MyComponent)
+		local hostParent = nil
+		local key = "Test"
+
+		noopReconciler.mountVirtualNode(initialElement, hostParent, key)
+
+		expect(willUpdateSpy.callCount).to.equal(0)
+
+		setComponentState({
+			foo = 2
+		})
+
+		expect(willUpdateSpy.callCount).to.equal(1)
+
+		local values = willUpdateSpy:captureValues("self", "newProps", "newState")
+
+		expect(Type.of(values.self)).to.equal(Type.StatefulComponentInstance)
+		assertDeepEqual(values.newProps, {})
+		assertDeepEqual(values.newState, {
+			foo = 2
+		})
+	end)
 end

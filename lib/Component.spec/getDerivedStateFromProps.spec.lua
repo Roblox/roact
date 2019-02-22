@@ -147,7 +147,7 @@ return function()
 		})
 	end)
 
-	it("should derive state for all setState updates", function()
+	it("should derive state for all setState updates, even when deferred", function()
 		local Child = Component:extend("Child")
 		local stateUpdaterSpy = createSpy(function()
 			return {}

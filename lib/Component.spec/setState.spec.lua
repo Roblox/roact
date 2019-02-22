@@ -1,6 +1,5 @@
 return function()
 	local createElement = require(script.Parent.Parent.createElement)
-	local createFragment = require(script.Parent.Parent.createFragment)
 	local createReconciler = require(script.Parent.Parent.createReconciler)
 	local createSpy = require(script.Parent.Parent.createSpy)
 	local None = require(script.Parent.Parent.None)
@@ -327,6 +326,135 @@ return function()
 
 			expect(result).to.be.ok()
 			expect(getParentStateCallback().foo).to.equal("bar")
+
+			noopReconciler.unmountVirtualNode(result)
+		end)
+
+		it("should combine pending state changes properly", function()
+			local Child = Component:extend("Child")
+			local getParentStateCallback
+
+			function Child:render()
+				return nil
+			end
+
+			function Child:didMount()
+				self.props.callback("foo", 1)
+				self.props.callback("bar", 3)
+			end
+
+			local Parent = Component:extend("Parent")
+
+			function Parent:init()
+				getParentStateCallback = function()
+					return self.state
+				end
+			end
+
+			function Parent:render()
+				return createElement(Child, {
+					callback = function(key, value)
+						self:setState({
+							[key] = value,
+						})
+					end,
+				})
+			end
+
+			local element = createElement(Parent)
+			local hostParent = nil
+			local key = "Test"
+
+			local result = noopReconciler.mountVirtualNode(element, hostParent, key)
+
+			expect(result).to.be.ok()
+			expect(getParentStateCallback().foo).to.equal(1)
+			expect(getParentStateCallback().bar).to.equal(3)
+
+			noopReconciler.unmountVirtualNode(result)
+		end)
+
+		it("should abort properly when functional setState returns nil while deferred", function()
+			local Child = Component:extend("Child")
+
+			function Child:render()
+				return nil
+			end
+
+			function Child:didMount()
+				self.props.callback()
+			end
+
+			local Parent = Component:extend("Parent")
+
+			local renderSpy = createSpy(function(self)
+				return createElement(Child, {
+					callback = function()
+						self:setState(function()
+							-- abort the setState
+							return nil
+						end)
+					end,
+				})
+			end)
+
+			Parent.render = renderSpy.value
+
+			local element = createElement(Parent)
+			local hostParent = nil
+			local key = "Test"
+
+			local result = noopReconciler.mountVirtualNode(element, hostParent, key)
+
+			expect(result).to.be.ok()
+			expect(renderSpy.callCount).to.equal(1)
+
+			noopReconciler.unmountVirtualNode(result)
+		end)
+
+		it("should still apply pending state if a subsequent state update was aborted", function()
+			local Child = Component:extend("Child")
+			local getParentStateCallback
+
+			function Child:render()
+				return nil
+			end
+
+			function Child:didMount()
+				self.props.callback(function()
+					return {
+						foo = 1,
+					}
+				end)
+				self.props.callback(function()
+					return nil
+				end)
+			end
+
+			local Parent = Component:extend("Parent")
+
+			function Parent:init()
+				getParentStateCallback = function()
+					return self.state
+				end
+			end
+
+			function Parent:render()
+				return createElement(Child, {
+					callback = function(stateUpdater)
+						self:setState(stateUpdater)
+					end,
+				})
+			end
+
+			local element = createElement(Parent)
+			local hostParent = nil
+			local key = "Test"
+
+			local result = noopReconciler.mountVirtualNode(element, hostParent, key)
+
+			expect(result).to.be.ok()
+			expect(getParentStateCallback().foo).to.equal(1)
 
 			noopReconciler.unmountVirtualNode(result)
 		end)

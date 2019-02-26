@@ -91,12 +91,48 @@ return function()
 			someState = 2,
 		})
 
-		expect(getDerivedSpy.callCount).to.equal(2)
+		expect(getDerivedSpy.callCount).to.equal(3)
 
 		local values = getDerivedSpy:captureValues("props", "state")
 
 		assertDeepEqual(values.props, {})
 		assertDeepEqual(values.state, { someState = 2 })
+	end)
+
+	it("should be invoked when updating via state in init (which skips reconciliation)", function()
+		local getDerivedSpy = createSpy()
+		local WithDerivedState = Component:extend("WithDerivedState")
+
+		WithDerivedState.getDerivedStateFromProps = getDerivedSpy.value
+
+		function WithDerivedState:init()
+			self:setState({
+				stateFromInit = 1,
+			})
+		end
+
+		function WithDerivedState:render()
+			return nil
+		end
+
+		local element = createElement(WithDerivedState, {
+			someProp = 1,
+		})
+		local hostParent = nil
+		local hostKey = "WithDerivedState"
+
+		noopReconciler.mountVirtualNode(element, hostParent, hostKey)
+
+		expect(getDerivedSpy.callCount).to.equal(2)
+
+		local values = getDerivedSpy:captureValues("props", "state")
+
+		assertDeepEqual(values.props, {
+			someProp = 1,
+		})
+		assertDeepEqual(values.state, {
+			stateFromInit = 1,
+		})
 	end)
 
 	it("should receive defaultProps", function()

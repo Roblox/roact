@@ -212,13 +212,10 @@ function Component:__mount(reconciler, virtualNode)
 	local newContext = assign({}, virtualNode.context)
 	instance._context = newContext
 
+	instance.state = assign({}, instance:__getDerivedState(instance.props, {}))
+
 	if instance.init ~= nil then
 		instance:init(instance.props)
-	end
-
-	-- We allow users to define initial state either directly or via setState. If they don't, we'll do it.
-	if instance.state == nil then
-		instance.state = assign({}, instance:__getDerivedState(instance.props, {}))
 	end
 
 	-- It's possible for init() to redefine _context!

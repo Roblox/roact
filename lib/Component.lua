@@ -89,10 +89,6 @@ function Component:setState(mapState)
 	then
 		local messageTemplate = invalidSetStateMessages[internalData.lifecyclePhase]
 
-		if messageTemplate == nil then
-			messageTemplate = invalidSetStateMessages.default
-		end
-
 		local message = messageTemplate:format(tostring(internalData.componentClass))
 
 		error(message, 2)

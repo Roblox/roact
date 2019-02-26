@@ -33,12 +33,4 @@ render must be a pure function that only depends on props and state.
 
 Check the definition of render in the component %q.]]
 
-invalidSetStateMessages["default"] = [[
-setState can not be used in the current situation, but Roact couldn't find a
-message to display.
-
-This is a bug in Roact.
-It was triggered by the component %q.
-]]
-
 return invalidSetStateMessages

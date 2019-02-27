@@ -1,4 +1,5 @@
 local assign = require(script.Parent.assign)
+local ComponentLifecyclePhase = require(script.Parent.ComponentLifecyclePhase)
 local Type = require(script.Parent.Type)
 local Symbol = require(script.Parent.Symbol)
 local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
@@ -51,30 +52,55 @@ function Component:extend(name)
 	return class
 end
 
+function Component:__getDerivedState(incomingProps, incomingState)
+	assert(Type.of(self) == Type.StatefulComponentInstance)
+
+	local internalData = self[InternalData]
+	local componentClass = internalData.componentClass
+
+	if componentClass.getDerivedStateFromProps ~= nil then
+		local derivedState = componentClass.getDerivedStateFromProps(incomingProps, incomingState)
+
+		if derivedState ~= nil then
+			assert(typeof(derivedState) == "table", "getDerivedStateFromProps must return a table!")
+
+			return derivedState
+		end
+	end
+
+	return nil
+end
+
 function Component:setState(mapState)
 	assert(Type.of(self) == Type.StatefulComponentInstance)
 
 	local internalData = self[InternalData]
+	local lifecyclePhase = internalData.lifecyclePhase
 
-	-- This value will be set when we're in a place that `setState` should not
-	-- be used. It will be set to the name of a message to display to the user.
-	if internalData.setStateBlockedReason ~= nil then
-		local messageTemplate = invalidSetStateMessages[internalData.setStateBlockedReason]
-
-		if messageTemplate == nil then
-			messageTemplate = invalidSetStateMessages.default
-		end
+	--[[
+		When preparing to update, rendering, or unmounting, it is not safe
+		to call `setState` as it will interfere with in-flight updates. It's
+		also disallowed during unmounting
+	]]
+	if lifecyclePhase == ComponentLifecyclePhase.ShouldUpdate or
+		lifecyclePhase == ComponentLifecyclePhase.WillUpdate or
+		lifecyclePhase == ComponentLifecyclePhase.Render or
+		lifecyclePhase == ComponentLifecyclePhase.WillUnmount
+	then
+		local messageTemplate = invalidSetStateMessages[internalData.lifecyclePhase]
 
 		local message = messageTemplate:format(tostring(internalData.componentClass))
 
 		error(message, 2)
 	end
 
+	local pendingState = internalData.pendingState
+
 	local partialState
-
 	if typeof(mapState) == "function" then
-		partialState = mapState(self.state, self.props)
+		partialState = mapState(pendingState or self.state, self.props)
 
+		-- Abort the state update if the given state updater function returns nil
 		if partialState == nil then
 			return
 		end
@@ -84,13 +110,40 @@ function Component:setState(mapState)
 		error("Invalid argument to setState, expected function or table", 2)
 	end
 
-	local newState = assign({}, self.state, partialState)
-
-	-- If `setState` is called in `init`, we can skip triggering an update!
-	if internalData.setStateShouldSkipUpdate then
-		self.state = newState
+	local newState
+	if pendingState ~= nil then
+		newState = assign(pendingState, partialState)
 	else
+		newState = assign({}, self.state, partialState)
+	end
+
+	if lifecyclePhase == ComponentLifecyclePhase.Init then
+		-- If `setState` is called in `init`, we can skip triggering an update!
+		local derivedState = self:__getDerivedState(self.props, newState)
+		self.state = assign(newState, derivedState)
+
+	elseif lifecyclePhase == ComponentLifecyclePhase.DidMount or
+		lifecyclePhase == ComponentLifecyclePhase.DidUpdate or
+		lifecyclePhase == ComponentLifecyclePhase.ReconcileChildren
+	then
+		--[[
+			During certain phases of the component lifecycle, it's acceptable to
+			allow `setState` but defer the update until we're done with ones in flight.
+			We do this by collapsing it into any pending updates we have.
+		]]
+		local derivedState = self:__getDerivedState(self.props, newState)
+		internalData.pendingState = assign(newState, derivedState)
+
+	elseif lifecyclePhase == ComponentLifecyclePhase.Idle then
+		-- Outside of our lifecycle, the state update is safe to make immediately
 		self:__update(nil, newState)
+
+	else
+		local messageTemplate = invalidSetStateMessages.default
+
+		local message = messageTemplate:format(tostring(internalData.componentClass))
+
+		error(message, 2)
 	end
 end
 
@@ -106,7 +159,7 @@ end
 
 --[[
 	Returns a snapshot of this component given the current props and state. Must
-	be overriden by consumers of Roact and should be a pure function with
+	be overridden by consumers of Roact and should be a pure function with
 	regards to props and state.
 
 	TODO: Accept props and state as arguments.
@@ -139,9 +192,7 @@ function Component:__mount(reconciler, virtualNode)
 		reconciler = reconciler,
 		virtualNode = virtualNode,
 		componentClass = self,
-
-		setStateBlockedReason = nil,
-		setStateShouldSkipUpdate = false,
+		lifecyclePhase = ComponentLifecyclePhase.Init,
 	}
 
 	local instance = {
@@ -160,39 +211,36 @@ function Component:__mount(reconciler, virtualNode)
 	end
 
 	instance.props = props
-	instance.state = {}
-
-	if self.getDerivedStateFromProps ~= nil then
-		local derivedState = self.getDerivedStateFromProps(instance.props, instance.state)
-
-		if derivedState ~= nil then
-			assert(typeof(derivedState) == "table", "getDerivedStateFromProps must return a table!")
-
-			assign(instance.state, derivedState)
-		end
-	end
 
 	local newContext = assign({}, virtualNode.context)
 	instance._context = newContext
 
+	instance.state = assign({}, instance:__getDerivedState(instance.props, {}))
+
 	if instance.init ~= nil then
-		internalData.setStateShouldSkipUpdate = true
 		instance:init(instance.props)
-		internalData.setStateShouldSkipUpdate = false
 	end
 
 	-- It's possible for init() to redefine _context!
 	virtualNode.context = instance._context
 
-	internalData.setStateBlockedReason = "render"
+	internalData.lifecyclePhase = ComponentLifecyclePhase.Render
 	local renderResult = instance:render()
-	internalData.setStateBlockedReason = nil
 
+	internalData.lifecyclePhase = ComponentLifecyclePhase.ReconcileChildren
 	reconciler.updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
 
 	if instance.didMount ~= nil then
+		internalData.lifecyclePhase = ComponentLifecyclePhase.DidMount
 		instance:didMount()
 	end
+
+	if internalData.pendingState ~= nil then
+		-- __update will handle pendingState, so we don't pass any new element or state
+		instance:__update(nil, nil)
+	end
+
+	internalData.lifecyclePhase = ComponentLifecyclePhase.Idle
 end
 
 --[[
@@ -206,12 +254,9 @@ function Component:__unmount()
 	local virtualNode = internalData.virtualNode
 	local reconciler = internalData.reconciler
 
-	-- TODO: Set unmounted flag to disallow setState after this point
-
 	if self.willUnmount ~= nil then
-		internalData.setStateBlockedReason = "willUnmount"
+		internalData.lifecyclePhase = ComponentLifecyclePhase.WillUnmount
 		self:willUnmount()
-		internalData.setStateBlockedReason = nil
 	end
 
 	for _, childNode in pairs(virtualNode.children) do
@@ -220,12 +265,10 @@ function Component:__unmount()
 end
 
 --[[
-	Internal method used by `setState` and the reconciler to update the
-	component instance.
+	Internal method used by setState (to trigger updates based on state) and by
+	the reconciler (to trigger updates based on props)
 
-	Both `updatedElement` and `updatedState` are optional and indicate different
-	kinds of updates. Both may be supplied to update props and state in a single
-	pass, as in the case of a batched update.
+	Returns true if the update was completed, false if it was cancelled by shouldUpdate
 ]]
 function Component:__update(updatedElement, updatedState)
 	assert(Type.of(self) == Type.StatefulComponentInstance)
@@ -233,17 +276,9 @@ function Component:__update(updatedElement, updatedState)
 	assert(typeof(updatedState) == "table" or updatedState == nil)
 
 	local internalData = self[InternalData]
-	local virtualNode = internalData.virtualNode
-	local reconciler = internalData.reconciler
 	local componentClass = internalData.componentClass
 
-	local oldProps = self.props
-	local oldState = self.state
-
-	-- These will be updated based on `updatedElement` and `updatedState`
-	local newProps = oldProps
-	local newState = oldState
-
+	local newProps = self.props
 	if updatedElement ~= nil then
 		newProps = updatedElement.props
 
@@ -252,49 +287,98 @@ function Component:__update(updatedElement, updatedState)
 		end
 	end
 
-	if updatedState ~= nil then
-		newState = updatedState
-	end
+	repeat
+		local finalState
+		local pendingState = nil
 
-	if componentClass.getDerivedStateFromProps ~= nil then
-		local derivedState = componentClass.getDerivedStateFromProps(newProps, newState)
-
-		if derivedState ~= nil then
-			assert(typeof(derivedState) == "table", "getDerivedStateFromProps must return a table!")
-
-			newState = assign({}, newState, derivedState)
+		-- Consume any pending state we might have
+		if internalData.pendingState ~= nil then
+			pendingState = internalData.pendingState
+			internalData.pendingState = nil
 		end
+
+		-- Resolve a standard update to state or props
+		if updatedState ~= nil or newProps ~= self.props then
+			if pendingState == nil then
+				finalState = updatedState or self.state
+			else
+				finalState = assign(pendingState, updatedState)
+			end
+
+			local derivedState = self:__getDerivedState(newProps, finalState)
+
+			if derivedState ~= nil then
+				finalState = assign({}, finalState, derivedState)
+			end
+		else
+			finalState = pendingState
+		end
+
+		if not self:__resolveUpdate(newProps, finalState) then
+			-- If the update was short-circuited, bubble the result up to the caller
+			return false
+		end
+
+		-- TODO: Consider counting our loop iterations and bailing with an error
+		-- if it reaches an unlikely number
+	until internalData.pendingState == nil
+
+	return true
+end
+
+--[[
+	Internal method used by __update to apply new props and state
+
+	Returns true if the update was completed, false if it was cancelled by shouldUpdate
+]]
+function Component:__resolveUpdate(incomingProps, incomingState)
+	assert(Type.of(self) == Type.StatefulComponentInstance)
+
+	local internalData = self[InternalData]
+	local virtualNode = internalData.virtualNode
+	local reconciler = internalData.reconciler
+
+	local oldProps = self.props
+	local oldState = self.state
+
+	if incomingProps == nil then
+		incomingProps = oldProps
+	end
+	if incomingState == nil then
+		incomingState = oldState
 	end
 
 	if self.shouldUpdate ~= nil then
-		internalData.setStateBlockedReason = "shouldUpdate"
-		local continueWithUpdate = self:shouldUpdate(newProps, newState)
-		internalData.setStateBlockedReason = nil
+		internalData.lifecyclePhase = ComponentLifecyclePhase.ShouldUpdate
+		local continueWithUpdate = self:shouldUpdate(incomingProps, incomingState)
 
 		if not continueWithUpdate then
+			internalData.lifecyclePhase = ComponentLifecyclePhase.Idle
 			return false
 		end
 	end
 
 	if self.willUpdate ~= nil then
-		internalData.setStateBlockedReason = "willUpdate"
-		self:willUpdate(newProps, newState)
-		internalData.setStateBlockedReason = nil
+		internalData.lifecyclePhase = ComponentLifecyclePhase.WillUpdate
+		self:willUpdate(incomingProps, incomingState)
 	end
 
-	self.props = newProps
-	self.state = newState
+	internalData.lifecyclePhase = ComponentLifecyclePhase.Render
 
-	internalData.setStateBlockedReason = "render"
+	self.props = incomingProps
+	self.state = incomingState
+
 	local renderResult = virtualNode.instance:render()
-	internalData.setStateBlockedReason = nil
 
+	internalData.lifecyclePhase = ComponentLifecyclePhase.ReconcileChildren
 	reconciler.updateVirtualNodeWithRenderResult(virtualNode, virtualNode.hostParent, renderResult)
 
 	if self.didUpdate ~= nil then
+		internalData.lifecyclePhase = ComponentLifecyclePhase.DidUpdate
 		self:didUpdate(oldProps, oldState)
 	end
 
+	internalData.lifecyclePhase = ComponentLifecyclePhase.Idle
 	return true
 end
 

@@ -474,15 +474,51 @@ return function()
 			]]
 		end)
 
-		itSKIP("Should call trigger update after didMount when setting state in didMount", function()
+		it("Should call trigger update after didMount when setting state in didMount", function()
 			--[[
 				Before setState suspension, it was possible to call setState in didMount but it would
 				not actually finish resolving didMount until after the entire update.
 
-				This is theoretically problematic, as it means that things like didUpdate could
-				be called before didMount is finished. setState suspension resolves this by
+				This is theoretically problematic, as it means that lifecycle methods like didUpdate
+				could be called before didMount is finished. setState suspension resolves this by
 				suspending state updates made in didMount and didUpdate as well as reconciliation
 			]]
+			local MyComponent = Component:extend("MyComponent")
+
+			function MyComponent:init()
+				self:setState({
+					status = "initial mount"
+				})
+
+				self.isMounted = false
+			end
+
+			function MyComponent:render()
+				return nil
+			end
+
+			function MyComponent:didMount()
+				self:setState({
+					status = "mounted"
+				})
+
+				self.isMounted = true
+			end
+
+			function MyComponent:didUpdate(oldProps, oldState)
+				expect(oldState.status).to.equal("initial mount")
+				expect(self.state.status).to.equal("mounted")
+
+				expect(self.isMounted).to.equal(true)
+			end
+
+			local element = createElement(MyComponent)
+			local hostParent = nil
+			local key = "Test"
+
+			local result = noopReconciler.mountVirtualNode(element, hostParent, key)
+
+			expect(result).to.be.ok()
 		end)
 	end)
 end

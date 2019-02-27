@@ -126,7 +126,6 @@ function Component:setState(mapState)
 		lifecyclePhase == ComponentLifecyclePhase.DidUpdate or
 		lifecyclePhase == ComponentLifecyclePhase.ReconcileChildren
 	then
-		-- TODO: Write test for wonky didMount-still-running scenario
 		--[[
 			During certain phases of the component lifecycle, it's acceptable to
 			allow `setState` but defer the update until we're done with ones in flight.
@@ -136,7 +135,7 @@ function Component:setState(mapState)
 		internalData.pendingState = assign(newState, derivedState)
 
 	elseif lifecyclePhase == ComponentLifecyclePhase.Idle then
-		-- Outside of our lifecycle, the state update is safe to make
+		-- Outside of our lifecycle, the state update is safe to make immediately
 		self:__update(nil, newState)
 
 	else
@@ -266,10 +265,10 @@ function Component:__unmount()
 end
 
 --[[
-	Internal method used by setState to trigger updates based on state and by
-	the reconciler to trigger updates based on props
+	Internal method used by setState (to trigger updates based on state) and by
+	the reconciler (to trigger updates based on props)
 
-	Returns whether or not the update was completed or blocked by shouldUpdate
+	Returns true if the update was completed, false if it was cancelled by shouldUpdate
 ]]
 function Component:__update(updatedElement, updatedState)
 	assert(Type.of(self) == Type.StatefulComponentInstance)
@@ -297,7 +296,7 @@ function Component:__update(updatedElement, updatedState)
 			pendingState = internalData.pendingState
 			internalData.pendingState = nil
 		end
-		-- TODO: Write a test that exercises all these branches (updatedState + pendingState)
+
 		-- Resolve a standard update to state or props
 		if updatedState ~= nil or newProps ~= self.props then
 			if pendingState == nil then
@@ -330,10 +329,8 @@ end
 --[[
 	Internal method used by __update to apply new props and state
 
-	Returns whether or not the update was completed or blocked by shouldUpdate
+	Returns true if the update was completed, false if it was cancelled by shouldUpdate
 ]]
--- TODO: indicate via better naming that this function returns a
--- bool that determines whether we updated or not
 function Component:__resolveUpdate(incomingProps, incomingState)
 	assert(Type.of(self) == Type.StatefulComponentInstance)
 

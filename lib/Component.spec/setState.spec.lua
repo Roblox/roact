@@ -466,5 +466,23 @@ return function()
 
 			noopReconciler.unmountVirtualNode(result)
 		end)
+
+		itSKIP("Should process single updates with both new and pending state", function()
+			--[[
+				This situation shouldn't be possible currently, but the implementation
+				should support it for future update de-duplication
+			]]
+		end)
+
+		itSKIP("Should call trigger update after didMount when setting state in didMount", function()
+			--[[
+				Before setState suspension, it was possible to call setState in didMount but it would
+				not actually finish resolving didMount until after the entire update.
+
+				This is theoretically problematic, as it means that things like didUpdate could
+				be called before didMount is finished. setState suspension resolves this by
+				suspending state updates made in didMount and didUpdate as well as reconciliation
+			]]
+		end)
 	end)
 end

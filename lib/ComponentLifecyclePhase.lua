@@ -12,7 +12,7 @@ local ComponentLifecyclePhase = strict({
 	WillUnmount = Symbol.named("willUnmount"),
 	-- Phases describing reconciliation status
 	ReconcileChildren = Symbol.named("reconcileChildren"),
-	Done = Symbol.named("done"),
+	Idle = Symbol.named("idle"),
 }, "ComponentLifecyclePhase")
 
 return ComponentLifecyclePhase

@@ -126,6 +126,7 @@ function Component:setState(mapState)
 		lifecyclePhase == ComponentLifecyclePhase.DidUpdate or
 		lifecyclePhase == ComponentLifecyclePhase.ReconcileChildren
 	then
+		-- TODO: Write test for wonky didMount-still-running scenario
 		--[[
 			During certain phases of the component lifecycle, it's acceptable to
 			allow `setState` but defer the update until we're done with ones in flight.
@@ -135,6 +136,7 @@ function Component:setState(mapState)
 		internalData.pendingState = assign(newState, derivedState)
 
 	else
+		-- TODO: assert that this is the Idle phase
 		-- Outside of our lifecycle, the state update is safe to make
 		self:__update(nil, newState)
 	end
@@ -233,7 +235,7 @@ function Component:__mount(reconciler, virtualNode)
 		instance:__update(nil, nil)
 	end
 
-	internalData.lifecyclePhase = ComponentLifecyclePhase.Done
+	internalData.lifecyclePhase = ComponentLifecyclePhase.Idle
 end
 
 --[[
@@ -260,6 +262,8 @@ end
 --[[
 	Internal method used by setState to trigger updates based on state and by
 	the reconciler to trigger updates based on props
+
+	Returns whether or not the update was completed or blocked by shouldUpdate
 ]]
 function Component:__update(updatedElement, updatedState)
 	assert(Type.of(self) == Type.StatefulComponentInstance)
@@ -279,30 +283,33 @@ function Component:__update(updatedElement, updatedState)
 	end
 
 	repeat
-		local newState = nil
+		local finalState
+		local pendingState = nil
 
-		-- Resolve any pending state we might have
+		-- Consume any pending state we might have
 		if internalData.pendingState ~= nil then
-			newState = internalData.pendingState
+			pendingState = internalData.pendingState
 			internalData.pendingState = nil
 		end
-
+		-- TODO: Write a test that exercises all these branches (updatedState + pendingState)
 		-- Resolve a standard update to state or props
 		if updatedState ~= nil or newProps ~= self.props then
-			if newState == nil then
-				newState = updatedState or self.state
+			if pendingState == nil then
+				finalState = updatedState or self.state
 			else
-				newState = assign({}, newState, updatedState)
+				finalState = assign(pendingState, updatedState)
 			end
 
-			local derivedState = self:__getDerivedState(newProps, newState)
+			local derivedState = self:__getDerivedState(newProps, finalState)
 
 			if derivedState ~= nil then
-				newState = assign({}, newState, derivedState)
+				finalState = assign({}, finalState, derivedState)
 			end
+		else
+			finalState = pendingState
 		end
 
-		if not self:__resolveUpdate(newProps, newState) then
+		if not self:__resolveUpdate(newProps, finalState) then
 			-- If the update was short-circuited, bubble the result up to the caller
 			return false
 		end
@@ -316,8 +323,12 @@ end
 
 --[[
 	Internal method used by __update to apply new props and state
+
+	Returns whether or not the update was completed or blocked by shouldUpdate
 ]]
-function Component:__resolveUpdate(newProps, newState)
+-- TODO: indicate via better naming that this function returns a
+-- bool that determines whether we updated or not
+function Component:__resolveUpdate(incomingProps, incomingState)
 	assert(Type.of(self) == Type.StatefulComponentInstance)
 
 	local internalData = self[InternalData]
@@ -327,32 +338,32 @@ function Component:__resolveUpdate(newProps, newState)
 	local oldProps = self.props
 	local oldState = self.state
 
-	if newProps == nil then
-		newProps = oldProps
+	if incomingProps == nil then
+		incomingProps = oldProps
 	end
-	if newState == nil then
-		newState = oldState
+	if incomingState == nil then
+		incomingState = oldState
 	end
 
 	if self.shouldUpdate ~= nil then
 		internalData.lifecyclePhase = ComponentLifecyclePhase.ShouldUpdate
-		local continueWithUpdate = self:shouldUpdate(newProps, newState)
+		local continueWithUpdate = self:shouldUpdate(incomingProps, incomingState)
 
 		if not continueWithUpdate then
-			internalData.lifecyclePhase = ComponentLifecyclePhase.Done
+			internalData.lifecyclePhase = ComponentLifecyclePhase.Idle
 			return false
 		end
 	end
 
 	if self.willUpdate ~= nil then
 		internalData.lifecyclePhase = ComponentLifecyclePhase.WillUpdate
-		self:willUpdate(newProps, newState)
+		self:willUpdate(incomingProps, incomingState)
 	end
 
 	internalData.lifecyclePhase = ComponentLifecyclePhase.Render
 
-	self.props = newProps
-	self.state = newState
+	self.props = incomingProps
+	self.state = incomingState
 
 	local renderResult = virtualNode.instance:render()
 
@@ -364,7 +375,7 @@ function Component:__resolveUpdate(newProps, newState)
 		self:didUpdate(oldProps, oldState)
 	end
 
-	internalData.lifecyclePhase = ComponentLifecyclePhase.Done
+	internalData.lifecyclePhase = ComponentLifecyclePhase.Idle
 	return true
 end
 

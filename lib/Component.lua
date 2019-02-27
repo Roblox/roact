@@ -297,7 +297,7 @@ function Component:__update(updatedElement, updatedState)
 			internalData.pendingState = nil
 		end
 
-		-- Resolve a standard update to state or props
+		-- Consume a standard update to state or props
 		if updatedState ~= nil or newProps ~= self.props then
 			if pendingState == nil then
 				finalState = updatedState or self.state

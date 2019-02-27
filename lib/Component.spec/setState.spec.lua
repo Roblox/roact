@@ -467,6 +467,58 @@ return function()
 			noopReconciler.unmountVirtualNode(result)
 		end)
 
+		it("Should not re-process new state when pending state is repeatedly present", function()
+			local setComponentState
+			local getComponentState
+
+			local MyComponent = Component:extend("MyComponent")
+
+			function MyComponent:init()
+				self:setState({
+					hasUpdatedOnce = false,
+					counter = 0,
+				})
+
+				setComponentState = function(mapState)
+					self:setState(mapState)
+				end
+
+				getComponentState = function()
+					return self.state
+				end
+			end
+
+			function MyComponent:render()
+				return nil
+			end
+
+			function MyComponent:didUpdate()
+				if self.state.hasUpdatedOnce == false then
+					self:setState({
+						hasUpdatedOnce = true,
+					})
+				end
+			end
+
+			local element = createElement(MyComponent)
+			local hostParent = nil
+			local key = "Test"
+
+			noopReconciler.mountVirtualNode(element, hostParent, key)
+
+			expect(getComponentState().hasUpdatedOnce).to.equal(false)
+			expect(getComponentState().counter).to.equal(0)
+
+			setComponentState(function(state)
+				return {
+					counter = state.counter + 1
+				}
+			end)
+
+			expect(getComponentState().hasUpdatedOnce).to.equal(true)
+			expect(getComponentState().counter).to.equal(1)
+		end)
+
 		itSKIP("Should process single updates with both new and pending state", function()
 			--[[
 				This situation shouldn't be possible currently, but the implementation

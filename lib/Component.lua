@@ -135,10 +135,16 @@ function Component:setState(mapState)
 		local derivedState = self:__getDerivedState(self.props, newState)
 		internalData.pendingState = assign(newState, derivedState)
 
-	else
-		-- TODO: assert that this is the Idle phase
+	elseif lifecyclePhase == ComponentLifecyclePhase.Idle then
 		-- Outside of our lifecycle, the state update is safe to make
 		self:__update(nil, newState)
+
+	else
+		local messageTemplate = invalidSetStateMessages.default
+
+		local message = messageTemplate:format(tostring(internalData.componentClass))
+
+		error(message, 2)
 	end
 end
 

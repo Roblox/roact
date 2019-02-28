@@ -467,7 +467,7 @@ return function()
 			noopReconciler.unmountVirtualNode(result)
 		end)
 
-		it("Should not re-process new state when pending state is repeatedly present", function()
+		it("Should not re-process new state when pending state is present after update", function()
 			local setComponentState
 			local getComponentState
 

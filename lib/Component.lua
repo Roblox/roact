@@ -4,11 +4,22 @@ local Type = require(script.Parent.Type)
 local Symbol = require(script.Parent.Symbol)
 local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
 
+--[[
+	Calling setState during certain lifecycle allowed methods has the potential
+	to create an infinitely updating component. Rather than time out, we exit
+	with an error if an unreasonable number of self-triggering updates occur
+]]
+local MAX_PENDING_UPDATES = 100
+
 local InternalData = Symbol.named("InternalData")
 
 local componentMissingRenderMessage = [[
 The component %q is missing the `render` method.
 `render` must be defined when creating a Roact component!]]
+
+local tooManyUpdatesMessage = [[
+The component %q has reached the setState update recursion limit.
+When using `setState` in `didUpdate`, make sure that it won't repeat infinitely!]]
 
 local componentClassMetatable = {}
 
@@ -287,6 +298,7 @@ function Component:__update(updatedElement, updatedState)
 		end
 	end
 
+	local updateCount = 0
 	repeat
 		local finalState
 		local pendingState = nil
@@ -319,8 +331,11 @@ function Component:__update(updatedElement, updatedState)
 			return false
 		end
 
-		-- TODO: Consider counting our loop iterations and bailing with an error
-		-- if it reaches an unlikely number
+		updateCount = updateCount + 1
+
+		if updateCount > MAX_PENDING_UPDATES then
+			error(tooManyUpdatesMessage:format(tostring(internalData.componentClass)), 3)
+		end
 	until internalData.pendingState == nil
 
 	return true

@@ -467,7 +467,7 @@ return function()
 			noopReconciler.unmountVirtualNode(result)
 		end)
 
-		it("Should not re-process new state when pending state is present after update", function()
+		it("should not re-process new state when pending state is present after update", function()
 			local setComponentState
 			local getComponentState
 
@@ -519,14 +519,40 @@ return function()
 			expect(getComponentState().counter).to.equal(1)
 		end)
 
-		itSKIP("Should process single updates with both new and pending state", function()
+		it("should throw when an infinite update is triggered", function()
+			local InfiniteUpdater = Component:extend("InfiniteUpdater")
+
+			function InfiniteUpdater:render()
+				return nil
+			end
+
+			function InfiniteUpdater:didMount()
+				self:setState({})
+			end
+
+			function InfiniteUpdater:didUpdate()
+				self:setState({})
+			end
+
+			local element = createElement(InfiniteUpdater)
+			local hostParent = nil
+			local key = "Test"
+
+			local success, result = pcall(noopReconciler.mountVirtualNode, element, hostParent, key)
+
+			expect(success).to.equal(false)
+			expect(result:find("InfiniteUpdater")).to.be.ok()
+			expect(result:find("reached the setState update recursion limit")).to.be.ok()
+		end)
+
+		itSKIP("should process single updates with both new and pending state", function()
 			--[[
 				This situation shouldn't be possible currently, but the implementation
 				should support it for future update de-duplication
 			]]
 		end)
 
-		it("Should call trigger update after didMount when setting state in didMount", function()
+		it("should call trigger update after didMount when setting state in didMount", function()
 			--[[
 				Before setState suspension, it was possible to call setState in didMount but it would
 				not actually finish resolving didMount until after the entire update.

@@ -322,6 +322,8 @@ function Component:__update(updatedElement, updatedState)
 			if derivedState ~= nil then
 				finalState = assign({}, finalState, derivedState)
 			end
+
+			updatedState = nil
 		else
 			finalState = pendingState
 		end

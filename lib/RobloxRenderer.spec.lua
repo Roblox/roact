@@ -1,4 +1,6 @@
 return function()
+	local CollectionService = game:GetService("CollectionService")
+
 	local assertDeepEqual = require(script.Parent.assertDeepEqual)
 	local Binding = require(script.Parent.Binding)
 	local Children = require(script.Parent.PropMarkers.Children)
@@ -11,6 +13,7 @@ return function()
 	local Logging = require(script.Parent.Logging)
 	local Portal = require(script.Parent.Portal)
 	local Ref = require(script.Parent.PropMarkers.Ref)
+	local Tag = require(script.Parent.PropMarkers.Tag)
 
 	local RobloxRenderer = require(script.Parent.RobloxRenderer)
 
@@ -734,6 +737,51 @@ return function()
 			assertDeepEqual(capturedContext, {
 				foo = "bar"
 			})
+		end)
+	end)
+
+	describe("Tags", function()
+		it("should be assigned on mount", function()
+			local parent = Instance.new("Folder")
+			local ref = createRef()
+			local tag = "TestTag"
+
+			local element = createElement("Frame", {
+				[Tag] = tag,
+				[Ref] = ref,
+			})
+
+			local node = reconciler.createVirtualNode(element, parent, "Test")
+			RobloxRenderer.mountHostNode(reconciler, node)
+
+			expect(CollectionService:HasTag(ref.current, tag)).to.equal(true)
+		end)
+
+		it("should update properly", function()
+			local parent = Instance.new("Folder")
+			local ref = createRef()
+			local tagA = "TestTag"
+			local tagB = "OtherTag"
+
+			local element = createElement("Frame", {
+				[Tag] = tagA,
+				[Ref] = ref,
+			})
+
+			local node = reconciler.createVirtualNode(element, parent, "Test")
+			RobloxRenderer.mountHostNode(reconciler, node)
+
+			expect(CollectionService:HasTag(ref.current, tagA)).to.equal(true)
+
+			local newElement = createElement("Frame", {
+				[Tag] = tagB,
+				[Ref] = ref,
+			})
+
+			RobloxRenderer.updateHostNode(reconciler, node, newElement)
+
+			expect(CollectionService:HasTag(ref.current, tagA)).to.equal(false)
+			expect(CollectionService:HasTag(ref.current, tagB)).to.equal(true)
 		end)
 	end)
 end

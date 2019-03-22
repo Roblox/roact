@@ -4,6 +4,7 @@ local Type = require(script.Parent.Type)
 local Symbol = require(script.Parent.Symbol)
 local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
 local GlobalConfig = require(script.Parent.GlobalConfig)
+local debugAssert = require(script.Parent.debugAssert)
 
 --[[
 	Calling setState during certain lifecycle allowed methods has the potential
@@ -41,8 +42,8 @@ Component.__componentName = "Component"
 	PureComponent.
 ]]
 function Component:extend(name)
-	assert(Type.of(self) == Type.StatefulComponentClass)
-	assert(typeof(name) == "string")
+	debugAssert(Type.of(self) == Type.StatefulComponentClass, "Invalid use of `extend`")
+	assert(typeof(name) == "string", "Component class name must be a string")
 
 	local class = {}
 
@@ -65,7 +66,7 @@ function Component:extend(name)
 end
 
 function Component:__getDerivedState(incomingProps, incomingState)
-	assert(Type.of(self) == Type.StatefulComponentInstance)
+	debugAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__getDerivedState`")
 
 	local internalData = self[InternalData]
 	local componentClass = internalData.componentClass
@@ -84,7 +85,7 @@ function Component:__getDerivedState(incomingProps, incomingState)
 end
 
 function Component:setState(mapState)
-	assert(Type.of(self) == Type.StatefulComponentInstance)
+	debugAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `setState`")
 
 	local internalData = self[InternalData]
 	local lifecyclePhase = internalData.lifecyclePhase
@@ -227,9 +228,8 @@ end
 	instance and attach it to the given virtualNode.
 ]]
 function Component:__mount(reconciler, virtualNode)
-	assert(Type.of(self) == Type.StatefulComponentClass)
-	assert(reconciler ~= nil)
-	assert(Type.of(virtualNode) == Type.VirtualNode)
+	debugAssert(Type.of(self) == Type.StatefulComponentClass, "Invalid use of `__mount`")
+	debugAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #2 to be of type VirtualNode")
 
 	local currentElement = virtualNode.currentElement
 	local hostParent = virtualNode.hostParent
@@ -298,7 +298,7 @@ end
 	this component instance.
 ]]
 function Component:__unmount()
-	assert(Type.of(self) == Type.StatefulComponentInstance)
+	debugAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__unmount`")
 
 	local internalData = self[InternalData]
 	local virtualNode = internalData.virtualNode
@@ -321,9 +321,15 @@ end
 	Returns true if the update was completed, false if it was cancelled by shouldUpdate
 ]]
 function Component:__update(updatedElement, updatedState)
-	assert(Type.of(self) == Type.StatefulComponentInstance)
-	assert(Type.of(updatedElement) == Type.Element or updatedElement == nil)
-	assert(typeof(updatedState) == "table" or updatedState == nil)
+	debugAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__update`")
+	debugAssert(
+		Type.of(updatedElement) == Type.Element or updatedElement == nil,
+		"Expected arg #1 to be of type Element or nil"
+	)
+	debugAssert(
+		typeof(updatedState) == "table" or updatedState == nil,
+		"Expected arg #2 to be of type table or nil"
+	)
 
 	local internalData = self[InternalData]
 	local componentClass = internalData.componentClass
@@ -390,7 +396,7 @@ end
 	Returns true if the update was completed, false if it was cancelled by shouldUpdate
 ]]
 function Component:__resolveUpdate(incomingProps, incomingState)
-	assert(Type.of(self) == Type.StatefulComponentInstance)
+	debugAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__resolveUpdate`")
 
 	local internalData = self[InternalData]
 	local virtualNode = internalData.virtualNode

@@ -3,6 +3,7 @@ local ElementKind = require(script.Parent.ElementKind)
 local ElementUtils = require(script.Parent.ElementUtils)
 local Children = require(script.Parent.PropMarkers.Children)
 local Logging = require(script.Parent.Logging)
+local debugAssert = require(script.Parent.debugAssert)
 
 --[[
 	The reconciler is the mechanism in Roact that constructs the virtual tree
@@ -50,7 +51,7 @@ local function createReconciler(renderer)
 		updated children given as elements.
 	]]
 	local function updateChildren(virtualNode, hostParent, newChildElements)
-		assert(Type.of(virtualNode) == Type.VirtualNode)
+		debugAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #1 to be of type VirtualNode")
 
 		local removeKeys = {}
 
@@ -113,7 +114,7 @@ local function createReconciler(renderer)
 		Unmounts the given virtual node and releases any held resources.
 	]]
 	function unmountVirtualNode(virtualNode)
-		assert(Type.of(virtualNode) == Type.VirtualNode)
+		debugAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #1 to be of type VirtualNode")
 
 		local kind = ElementKind.of(virtualNode.currentElement)
 
@@ -148,8 +149,7 @@ local function createReconciler(renderer)
 
 		local targetHostParent = newElement.props.target
 
-		-- TODO: Error message
-		assert(renderer.isHostObject(targetHostParent))
+		assert(renderer.isHostObject(targetHostParent), "Expected target to be host object")
 
 		if targetHostParent ~= oldTargetHostParent then
 			-- TODO: Better warning
@@ -178,8 +178,11 @@ local function createReconciler(renderer)
 		a warning to the user.
 	]]
 	function updateVirtualNode(virtualNode, newElement, newState)
-		assert(Type.of(virtualNode) == Type.VirtualNode)
-		assert(Type.of(newElement) == Type.Element or typeof(newElement) == "boolean" or newElement == nil)
+		debugAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #1 to be of type VirtualNode")
+		assert(
+			Type.of(newElement) == Type.Element or typeof(newElement) == "boolean" or newElement == nil,
+			"Expected arg #2 to be of type Element, boolean, or nil"
+		)
 
 		-- If nothing changed, we can skip this update
 		if virtualNode.currentElement == newElement and newState == nil then
@@ -226,10 +229,13 @@ local function createReconciler(renderer)
 		Constructs a new virtual node but not does mount it.
 	]]
 	local function createVirtualNode(element, hostParent, hostKey, context)
-		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
-		assert(renderer.isHostObject(hostParent) or hostParent == nil)
-		assert(hostKey ~= nil)
-		assert(typeof(context) == "table" or context == nil)
+		debugAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
+		debugAssert(typeof(context) == "table" or context == nil, "Expected arg #4 to be of type table or nil")
+		assert(hostKey ~= nil, "Expected arg #3 to be non-nil")
+		assert(
+			Type.of(element) == Type.Element or typeof(element) == "boolean",
+			"Expected arg #1 to be of type Element or boolean"
+		)
 
 		return {
 			[Type] = Type.VirtualNode,
@@ -263,7 +269,7 @@ local function createReconciler(renderer)
 		local targetHostParent = element.props.target
 		local children = element.props[Children]
 
-		assert(renderer.isHostObject(targetHostParent))
+		assert(renderer.isHostObject(targetHostParent), "Expected target to be host object")
 
 		updateVirtualNodeWithChildren(virtualNode, targetHostParent, children)
 	end
@@ -273,10 +279,13 @@ local function createReconciler(renderer)
 		the tree.
 	]]
 	function mountVirtualNode(element, hostParent, hostKey, context)
-		assert(Type.of(element) == Type.Element or typeof(element) == "boolean")
-		assert(typeof(hostParent) == "Instance" or hostParent == nil)
-		assert(hostKey ~= nil)
-		assert(typeof(context) == "table" or context == nil)
+		debugAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
+		debugAssert(typeof(context) == "table" or context == nil, "Expected arg #4 to be of type table or nil")
+		assert(hostKey ~= nil, "Expected arg #3 to be non-nil")
+		assert(
+			Type.of(element) == Type.Element or typeof(element) == "boolean",
+			"Expected arg #1 to be of type Element or boolean"
+		)
 
 		-- Boolean values render as nil to enable terse conditional rendering.
 		if typeof(element) == "boolean" then
@@ -307,8 +316,8 @@ local function createReconciler(renderer)
 		it, and mounts it.
 	]]
 	local function mountVirtualTree(element, hostParent, hostKey)
-		assert(Type.of(element) == Type.Element)
-		assert(typeof(hostParent) == "Instance" or hostParent == nil)
+		assert(Type.of(element) == Type.Element, "Expected arg #1 to be of type Element")
+		assert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
 
 		if hostKey == nil then
 			hostKey = "RoactTree"
@@ -338,7 +347,7 @@ local function createReconciler(renderer)
 		unmounted, as indicated by its the `mounted` field.
 	]]
 	local function unmountVirtualTree(tree)
-		assert(Type.of(tree) == Type.VirtualTree)
+		assert(Type.of(tree) == Type.VirtualTree, "Expected arg #1 to be a Roact handle")
 		assert(tree.mounted, "Cannot unmounted a Roact tree that has already been unmounted")
 
 		tree.mounted = false
@@ -353,8 +362,8 @@ local function createReconciler(renderer)
 		element.
 	]]
 	local function updateVirtualTree(tree, newElement)
-		assert(Type.of(tree) == Type.VirtualTree)
-		assert(Type.of(newElement) == Type.Element)
+		assert(Type.of(tree) == Type.VirtualTree, "Expected arg #1 to be a Roact handle")
+		assert(Type.of(newElement) == Type.Element, "Expected arg #2 to be a Roact Element")
 
 		tree.rootNode = updateVirtualNode(tree.rootNode, newElement)
 

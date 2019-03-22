@@ -1,6 +1,26 @@
 {
-  "name": "Roact",
-  "tree": {
-    "$path": "lib"
-  }
+    "name": "Roact examples",
+    "tree": {
+        "$className": "DataModel",
+
+        "ReplicatedStorage": {
+            "$className": "ReplicatedStorage",
+
+            "Roact": {
+                "$path": "lib"
+            }
+        },
+        
+        "StarterPlayer": {
+            "$className": "StarterPlayer",
+
+            "StarterPlayerScripts": {
+                "$className": "StarterPlayerScripts",
+
+                "RoactExamples": {
+                    "$path": "examples"
+                }
+            }
+        }
+    }
 }

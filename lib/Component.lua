@@ -3,6 +3,7 @@ local ComponentLifecyclePhase = require(script.Parent.ComponentLifecyclePhase)
 local Type = require(script.Parent.Type)
 local Symbol = require(script.Parent.Symbol)
 local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
+local GlobalConfig = require(script.Parent.GlobalConfig)
 
 --[[
 	Calling setState during certain lifecycle allowed methods has the potential
@@ -218,6 +219,42 @@ function Component:__updateVirtualNode(reconciler, virtualNode, renderResult)
 end
 
 --[[
+	Performs property validation if the static method validateProps is declared.
+	validateProps should follow assert's expected arguments:
+	(false, message: string) | true. The function may return a message in the
+	true case; it will be ignored. If this fails, the function will throw the
+	error.
+]]
+function Component:__validateProps(props)
+	if not GlobalConfig.getValue("propertyValidation") then
+		return
+	end
+
+	local validator = self[InternalData].componentClass.validateProps
+
+	if validator == nil then
+		return
+	end
+
+	if typeof(validator) ~= "function" then
+		error(("validateProps must be a function, but it is a %s.\nCheck the definition of the component %q."):format(
+			typeof(validator),
+			self.__componentName
+		))
+	end
+
+	local success, failureReason = validator(props)
+
+	if not success then
+		failureReason = failureReason or "<Validator function did not supply a message>"
+		error(("Property validation failed: %s\n\n%s"):format(
+			tostring(failureReason),
+			self:getElementTraceback() or "<enable element tracebacks>"),
+		0)
+	end
+end
+
+--[[
 	An internal method used by the reconciler to construct a new component
 	instance and attach it to the given virtualNode.
 ]]
@@ -251,6 +288,8 @@ function Component:__mount(reconciler, virtualNode)
 	if self.defaultProps ~= nil then
 		props = assign({}, self.defaultProps, props)
 	end
+
+	instance:__validateProps(props)
 
 	instance.props = props
 
@@ -327,6 +366,8 @@ function Component:__update(updatedElement, updatedState)
 		if componentClass.defaultProps ~= nil then
 			newProps = assign({}, componentClass.defaultProps, newProps)
 		end
+
+		self:__validateProps(newProps)
 	end
 
 	local updateCount = 0

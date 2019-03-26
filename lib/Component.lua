@@ -186,11 +186,12 @@ function Component:__mount(reconciler, virtualNode)
 	virtualNode.instance = instance
 
 	local props = currentElement.props
-	instance:__validateProps(props)
 
 	if self.defaultProps ~= nil then
 		props = assign({}, self.defaultProps, props)
 	end
+
+	instance:__validateProps(props)
 
 	instance.props = props
 	instance.state = {}
@@ -279,11 +280,12 @@ function Component:__update(updatedElement, updatedState)
 
 	if updatedElement ~= nil then
 		newProps = updatedElement.props
-		self:__validateProps(newProps)
 
 		if componentClass.defaultProps ~= nil then
 			newProps = assign({}, componentClass.defaultProps, newProps)
 		end
+
+		self:__validateProps(newProps)
 	end
 
 	if updatedState ~= nil then

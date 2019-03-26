@@ -131,5 +131,42 @@ return function()
         expect(function()
             noopReconciler.mountVirtualNode(element, hostParent, key)
         end).to.throw()
+	end)
+
+	it("should be invoked after defaultProps are applied", function()
+        local MyComponent = Component:extend("MyComponent")
+
+        local validatePropsSpy = createSpy(function()
+            return true
+        end)
+
+        MyComponent.validateProps = validatePropsSpy.value
+
+        function MyComponent:render()
+            return nil
+		end
+
+		MyComponent.defaultProps = {
+			b = 2,
+		}
+
+        local element = createElement(MyComponent, { a = 1 })
+		local hostParent = nil
+        local key = "Test"
+
+        local node = noopReconciler.mountVirtualNode(element, hostParent, key)
+        expect(validatePropsSpy.callCount).to.equal(1)
+        validatePropsSpy:assertCalledWithDeepEqual({
+			a = 1,
+			b = 2,
+        })
+
+        local newElement = createElement(MyComponent, { a = 2 })
+        noopReconciler.updateVirtualNode(node, newElement)
+        expect(validatePropsSpy.callCount).to.equal(2)
+        validatePropsSpy:assertCalledWithDeepEqual({
+			a = 2,
+			b = 2,
+        })
     end)
 end

@@ -20,6 +20,8 @@ local defaultConfig = {
 	["componentInstrumentation"] = false,
 	-- Enables warnings if an element changes type after being rendered.
 	["warnOnTypeChange"] = true,
+	-- Enables validation of component props in stateful components.
+	["propertyValidation"] = false,
 }
 
 -- Build a list of valid configuration values up for debug messages.

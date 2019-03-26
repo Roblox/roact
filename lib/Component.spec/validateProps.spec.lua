@@ -3,12 +3,17 @@ return function()
 	local createReconciler = require(script.Parent.Parent.createReconciler)
 	local createSpy = require(script.Parent.Parent.createSpy)
 	local NoopRenderer = require(script.Parent.Parent.NoopRenderer)
+	local GlobalConfig = require(script.Parent.Parent.GlobalConfig)
 
 	local Component = require(script.Parent.Parent.Component)
 
 	local noopReconciler = createReconciler(NoopRenderer)
 
 	it("should be invoked when mounted", function()
+		GlobalConfig.set({
+			propertyValidation = true,
+		})
+
 		local MyComponent = Component:extend("MyComponent")
 
 		local validatePropsSpy = createSpy(function()
@@ -27,9 +32,15 @@ return function()
 
 		noopReconciler.mountVirtualNode(element, hostParent, key)
 		expect(validatePropsSpy.callCount).to.equal(1)
+
+		GlobalConfig.reset()
 	end)
 
 	it("should be invoked when props change", function()
+		GlobalConfig.set({
+			propertyValidation = true,
+		})
+
 		local MyComponent = Component:extend("MyComponent")
 
 		local validatePropsSpy = createSpy(function()
@@ -58,9 +69,15 @@ return function()
 		validatePropsSpy:assertCalledWithDeepEqual({
 			a = 2,
 		})
+
+		GlobalConfig.reset()
 	end)
 
 	it("should not be invoked when state changes", function()
+		GlobalConfig.set({
+			propertyValidation = true,
+		})
+
 		local MyComponent = Component:extend("MyComponent")
 
 		local setStateCallback = nil
@@ -95,9 +112,15 @@ return function()
 		})
 
 		expect(validatePropsSpy.callCount).to.equal(1)
+
+		GlobalConfig.reset()
 	end)
 
 	it("should throw if validateProps is not a function", function()
+		GlobalConfig.set({
+			propertyValidation = true,
+		})
+
 		local MyComponent = Component:extend("MyComponent")
 		MyComponent.validateProps = 1
 
@@ -112,9 +135,15 @@ return function()
 		expect(function()
 			noopReconciler.mountVirtualNode(element, hostParent, key)
 		end).to.throw()
+
+		GlobalConfig.reset()
 	end)
 
 	it("should throw if validateProps returns false", function()
+		GlobalConfig.set({
+			propertyValidation = true,
+		})
+
 		local MyComponent = Component:extend("MyComponent")
 		MyComponent.validateProps = function()
 			return false
@@ -131,9 +160,15 @@ return function()
 		expect(function()
 			noopReconciler.mountVirtualNode(element, hostParent, key)
 		end).to.throw()
+
+		GlobalConfig.reset()
 	end)
 
 	it("should be invoked after defaultProps are applied", function()
+		GlobalConfig.set({
+			propertyValidation = true,
+		})
+
 		local MyComponent = Component:extend("MyComponent")
 
 		local validatePropsSpy = createSpy(function()
@@ -168,5 +203,32 @@ return function()
 			a = 2,
 			b = 2,
 		})
+
+		GlobalConfig.reset()
+	end)
+
+	it("should not be invoked if the flag is off", function()
+		local MyComponent = Component:extend("MyComponent")
+
+		local validatePropsSpy = createSpy(function()
+			return true
+		end)
+
+		MyComponent.validateProps = validatePropsSpy.value
+
+		function MyComponent:render()
+			return nil
+		end
+
+		local element = createElement(MyComponent, { a = 1 })
+		local hostParent = nil
+		local key = "Test"
+
+		local node = noopReconciler.mountVirtualNode(element, hostParent, key)
+		expect(validatePropsSpy.callCount).to.equal(0)
+
+		local newElement = createElement(MyComponent, { a = 2 })
+		noopReconciler.updateVirtualNode(node, newElement)
+		expect(validatePropsSpy.callCount).to.equal(0)
 	end)
 end

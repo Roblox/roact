@@ -2,6 +2,7 @@ local assign = require(script.Parent.assign)
 local Type = require(script.Parent.Type)
 local Symbol = require(script.Parent.Symbol)
 local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
+local GlobalConfig = require(script.Parent.GlobalConfig)
 
 local InternalData = Symbol.named("InternalData")
 
@@ -129,6 +130,10 @@ end
 	error.
 ]]
 function Component:__validateProps(props)
+	if not GlobalConfig.getValue("propertyValidation") then
+		return
+	end
+
 	local validator = self[InternalData].componentClass.validateProps
 
 	if validator == nil then

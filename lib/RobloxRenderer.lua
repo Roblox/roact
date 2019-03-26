@@ -171,7 +171,9 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 	local instance = Instance.new(element.component)
 	virtualNode.hostObject = instance
 
-	local success, errorMessage = pcall(applyProps, virtualNode, element.props)
+	local success, errorMessage = xpcall(function()
+		applyProps(virtualNode, element.props)
+	end, debug.traceback)
 
 	if not success then
 		local source = element.source
@@ -222,7 +224,9 @@ function RobloxRenderer.updateHostNode(reconciler, virtualNode, newElement)
 		applyRef(newProps[Ref], virtualNode.hostObject)
 	end
 
-	local success, errorMessage = pcall(updateProps, virtualNode, oldProps, newProps)
+	local success, errorMessage = xpcall(function()
+		updateProps(virtualNode, oldProps, newProps)
+	end, debug.traceback)
 
 	if not success then
 		local source = newElement.source

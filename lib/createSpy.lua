@@ -6,6 +6,8 @@
 	This should only be used in tests.
 ]]
 
+local assertDeepEqual = require(script.Parent.assertDeepEqual)
+
 local function createSpy(inner)
 	local self = {
 		callCount = 0,
@@ -37,6 +39,23 @@ local function createSpy(inner)
 			local expected = select(i, ...)
 
 			assert(self.values[i] == expected, "value differs")
+		end
+	end
+
+	self.assertCalledWithDeepEqual = function(_, ...)
+		local len = select("#", ...)
+
+		if self.valuesLength ~= len then
+			error(("Expected %d arguments, but was called with %d arguments"):format(
+				self.valuesLength,
+				len
+			), 2)
+		end
+
+		for i = 1, len do
+			local expected = select(i, ...)
+
+			assertDeepEqual(self.values[i], expected)
 		end
 	end
 

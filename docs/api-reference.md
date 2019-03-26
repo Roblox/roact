@@ -12,7 +12,17 @@ The `children` argument is shorthand for adding a `Roact.Children` key to `props
 `component` can be a string, a function, or a table created by `Component:extend`.
 
 !!! caution
-	Once `props` or `children` are passed into the `createElement`, make sure not to modify them!
+	Make sure not to modify `props` or `children` after they're passed into `createElement`!
+
+### Roact.createFragment
+```
+Roact.createFragment(elements) -> RoactFragment
+```
+
+Creates a new Roact fragment with the provided table of elements. Fragments allow grouping of elements without the need for intermediate containing objects like `Frame`s.
+
+!!! caution
+	Make sure not to modify `elements` after they're passed into `createFragment`!
 
 ### Roact.mount
 ```
@@ -48,7 +58,7 @@ Roact.unmount(instance) -> void
 !!! info
 	`Roact.unmount` is also available via the deprecated alias `Roact.teardown`. It will be removed in a future release.
 
-Destroys the given `ComponentInstanceHandle` and all of its descendents. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.
+Destroys the given `ComponentInstanceHandle` and all of its descendants. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.
 
 ### Roact.oneChild
 `Roact.oneChild(children) -> RoactElement | nil`
@@ -58,6 +68,36 @@ Given a dictionary of children, returns a single child element.
 If `children` contains more than one child, `oneChild` function will throw an error. This is intended to denote an error when using the component using `oneChild`.
 
 If `children` is `nil` or contains no children, `oneChild` will return `nil`.
+
+### Roact.createBinding
+```
+Roact.createBinding(initialValue) -> Binding, updateFunction
+where
+	updateFunction: (newValue) -> ()
+```
+
+The first value returned is a `Binding` object, which will typically be passed as a prop to a Roact host component. The second is a function that can be called with a new value to update the binding.
+
+A `Binding` has the following API:
+
+#### getValue
+```
+Binding:getValue() -> value
+```
+
+Returns the internal value of the binding. This is helpful when updating a binding relative to its current value.
+
+!!! warning
+	Using `getValue` inside a component's `render` method is dangerous! Using the unwrapped value directly won't allow Roact to subscribe to a binding's updates. To guarantee that a bound value will update, use the binding itself for your prop value.
+
+#### map
+```
+Binding:map(mappingFunction) -> Binding
+where
+	mappingFunction: (value) -> mappedValue
+```
+
+Returns a new binding that maps the existing binding's value to something else. For example, `map` can be used to transform an animation progress value like `0.4` into a property that can be consumed by a Roblox Instance like `UDim2.new(0.4, 0, 1, 0)`.
 
 ### Roact.createRef
 ```
@@ -109,10 +149,10 @@ Roact.createElement("Frame", {
 ```
 
 !!! warning
-	When `Roact.Ref` is given a funciton, Roact does not guarantee when this function will be run relative to the reconciliation of other props. If you try to read a Roblox property that's being set via a Roact prop, you won't know if you're reading it before or after Roact reconciles that prop!
+	When `Roact.Ref` is given a function, Roact does not guarantee when this function will be run relative to the reconciliation of other props. If you try to read a Roblox property that's being set via a Roact prop, you won't know if you're reading it before or after Roact reconciles that prop!
 
 !!! warning
-	When `Roact.Ref` is given a funciton, it will be called with `nil` when the component instance is destroyed!
+	When `Roact.Ref` is given a function, it will be called with `nil` when the component instance is destroyed!
 
 See [the refs guide](/advanced/refs.md) for more details.
 

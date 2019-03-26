@@ -192,9 +192,6 @@ local function createReconciler(renderer)
 		end
 
 		if virtualNode.currentElement.component ~= newElement.component then
-			-- TODO: Better message
-			Logging.warn("Component changed type!")
-
 			return replaceVirtualNode(virtualNode, newElement)
 		end
 

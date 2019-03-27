@@ -1,0 +1,45 @@
+{
+  "name": "roact",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Roact": {
+        "$path": "lib"
+			},
+			"TestEZ": {
+				"$path": "modules/testez/lib"
+			}
+		},
+		"ServerScriptService": {
+			"$className": "ServerScriptService",
+			"RoactBenchmark": {
+				"$path": "benchmarks"
+			},
+			"RoactTests": {
+				"$path": "bin/run-tests.server.lua"
+			}
+		},
+		"StarterPlayer": {
+			"$className": "StarterPlayer",
+			"StarterPlayerScripts": {
+				"$className": "StarterPlayerScripts",
+				"RoactTestClient": {
+					"$path": "client"
+				},
+				"RoactExamples": {
+					"$path": "examples"
+				}
+			}
+		},
+    "HttpService": {
+      "$className": "HttpService",
+      "$properties": {
+        "HttpEnabled": {
+          "Type": "Bool",
+          "Value": true
+        }
+      }
+    }
+  }
+}

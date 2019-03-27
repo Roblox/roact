@@ -4,12 +4,15 @@
 	renderer that does anything.
 ]]
 
+local CollectionService = game:GetService("CollectionService")
+
 local Binding = require(script.Parent.Binding)
 local Children = require(script.Parent.PropMarkers.Children)
 local ElementKind = require(script.Parent.ElementKind)
 local SingleEventManager = require(script.Parent.SingleEventManager)
 local getDefaultInstanceProperty = require(script.Parent.getDefaultInstanceProperty)
 local Ref = require(script.Parent.PropMarkers.Ref)
+local Tag = require(script.Parent.PropMarkers.Tag)
 local Type = require(script.Parent.Type)
 
 local applyPropsError = [[
@@ -90,8 +93,8 @@ local function applyProp(virtualNode, key, newValue, oldValue)
 		return
 	end
 
-	if key == Ref or key == Children then
-		-- Refs and children are handled in a separate pass
+	if key == Ref or key == Children or key == Tag then
+		-- Refs, children, and tags are handled in a separate pass
 		return
 	end
 
@@ -196,6 +199,10 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 	virtualNode.hostObject = instance
 
 	applyRef(element.props[Ref], instance)
+
+	if element.props[Tag] ~= nil then
+		CollectionService:AddTag(instance, element.props[Tag])
+	end
 end
 
 function RobloxRenderer.unmountHostNode(reconciler, virtualNode)
@@ -220,6 +227,16 @@ function RobloxRenderer.updateHostNode(reconciler, virtualNode, newElement)
 	if oldProps[Ref] ~= newProps[Ref] then
 		applyRef(oldProps[Ref], nil)
 		applyRef(newProps[Ref], virtualNode.hostObject)
+	end
+
+	if oldProps[Tag] ~= newProps[Tag] then
+		if oldProps[Tag] ~= nil then
+			CollectionService:RemoveTag(virtualNode.hostObject, oldProps[Tag])
+		end
+
+		if newProps[Tag] ~= nil then
+			CollectionService:AddTag(virtualNode.hostObject, newProps[Tag])
+		end
 	end
 
 	local success, errorMessage = pcall(updateProps, virtualNode, oldProps, newProps)

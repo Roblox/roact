@@ -13,6 +13,8 @@ local Ref = require(script.Parent.PropMarkers.Ref)
 local Type = require(script.Parent.Type)
 local debugAssert = require(script.Parent.debugAssert)
 
+local DEBUG = _G.ROACT_DEBUG
+
 local applyPropsError = [[
 Error applying props:
 	%s
@@ -179,9 +181,11 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 	local hostParent = virtualNode.hostParent
 	local hostKey = virtualNode.hostKey
 
-	debugAssert(ElementKind.of(element) == ElementKind.Host, "Element at given node is not a host Element")
-	assert(element.props.Name == nil, "Name can not be specified as a prop to a host component in Roact.")
-	assert(element.props.Parent == nil, "Parent can not be specified as a prop to a host component in Roact.")
+	if DEBUG then
+		debugAssert(ElementKind.of(element) == ElementKind.Host, "Element at given node is not a host Element")
+		assert(element.props.Name == nil, "Name can not be specified as a prop to a host component in Roact.")
+		assert(element.props.Parent == nil, "Parent can not be specified as a prop to a host component in Roact.")
+	end
 
 	local instance = Instance.new(element.component)
 	virtualNode.hostObject = instance

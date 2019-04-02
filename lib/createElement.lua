@@ -4,6 +4,8 @@ local GlobalConfig = require(script.Parent.GlobalConfig)
 local Logging = require(script.Parent.Logging)
 local Type = require(script.Parent.Type)
 
+local DEBUG = _G.ROACT_DEBUG
+
 local multipleChildrenMessage = [[
 The prop `Roact.Children` was defined but was overriden by the third parameter to createElement!
 This can happen when a component passes props through to a child element but also uses the `children` argument:
@@ -34,9 +36,11 @@ Instead, consider using a utility function to merge tables of children together:
 	props. If specified, the passed `props` table is mutated!
 ]]
 local function createElement(component, props, children)
-	assert(component ~= nil, "`component` is required")
-	assert(typeof(props) == "table" or props == nil, "`props` must be a table or nil")
-	assert(typeof(children) == "table" or children == nil, "`children` must be a table or nil")
+	if DEBUG then
+		assert(component ~= nil, "`component` is required")
+		assert(typeof(props) == "table" or props == nil, "`props` must be a table or nil")
+		assert(typeof(children) == "table" or children == nil, "`children` must be a table or nil")
+	end
 
 	if props == nil then
 		props = {}

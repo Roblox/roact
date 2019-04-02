@@ -2,6 +2,8 @@
 	Loads our library and all of its dependencies, then runs tests using TestEZ.
 ]]
 
+_G.ROACT_DEBUG = true
+
 -- If you add any dependencies, add them to this table so they'll be loaded!
 local LOAD_MODULES = {
 	{"lib", "Roact"},

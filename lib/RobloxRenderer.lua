@@ -51,7 +51,6 @@ local function setRobloxInstanceProperty(hostObject, key, newValue)
 	end
 
 	-- Assign the new value to the object
-	-- TODO: Handle errors if `key` is not a valid Instance property
 	hostObject[key] = newValue
 
 	return
@@ -65,7 +64,20 @@ end
 
 local function attachBinding(virtualNode, key, newBinding)
 	local function updateBoundProperty(newValue)
-		setRobloxInstanceProperty(virtualNode.hostObject, key, newValue)
+		local success, errorMessage = xpcall(function()
+			setRobloxInstanceProperty(virtualNode.hostObject, key, newValue)
+		end, debug.traceback)
+
+		if not success then
+			local source = virtualNode.currentElement.source
+
+			if source == nil then
+				source = "<enable element tracebacks>"
+			end
+
+			local fullMessage = updatePropsError:format(errorMessage, source)
+			error(fullMessage, 0)
+		end
 	end
 
 	if virtualNode.bindings == nil then
@@ -74,7 +86,7 @@ local function attachBinding(virtualNode, key, newBinding)
 
 	virtualNode.bindings[key] = Binding.subscribe(newBinding, updateBoundProperty)
 
-	setRobloxInstanceProperty(virtualNode.hostObject, key, newBinding:getValue())
+	updateBoundProperty(newBinding:getValue())
 end
 
 local function detachAllBindings(virtualNode)
@@ -171,7 +183,9 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 	local instance = Instance.new(element.component)
 	virtualNode.hostObject = instance
 
-	local success, errorMessage = pcall(applyProps, virtualNode, element.props)
+	local success, errorMessage = xpcall(function()
+		applyProps(virtualNode, element.props)
+	end, debug.traceback)
 
 	if not success then
 		local source = element.source
@@ -222,7 +236,9 @@ function RobloxRenderer.updateHostNode(reconciler, virtualNode, newElement)
 		applyRef(newProps[Ref], virtualNode.hostObject)
 	end
 
-	local success, errorMessage = pcall(updateProps, virtualNode, oldProps, newProps)
+	local success, errorMessage = xpcall(function()
+		updateProps(virtualNode, oldProps, newProps)
+	end, debug.traceback)
 
 	if not success then
 		local source = newElement.source

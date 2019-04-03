@@ -81,7 +81,9 @@ function Component:__getDerivedState(incomingProps, incomingState)
 		local derivedState = componentClass.getDerivedStateFromProps(incomingProps, incomingState)
 
 		if derivedState ~= nil then
-			assert(typeof(derivedState) == "table", "getDerivedStateFromProps must return a table!")
+			if DEBUG then
+				assert(typeof(derivedState) == "table", "getDerivedStateFromProps must return a table!")
+			end
 
 			return derivedState
 		end

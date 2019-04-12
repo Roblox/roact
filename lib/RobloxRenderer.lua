@@ -26,6 +26,10 @@ In element:
 %s
 ]]
 
+local function identity(...)
+	return ...
+end
+
 local function applyRef(ref, newHostObject)
 	if ref == nil then
 		return
@@ -66,7 +70,7 @@ local function attachBinding(virtualNode, key, newBinding)
 	local function updateBoundProperty(newValue)
 		local success, errorMessage = xpcall(function()
 			setRobloxInstanceProperty(virtualNode.hostObject, key, newValue)
-		end, debug.traceback)
+		end, identity)
 
 		if not success then
 			local source = virtualNode.currentElement.source
@@ -185,7 +189,7 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 
 	local success, errorMessage = xpcall(function()
 		applyProps(virtualNode, element.props)
-	end, debug.traceback)
+	end, identity)
 
 	if not success then
 		local source = element.source
@@ -238,7 +242,7 @@ function RobloxRenderer.updateHostNode(reconciler, virtualNode, newElement)
 
 	local success, errorMessage = xpcall(function()
 		updateProps(virtualNode, oldProps, newProps)
-	end, debug.traceback)
+	end, identity)
 
 	if not success then
 		local source = newElement.source

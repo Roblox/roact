@@ -40,6 +40,13 @@
       "$properties": {
         "HttpEnabled": true
       }
+    },
+
+    "Players": {
+      "$className": "Players",
+      "$properties": {
+        "CharacterAutoLoads": false
+      }
     }
   }
 }

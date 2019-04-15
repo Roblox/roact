@@ -19,7 +19,7 @@ local defaultConfig = {
 	-- Enables instrumentation of shouldUpdate and render methods for Roact components
 	["componentInstrumentation"] = false,
 	-- Enables warnings if an element changes type after being rendered.
-	["warnOnTypeChange"] = true,
+	["warnOnTypeChange"] = false,
 	-- Enables validation of component props in stateful components.
 	["propertyValidation"] = false,
 }

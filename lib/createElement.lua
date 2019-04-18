@@ -1,10 +1,9 @@
 local Children = require(script.Parent.PropMarkers.Children)
 local ElementKind = require(script.Parent.ElementKind)
-local GlobalConfig = require(script.Parent.GlobalConfig)
 local Logging = require(script.Parent.Logging)
 local Type = require(script.Parent.Type)
 
-local DEBUG = _G.ROACT_DEBUG
+local config = require(script.Parent.GlobalConfig).get()
 
 local multipleChildrenMessage = [[
 The prop `Roact.Children` was defined but was overriden by the third parameter to createElement!
@@ -36,7 +35,7 @@ Instead, consider using a utility function to merge tables of children together:
 	props. If specified, the passed `props` table is mutated!
 ]]
 local function createElement(component, props, children)
-	if DEBUG then
+	if config.strictMode then
 		assert(component ~= nil, "`component` is required")
 		assert(typeof(props) == "table" or props == nil, "`props` must be a table or nil")
 		assert(typeof(children) == "table" or children == nil, "`children` must be a table or nil")
@@ -63,7 +62,7 @@ local function createElement(component, props, children)
 		props = props,
 	}
 
-	if GlobalConfig.getValue("elementTracing") then
+	if config.elementTracing then
 		-- We trim out the leading newline since there's no way to specify the
 		-- trace level without also specifying a message.
 		element.source = debug.traceback("", 2):sub(2)

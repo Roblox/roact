@@ -2,6 +2,8 @@ local createSignal = require(script.Parent.createSignal)
 local Symbol = require(script.Parent.Symbol)
 local Type = require(script.Parent.Type)
 
+local DEBUG = _G.ROACT_DEBUG
+
 --[[
 	Default mapping function used for non-mapped bindings
 ]]
@@ -46,6 +48,10 @@ end
 	Creates a new binding from this one with the given mapping.
 ]]
 function bindingPrototype:map(valueTransform)
+	if DEBUG then
+		assert(typeof(valueTransform) == "function", "Bad arg #1 to binding:map: expected function")
+	end
+
 	local binding = Binding.create(valueTransform(self:getValue()))
 
 	binding[InternalData].valueTransform = valueTransform

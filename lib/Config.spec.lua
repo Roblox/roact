@@ -3,14 +3,15 @@ return function()
 
 	it("should accept valid configuration", function()
 		local config = Config.new()
+		local values = config.get()
 
-		expect(config.getValue("elementTracing")).to.equal(false)
+		expect(values.elementTracing).to.equal(false)
 
 		config.set({
 			elementTracing = true,
 		})
 
-		expect(config.getValue("elementTracing")).to.equal(true)
+		expect(values.elementTracing).to.equal(true)
 	end)
 
 	it("should reject invalid configuration keys", function()
@@ -70,17 +71,18 @@ return function()
 
 	it("should reset to default values after invoking reset()", function()
 		local config = Config.new()
+		local values = config.get()
 
-		expect(config.getValue("elementTracing")).to.equal(false)
+		expect(values.elementTracing).to.equal(false)
 
 		config.set({
 			elementTracing = true,
 		})
 
-		expect(config.getValue("elementTracing")).to.equal(true)
+		expect(values.elementTracing).to.equal(true)
 
 		config.reset()
 
-		expect(config.getValue("elementTracing")).to.equal(false)
+		expect(values.elementTracing).to.equal(false)
 	end)
 end

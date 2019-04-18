@@ -36,7 +36,7 @@ function Config.new()
 	local self = {}
 
 	self._currentConfig = setmetatable({}, {
-		__index = function(key)
+		__index = function(_, key)
 			local message = (
 				"Invalid global configuration key %q. Valid configuration keys are: %s"
 			):format(

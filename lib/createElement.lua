@@ -35,7 +35,7 @@ Instead, consider using a utility function to merge tables of children together:
 	props. If specified, the passed `props` table is mutated!
 ]]
 local function createElement(component, props, children)
-	if config.strictMode then
+	if config.typeChecks then
 		assert(component ~= nil, "`component` is required")
 		assert(typeof(props) == "table" or props == nil, "`props` must be a table or nil")
 		assert(typeof(children) == "table" or children == nil, "`children` must be a table or nil")

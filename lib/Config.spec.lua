@@ -49,21 +49,4 @@ return function()
 		expect(err:find(goodKey)).to.be.ok()
 		expect(err:find(badValue)).to.be.ok()
 	end)
-
-	it("should reset to default values after invoking reset()", function()
-		local config = Config.new()
-		local values = config.get()
-
-		expect(values.elementTracing).to.equal(false)
-
-		config.set({
-			elementTracing = true,
-		})
-
-		expect(values.elementTracing).to.equal(true)
-
-		config.reset()
-
-		expect(values.elementTracing).to.equal(false)
-	end)
 end

@@ -15,9 +15,9 @@
 -- Every valid configuration value should be non-nil in this table.
 local defaultConfig = {
 	-- Enables asserts for internal Roact APIs. Useful for debugging Roact itself.
-	["devAsserts"] = false,
+	["internalTypeChecks"] = false,
 	-- Enables stricter type asserts for Roact's public API.
-	["strictMode"] = false,
+	["typeChecks"] = false,
 	-- Enables storage of `debug.traceback()` values on elements for debugging.
 	["elementTracing"] = false,
 	-- Enables validation of component props in stateful components.
@@ -57,10 +57,6 @@ function Config.new()
 
 	self.get = function(...)
 		return Config.get(self, ...)
-	end
-
-	self.reset = function(...)
-		return Config.reset(self, ...)
 	end
 
 	self.scoped = function(...)
@@ -109,19 +105,17 @@ function Config:get()
 	return self._currentConfig
 end
 
-function Config:reset()
-	for key, value in pairs(defaultConfig) do
-		self._currentConfig[key] = value
-	end
-end
-
--- Fix dis
 function Config:scoped(configValues, callback)
+	local previousValues = {}
+	for key, value in pairs(self._currentConfig) do
+		previousValues[key] = value
+	end
+
 	self.set(configValues)
 
 	local success, result = pcall(callback)
 
-	self.reset()
+	self.set(previousValues)
 
 	assert(success, result)
 end

@@ -181,10 +181,10 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 	local hostParent = virtualNode.hostParent
 	local hostKey = virtualNode.hostKey
 
-	if config.devAsserts then
+	if config.internalTypeChecks then
 		debugAssert(ElementKind.of(element) == ElementKind.Host, "Element at given node is not a host Element")
 	end
-	if config.strictMode then
+	if config.typeChecks then
 		assert(element.props.Name == nil, "Name can not be specified as a prop to a host component in Roact.")
 		assert(element.props.Parent == nil, "Parent can not be specified as a prop to a host component in Roact.")
 	end

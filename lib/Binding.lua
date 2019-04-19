@@ -48,7 +48,7 @@ end
 	Creates a new binding from this one with the given mapping.
 ]]
 function bindingPrototype:map(valueTransform)
-	if config.strictMode then
+	if config.typeChecks then
 		assert(typeof(valueTransform) == "function", "Bad arg #1 to binding:map: expected function")
 	end
 

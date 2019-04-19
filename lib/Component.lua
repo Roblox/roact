@@ -43,10 +43,10 @@ Component.__componentName = "Component"
 	PureComponent.
 ]]
 function Component:extend(name)
-	if config.devAsserts then
+	if config.internalTypeChecks then
 		debugAssert(Type.of(self) == Type.StatefulComponentClass, "Invalid use of `extend`")
 	end
-	if config.strictMode then
+	if config.typeChecks then
 		assert(typeof(name) == "string", "Component class name must be a string")
 	end
 
@@ -71,7 +71,7 @@ function Component:extend(name)
 end
 
 function Component:__getDerivedState(incomingProps, incomingState)
-	if config.devAsserts then
+	if config.internalTypeChecks then
 		debugAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__getDerivedState`")
 	end
 
@@ -82,7 +82,7 @@ function Component:__getDerivedState(incomingProps, incomingState)
 		local derivedState = componentClass.getDerivedStateFromProps(incomingProps, incomingState)
 
 		if derivedState ~= nil then
-			if config.strictMode then
+			if config.typeChecks then
 				assert(typeof(derivedState) == "table", "getDerivedStateFromProps must return a table!")
 			end
 
@@ -94,7 +94,7 @@ function Component:__getDerivedState(incomingProps, incomingState)
 end
 
 function Component:setState(mapState)
-	if config.devAsserts then
+	if config.internalTypeChecks then
 		debugAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `setState`")
 	end
 
@@ -239,7 +239,7 @@ end
 	instance and attach it to the given virtualNode.
 ]]
 function Component:__mount(reconciler, virtualNode)
-	if config.devAsserts then
+	if config.internalTypeChecks then
 		debugAssert(Type.of(self) == Type.StatefulComponentClass, "Invalid use of `__mount`")
 		debugAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #2 to be of type VirtualNode")
 	end
@@ -311,7 +311,7 @@ end
 	this component instance.
 ]]
 function Component:__unmount()
-	if config.devAsserts then
+	if config.internalTypeChecks then
 		debugAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__unmount`")
 	end
 
@@ -336,7 +336,7 @@ end
 	Returns true if the update was completed, false if it was cancelled by shouldUpdate
 ]]
 function Component:__update(updatedElement, updatedState)
-	if config.devAsserts then
+	if config.internalTypeChecks then
 		debugAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__update`")
 		debugAssert(
 			Type.of(updatedElement) == Type.Element or updatedElement == nil,
@@ -413,7 +413,7 @@ end
 	Returns true if the update was completed, false if it was cancelled by shouldUpdate
 ]]
 function Component:__resolveUpdate(incomingProps, incomingState)
-	if config.devAsserts then
+	if config.internalTypeChecks then
 		debugAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__resolveUpdate`")
 	end
 

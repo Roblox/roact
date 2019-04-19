@@ -6,8 +6,8 @@ local Roact = require(ReplicatedStorage.Roact)
 local TestEZ = require(ReplicatedStorage.TestEZ)
 
 Roact.setGlobalConfig({
-	["devAsserts"] = true,
-	["strictMode"] = true,
+	["internalTypeChecks"] = true,
+	["typeChecks"] = true,
 	["elementTracing"] = true,
 	["propertyValidation"] = true,
 })

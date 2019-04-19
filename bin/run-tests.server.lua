@@ -2,7 +2,15 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Roact = require(ReplicatedStorage.Roact)
 local TestEZ = require(ReplicatedStorage.TestEZ)
+
+Roact.setGlobalConfig({
+	["devAsserts"] = true,
+	["strictMode"] = true,
+	["elementTracing"] = true,
+	["propertyValidation"] = true,
+})
 local results = TestEZ.TestBootstrap:run(ReplicatedStorage.Roact, TestEZ.Reporters.TextReporter)
 
 if __LEMUR__ then

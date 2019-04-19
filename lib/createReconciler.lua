@@ -3,7 +3,7 @@ local ElementKind = require(script.Parent.ElementKind)
 local ElementUtils = require(script.Parent.ElementUtils)
 local Children = require(script.Parent.PropMarkers.Children)
 local Logging = require(script.Parent.Logging)
-local debugAssert = require(script.Parent.debugAssert)
+local internalAssert = require(script.Parent.internalAssert)
 
 local config = require(script.Parent.GlobalConfig).get()
 
@@ -54,7 +54,7 @@ local function createReconciler(renderer)
 	]]
 	local function updateChildren(virtualNode, hostParent, newChildElements)
 		if config.internalTypeChecks then
-			debugAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #1 to be of type VirtualNode")
+			internalAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #1 to be of type VirtualNode")
 		end
 
 		local removeKeys = {}
@@ -119,7 +119,7 @@ local function createReconciler(renderer)
 	]]
 	function unmountVirtualNode(virtualNode)
 		if config.internalTypeChecks then
-			debugAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #1 to be of type VirtualNode")
+			internalAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #1 to be of type VirtualNode")
 		end
 
 		local kind = ElementKind.of(virtualNode.currentElement)
@@ -185,7 +185,7 @@ local function createReconciler(renderer)
 	]]
 	function updateVirtualNode(virtualNode, newElement, newState)
 		if config.internalTypeChecks then
-			debugAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #1 to be of type VirtualNode")
+			internalAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #1 to be of type VirtualNode")
 		end
 		if config.typeChecks then
 			assert(
@@ -240,8 +240,8 @@ local function createReconciler(renderer)
 	]]
 	local function createVirtualNode(element, hostParent, hostKey, context)
 		if config.internalTypeChecks then
-			debugAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
-			debugAssert(typeof(context) == "table" or context == nil, "Expected arg #4 to be of type table or nil")
+			internalAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
+			internalAssert(typeof(context) == "table" or context == nil, "Expected arg #4 to be of type table or nil")
 		end
 		if config.typeChecks then
 			assert(hostKey ~= nil, "Expected arg #3 to be non-nil")
@@ -294,8 +294,8 @@ local function createReconciler(renderer)
 	]]
 	function mountVirtualNode(element, hostParent, hostKey, context)
 		if config.internalTypeChecks then
-			debugAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
-			debugAssert(typeof(context) == "table" or context == nil, "Expected arg #4 to be of type table or nil")
+			internalAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
+			internalAssert(typeof(context) == "table" or context == nil, "Expected arg #4 to be of type table or nil")
 		end
 		if config.typeChecks then
 			assert(hostKey ~= nil, "Expected arg #3 to be non-nil")

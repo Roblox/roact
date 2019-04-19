@@ -3,7 +3,7 @@ local ComponentLifecyclePhase = require(script.Parent.ComponentLifecyclePhase)
 local Type = require(script.Parent.Type)
 local Symbol = require(script.Parent.Symbol)
 local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
-local debugAssert = require(script.Parent.debugAssert)
+local internalAssert = require(script.Parent.internalAssert)
 
 local config = require(script.Parent.GlobalConfig).get()
 
@@ -44,7 +44,7 @@ Component.__componentName = "Component"
 ]]
 function Component:extend(name)
 	if config.internalTypeChecks then
-		debugAssert(Type.of(self) == Type.StatefulComponentClass, "Invalid use of `extend`")
+		internalAssert(Type.of(self) == Type.StatefulComponentClass, "Invalid use of `extend`")
 	end
 	if config.typeChecks then
 		assert(typeof(name) == "string", "Component class name must be a string")
@@ -72,7 +72,7 @@ end
 
 function Component:__getDerivedState(incomingProps, incomingState)
 	if config.internalTypeChecks then
-		debugAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__getDerivedState`")
+		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__getDerivedState`")
 	end
 
 	local internalData = self[InternalData]
@@ -95,7 +95,7 @@ end
 
 function Component:setState(mapState)
 	if config.internalTypeChecks then
-		debugAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `setState`")
+		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `setState`")
 	end
 
 	local internalData = self[InternalData]
@@ -240,8 +240,8 @@ end
 ]]
 function Component:__mount(reconciler, virtualNode)
 	if config.internalTypeChecks then
-		debugAssert(Type.of(self) == Type.StatefulComponentClass, "Invalid use of `__mount`")
-		debugAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #2 to be of type VirtualNode")
+		internalAssert(Type.of(self) == Type.StatefulComponentClass, "Invalid use of `__mount`")
+		internalAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #2 to be of type VirtualNode")
 	end
 
 	local currentElement = virtualNode.currentElement
@@ -312,7 +312,7 @@ end
 ]]
 function Component:__unmount()
 	if config.internalTypeChecks then
-		debugAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__unmount`")
+		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__unmount`")
 	end
 
 	local internalData = self[InternalData]
@@ -337,12 +337,12 @@ end
 ]]
 function Component:__update(updatedElement, updatedState)
 	if config.internalTypeChecks then
-		debugAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__update`")
-		debugAssert(
+		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__update`")
+		internalAssert(
 			Type.of(updatedElement) == Type.Element or updatedElement == nil,
 			"Expected arg #1 to be of type Element or nil"
 		)
-		debugAssert(
+		internalAssert(
 			typeof(updatedState) == "table" or updatedState == nil,
 			"Expected arg #2 to be of type table or nil"
 		)
@@ -414,7 +414,7 @@ end
 ]]
 function Component:__resolveUpdate(incomingProps, incomingState)
 	if config.internalTypeChecks then
-		debugAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__resolveUpdate`")
+		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__resolveUpdate`")
 	end
 
 	local internalData = self[InternalData]

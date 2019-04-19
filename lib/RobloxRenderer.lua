@@ -11,7 +11,7 @@ local SingleEventManager = require(script.Parent.SingleEventManager)
 local getDefaultInstanceProperty = require(script.Parent.getDefaultInstanceProperty)
 local Ref = require(script.Parent.PropMarkers.Ref)
 local Type = require(script.Parent.Type)
-local debugAssert = require(script.Parent.debugAssert)
+local internalAssert = require(script.Parent.internalAssert)
 
 local config = require(script.Parent.GlobalConfig).get()
 
@@ -182,7 +182,7 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 	local hostKey = virtualNode.hostKey
 
 	if config.internalTypeChecks then
-		debugAssert(ElementKind.of(element) == ElementKind.Host, "Element at given node is not a host Element")
+		internalAssert(ElementKind.of(element) == ElementKind.Host, "Element at given node is not a host Element")
 	end
 	if config.typeChecks then
 		assert(element.props.Name == nil, "Name can not be specified as a prop to a host component in Roact.")

@@ -43,10 +43,8 @@ Component.__componentName = "Component"
 	PureComponent.
 ]]
 function Component:extend(name)
-	if config.internalTypeChecks then
-		internalAssert(Type.of(self) == Type.StatefulComponentClass, "Invalid use of `extend`")
-	end
 	if config.typeChecks then
+		assert(Type.of(self) == Type.StatefulComponentClass, "Invalid `self` argument to `extend`.")
 		assert(typeof(name) == "string", "Component class name must be a string")
 	end
 
@@ -94,8 +92,8 @@ function Component:__getDerivedState(incomingProps, incomingState)
 end
 
 function Component:setState(mapState)
-	if config.internalTypeChecks then
-		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `setState`")
+	if config.typeChecks then
+		assert(Type.of(self) == Type.StatefulComponentInstance, "Invalid `self` argument to `extend`.")
 	end
 
 	local internalData = self[InternalData]

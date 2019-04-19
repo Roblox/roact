@@ -50,25 +50,6 @@ return function()
 		expect(err:find(badValue)).to.be.ok()
 	end)
 
-	it("should prevent setting configuration more than once", function()
-		local config = Config.new()
-
-		-- We're going to use the name of this function to see if the traceback
-		-- was correct.
-		local function setEmptyConfig()
-			config.set({})
-		end
-
-		setEmptyConfig()
-
-		local ok, err = pcall(setEmptyConfig)
-
-		expect(ok).to.equal(false)
-
-		-- The error should mention the stack trace with the original set call.
-		expect(err:find("setEmptyConfig")).to.be.ok()
-	end)
-
 	it("should reset to default values after invoking reset()", function()
 		local config = Config.new()
 		local values = config.get()

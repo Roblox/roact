@@ -69,30 +69,10 @@ function Config.new()
 
 	self.set(defaultConfig)
 
-	-- Once configuration has been set, we record a traceback.
-	-- That way, if the user mistakenly calls `set` twice, we can point to the
-	-- first place it was called.
-	self._lastConfigTraceback = nil
-
 	return self
 end
 
 function Config:set(configValues)
-	if self._lastConfigTraceback then
-		local message = (
-			"Global configuration can only be set once. Configuration was already set at:%s"
-		):format(
-			self._lastConfigTraceback
-		)
-
-		error(message, 3)
-	end
-
-	-- We use 3 as our traceback and error level because all of the methods are
-	-- manually bound to 'self', which creates an additional stack frame we want
-	-- to skip through.
-	self._lastConfigTraceback = debug.traceback("", 3)
-
 	-- Validate values without changing any configuration.
 	-- We only want to apply this configuration if it's valid!
 	for key, value in pairs(configValues) do
@@ -120,11 +100,7 @@ function Config:set(configValues)
 
 			error(message, 3)
 		end
-	end
 
-	-- Once validated, we mutate our config table so that all consumers who
-	-- stored the result of get have the correct values
-	for key, value in pairs(configValues) do
 		self._currentConfig[key] = value
 	end
 end
@@ -134,12 +110,12 @@ function Config:get()
 end
 
 function Config:reset()
-	self._lastConfigTraceback = nil
 	for key, value in pairs(defaultConfig) do
 		self._currentConfig[key] = value
 	end
 end
 
+-- Fix dis
 function Config:scoped(configValues, callback)
 	self.set(configValues)
 

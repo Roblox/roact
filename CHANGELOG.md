@@ -17,6 +17,7 @@
 * Introduced Roact Bindings. ([#159](https://github.com/Roblox/roact/pull/159))
 * Introduce setState suspension to replace event suspension. ([#183](https://github.com/Roblox/roact/pull/183))
 * By default, disable the warning for an element changing types during reconciliation ([#168](https://github.com/Roblox/roact/pull/168))
+* Refactor debugging asserts to be behind config flags ([#188](https://github.com/Roblox/roact/pull/188))
 
 ## 1.0.0 Prerelease 2 (March 22, 2018)
 * Removed `is*Element` methods, this is unlikely to affect anyone ([#50](https://github.com/Roblox/roact/pull/50))

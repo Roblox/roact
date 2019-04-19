@@ -11,6 +11,9 @@ local SingleEventManager = require(script.Parent.SingleEventManager)
 local getDefaultInstanceProperty = require(script.Parent.getDefaultInstanceProperty)
 local Ref = require(script.Parent.PropMarkers.Ref)
 local Type = require(script.Parent.Type)
+local internalAssert = require(script.Parent.internalAssert)
+
+local config = require(script.Parent.GlobalConfig).get()
 
 local applyPropsError = [[
 Error applying props:
@@ -178,11 +181,13 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 	local hostParent = virtualNode.hostParent
 	local hostKey = virtualNode.hostKey
 
-	assert(ElementKind.of(element) == ElementKind.Host)
-
-	-- TODO: Better error messages
-	assert(element.props.Name == nil)
-	assert(element.props.Parent == nil)
+	if config.internalTypeChecks then
+		internalAssert(ElementKind.of(element) == ElementKind.Host, "Element at given node is not a host Element")
+	end
+	if config.typeChecks then
+		assert(element.props.Name == nil, "Name can not be specified as a prop to a host component in Roact.")
+		assert(element.props.Parent == nil, "Parent can not be specified as a prop to a host component in Roact.")
+	end
 
 	local instance = Instance.new(element.component)
 	virtualNode.hostObject = instance

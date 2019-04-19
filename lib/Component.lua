@@ -3,7 +3,9 @@ local ComponentLifecyclePhase = require(script.Parent.ComponentLifecyclePhase)
 local Type = require(script.Parent.Type)
 local Symbol = require(script.Parent.Symbol)
 local invalidSetStateMessages = require(script.Parent.invalidSetStateMessages)
-local GlobalConfig = require(script.Parent.GlobalConfig)
+local internalAssert = require(script.Parent.internalAssert)
+
+local config = require(script.Parent.GlobalConfig).get()
 
 --[[
 	Calling setState during certain lifecycle allowed methods has the potential
@@ -41,8 +43,10 @@ Component.__componentName = "Component"
 	PureComponent.
 ]]
 function Component:extend(name)
-	assert(Type.of(self) == Type.StatefulComponentClass)
-	assert(typeof(name) == "string")
+	if config.typeChecks then
+		assert(Type.of(self) == Type.StatefulComponentClass, "Invalid `self` argument to `extend`.")
+		assert(typeof(name) == "string", "Component class name must be a string")
+	end
 
 	local class = {}
 
@@ -65,7 +69,9 @@ function Component:extend(name)
 end
 
 function Component:__getDerivedState(incomingProps, incomingState)
-	assert(Type.of(self) == Type.StatefulComponentInstance)
+	if config.internalTypeChecks then
+		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__getDerivedState`")
+	end
 
 	local internalData = self[InternalData]
 	local componentClass = internalData.componentClass
@@ -74,7 +80,9 @@ function Component:__getDerivedState(incomingProps, incomingState)
 		local derivedState = componentClass.getDerivedStateFromProps(incomingProps, incomingState)
 
 		if derivedState ~= nil then
-			assert(typeof(derivedState) == "table", "getDerivedStateFromProps must return a table!")
+			if config.typeChecks then
+				assert(typeof(derivedState) == "table", "getDerivedStateFromProps must return a table!")
+			end
 
 			return derivedState
 		end
@@ -84,7 +92,9 @@ function Component:__getDerivedState(incomingProps, incomingState)
 end
 
 function Component:setState(mapState)
-	assert(Type.of(self) == Type.StatefulComponentInstance)
+	if config.typeChecks then
+		assert(Type.of(self) == Type.StatefulComponentInstance, "Invalid `self` argument to `extend`.")
+	end
 
 	local internalData = self[InternalData]
 	local lifecyclePhase = internalData.lifecyclePhase
@@ -194,7 +204,7 @@ end
 	error.
 ]]
 function Component:__validateProps(props)
-	if not GlobalConfig.getValue("propertyValidation") then
+	if not config.propertyValidation then
 		return
 	end
 
@@ -227,9 +237,10 @@ end
 	instance and attach it to the given virtualNode.
 ]]
 function Component:__mount(reconciler, virtualNode)
-	assert(Type.of(self) == Type.StatefulComponentClass)
-	assert(reconciler ~= nil)
-	assert(Type.of(virtualNode) == Type.VirtualNode)
+	if config.internalTypeChecks then
+		internalAssert(Type.of(self) == Type.StatefulComponentClass, "Invalid use of `__mount`")
+		internalAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #2 to be of type VirtualNode")
+	end
 
 	local currentElement = virtualNode.currentElement
 	local hostParent = virtualNode.hostParent
@@ -298,7 +309,9 @@ end
 	this component instance.
 ]]
 function Component:__unmount()
-	assert(Type.of(self) == Type.StatefulComponentInstance)
+	if config.internalTypeChecks then
+		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__unmount`")
+	end
 
 	local internalData = self[InternalData]
 	local virtualNode = internalData.virtualNode
@@ -321,9 +334,17 @@ end
 	Returns true if the update was completed, false if it was cancelled by shouldUpdate
 ]]
 function Component:__update(updatedElement, updatedState)
-	assert(Type.of(self) == Type.StatefulComponentInstance)
-	assert(Type.of(updatedElement) == Type.Element or updatedElement == nil)
-	assert(typeof(updatedState) == "table" or updatedState == nil)
+	if config.internalTypeChecks then
+		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__update`")
+		internalAssert(
+			Type.of(updatedElement) == Type.Element or updatedElement == nil,
+			"Expected arg #1 to be of type Element or nil"
+		)
+		internalAssert(
+			typeof(updatedState) == "table" or updatedState == nil,
+			"Expected arg #2 to be of type table or nil"
+		)
+	end
 
 	local internalData = self[InternalData]
 	local componentClass = internalData.componentClass
@@ -390,7 +411,9 @@ end
 	Returns true if the update was completed, false if it was cancelled by shouldUpdate
 ]]
 function Component:__resolveUpdate(incomingProps, incomingState)
-	assert(Type.of(self) == Type.StatefulComponentInstance)
+	if config.internalTypeChecks then
+		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__resolveUpdate`")
+	end
 
 	local internalData = self[InternalData]
 	local virtualNode = internalData.virtualNode

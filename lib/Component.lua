@@ -352,7 +352,7 @@ function Component:_forceUpdate(newProps, newState)
 	self._setStateBlockedReason = "reconcile"
 	if self._handle._child ~= nil then
 		-- We returned an element during our last render, update it.
-		self._handle._child = Reconciler._reconcileInternal(
+		self._handle._child = Reconciler._updateInternal(
 			self._handle._child,
 			newChildElement
 		)

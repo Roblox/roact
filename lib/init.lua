@@ -25,10 +25,11 @@ local Roact = {
 
 	mount = Reconciler.mount,
 	unmount = Reconciler.unmount,
-	reconcile = Reconciler.reconcile,
+	update = Reconciler.update,
 
 	reify = ReconcilerCompat.reify,
 	teardown = ReconcilerCompat.teardown,
+	reconcile = ReconcilerCompat.reconcile,
 
 	setGlobalConfig = GlobalConfig.set,
 	getGlobalConfigValue = GlobalConfig.getValue,

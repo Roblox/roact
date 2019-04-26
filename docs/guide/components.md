@@ -46,7 +46,7 @@ local hello = Roact.createElement(Greeting, {
 })
 ```
 
-The `name` value is passed to our component as props, which we can reference as the `props` argument in our functional component or `self.props` in our stateful component.
+The `name` value is passed to our component as props, which we can reference as the `props` argument in our function component or `self.props` in our stateful component.
 
 ## Components in Components
 Components are designed to make it easy to re-use pieces of UI, so naturally, we can use components inside other components!
@@ -76,7 +76,7 @@ end
 Applications built using Roact usually have one component at the top of the tree, and include all other pieces as children.
 
 ## Incrementing Counter, Part Two
-We can revisit the incrementing counter example from the previous section, now using a functional component. Changed sections are highlighted.
+We can revisit the incrementing counter example from the previous section, now using a function component. Changed sections are highlighted.
 
 ```lua hl_lines="6 7 8 23 24 25 26 33 34 35"
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -84,7 +84,7 @@ local Players = game:GetService("Players")
 
 local Roact = require(ReplicatedStorage.Roact)
 
--- Create a functional component that represents our UI
+-- Create a function component that represents our UI
 local function Clock(props)
 	local currentTime = props.currentTime
 

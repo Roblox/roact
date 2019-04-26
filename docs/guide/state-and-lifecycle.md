@@ -1,6 +1,6 @@
-In the previous section, we talked about using components to create reusable chunks of state, and introduced *functional* and *stateful* components.
+In the previous section, we talked about using components to create reusable chunks of state, and introduced *host*, *function*, and *stateful* components.
 
-Stateful components do everything that functional components do, but have the addition of mutable *state* and *lifecycle methods*.
+Stateful components do everything that function components do, but have the addition of mutable *state* and *lifecycle methods*.
 
 ## State
 **State** is the term we use to talk about values that are owned by a component itself.

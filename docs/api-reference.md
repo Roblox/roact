@@ -111,7 +111,7 @@ Creates a new reference object that can be used with [Roact.Ref](#roactref).
 ### Roact.Children
 This is the key that Roact uses internally to store the children that are attached to a Roact element.
 
-If you're writing a new functional or stateful element that needs to be used like a host component, you can access `Roact.Children` in your props table.
+If you're writing a new function component or stateful component that renders children like a host component, you can access `Roact.Children` in your props table.
 
 ### Roact.Ref
 Use `Roact.Ref` as a key into the props of a host element to receive a handle to the underlying Roblox Instance.

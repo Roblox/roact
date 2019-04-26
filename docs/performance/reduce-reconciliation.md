@@ -82,7 +82,7 @@ Now, if we add a new item to the end of the `Inventory` or change something abou
 
 Another performance improvement we can make is to use stable, unique keys to refer to our child elements.
 
-When the list that we pass into the `Inventory` component changes, Roact reconciles our Roblox UI by adjusting the properties of each Roblox Instance according to the new list of elements.
+When the list that we pass into the `Inventory` component changes, Roact updates our Roblox UI by adjusting the properties of each Roblox Instance according to the new list of elements.
 
 For example, let's suppose our list of items is as follows:
 ```lua

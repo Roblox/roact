@@ -225,7 +225,7 @@ Any children of a portal are put inside the Roblox Instance specified by the req
 
 Portals are useful for creating dialogs managed by deeply-nested UI components, and enable Roact to represent and manage multiple disjoint trees at once.
 
-See [the Portals guide](/advanced/portals.md) for a small tutorial and more details about portals.
+See [the Portals guide](/advanced/portals) for a small tutorial and more details about portals.
 
 ## Component API
 

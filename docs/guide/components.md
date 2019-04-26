@@ -2,10 +2,15 @@ Components are encapsulated, reusable pieces of UI that you can combine to build
 
 Components accept inputs, known as *props*, and return elements to describe the UI that should represent those inputs.
 
-## Functional and Stateful Components
-Components come in two flavors in Roact, *functional* and *stateful*.
+## Types of Components
 
-Functional components are the simplest: they're just functions that accept props as their only argument, and return some elements.
+### Host Components
+A *host* component is nothing more than a string that matches the name of a Roblox class. We used these in our earlier discussion of [elements](/guide/elements) as the first argument to `createElement`. Examples include `"Frame"`, `"ImageButton"`, etc.
+
+When our component is a host component, the props that we pass to it will be turned directly into properties on the Roblox instance that the component refers to.
+
+### Function Components
+*Function* components are the simplest kind of user-defined component: they're just functions that accept props as their only argument, and return some elements.
 
 ```lua
 local function Greeting(props)
@@ -15,7 +20,8 @@ local function Greeting(props)
 end
 ```
 
-Roact also has *stateful* components, which have additional features, like lifecycle methods and state, that we'll talk about in a later section.
+### Stateful Components
+Roact also has *stateful* components, which provide additional features like lifecycle methods and state. We'll talk about these features in a later section.
 
 You can create a stateful component by calling `Roact.Component:extend` and passing in the component's name.
 

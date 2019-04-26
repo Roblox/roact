@@ -3,6 +3,8 @@
 ## Current `master` branch
 * Renamed `Roact.reify` to `Roact.mount` and `Roact.teardown` to `Roact.unmount` ([#82](https://github.com/Roblox/roact/issues/82))
 	* The old methods are still present as aliases, but will output a warning when used.
+* Renamed `Roact.reconcile` to `Roact.update` ([#194](https://github.com/Roblox/roact/pull/194))
+	* Like `Roact.reify` and `Roact.teardown`, the original method name is still available with a warning.
 * Added `Roact.Change` for subscribing to `GetPropertyChangedSignal` ([#51](https://github.com/Roblox/roact/pull/51))
 * Added the static lifecycle method `getDerivedStateFromProps` ([#57](https://github.com/Roblox/roact/pull/57))
 * Allow canceling render by returning nil from setState callback ([#64](https://github.com/Roblox/roact/pull/64))

@@ -10,7 +10,6 @@ return function()
 			reconcile = "function",
 			oneChild = "function",
 			setGlobalConfig = "function",
-			getGlobalConfigValue = "function",
 
 			-- These functions are deprecated and will throw warnings soon!
 			reify = "function",
@@ -24,7 +23,6 @@ return function()
 			Change = true,
 			Ref = true,
 			None = true,
-			Element = true,
 			UNSTABLE = true,
 		}
 

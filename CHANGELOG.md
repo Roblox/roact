@@ -14,6 +14,9 @@
 * `setState` can now be called inside `init` and `willUpdate`. Instead of triggering a new render, it will affect the currently scheduled one. ([#139](https://github.com/Roblox/roact/pull/139))
 * Roll back changes that allowed `setState` to be called inside `willUpdate`, which created state update scenarios with difficult-to-determine behavior. ([#157](https://github.com/Roblox/roact/pull/157))
 * By default, disable the warning for an element changing types during reconciliation ([#168](https://github.com/Roblox/roact/pull/168))
+* Removed some undocumented APIs:
+	* `Roact.getGlobalConfigValue`, which let users read the current internal configuration.
+	* `Roact.Element`, which let users figure out whether something is a Roact element. We'll introduce a proper type-checking API at a later date.
 
 ## 1.0.0 Prerelease 2 (March 22, 2018)
 * Removed `is*Element` methods, this is unlikely to affect anyone ([#50](https://github.com/Roblox/roact/pull/50))

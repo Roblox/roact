@@ -39,11 +39,11 @@ Right now, this version of `setState` works exactly the same way as the version 
 ## Lifecycle Methods
 Stateful components can provide methods to Roact that are called when certain things happen to a component instance.
 
-Lifecycle methods are a great place to send off network requests, measure UI ([with the help of refs](/advanced/refs)), wrap non-Roact components, and produce other side-effects.
+Lifecycle methods are a great place to send off network requests, measure UI ([with the help of refs](../../advanced/bindings-and-refs.md)), wrap non-Roact components, and produce other side-effects.
 
 The most useful lifecycle methods are generally `didMount` and `didUpdate`. Most components that do things that are difficult to express in Roact itself will use these lifecycle methods.
 
-Here's a chart of all of the methods available. You can also check out the [Lifecycle Methods](../api-reference/#lifecycle-methods) section of the API reference for more details.
+Here's a chart of all of the methods available. You can also check out the [Lifecycle Methods](../../api-reference/#lifecycle-methods) section of the API reference for more details.
 
 <div align="center">
 	<a href="../../images/lifecycle.svg">

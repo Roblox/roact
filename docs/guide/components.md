@@ -5,7 +5,7 @@ Components accept inputs, known as *props*, and return elements to describe the 
 ## Types of Components
 
 ### Host Components
-A *host* component is nothing more than a string that matches the name of a Roblox class. We used these in our earlier discussion of [elements](/guide/elements) as the first argument to `createElement`. Examples include `"Frame"`, `"ImageButton"`, etc.
+A *host* component is nothing more than a string that matches the name of a Roblox class. We used these in our earlier discussion about [elements](../elements) as the first argument to `createElement`. Examples include `"Frame"`, `"ImageButton"`, etc.
 
 When our component is a host component, the props that we pass to it will be turned directly into properties on the Roblox instance that the component refers to.
 

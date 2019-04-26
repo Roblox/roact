@@ -2,7 +2,7 @@ Like React, everything in Roact is built out of elements. Elements are the small
 
 Elements describe what you want your UI to look like at a single point in time. They're [immutable](https://en.wikipedia.org/wiki/Immutable_object): you can't change elements once they're created, but you can create new ones. Because creating elements is fast, this is no big deal.
 
-You can create an element using `Roact.createElement`. You will need to pass it a Roblox class name as the first argument (this is a kind of component, which we discuss in the [next section](/guide/components)), and any properties as the second argument!
+You can create an element using `Roact.createElement`. You will need to pass it a Roblox class name as the first argument (this is a kind of component, which we discuss in the [next section](../components)), and any properties as the second argument!
 
 ```lua
 local myElement = Roact.createElement("Frame", {

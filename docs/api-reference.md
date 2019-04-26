@@ -154,7 +154,7 @@ Roact.createElement("Frame", {
 !!! warning
 	When `Roact.Ref` is given a function, it will be called with `nil` when the component instance is destroyed!
 
-See [the refs guide](/advanced/refs.md) for more details.
+See [the refs guide]..(/advanced/refs) for more details.
 
 ### Roact.Event
 Index into `Roact.Event` to receive a key that can be used to connect to events when creating host elements:
@@ -173,7 +173,7 @@ Roact.createElement("ImageButton", {
 !!! warning
 	When connecting to the `Changed` event, be careful not to call `setState` or other functions that will trigger renders. This will cause Roact to re-render during a render, and errors will be thrown!
 
-See [the events guide](/guide/events.md) for more details.
+See [the events guide](../guide/events) for more details.
 
 ### Roact.Change
 Index into `Roact.Change` to receive a key that can be used to connect to [`GetPropertyChangedSignal`](http://wiki.roblox.com/index.php?title=API:Class/Instance/GetPropertyChangedSignal) events.
@@ -225,7 +225,7 @@ Any children of a portal are put inside the Roblox Instance specified by the req
 
 Portals are useful for creating dialogs managed by deeply-nested UI components, and enable Roact to represent and manage multiple disjoint trees at once.
 
-See [the Portals guide](/advanced/portals) for a small tutorial and more details about portals.
+See [the Portals guide](../advanced/portals) for a small tutorial and more details about portals.
 
 ## Component API
 

@@ -17,6 +17,11 @@ Roact.teardown has been renamed to Roact.unmount and will be removed in a future
 Check the call to Roact.teardown at:
 ]]
 
+local reconcileMessage = [[
+Roact.reconcile has been renamed to Roact.update and will be removed in a future release.
+Check the call to Roact.reconcile at:
+]]
+
 local ReconcilerCompat = {}
 
 --[[
@@ -45,6 +50,12 @@ function ReconcilerCompat.teardown(...)
 	warnOnce(teardownMessage)
 
 	return Reconciler.unmount(...)
+end
+
+function ReconcilerCompat.reconcile(...)
+	warnOnce(reconcileMessage)
+
+	return Reconciler.update(...)
 end
 
 return ReconcilerCompat

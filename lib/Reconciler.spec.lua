@@ -59,7 +59,7 @@ return function()
 		local handle = Reconciler.mount(element, game, "Test123")
 		expect(aValue).to.be.ok()
 		expect(bValue).to.never.be.ok()
-		handle = Reconciler.reconcile(handle, createElement("StringValue", {
+		handle = Reconciler.update(handle, createElement("StringValue", {
 			[Core.Ref] = bRef,
 		}))
 		expect(aValue).to.never.be.ok()
@@ -79,7 +79,7 @@ return function()
 		local handle = Reconciler.mount(element, game, "Test123")
 		expect(aRef.current).to.be.ok()
 		expect(bRef.current).to.never.be.ok()
-		handle = Reconciler.reconcile(handle, createElement("StringValue", {
+		handle = Reconciler.update(handle, createElement("StringValue", {
 			[Core.Ref] = bRef,
 		}))
 		expect(aRef.current).to.never.be.ok()
@@ -110,7 +110,7 @@ return function()
 		container.Foo.Size = UDim2.new(0, 100, 0, 100)
 		expect(sizeChangedCount).to.equal(1)
 
-		handle = Reconciler.reconcile(handle, createElement("Frame", {
+		handle = Reconciler.update(handle, createElement("Frame", {
 			[Event.Changed] = nil
 		}))
 		container.Foo.Size = UDim2.new(0, 200, 0, 200)
@@ -139,7 +139,7 @@ return function()
 		container.Foo.Size = UDim2.new(0, 100, 0, 100)
 		expect(sizeChangedCount).to.equal(1)
 
-		handle = Reconciler.reconcile(handle, createElement("Frame", {
+		handle = Reconciler.update(handle, createElement("Frame", {
 			[Change.Size] = nil
 		}))
 		container.Foo.Size = UDim2.new(0, 200, 0, 200)

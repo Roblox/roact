@@ -209,7 +209,7 @@ return function()
 		local state = getStateCallback()
 		expect(state.visible).to.equal(true)
 
-		handle = Reconciler.reconcile(handle, createElement(TestComponent, {
+		handle = Reconciler.update(handle, createElement(TestComponent, {
 			visible = 123
 		}))
 
@@ -283,7 +283,7 @@ return function()
 		end
 
 		local handle = Reconciler.mount(createElement(TestComponent, {}))
-		Reconciler.reconcile(handle, createElement(TestComponent, {
+		Reconciler.update(handle, createElement(TestComponent, {
 			baz = "!",
 		}))
 
@@ -317,7 +317,7 @@ return function()
 		expect(lastProps.foo).to.equal("hey")
 		expect(lastProps.bar).to.equal("world")
 
-		handle = Reconciler.reconcile(handle, createElement(TestComponent))
+		handle = Reconciler.update(handle, createElement(TestComponent))
 
 		expect(lastProps).to.be.a("table")
 		expect(lastProps.foo).to.equal("hello")
@@ -454,7 +454,7 @@ return function()
 			local handle = Reconciler.mount(element)
 
 			expect(function()
-				handle = Reconciler.reconcile(handle, {
+				handle = Reconciler.update(handle, {
 					createElement(TestComponent, {
 						someProp = 2
 					})

@@ -4,7 +4,7 @@
 
 	The reonciler has three basic operations:
 	* mount (previously reify)
-	* reconcile
+	* update (previously reconcile)
 	* unmount (previously teardown)
 
 	Mounting is the process of creating new components. This is first
@@ -278,12 +278,12 @@ function Reconciler._mountInternal(element, parent, key, context)
 end
 
 --[[
-	A public interface around _reconcileInternal
+	A public interface around _updateInternal
 ]]
-function Reconciler.reconcile(instanceHandle, newElement)
+function Reconciler.update(instanceHandle, newElement)
 	if instanceHandle == nil or not instanceHandle[isInstanceHandle] then
 		local message = (
-			"Bad argument #1 to Reconciler.reconcile, expected component instance handle, found %s"
+			"Bad argument #1 to Reconciler.update, expected component instance handle, found %s"
 		):format(
 			typeof(instanceHandle)
 		)
@@ -291,7 +291,7 @@ function Reconciler.reconcile(instanceHandle, newElement)
 		error(message, 2)
 	end
 
-	return Reconciler._reconcileInternal(instanceHandle, newElement)
+	return Reconciler._updateInternal(instanceHandle, newElement)
 end
 
 --[[
@@ -300,7 +300,7 @@ end
 	reconcile will return the instance that should be used. This instance can
 	be different than the one that was passed in.
 ]]
-function Reconciler._reconcileInternal(instanceHandle, newElement)
+function Reconciler._updateInternal(instanceHandle, newElement)
 	local oldElement = instanceHandle._element
 
 	local newElementKind = getElementKind(newElement)
@@ -375,7 +375,7 @@ function Reconciler._reconcileInternal(instanceHandle, newElement)
 
 		if instanceHandle._child then
 			-- Transition from tree to tree, even if 'rendered' is nil
-			newChild = Reconciler._reconcileInternal(instanceHandle._child, rendered)
+			newChild = Reconciler._updateInternal(instanceHandle._child, rendered)
 		elseif rendered then
 			-- Transition from nil to new tree
 			newChild = Reconciler._mountInternal(
@@ -429,7 +429,7 @@ function Reconciler._reconcilePrimitiveChildren(instance, newElement)
 	for key, childInstance in pairs(instance._children) do
 		local childElement = elementChildren and elementChildren[key]
 
-		childInstance = Reconciler._reconcileInternal(childInstance, childElement)
+		childInstance = Reconciler._updateInternal(childInstance, childElement)
 
 		instance._children[key] = childInstance
 	end

@@ -18,7 +18,6 @@ local Roact = {
 	PureComponent = require(script.PureComponent),
 
 	Children = Core.Children,
-	Element = Core.Element,
 	None = Core.None,
 	Portal = Core.Portal,
 	Ref = Core.Ref,
@@ -32,7 +31,6 @@ local Roact = {
 	reconcile = ReconcilerCompat.reconcile,
 
 	setGlobalConfig = GlobalConfig.set,
-	getGlobalConfigValue = GlobalConfig.getValue,
 
 	-- APIs that may change in the future without warning
 	UNSTABLE = {

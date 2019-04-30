@@ -36,19 +36,19 @@ Creates a Roblox Instance given a Roact element, and optionally a `parent` to pu
 
 The result is a `ComponentInstanceHandle`, which is an opaque handle that represents this specific instance of the root component. You can pass this to APIs like `Roact.unmount` and the future debug API.
 
-### Roact.reconcile
+### Roact.update
 ```
-Roact.reconcile(instanceHandle, element) -> ComponentInstanceHandle
+Roact.update(instanceHandle, element) -> ComponentInstanceHandle
 ```
 
 Updates an existing instance handle with a new element, returning a new handle. This can be used to update a UI created with `Roact.mount` by passing in a new element with new props.
 
-`reconcile` can be used to change the props of a component instance created with `mount` and is useful for putting Roact content into non-Roact applications.
+`update` can be used to change the props of a component instance created with `mount` and is useful for putting Roact content into non-Roact applications.
 
 !!! warning
-	`Roact.reconcile` takes ownership of the `instanceHandle` passed into it and may unmount it and mount a new tree!
+	`Roact.update` takes ownership of the `instanceHandle` passed into it and may unmount it and mount a new tree!
 
-	Make sure to use the handle that `reconcile` returns in any operations after `reconcile`, including `unmount`.
+	Make sure to use the handle that `update` returns in any operations after `update`, including `unmount`.
 
 ### Roact.unmount
 ```
@@ -149,7 +149,7 @@ Roact.createElement("Frame", {
 ```
 
 !!! warning
-	When `Roact.Ref` is given a function, Roact does not guarantee when this function will be run relative to the reconciliation of other props. If you try to read a Roblox property that's being set via a Roact prop, you won't know if you're reading it before or after Roact reconciles that prop!
+	When `Roact.Ref` is given a function, Roact does not guarantee when this function will be run relative to the reconciliation of other props. If you try to read a Roblox property that's being set via a Roact prop, you won't know if you're reading it before or after Roact updates that prop!
 
 !!! warning
 	When `Roact.Ref` is given a function, it will be called with `nil` when the component instance is destroyed!
@@ -409,7 +409,7 @@ willUpdate(nextProps, nextState) -> void
 didUpdate(previousProps, previousState) -> void
 ```
 
-`didUpdate` is fired after at the end of an update. At this point, the reconciler has updated the properties of any Roblox Instances and the component instance's props and state are up to date.
+`didUpdate` is fired after at the end of an update. At this point, Roact has updated the properties of any Roblox Instances and the component instance's props and state are up to date.
 
 `didUpdate` is a good place to send network requests or dispatch Rodux actions, but make sure to compare `self.props` and `self.state` with `previousProps` and `previousState` to avoid triggering too many updates.
 

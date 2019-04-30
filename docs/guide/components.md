@@ -111,7 +111,7 @@ while true do
 	wait(1)
 
 	currentTime = currentTime + 1
-	handle = Roact.reconcile(handle, Roact.createElement(Clock, {
+	handle = Roact.update(handle, Roact.createElement(Clock, {
 		currentTime = currentTime
 	}))
 end

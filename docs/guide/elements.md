@@ -31,10 +31,10 @@ local myHandle = Roact.mount(myElement, game.Workspace)
 
 Mounting is the process of creating a Roact component instance as well as any associated Roblox Instances.
 
-`Roact.mount` returns a handle that we can later use to update or destroy that object with `Roact.reconcile` and `Roact.unmount`.
+`Roact.mount` returns a handle that we can later use to update or destroy that object with `Roact.update` and `Roact.unmount`.
 
 ## Changing What's Rendered
-In order to change the UI that we've created, we need to create a new set of elements and *reconcile* the existing tree to match it.
+In order to change the UI that we've created, we need to create a new set of elements and *update* the existing tree to match it.
 
 Reconciliation is the term that Roact uses to describe the process of updating an existing UI to match what the program wants it to look like at any given time.
 
@@ -51,13 +51,13 @@ local myNewElement = Roact.createElement("Frame", {
 })
 
 -- Update our hierarchy to match those elements.
-myHandle = Roact.reconcile(myHandle, myNewElement)
+myHandle = Roact.update(myHandle, myNewElement)
 ```
 
 !!! info
-	Most projects using UI don't use `Roact.reconcile` and instead change UI using state and lifecycle events, which will be introduced in the next section.
+	Most projects using UI don't use `Roact.update` and instead change UI using state and lifecycle events, which will be introduced in the next section.
 
-	`Roact.reconcile` is mostly useful to embed Roact components into existing, non-Roact projects, and for introducing Roact!
+	`Roact.update` is mostly useful to embed Roact components into existing, non-Roact projects, and for introducing Roact!
 
 Unlike many other UI systems, Roact doesn't let you directly set values on UI objects. Instead, describe what your UI should look like in the form of elements and Roact will handle changing the underlying Roblox Instances.
 
@@ -106,7 +106,7 @@ while true do
 	wait(1)
 
 	currentTime = currentTime + 1
-	handle = Roact.reconcile(handle, clock(currentTime))
+	handle = Roact.update(handle, clock(currentTime))
 end
 ```
 

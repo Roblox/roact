@@ -52,7 +52,7 @@ Here's a chart of all of the methods available. You can also check out the [Life
 </div>
 
 ## Incrementing Counter, Part Three
-Building on the previous two examples, we can expand the incrementing counter to move the counter state and loop inside Roact, and use `setState` to trigger a re-render instead of `Roact.reconcile`.
+Building on the previous two examples, we can expand the incrementing counter to move the counter state and loop inside Roact, and use `setState` to trigger a re-render instead of `Roact.update`.
 
 Generally, this ticking clock demonstrates how many stateful components are structured in Roact.
 

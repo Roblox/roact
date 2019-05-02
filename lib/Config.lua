@@ -21,7 +21,7 @@ local defaultConfig = {
 	-- Enables storage of `debug.traceback()` values on elements for debugging.
 	["elementTracing"] = false,
 	-- Enables validation of component props in stateful components.
-	["propertyValidation"] = false,
+	["propValidation"] = false,
 }
 
 -- Build a list of valid configuration values up for debug messages.

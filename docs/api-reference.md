@@ -124,7 +124,7 @@ Call this method once at the root of your project (before mounting any Roact ele
 ```lua
 Roact.setGlobalConfig({
 	typeChecks = true,
-	propertyValidation = true,
+	propValidation = true,
 })
 ```
 
@@ -147,7 +147,7 @@ When enabled, Roact will capture a stack trace at the site of each element creat
 
 Enabling `elementTracing` also allows the use of the [getElementTraceback](#getelementtraceback) method on Component, which can also be helpful for debugging.
 
-#### propertyValidation
+#### propValidation
 Enables validation of props via the [validateProps](#validateprops) method on components. With this flag enabled, any validation written by component authors in a component's `validateProps` method will be run on every prop change. This is helpful during development for making sure components are being used correctly.
 
 ## Constants
@@ -425,7 +425,7 @@ Roact.setGlobalConfig({
 })
 ```
 
- See [setGlobalConfig](#roactsetglobalconfig) for more details.
+See [setGlobalConfig](#roactsetglobalconfig) for more details.
 
 !!! warning
 	Depending on the implementation, `validateProps` can impact performance. Recommended practice is to enable prop validation during development and leave it off in production environments.

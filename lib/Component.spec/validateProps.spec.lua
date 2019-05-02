@@ -11,7 +11,7 @@ return function()
 
 	it("should be invoked when mounted", function()
 		local config = {
-			propertyValidation = true,
+			propValidation = true,
 		}
 
 		GlobalConfig.scoped(config, function()
@@ -38,7 +38,7 @@ return function()
 
 	it("should be invoked when props change", function()
 		local config = {
-			propertyValidation = true,
+			propValidation = true,
 		}
 
 		GlobalConfig.scoped(config, function()
@@ -75,7 +75,7 @@ return function()
 
 	it("should not be invoked when state changes", function()
 		local config = {
-			propertyValidation = true,
+			propValidation = true,
 		}
 
 		GlobalConfig.scoped(config, function()
@@ -118,7 +118,7 @@ return function()
 
 	it("should throw if validateProps is not a function", function()
 		local config = {
-			propertyValidation = true,
+			propValidation = true,
 		}
 
 		GlobalConfig.scoped(config, function()
@@ -141,7 +141,7 @@ return function()
 
 	it("should throw if validateProps returns false", function()
 		local config = {
-			propertyValidation = true,
+			propValidation = true,
 		}
 
 		GlobalConfig.scoped(config, function()
@@ -166,7 +166,7 @@ return function()
 
 	it("should be invoked after defaultProps are applied", function()
 		local config = {
-			propertyValidation = true,
+			propValidation = true,
 		}
 
 		GlobalConfig.scoped(config, function()
@@ -209,7 +209,7 @@ return function()
 
 	it("should not be invoked if the flag is off", function()
 		local config = {
-			propertyValidation = false,
+			propValidation = false,
 		}
 
 		GlobalConfig.scoped(config, function()

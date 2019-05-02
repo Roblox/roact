@@ -226,8 +226,8 @@ It's similar to `Roact.Event`:
 
 ```lua
 Roact.createElement("ScrollingFrame", {
-	[Roact.Change.CanvasPosition] = function(rbx, position)
-		print("ScrollingFrame scrolled to", position)
+	[Roact.Change.CanvasPosition] = function(rbx)
+		print("ScrollingFrame scrolled to", rbx.CanvasPosition)
 	end,
 })
 ```

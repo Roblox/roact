@@ -109,7 +109,7 @@ local function createReconciler(renderer)
 			-- TODO: Better error message
 			Logging.error(("%s\n%s"):format(
 				"Component returned invalid children:",
-				virtualNode.currentElement.source or ""
+				virtualNode.currentElement.source or "<enable element tracebacks>"
 			), 0)
 		end
 	end

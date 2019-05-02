@@ -177,7 +177,6 @@ end
 ]]
 function Component:getElementTraceback()
 	return self[InternalData].virtualNode.currentElement.source
-		or "<enable element tracebacks>"
 end
 
 --[[

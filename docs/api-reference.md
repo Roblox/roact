@@ -108,6 +108,40 @@ Roact.createRef() -> Ref
 
 Creates a new reference object that can be used with [Roact.Ref](#roactref).
 
+### Roact.setGlobalConfig
+```
+Roact.setGlobalConfig(configValues: Dictionary<string, bool>) -> void
+```
+
+The entry point for configuring Roact. Roact currently applies this to everything using this instance of Roact, so be careful using this with a project that has multiple consumers of Roact.
+
+Once config values are set, they will apply from then on. This is primarily useful when developing as it can enable features that validate your code more strictly. Most of the settings here incur a performance cost and should typically be disabled in production environments.
+
+The following are the valid config keys that can be used, and what they do.
+
+#### typeChecks
+
+Enables type checks for Roact's public interface. This includes some of the following:
+
+* Check that the `props` and `children` arguments to `Roact.createElement` are both tables or nil
+* Check that `setState` is passing `self` as the first argument (it should be called like `self:setState(...)`)
+* Confirm the `Roact.mount`'s first argument is a Roact element
+* And much more!
+
+#### internalTypeChecks
+
+Enables type checks for internal functionality of Roact. This is typically only useful when debugging Roact itself. It will run similar type checks to those mentioned above, but only the private portion of the API.
+
+#### elementTracing
+
+When enabled, Roact will capture a stack trace at the site of each element creation and hold onto it, using it to provide additional details on certain kinds of errors. If you get an error that says "<enable element tracebacks>", try enabling this config value to help with debugging.
+
+Enabling `elementTracing` also allows the use of the [getElementTraceback](#getelementtraceback) method on Component, which can also be helpful for debugging.
+
+#### propertyValidation
+
+Enables validation of props via the [validateProps](#validateProps) method on components. With this flag enabled, any validation written by component authors in a component's `validateProps` method will be run on every prop change. This is helpful during development for making sure components are being used correctly.
+
 ## Constants
 
 ### Roact.Children
@@ -368,8 +402,17 @@ By default, components are re-rendered any time a parent component updates, or w
 ### validateProps
 *Added in 0.2.0*
 ```
-static validateProps() -> (false, message: string) | true
+static validateProps(props) -> (false, message: string) | true
 ```
+
+`validateProps` is an optional method that can be implemented for a component. It provides a mechanism for verifying inputs passed into the component.
+
+Every time props are updated, `validateProps` will be called with the new props before proceeding to `shouldUpdate` or `init`. It should return the same parameters that assert expects: a boolean, true if the props passed validation, false if they did not, plus a message explaining why they failed. If the first return value is true, the second value is ignored.
+
+**For performance reasons, property validation is disabled by default.** To use this feature, enable it via [`setGlobalConfig`](#roactsetglobalconfig).
+
+!!! warning
+	Depending on the implementation, `validateProps` can impact performance. Recommended practice is to enable prop validation during development and leave it off in production environments.
 
 ### getElementTraceback
 ```

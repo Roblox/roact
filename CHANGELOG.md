@@ -1,10 +1,14 @@
 # Roact Changelog
 
-## Current `master` branch
+## [0.2.0](https://github.com/Roblox/roact/releases/tag/v0.2.0)
+* Deprecated `Roact.reconcile` in favor of `Roact.update` ([#194](https://github.com/Roblox/roact/pull/194))
+* Removed some undocumented APIs:
+	* `Roact.getGlobalConfigValue`, which let users read the current internal configuration.
+	* `Roact.Element`, which let users figure out whether something is a Roact element. We'll introduce a proper type-checking API at a later date.
+
+## April 15th, 2019 Prerelease
 * Renamed `Roact.reify` to `Roact.mount` and `Roact.teardown` to `Roact.unmount` ([#82](https://github.com/Roblox/roact/issues/82))
 	* The old methods are still present as aliases, but will output a warning when used.
-* Renamed `Roact.reconcile` to `Roact.update` ([#194](https://github.com/Roblox/roact/pull/194))
-	* Like `Roact.reify` and `Roact.teardown`, the original method name is still available with a warning.
 * Added `Roact.Change` for subscribing to `GetPropertyChangedSignal` ([#51](https://github.com/Roblox/roact/pull/51))
 * Added the static lifecycle method `getDerivedStateFromProps` ([#57](https://github.com/Roblox/roact/pull/57))
 * Allow canceling render by returning nil from setState callback ([#64](https://github.com/Roblox/roact/pull/64))
@@ -16,11 +20,8 @@
 * `setState` can now be called inside `init` and `willUpdate`. Instead of triggering a new render, it will affect the currently scheduled one. ([#139](https://github.com/Roblox/roact/pull/139))
 * Roll back changes that allowed `setState` to be called inside `willUpdate`, which created state update scenarios with difficult-to-determine behavior. ([#157](https://github.com/Roblox/roact/pull/157))
 * By default, disable the warning for an element changing types during reconciliation ([#168](https://github.com/Roblox/roact/pull/168))
-* Removed some undocumented APIs:
-	* `Roact.getGlobalConfigValue`, which let users read the current internal configuration.
-	* `Roact.Element`, which let users figure out whether something is a Roact element. We'll introduce a proper type-checking API at a later date.
 
-## 1.0.0 Prerelease 2 (March 22, 2018)
+## March 22, 2018 Prerelease
 * Removed `is*Element` methods, this is unlikely to affect anyone ([#50](https://github.com/Roblox/roact/pull/50))
 * Added new global configuration API for debug settings ([#46](https://github.com/Roblox/roact/pull/46))
 * Added `Roact.reconcile`, which will be in the guide soon. It's useful for embedding Roact into existing projects! ([#44](https://github.com/Roblox/roact/pull/44))
@@ -32,5 +33,5 @@
 * Error messages should make more sense in general
 * Got rid of installer scripts in favor of regular model files
 
-## 1.0.0 Prerelease 1 (December 1, 2017)
+## December 1, 2017 Prerelease
 * Initial pre-release build

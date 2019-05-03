@@ -44,4 +44,12 @@ return function()
 
 		expect(ref.current).to.equal(99)
 	end)
+
+	it("should return the same thing from getValue as its current field", function()
+		local ref = createRef()
+		Binding.update(ref, 10)
+
+		expect(ref:getValue()).to.equal(10)
+		expect(ref.current).to.equal(10)
+	end)
 end

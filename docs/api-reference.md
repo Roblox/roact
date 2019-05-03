@@ -160,27 +160,30 @@ If you're writing a new function component or stateful component that renders ch
 ### Roact.Ref
 Use `Roact.Ref` as a key into the props of a host element to receive a handle to the underlying Roblox Instance.
 
-Assign this key to a reference object created with [createRef](#roactcreateref):
+Assign this key to a ref created with [createRef](#roactcreateref):
 ```lua
 local ExampleComponent = Roact.Component:extend("ExampleComponent")
 
 function ExampleComponent:init()
-	-- Create a reference object.
+	-- Create a ref.
 	self.ref = Roact.createRef()
 end
 
 function ExampleComponent:render()
 	return Roact.createElement("Frame", {
-		-- Use the reference object to point to this rendered instance.
+		-- Use the ref to point to this rendered instance.
 		[Roact.Ref] = self.ref,
 	})
 end
 
 function ExampleComponent:didMount()
-	-- Access the current value of a reference object using its current property.
-	print("Roblox Instance", self.ref.current)
+	-- Refs are a kind of binding, so we can access the Roblox Instance using getValue.
+	print("Roblox Instance", self.ref:getValue())
 end
 ```
+
+!!! info
+	Ref objects have a deprecated field called `current` that is always equal to the result of `getValue`. Assigning to the `current` field is not allowed. The field will be removed in a future release.
 
 Alternatively, you can assign it to a function instead:
 ```lua

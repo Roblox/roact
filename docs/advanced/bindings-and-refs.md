@@ -101,8 +101,8 @@ Finally, we can use the value of the ref at any point after our component is mou
 
 ```lua
 function Foo:didMount()
-	-- The actual Instance is stored in the 'current' property of a ref object.
-	local textBox = self.textBoxRef.current
+	-- The actual Instance can be retrieved using the `getValue` method of the ref.
+	local textBox = self.textBoxRef:getValue()
 
 	print("TextBox has this text:", textBox.Text)
 end

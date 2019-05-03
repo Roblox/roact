@@ -5,58 +5,37 @@
 	The indentation may seem odd, but it's necessary to avoid introducing extra
 	whitespace into the error messages themselves.
 ]]
+local ComponentLifecyclePhase = require(script.Parent.ComponentLifecyclePhase)
 
 local invalidSetStateMessages = {}
 
-invalidSetStateMessages["willUpdate"] = [[
+invalidSetStateMessages[ComponentLifecyclePhase.WillUpdate] = [[
 setState cannot be used in the willUpdate lifecycle method.
 Consider using the didUpdate method instead, or using getDerivedStateFromProps.
 
 Check the definition of willUpdate in the component %q.]]
 
-invalidSetStateMessages["willUnmount"] = [[
+invalidSetStateMessages[ComponentLifecyclePhase.WillUnmount] = [[
 setState cannot be used in the willUnmount lifecycle method.
 A component that is being unmounted cannot be updated!
 
 Check the definition of willUnmount in the component %q.]]
 
-invalidSetStateMessages["shouldUpdate"] = [[
+invalidSetStateMessages[ComponentLifecyclePhase.ShouldUpdate] = [[
 setState cannot be used in the shouldUpdate lifecycle method.
 shouldUpdate must be a pure function that only depends on props and state.
 
 Check the definition of shouldUpdate in the component %q.]]
 
-invalidSetStateMessages["init"] = [[
-setState cannot be used in the init method.
-During init, the component hasn't initialized yet, and isn't ready to render.
-
-Instead, set the `state` value directly:
-
-	self.state = {
-		value = "foo"
-	}
-
-Check the definition of init in the component %q.]]
-
-invalidSetStateMessages["render"] = [[
+invalidSetStateMessages[ComponentLifecyclePhase.Render] = [[
 setState cannot be used in the render method.
 render must be a pure function that only depends on props and state.
 
 Check the definition of render in the component %q.]]
 
-invalidSetStateMessages["reconcile"] = [[
-setState cannot be called while a component is being reified or reconciled.
-This is the step where Roact constructs Roblox instances, and starting another
-render here would introduce bugs.
-
-Check the component %q to see if setState is being called by:
-* a child Ref
-* a child Changed event
-* a child's render method]]
-
 invalidSetStateMessages["default"] = [[
-setState can not be used in the current situation, but Roact couldn't find a
-message to display.
+setState can not be used in the current situation, because Roact doesn't know
+which part of the lifecycle this component is in.
 
 This is a bug in Roact.
 It was triggered by the component %q.

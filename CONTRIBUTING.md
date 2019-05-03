@@ -30,13 +30,13 @@ Make sure you have all of the Git submodules for Roact downloaded, which include
 Finally, you can run all of Roact's tests with:
 
 ```sh
-lua spec.lua
+lua bin/spec.lua
 ```
 
 Or, to also generate a LuaCov coverage report:
 
 ```sh
-lua -lluacov spec.lua
+lua -lluacov bin/spec.lua
 luacov
 ```
 

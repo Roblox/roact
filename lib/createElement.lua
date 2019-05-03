@@ -1,34 +1,71 @@
-local Core = require(script.Parent.Core)
-local GlobalConfig = require(script.Parent.GlobalConfig)
+local Children = require(script.Parent.PropMarkers.Children)
+local ElementKind = require(script.Parent.ElementKind)
+local Logging = require(script.Parent.Logging)
+local Type = require(script.Parent.Type)
+
+local config = require(script.Parent.GlobalConfig).get()
+
+local multipleChildrenMessage = [[
+The prop `Roact.Children` was defined but was overriden by the third parameter to createElement!
+This can happen when a component passes props through to a child element but also uses the `children` argument:
+
+	Roact.createElement("Frame", passedProps, {
+		child = ...
+	})
+
+Instead, consider using a utility function to merge tables of children together:
+
+	local children = mergeTables(passedProps[Roact.Children], {
+		child = ...
+	})
+
+	local fullProps = mergeTables(passedProps, {
+		[Roact.Children] = children
+	})
+
+	Roact.createElement("Frame", fullProps)]]
 
 --[[
-	Creates a new Roact element of the given type.
+	Creates a new element representing the given component.
 
-	Does not create any concrete objects.
+	Elements are lightweight representations of what a component instance should
+	look like.
+
+	Children is a shorthand for specifying `Roact.Children` as a key inside
+	props. If specified, the passed `props` table is mutated!
 ]]
-local function createElement(elementType, props, children)
-	if elementType == nil then
-		error(("Expected elementType as an argument to createElement!"), 2)
+local function createElement(component, props, children)
+	if config.typeChecks then
+		assert(component ~= nil, "`component` is required")
+		assert(typeof(props) == "table" or props == nil, "`props` must be a table or nil")
+		assert(typeof(children) == "table" or children == nil, "`children` must be a table or nil")
 	end
 
-	props = props or {}
+	if props == nil then
+		props = {}
+	end
 
-	if children then
-		if props[Core.Children] ~= nil then
-			warn("props[Children] was defined but was overridden by third parameter to createElement!")
+	if children ~= nil then
+		if props[Children] ~= nil then
+			Logging.warnOnce(multipleChildrenMessage)
 		end
 
-		props[Core.Children] = children
+		props[Children] = children
 	end
 
+	local elementKind = ElementKind.fromComponent(component)
+
 	local element = {
-		type = Core.Element,
-		component = elementType,
+		[Type] = Type.Element,
+		[ElementKind] = elementKind,
+		component = component,
 		props = props,
 	}
 
-	if GlobalConfig.getValue("elementTracing") then
-		element.source = ("\n%s\n"):format(debug.traceback())
+	if config.elementTracing then
+		-- We trim out the leading newline since there's no way to specify the
+		-- trace level without also specifying a message.
+		element.source = debug.traceback("", 2):sub(2)
 	end
 
 	return element

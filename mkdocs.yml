@@ -19,8 +19,9 @@ pages:
     - State and Lifecycle: guide/state-and-lifecycle.md
     - Events: guide/events.md
   - Advanced Concepts:
+    - Fragments: advanced/fragments.md
     - Portals: advanced/portals.md
-    - Refs: advanced/refs.md
+    - Bindings and Refs: advanced/bindings-and-refs.md
     - Context: advanced/context.md
   - Performance Optimization:
     - Overview: performance/overview.md

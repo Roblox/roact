@@ -27,18 +27,4 @@ function Symbol.named(name)
 	return self
 end
 
---[[
-	Create an unnamed Symbol. Usually, you should create a named Symbol using
-	Symbol.named(name)
-]]
-function Symbol.unnamed()
-	local self = newproxy(true)
-
-	getmetatable(self).__tostring = function()
-		return "Unnamed Symbol"
-	end
-
-	return self
-end
-
 return Symbol

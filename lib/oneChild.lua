@@ -1,19 +1,19 @@
 --[[
-	Utility to retrieve one child out the children passed to a component.
+	Retrieves at most one child from the children passed to a component.
 
 	If passed nil or an empty table, will return nil.
 
-	Throws an error if passed more than one child, but can be passed zero.
+	Throws an error if passed more than one child.
 ]]
 local function oneChild(children)
 	if not children then
-		return
+		return nil
 	end
 
 	local key, child = next(children)
 
 	if not child then
-		return
+		return nil
 	end
 
 	local after = next(children, key)

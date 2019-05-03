@@ -1,20 +1,38 @@
 --[[
-	Provides an API for acquiring a reference to a reified object. This
-	API is designed to mimic React 16.3's createRef API.
-
-	See:
-	* https://reactjs.org/docs/refs-and-the-dom.html
-	* https://reactjs.org/blog/2018/03/29/react-v-16-3.html#createref-api
+	A ref is nothing more than a binding with a special field 'current'
+	that maps to the getValue method of the binding
 ]]
+local Binding = require(script.Parent.Binding)
 
-local refMetatable = {
-	__tostring = function(self)
-		return ("RoactReference(%s)"):format(tostring(self.current))
-	end,
-}
+local function createRef()
+	local binding, _ = Binding.create(nil)
 
-return function()
-	return setmetatable({
-		current = nil,
-	}, refMetatable)
+	local ref = {}
+
+	--[[
+		A ref is just redirected to a binding via its metatable
+	]]
+	setmetatable(ref, {
+		__index = function(self, key)
+			if key == "current" then
+				return binding:getValue()
+			else
+				return binding[key]
+			end
+		end,
+		__newindex = function(self, key, value)
+			if key == "current" then
+				error("Cannot assign to the 'current' property of refs", 2)
+			end
+
+			binding[key] = value
+		end,
+		__tostring = function(self)
+			return ("RoactRef(%s)"):format(tostring(binding:getValue()))
+		end,
+	})
+
+	return ref
 end
+
+return createRef

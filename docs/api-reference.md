@@ -12,7 +12,18 @@ The `children` argument is shorthand for adding a `Roact.Children` key to `props
 `component` can be a string, a function, or a table created by `Component:extend`.
 
 !!! caution
-	Once `props` or `children` are passed into the `createElement`, make sure not to modify them!
+	Make sure not to modify `props` or `children` after they're passed into `createElement`!
+
+### Roact.createFragment
+*Added in 1.0.0*
+```
+Roact.createFragment(elements) -> RoactFragment
+```
+
+Creates a new Roact fragment with the provided table of elements. Fragments allow grouping of elements without the need for intermediate containing objects like `Frame`s.
+
+!!! caution
+	Make sure not to modify `elements` after they're passed into `createFragment`!
 
 ### Roact.mount
 ```
@@ -26,19 +37,22 @@ Creates a Roblox Instance given a Roact element, and optionally a `parent` to pu
 
 The result is a `ComponentInstanceHandle`, which is an opaque handle that represents this specific instance of the root component. You can pass this to APIs like `Roact.unmount` and the future debug API.
 
-### Roact.reconcile
+### Roact.update
 ```
-Roact.reconcile(instanceHandle, element) -> ComponentInstanceHandle
+Roact.update(instanceHandle, element) -> ComponentInstanceHandle
 ```
+
+!!! info
+	`Roact.update` is also available via the deprecated alias `Roact.reconcile`. It will be removed in a future release.
 
 Updates an existing instance handle with a new element, returning a new handle. This can be used to update a UI created with `Roact.mount` by passing in a new element with new props.
 
-`reconcile` can be used to change the props of a component instance created with `mount` and is useful for putting Roact content into non-Roact applications.
+`update` can be used to change the props of a component instance created with `mount` and is useful for putting Roact content into non-Roact applications.
 
 !!! warning
-	`Roact.reconcile` takes ownership of the `instanceHandle` passed into it and may unmount it and mount a new tree!
+	`Roact.update` takes ownership of the `instanceHandle` passed into it and may unmount it and mount a new tree!
 
-	Make sure to use the handle that `reconcile` returns in any operations after `reconcile`, including `unmount`.
+	Make sure to use the handle that `update` returns in any operations after `update`, including `unmount`.
 
 ### Roact.unmount
 ```
@@ -48,7 +62,7 @@ Roact.unmount(instance) -> void
 !!! info
 	`Roact.unmount` is also available via the deprecated alias `Roact.teardown`. It will be removed in a future release.
 
-Destroys the given `ComponentInstanceHandle` and all of its descendents. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.
+Destroys the given `ComponentInstanceHandle` and all of its descendants. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.
 
 ### Roact.oneChild
 `Roact.oneChild(children) -> RoactElement | nil`
@@ -59,6 +73,37 @@ If `children` contains more than one child, `oneChild` function will throw an er
 
 If `children` is `nil` or contains no children, `oneChild` will return `nil`.
 
+### Roact.createBinding
+*Added in 1.0.0*
+```
+Roact.createBinding(initialValue) -> Binding, updateFunction
+where
+	updateFunction: (newValue) -> ()
+```
+
+The first value returned is a `Binding` object, which will typically be passed as a prop to a Roact host component. The second is a function that can be called with a new value to update the binding.
+
+A `Binding` has the following API:
+
+#### getValue
+```
+Binding:getValue() -> value
+```
+
+Returns the internal value of the binding. This is helpful when updating a binding relative to its current value.
+
+!!! warning
+	Using `getValue` inside a component's `render` method is dangerous! Using the unwrapped value directly won't allow Roact to subscribe to a binding's updates. To guarantee that a bound value will update, use the binding itself for your prop value.
+
+#### map
+```
+Binding:map(mappingFunction) -> Binding
+where
+	mappingFunction: (value) -> mappedValue
+```
+
+Returns a new binding that maps the existing binding's value to something else. For example, `map` can be used to transform an animation progress value like `0.4` into a property that can be consumed by a Roblox Instance like `UDim2.new(0.4, 0, 1, 0)`.
+
 ### Roact.createRef
 ```
 Roact.createRef() -> Ref
@@ -66,37 +111,79 @@ Roact.createRef() -> Ref
 
 Creates a new reference object that can be used with [Roact.Ref](#roactref).
 
+### Roact.setGlobalConfig
+```
+Roact.setGlobalConfig(configValues: Dictionary<string, bool>) -> void
+```
+
+The entry point for configuring Roact. Roact currently applies this to everything using this instance of Roact, so be careful using this with a project that has multiple consumers of Roact.
+
+Once config values are set, they will apply from then on. This is primarily useful when developing as it can enable features that validate your code more strictly. Most of the settings here incur a performance cost and should typically be disabled in production environments.
+
+Call this method once at the root of your project (before mounting any Roact elements):
+```lua
+Roact.setGlobalConfig({
+	typeChecks = true,
+	propValidation = true,
+})
+```
+
+
+The following are the valid config keys that can be used, and what they do.
+
+#### typeChecks
+Enables type checks for Roact's public interface. This includes some of the following:
+
+* Check that the `props` and `children` arguments to `Roact.createElement` are both tables or nil
+* Check that `setState` is passing `self` as the first argument (it should be called like `self:setState(...)`)
+* Confirm the `Roact.mount`'s first argument is a Roact element
+* And much more!
+
+#### internalTypeChecks
+Enables type checks for internal functionality of Roact. This is typically only useful when debugging Roact itself. It will run similar type checks to those mentioned above, but only the private portion of the API.
+
+#### elementTracing
+When enabled, Roact will capture a stack trace at the site of each element creation and hold onto it, using it to provide additional details on certain kinds of errors. If you get an error that says "<enable element tracebacks>", try enabling this config value to help with debugging.
+
+Enabling `elementTracing` also allows the use of the [getElementTraceback](#getelementtraceback) method on Component, which can also be helpful for debugging.
+
+#### propValidation
+Enables validation of props via the [validateProps](#validateprops) method on components. With this flag enabled, any validation written by component authors in a component's `validateProps` method will be run on every prop change. This is helpful during development for making sure components are being used correctly.
+
 ## Constants
 
 ### Roact.Children
 This is the key that Roact uses internally to store the children that are attached to a Roact element.
 
-If you're writing a new functional or stateful element that needs to be used like a primitive component, you can access `Roact.Children` in your props table.
+If you're writing a new function component or stateful component that renders children like a host component, you can access `Roact.Children` in your props table.
 
 ### Roact.Ref
-Use `Roact.Ref` as a key into the props of a primitive element to receive a handle to the underlying Roblox Instance.
+Use `Roact.Ref` as a key into the props of a host element to receive a handle to the underlying Roblox Instance.
 
-Assign this key to a reference object created with [createRef](#roactcreateref):
+Assign this key to a ref created with [createRef](#roactcreateref):
 ```lua
 local ExampleComponent = Roact.Component:extend("ExampleComponent")
 
 function ExampleComponent:init()
-	-- Create a reference object.
+	-- Create a ref.
 	self.ref = Roact.createRef()
 end
 
 function ExampleComponent:render()
 	return Roact.createElement("Frame", {
-		-- Use the reference object to point to this rendered instance.
+		-- Use the ref to point to this rendered instance.
 		[Roact.Ref] = self.ref,
 	})
 end
 
 function ExampleComponent:didMount()
-	-- Access the current value of a reference object using its current property.
-	print("Roblox Instance", self.ref.current)
+	-- Refs are a kind of binding, so we can access the Roblox Instance using getValue.
+	print("Roblox Instance", self.ref:getValue())
 end
 ```
+
+!!! info
+	Ref objects have a deprecated field called `current` that is always equal to the result of `getValue`. Assigning to the `current` field is not allowed. The field will be removed in a future release.
 
 Alternatively, you can assign it to a function instead:
 ```lua
@@ -109,15 +196,15 @@ Roact.createElement("Frame", {
 ```
 
 !!! warning
-	When `Roact.Ref` is given a funciton, Roact does not guarantee when this function will be run relative to the reconciliation of other props. If you try to read a Roblox property that's being set via a Roact prop, you won't know if you're reading it before or after Roact reconciles that prop!
+	When `Roact.Ref` is given a function, Roact does not guarantee when this function will be run relative to the reconciliation of other props. If you try to read a Roblox property that's being set via a Roact prop, you won't know if you're reading it before or after Roact updates that prop!
 
 !!! warning
-	When `Roact.Ref` is given a funciton, it will be called with `nil` when the component instance is destroyed!
+	When `Roact.Ref` is given a function, it will be called with `nil` when the component instance is destroyed!
 
-See [the refs guide](/advanced/refs.md) for more details.
+See [the refs guide](../advanced/bindings-and-refs#refs) for more details.
 
 ### Roact.Event
-Index into `Roact.Event` to receive a key that can be used to connect to events when creating primitive elements:
+Index into `Roact.Event` to receive a key that can be used to connect to events when creating host elements:
 
 ```lua
 Roact.createElement("ImageButton", {
@@ -133,7 +220,7 @@ Roact.createElement("ImageButton", {
 !!! warning
 	When connecting to the `Changed` event, be careful not to call `setState` or other functions that will trigger renders. This will cause Roact to re-render during a render, and errors will be thrown!
 
-See [the events guide](/guide/events.md) for more details.
+See [the events guide](../guide/events) for more details.
 
 ### Roact.Change
 Index into `Roact.Change` to receive a key that can be used to connect to [`GetPropertyChangedSignal`](http://wiki.roblox.com/index.php?title=API:Class/Instance/GetPropertyChangedSignal) events.
@@ -185,7 +272,7 @@ Any children of a portal are put inside the Roblox Instance specified by the req
 
 Portals are useful for creating dialogs managed by deeply-nested UI components, and enable Roact to represent and manage multiple disjoint trees at once.
 
-See [the Portals guide](/advanced/portals.md) for a small tutorial and more details about portals.
+See [the Portals guide](../advanced/portals) for a small tutorial and more details about portals.
 
 ## Component API
 
@@ -323,6 +410,29 @@ By default, components are re-rendered any time a parent component updates, or w
 
 `PureComponent` implements `shouldUpdate` to only trigger a re-render any time the props are different based on shallow equality. In a future Roact update, *all* components may implement this check by default.
 
+### validateProps
+*Added in 1.0.0*
+```
+static validateProps(props) -> (false, message: string) | true
+```
+
+`validateProps` is an optional method that can be implemented for a component. It provides a mechanism for verifying inputs passed into the component.
+
+Every time props are updated, `validateProps` will be called with the new props before proceeding to `shouldUpdate` or `init`. It should return the same parameters that assert expects: a boolean, true if the props passed validation, false if they did not, plus a message explaining why they failed. If the first return value is true, the second value is ignored.
+
+**For performance reasons, property validation is disabled by default.** To use this feature, enable `propValidation` via `setGlobalConfig`:
+
+```
+Roact.setGlobalConfig({
+	propValidation = true
+})
+```
+
+See [setGlobalConfig](#roactsetglobalconfig) for more details.
+
+!!! warning
+	Depending on the implementation, `validateProps` can impact performance. Recommended practice is to enable prop validation during development and leave it off in production environments.
+
 ### getElementTraceback
 ```
 getElementTraceback() -> string | nil
@@ -369,7 +479,7 @@ willUpdate(nextProps, nextState) -> void
 didUpdate(previousProps, previousState) -> void
 ```
 
-`didUpdate` is fired after at the end of an update. At this point, the reconciler has updated the properties of any Roblox Instances and the component instance's props and state are up to date.
+`didUpdate` is fired after at the end of an update. At this point, Roact has updated the properties of any Roblox Instances and the component instance's props and state are up to date.
 
 `didUpdate` is a good place to send network requests or dispatch Rodux actions, but make sure to compare `self.props` and `self.state` with `previousProps` and `previousState` to avoid triggering too many updates.
 

@@ -1,8 +1,11 @@
 return function()
 	local createElement = require(script.Parent.createElement)
-	local Reconciler = require(script.Parent.Reconciler)
+	local NoopRenderer = require(script.Parent.NoopRenderer)
+	local createReconciler = require(script.Parent.createReconciler)
 
 	local PureComponent = require(script.Parent.PureComponent)
+
+	local noopReconciler = createReconciler(NoopRenderer)
 
 	it("should be extendable", function()
 		local MyComponent = PureComponent:extend("MyComponent")
@@ -16,11 +19,12 @@ return function()
 
 		local PureChild = PureComponent:extend("PureChild")
 
-		function PureChild:willUpdate(newProps, newState)
+		function PureChild:willUpdate()
 			updateCount = updateCount + 1
 		end
 
 		function PureChild:render()
+			return nil
 		end
 
 		local PureContainer = PureComponent:extend("PureContainer")
@@ -46,7 +50,7 @@ return function()
 		end
 
 		local element = createElement(PureContainer)
-		local instance = Reconciler.mount(element)
+		local tree = noopReconciler.mountVirtualTree(element, nil, "PureComponent Tree")
 
 		expect(updateCount).to.equal(0)
 
@@ -66,6 +70,6 @@ return function()
 
 		expect(updateCount).to.equal(3)
 
-		Reconciler.unmount(instance)
+		noopReconciler.unmountVirtualTree(tree)
 	end)
 end

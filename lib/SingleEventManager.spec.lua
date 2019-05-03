@@ -1,4 +1,8 @@
 return function()
+	local assertDeepEqual = require(script.Parent.assertDeepEqual)
+	local createSpy = require(script.Parent.createSpy)
+	local Logging = require(script.Parent.Logging)
+
 	local SingleEventManager = require(script.Parent.SingleEventManager)
 
 	describe("new", function()
@@ -9,267 +13,218 @@ return function()
 		end)
 	end)
 
-	describe("connect", function()
-		it("should connect to events on an object", function()
-			local target = Instance.new("BindableEvent")
-			local manager = SingleEventManager.new()
+	describe("connectEvent", function()
+		it("should connect to events", function()
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
+			local eventSpy = createSpy()
 
-			local callCount = 0
+			manager:connectEvent("Event", eventSpy.value)
+			manager:resume()
 
-			manager:connect(target, "Event", function(rbx, arg)
-				expect(rbx).to.equal(target)
-				expect(arg).to.equal("foo")
-				callCount = callCount + 1
-			end)
+			instance:Fire("foo")
+			expect(eventSpy.callCount).to.equal(1)
+			eventSpy:assertCalledWith(instance, "foo")
 
-			target:Fire("foo")
+			instance:Fire("bar")
+			expect(eventSpy.callCount).to.equal(2)
+			eventSpy:assertCalledWith(instance, "bar")
 
-			expect(callCount).to.equal(1)
+			manager:connectEvent("Event", nil)
 
-			target:Fire("foo")
-
-			expect(callCount).to.equal(2)
+			instance:Fire("baz")
+			expect(eventSpy.callCount).to.equal(2)
 		end)
 
-		it("should only connect one handler at a time", function()
-			local target = Instance.new("BindableEvent")
-			local manager = SingleEventManager.new()
+		it("should drop events until resumed initially", function()
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
+			local eventSpy = createSpy()
 
-			local callCountA = 0
-			local callCountB = 0
+			manager:connectEvent("Event", eventSpy.value)
 
-			manager:connect(target, "Event", function(rbx)
-				expect(rbx).to.equal(target)
-				callCountA = callCountA + 1
-			end)
+			instance:Fire("foo")
+			expect(eventSpy.callCount).to.equal(0)
 
-			manager:connect(target, "Event", function(rbx)
-				expect(rbx).to.equal(target)
-				callCountB = callCountB + 1
-			end)
+			manager:resume()
 
-			target:Fire("foo")
-
-			expect(callCountA).to.equal(0)
-			expect(callCountB).to.equal(1)
+			instance:Fire("bar")
+			expect(eventSpy.callCount).to.equal(1)
+			eventSpy:assertCalledWith(instance, "bar")
 		end)
 
-		it("shouldn't conflate different event handlers", function()
-			local target = Instance.new("BindableEvent")
-			local manager = SingleEventManager.new()
+		it("should invoke suspended events when resumed", function()
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
+			local eventSpy = createSpy()
 
-			local callCountEvent = 0
-			local callCountChanged = 0
+			manager:connectEvent("Event", eventSpy.value)
+			manager:resume()
 
-			manager:connect(target, "Event", function(rbx)
-				expect(rbx).to.equal(target)
-				callCountEvent = callCountEvent + 1
+			instance:Fire("foo")
+			expect(eventSpy.callCount).to.equal(1)
+			eventSpy:assertCalledWith(instance, "foo")
+
+			manager:suspend()
+
+			instance:Fire("bar")
+			expect(eventSpy.callCount).to.equal(1)
+
+			manager:resume()
+			expect(eventSpy.callCount).to.equal(2)
+			eventSpy:assertCalledWith(instance, "bar")
+		end)
+
+		it("should invoke events triggered during resumption in the correct order", function()
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
+
+			local recordedValues = {}
+			local eventSpy = createSpy(function(_, value)
+				table.insert(recordedValues, value)
+
+				if value == 2 then
+					instance:Fire(3)
+				elseif value == 3 then
+					instance:Fire(4)
+				end
 			end)
 
-			manager:connect(target, "Changed", function(rbx)
-				expect(rbx).to.equal(target)
-				callCountChanged = callCountChanged + 1
+			manager:connectEvent("Event", eventSpy.value)
+			manager:suspend()
+
+			instance:Fire(1)
+			instance:Fire(2)
+
+			manager:resume()
+			expect(eventSpy.callCount).to.equal(4)
+			assertDeepEqual(recordedValues, {1, 2, 3, 4})
+		end)
+
+		it("should not invoke events fired during suspension but disconnected before resumption", function()
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
+			local eventSpy = createSpy()
+
+			manager:connectEvent("Event", eventSpy.value)
+			manager:suspend()
+
+			instance:Fire(1)
+
+			manager:connectEvent("Event", nil)
+
+			manager:resume()
+			expect(eventSpy.callCount).to.equal(0)
+		end)
+
+		it("should not yield events through the SingleEventManager when resuming", function()
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
+
+			manager:connectEvent("Event", function()
+				coroutine.yield()
 			end)
 
-			target:Fire()
+			manager:resume()
 
-			expect(callCountEvent).to.equal(1)
-			expect(callCountChanged).to.equal(0)
+			local co = coroutine.create(function()
+				instance:Fire(5)
+			end)
 
-			target.Name = "unlimited power!"
+			assert(coroutine.resume(co))
+			expect(coroutine.status(co)).to.equal("dead")
 
-			expect(callCountEvent).to.equal(1)
-			expect(callCountChanged).to.equal(1)
+			manager:suspend()
+			instance:Fire(5)
+
+			co = coroutine.create(function()
+				manager:resume()
+			end)
+
+			assert(coroutine.resume(co))
+			expect(coroutine.status(co)).to.equal("dead")
+		end)
+
+		it("should not throw errors through SingleEventManager when resuming", function()
+			local errorText = "Error from SingleEventManager test"
+
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
+
+			manager:connectEvent("Event", function()
+				error(errorText)
+			end)
+
+			manager:resume()
+
+			-- If we call instance:Fire() here, the error message will leak to
+			-- the console since the thread's resumption will be handled by
+			-- Roblox's scheduler.
+
+			manager:suspend()
+			instance:Fire(5)
+
+			local logInfo = Logging.capture(function()
+				manager:resume()
+			end)
+
+			expect(#logInfo.errors).to.equal(0)
+			expect(#logInfo.warnings).to.equal(1)
+			expect(#logInfo.infos).to.equal(0)
+
+			expect(logInfo.warnings[1]:find(errorText)).to.be.ok()
+		end)
+
+		it("should not overflow with events if manager:resume() is invoked when resuming a suspended event", function()
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
+
+			-- This connection emulates what happens if reconciliation is
+			-- triggered again in response to reconciliation. Without
+			-- appropriate guards, the inner resume() call will process the
+			-- Fire(1) event again, causing a nasty stack overflow.
+			local eventSpy = createSpy(function(_, value)
+				if value == 1 then
+					manager:suspend()
+					instance:Fire(2)
+					manager:resume()
+				end
+			end)
+
+			manager:connectEvent("Event", eventSpy.value)
+
+			manager:suspend()
+			instance:Fire(1)
+			manager:resume()
+
+			expect(eventSpy.callCount).to.equal(2)
 		end)
 	end)
 
-	describe("connectProperty", function()
+	describe("connectPropertyChange", function()
+		-- Since property changes utilize the same mechanisms as other events,
+		-- the tests here are slimmed down to reduce redundancy.
+
 		it("should connect to property changes", function()
-			local target = Instance.new("BindableEvent")
-			local manager = SingleEventManager.new()
+			local instance = Instance.new("Folder")
+			local manager = SingleEventManager.new(instance)
+			local eventSpy = createSpy()
 
-			local changeCount = 0
+			manager:connectPropertyChange("Name", eventSpy.value)
+			manager:resume()
 
-			manager:connectProperty(target, "Name", function(rbx)
-				changeCount = changeCount + 1
-			end)
+			instance.Name = "foo"
+			expect(eventSpy.callCount).to.equal(1)
+			eventSpy:assertCalledWith(instance)
 
-			target.Name = "hi"
-			expect(changeCount).to.equal(1)
-		end)
+			instance.Name = "bar"
+			expect(eventSpy.callCount).to.equal(2)
+			eventSpy:assertCalledWith(instance)
 
-		it("should disconnect the existing connection if present", function()
-			local target = Instance.new("IntValue")
-			local manager = SingleEventManager.new()
+			manager:connectPropertyChange("Name")
 
-			local changeCountA = 0
-			local changeCountB = 0
-
-			manager:connectProperty(target, "Name", function(rbx)
-				changeCountA = changeCountA + 1
-			end)
-
-			manager:connectProperty(target, "Name", function(rbx)
-				changeCountB = changeCountB + 1
-			end)
-
-			target.Name = "hi"
-			expect(changeCountA).to.equal(0)
-			expect(changeCountB).to.equal(1)
-		end)
-
-		it("should only connect to the property specified", function()
-			local target = Instance.new("IntValue")
-			local manager = SingleEventManager.new()
-
-			local changeCount = 0
-
-			manager:connectProperty(target, "Name", function(rbx)
-				changeCount = changeCount + 1
-			end)
-
-			target.Name = "hi"
-			target.Value = 0
-			expect(changeCount).to.equal(1)
-		end)
-	end)
-
-	describe("disconnect", function()
-		it("should disconnect handlers on an object", function()
-			local target = Instance.new("BindableEvent")
-			local manager = SingleEventManager.new()
-
-			local callCount = 0
-
-			manager:connect(target, "Event", function(rbx)
-				expect(rbx).to.equal(target)
-				callCount = callCount + 1
-			end)
-
-			target:Fire()
-
-			expect(callCount).to.equal(1)
-
-			manager:disconnect(target, "Event")
-
-			target:Fire()
-
-			expect(callCount).to.equal(1)
-		end)
-
-		it("should not disconnect unrelated connections", function()
-			local target = Instance.new("BindableEvent")
-			local manager = SingleEventManager.new()
-
-			local callCountEvent = 0
-			local callCountChanged = 0
-
-			manager:connect(target, "Event", function(rbx)
-				expect(rbx).to.equal(target)
-				callCountEvent = callCountEvent + 1
-			end)
-
-			manager:connect(target, "Changed", function(rbx)
-				expect(rbx).to.equal(target)
-				callCountChanged = callCountChanged + 1
-			end)
-
-			target:Fire()
-			target.Name = "bar"
-
-			expect(callCountEvent).to.equal(1)
-			expect(callCountChanged).to.equal(1)
-
-			manager:disconnect(target, "Event")
-
-			target:Fire()
-			target.Name = "foo"
-
-			expect(callCountEvent).to.equal(1)
-			expect(callCountChanged).to.equal(2)
-		end)
-
-		it("should succeed with no events attached", function()
-			local manager = SingleEventManager.new()
-			local target = Instance.new("BindableEvent")
-
-			manager:disconnect(target, "Event")
-		end)
-	end)
-
-	describe("disconnectProperty", function()
-		it("should disconnect property change handlers on an object", function()
-			local target = Instance.new("IntValue")
-			local manager = SingleEventManager.new()
-
-			local changeCount = 0
-
-			manager:connectProperty(target, "Name", function(rbx)
-				changeCount = changeCount + 1
-			end)
-
-			target.Name = "hi"
-			expect(changeCount).to.equal(1)
-
-			manager:disconnectProperty(target, "Name")
-			target.Name = "test"
-			expect(changeCount).to.equal(1)
-		end)
-
-		it("should succeed even if no handler is attached", function()
-			local target = Instance.new("IntValue")
-			local manager = SingleEventManager.new()
-
-			manager:disconnectProperty(target, "Name")
-		end)
-	end)
-
-	describe("disconnectAll", function()
-		it("should disconnect all listeners on an object", function()
-			local target = Instance.new("BindableEvent")
-			local manager = SingleEventManager.new()
-
-			local callCountEvent = 0
-			local callCountChanged = 0
-			local changeCount = 0
-
-			manager:connect(target, "Event", function(rbx)
-				expect(rbx).to.equal(target)
-				callCountEvent = callCountEvent + 1
-			end)
-
-			manager:connect(target, "Changed", function(rbx)
-				expect(rbx).to.equal(target)
-				callCountChanged = callCountChanged + 1
-			end)
-
-			manager:connectProperty(target, "Name", function(rbx)
-				expect(rbx).to.equal(target)
-				changeCount = changeCount + 1
-			end)
-
-			target:Fire()
-			target.Name = "bar"
-
-			expect(callCountEvent).to.equal(1)
-			expect(callCountChanged).to.equal(1)
-			expect(changeCount).to.equal(1)
-
-			manager:disconnectAll(target)
-
-			target:Fire()
-			target.Name = "foo"
-
-			expect(callCountEvent).to.equal(1)
-			expect(callCountChanged).to.equal(1)
-			expect(changeCount).to.equal(1)
-		end)
-
-		it("should succeed with no events attached", function()
-			local target = Instance.new("StringValue")
-			local manager = SingleEventManager.new()
-
-			manager:disconnectAll(target)
+			instance.Name = "baz"
+			expect(eventSpy.callCount).to.equal(2)
 		end)
 	end)
 end

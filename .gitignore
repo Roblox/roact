@@ -1,2 +1,6 @@
 /luacov.*
 /site
+/*.rbxlx
+/*.rbxmx
+/*.rbxm
+/*.rbxl

@@ -1,5 +1,17 @@
 # Roact Changelog
 
+## [1.0.0](https://github.com/Roblox/roact/releases/tag/v1.0.0)
+This release significantly reworks Roact internals to enable new features and optimizations.
+
+* Added Fragments, which reduces the need for many container instances. ([#172](https://github.com/Roblox/roact/pull/172))
+* Added Bindings, which enables easy surgical updates to instances without using refs. ([#159](https://github.com/Roblox/roact/pull/159))
+* Added opt-in runtime type checking across the entire Roact API. ([#188](https://github.com/Roblox/roact/pull/188))
+* Added support for prop validation akin to React's `propTypes`.
+* Changed `Component:setState` to be deferred if it's called while Roact is updating a component. ([#183](https://github.com/Roblox/roact/pull/183))
+* Changed events connected via `Roact.Event` and `Roact.Change` triggered by a Roact update to be deferred until Roact is done updating the instance.
+* Improved and consolidated terminology across the board.
+* Improved errors to be much more informative and clear.
+
 ## [0.2.0](https://github.com/Roblox/roact/releases/tag/v0.2.0)
 * Deprecated `Roact.reconcile` in favor of `Roact.update` ([#194](https://github.com/Roblox/roact/pull/194))
 * Removed some undocumented APIs:

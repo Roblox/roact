@@ -14,12 +14,14 @@
 
 -- Every valid configuration value should be non-nil in this table.
 local defaultConfig = {
+	-- Enables asserts for internal Roact APIs. Useful for debugging Roact itself.
+	["internalTypeChecks"] = false,
+	-- Enables stricter type asserts for Roact's public API.
+	["typeChecks"] = false,
 	-- Enables storage of `debug.traceback()` values on elements for debugging.
 	["elementTracing"] = false,
-	-- Enables instrumentation of shouldUpdate and render methods for Roact components
-	["componentInstrumentation"] = false,
-	-- Enables warnings if an element changes type after being rendered.
-	["warnOnTypeChange"] = false,
+	-- Enables validation of component props in stateful components.
+	["propValidation"] = false,
 }
 
 -- Build a list of valid configuration values up for debug messages.
@@ -28,34 +30,23 @@ for key in pairs(defaultConfig) do
 	table.insert(defaultConfigKeys, key)
 end
 
---[[
-	Merges two tables together into a new table.
-]]
-local function join(a, b)
-	local new = {}
-
-	for key, value in pairs(a) do
-		new[key] = value
-	end
-
-	for key, value in pairs(b) do
-		new[key] = value
-	end
-
-	return new
-end
-
 local Config = {}
 
 function Config.new()
 	local self = {}
 
-	-- Once configuration has been set, we record a traceback.
-	-- That way, if the user mistakenly calls `set` twice, we can point to the
-	-- first place it was called.
-	self._lastConfigTraceback = nil
+	self._currentConfig = setmetatable({}, {
+		__index = function(_, key)
+			local message = (
+				"Invalid global configuration key %q. Valid configuration keys are: %s"
+			):format(
+				tostring(key),
+				table.concat(defaultConfigKeys, ", ")
+			)
 
-	self._currentConfig = defaultConfig
+			error(message, 3)
+		end
+	})
 
 	-- We manually bind these methods here so that the Config's methods can be
 	-- used without passing in self, since they eventually get exposed on the
@@ -64,33 +55,20 @@ function Config.new()
 		return Config.set(self, ...)
 	end
 
-	self.getValue = function(...)
-		return Config.getValue(self, ...)
+	self.get = function(...)
+		return Config.get(self, ...)
 	end
 
-	self.reset = function(...)
-		return Config.reset(self, ...)
+	self.scoped = function(...)
+		return Config.scoped(self, ...)
 	end
+
+	self.set(defaultConfig)
 
 	return self
 end
 
-function Config.set(self, configValues)
-	if self._lastConfigTraceback then
-		local message = (
-			"Global configuration can only be set once. Configuration was already set at:%s"
-		):format(
-			self._lastConfigTraceback
-		)
-
-		error(message, 3)
-	end
-
-	-- We use 3 as our traceback and error level because all of the methods are
-	-- manually bound to 'self', which creates an additional stack frame we want
-	-- to skip through.
-	self._lastConfigTraceback = debug.traceback("", 3)
-
+function Config:set(configValues)
 	-- Validate values without changing any configuration.
 	-- We only want to apply this configuration if it's valid!
 	for key, value in pairs(configValues) do
@@ -118,31 +96,28 @@ function Config.set(self, configValues)
 
 			error(message, 3)
 		end
-	end
 
-	-- Assign all of the (validated) configuration values in one go.
-	self._currentConfig = join(self._currentConfig, configValues)
+		self._currentConfig[key] = value
+	end
 end
 
-function Config.getValue(self, key)
-	if defaultConfig[key] == nil then
-		local message = (
-			"Invalid global configuration key %q (type %s). Valid configuration keys are: %s"
-		):format(
-			tostring(key),
-			typeof(key),
-			table.concat(defaultConfigKeys, ", ")
-		)
-
-		error(message, 3)
-	end
-
-	return self._currentConfig[key]
+function Config:get()
+	return self._currentConfig
 end
 
-function Config.reset(self)
-	self._lastConfigTraceback = nil
-	self._currentConfig = defaultConfig
+function Config:scoped(configValues, callback)
+	local previousValues = {}
+	for key, value in pairs(self._currentConfig) do
+		previousValues[key] = value
+	end
+
+	self.set(configValues)
+
+	local success, result = pcall(callback)
+
+	self.set(previousValues)
+
+	assert(success, result)
 end
 
 return Config

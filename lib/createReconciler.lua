@@ -345,7 +345,7 @@ local function createReconciler(renderer)
 				-- Roact component instances.
 				rootNode = nil,
 				mounted = true,
-			}
+			},
 		}
 
 		tree[InternalData].rootNode = mountVirtualNode(element, hostParent, hostKey)
@@ -360,16 +360,16 @@ local function createReconciler(renderer)
 		unmounted, as indicated by its the `mounted` field.
 	]]
 	local function unmountVirtualTree(tree)
+		local internalData = tree[InternalData]
 		if config.typeChecks then
 			assert(Type.of(tree) == Type.VirtualTree, "Expected arg #1 to be a Roact handle")
-			assert(tree[InternalData].mounted, "Cannot unmounted a Roact tree that has already been unmounted")
+			assert(internalData.mounted, "Cannot unmounted a Roact tree that has already been unmounted")
 		end
 
-		tree[InternalData].mounted = false
+		internalData.mounted = false
 
-		local rootNode = tree[InternalData].rootNode
-		if rootNode ~= nil then
-			unmountVirtualNode(rootNode)
+		if internalData.rootNode ~= nil then
+			unmountVirtualNode(internalData.rootNode)
 		end
 	end
 
@@ -378,12 +378,13 @@ local function createReconciler(renderer)
 		element.
 	]]
 	local function updateVirtualTree(tree, newElement)
+		local internalData = tree[InternalData]
 		if config.typeChecks then
 			assert(Type.of(tree) == Type.VirtualTree, "Expected arg #1 to be a Roact handle")
 			assert(Type.of(newElement) == Type.Element, "Expected arg #2 to be a Roact Element")
 		end
 
-		tree[InternalData].rootNode = updateVirtualNode(tree[InternalData].rootNode, newElement)
+		internalData.rootNode = updateVirtualNode(internalData.rootNode, newElement)
 
 		return tree
 	end

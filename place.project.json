@@ -7,7 +7,7 @@
       "$className": "ReplicatedStorage",
 
       "Roact": {
-        "$path": "lib"
+        "$path": "src"
       },
 
       "TestEZ": {

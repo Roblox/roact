@@ -8,7 +8,6 @@ return function()
 	local createRef = require(script.Parent.createRef)
 	local createSpy = require(script.Parent.createSpy)
 	local GlobalConfig = require(script.Parent.GlobalConfig)
-	local Logging = require(script.Parent.Logging)
 	local Portal = require(script.Parent.Portal)
 	local Ref = require(script.Parent.PropMarkers.Ref)
 

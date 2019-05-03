@@ -15,7 +15,7 @@ The `children` argument is shorthand for adding a `Roact.Children` key to `props
 	Make sure not to modify `props` or `children` after they're passed into `createElement`!
 
 ### Roact.createFragment
-*Added in 0.2.0*
+*Added in 1.0.0*
 ```
 Roact.createFragment(elements) -> RoactFragment
 ```
@@ -74,7 +74,7 @@ If `children` contains more than one child, `oneChild` function will throw an er
 If `children` is `nil` or contains no children, `oneChild` will return `nil`.
 
 ### Roact.createBinding
-*Added in 0.2.0*
+*Added in 1.0.0*
 ```
 Roact.createBinding(initialValue) -> Binding, updateFunction
 where
@@ -160,27 +160,30 @@ If you're writing a new function component or stateful component that renders ch
 ### Roact.Ref
 Use `Roact.Ref` as a key into the props of a host element to receive a handle to the underlying Roblox Instance.
 
-Assign this key to a reference object created with [createRef](#roactcreateref):
+Assign this key to a ref created with [createRef](#roactcreateref):
 ```lua
 local ExampleComponent = Roact.Component:extend("ExampleComponent")
 
 function ExampleComponent:init()
-	-- Create a reference object.
+	-- Create a ref.
 	self.ref = Roact.createRef()
 end
 
 function ExampleComponent:render()
 	return Roact.createElement("Frame", {
-		-- Use the reference object to point to this rendered instance.
+		-- Use the ref to point to this rendered instance.
 		[Roact.Ref] = self.ref,
 	})
 end
 
 function ExampleComponent:didMount()
-	-- Access the current value of a reference object using its current property.
-	print("Roblox Instance", self.ref.current)
+	-- Refs are a kind of binding, so we can access the Roblox Instance using getValue.
+	print("Roblox Instance", self.ref:getValue())
 end
 ```
+
+!!! info
+	Ref objects have a deprecated field called `current` that is always equal to the result of `getValue`. Assigning to the `current` field is not allowed. The field will be removed in a future release.
 
 Alternatively, you can assign it to a function instead:
 ```lua
@@ -408,7 +411,7 @@ By default, components are re-rendered any time a parent component updates, or w
 `PureComponent` implements `shouldUpdate` to only trigger a re-render any time the props are different based on shallow equality. In a future Roact update, *all* components may implement this check by default.
 
 ### validateProps
-*Added in 0.2.0*
+*Added in 1.0.0*
 ```
 static validateProps(props) -> (false, message: string) | true
 ```

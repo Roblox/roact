@@ -1,6 +1,6 @@
 {
   "name": "Roact",
   "tree": {
-    "$path": "lib"
+    "$path": "src"
   }
 }

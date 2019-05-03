@@ -22,9 +22,9 @@ local function createRef()
 		end,
 		__newindex = function(self, key, value)
 			if key == "current" then
-				-- TODO: Better error message
-				error("Cannot assign to a ref.current", 2)
+				error("Cannot assign to the 'current' property of refs", 2)
 			end
+
 			binding[key] = value
 		end,
 		__tostring = function(self)

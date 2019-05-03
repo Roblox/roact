@@ -43,7 +43,7 @@ local function applyRef(ref, newHostObject)
 	elseif Type.of(ref) == Type.Binding then
 		Binding.update(ref, newHostObject)
 	else
-		-- TODO: Better error message
+		-- TODO (#197): Better error message
 		error(("Invalid ref: Expected type Binding but got %s"):format(
 			typeof(ref)
 		))

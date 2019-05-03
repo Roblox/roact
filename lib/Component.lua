@@ -184,7 +184,7 @@ end
 	be overridden by consumers of Roact and should be a pure function with
 	regards to props and state.
 
-	TODO: Accept props and state as arguments.
+	TODO (#199): Accept props and state as arguments.
 ]]
 function Component:render()
 	local internalData = self[InternalData]

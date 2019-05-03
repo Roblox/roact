@@ -49,4 +49,4 @@ Roact.mount(tree, LocalPlayer.PlayerGui, "HelloWorld")
 ```
 
 ## License
-Roact is available under the Apache 2.0 license. See [LICENSE](LICENSE) for details.
+Roact is available under the Apache 2.0 license. See [LICENSE.txt](LICENSE.txt) for details.

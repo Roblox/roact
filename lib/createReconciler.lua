@@ -2,7 +2,6 @@ local Type = require(script.Parent.Type)
 local ElementKind = require(script.Parent.ElementKind)
 local ElementUtils = require(script.Parent.ElementUtils)
 local Children = require(script.Parent.PropMarkers.Children)
-local Logging = require(script.Parent.Logging)
 local internalAssert = require(script.Parent.internalAssert)
 
 local config = require(script.Parent.GlobalConfig).get()
@@ -99,6 +98,7 @@ local function createReconciler(renderer)
 	end
 
 	local function updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
+		-- TODO: Consider reordering checks (https://github.com/Roblox/roact/issues/200)
 		if renderResult == nil
 			or typeof(renderResult) == "boolean"
 			or Type.of(renderResult) == Type.Element
@@ -106,8 +106,7 @@ local function createReconciler(renderer)
 		then
 			updateChildren(virtualNode, hostParent, renderResult)
 		else
-			-- TODO: Better error message
-			Logging.error(("%s\n%s"):format(
+			error(("%s\n%s"):format(
 				"Component returned invalid children:",
 				virtualNode.currentElement.source or "<enable element tracebacks>"
 			), 0)
@@ -158,9 +157,6 @@ local function createReconciler(renderer)
 		assert(renderer.isHostObject(targetHostParent), "Expected target to be host object")
 
 		if targetHostParent ~= oldTargetHostParent then
-			-- TODO: Better warning
-			Logging.warn("Portal changed target!")
-
 			return replaceVirtualNode(virtualNode, newElement)
 		end
 
@@ -255,11 +251,7 @@ local function createReconciler(renderer)
 			[Type] = Type.VirtualNode,
 			currentElement = element,
 			depth = 1,
-
-			-- TODO: Allow children to be a single node?
 			children = {},
-
-			-- Less certain about these properties:
 			hostParent = hostParent,
 			hostKey = hostKey,
 			context = context,

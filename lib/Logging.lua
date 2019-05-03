@@ -120,21 +120,6 @@ function Logging.capture(callback)
 end
 
 --[[
-	Throws an error, while additionally logging the message with the logging
-	system. This can be used to indicate critical failures that should cause
-	tests not to pass even if the error is caught with `pcall`.
-]]
-function Logging.error(messageTemplate, ...)
-	local message = messageTemplate:format(...)
-
-	for collector in pairs(collectors) do
-		table.insert(collector.errors, message)
-	end
-
-	error(message, 2)
-end
-
---[[
 	Issues a warning with an automatically attached stack trace.
 ]]
 function Logging.warn(messageTemplate, ...)

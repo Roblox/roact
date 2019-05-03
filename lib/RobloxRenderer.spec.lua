@@ -645,15 +645,7 @@ return function()
 			local firstChild = firstTarget.ChildValue
 			expect(firstChild.Value).to.equal(1)
 
-			local logs = Logging.capture(function()
-				node = reconciler.updateVirtualNode(node, secondElement)
-			end)
-
-			expect(#logs.warnings).to.equal(1)
-			expect(#logs.infos).to.equal(0)
-			expect(#logs.errors).to.equal(0)
-			expect(logs.warnings[1]:find("Portal")).to.be.ok()
-			expect(logs.warnings[1]:find("target")).to.be.ok()
+			node = reconciler.updateVirtualNode(node, secondElement)
 
 			expect(#firstTarget:GetChildren()).to.equal(0)
 			expect(#secondTarget:GetChildren()).to.equal(1)

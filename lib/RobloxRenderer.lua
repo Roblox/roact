@@ -219,6 +219,10 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 	virtualNode.hostObject = instance
 
 	applyRef(element.props[Ref], instance)
+
+	if virtualNode.eventManager ~= nil then
+		virtualNode.eventManager:resume()
+	end
 end
 
 function RobloxRenderer.unmountHostNode(reconciler, virtualNode)
@@ -238,6 +242,10 @@ end
 function RobloxRenderer.updateHostNode(reconciler, virtualNode, newElement)
 	local oldProps = virtualNode.currentElement.props
 	local newProps = newElement.props
+
+	if virtualNode.eventManager ~= nil then
+		virtualNode.eventManager:suspend()
+	end
 
 	-- If refs changed, detach the old ref and attach the new one
 	if oldProps[Ref] ~= newProps[Ref] then
@@ -263,6 +271,10 @@ function RobloxRenderer.updateHostNode(reconciler, virtualNode, newElement)
 	local children = newElement.props[Children]
 	if children ~= nil then
 		reconciler.updateVirtualNodeWithChildren(virtualNode, virtualNode.hostObject, children)
+	end
+
+	if virtualNode.eventManager ~= nil then
+		virtualNode.eventManager:resume()
 	end
 
 	return virtualNode

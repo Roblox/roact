@@ -50,6 +50,6 @@ return function()
 		Binding.update(ref, 10)
 
 		expect(ref:getValue()).to.equal(10)
-		expect(ref.current).to.equal(10)
+		expect(ref:getValue()).to.equal(ref.current)
 	end)
 end

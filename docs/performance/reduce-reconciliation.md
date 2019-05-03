@@ -82,7 +82,7 @@ Now, if we add a new item to the end of the `Inventory` or change something abou
 
 Another performance improvement we can make is to use stable, unique keys to refer to our child elements.
 
-When the list that we pass into the `Inventory` component changes, Roact reconciles our Roblox UI by adjusting the properties of each primitive according to the new list of elements.
+When the list that we pass into the `Inventory` component changes, Roact updates our Roblox UI by adjusting the properties of each Roblox Instance according to the new list of elements.
 
 For example, let's suppose our list of items is as follows:
 ```lua
@@ -101,9 +101,9 @@ If we add a new item to the beginning, then we'll end up with a list like this:
 }
 ```
 
-When Roact reconciles the underlying `ImageLabel` objects, it will need to change their icons so that the item at `[1]` has the potion icon, the item at `[2]` has the sword icon, and a new `ImageLabel` is added at `[3]` with the shield icon.
+When Roact updates the underlying `ImageLabel` objects, it will need to change their icons so that the item at `[1]` has the potion icon, the item at `[2]` has the sword icon, and a new `ImageLabel` is added at `[3]` with the shield icon.
 
-We'd like for Roact to know that the new item was added at `[1]` and that the sword and sheild items simply moved down in the list. Then it can adjust their LayoutOrder properties and let the Roblox UI system resolve the rest.
+We'd like for Roact to know that the new item was added at `[1]` and that the sword and shield items simply moved down in the list. That way it can adjust their LayoutOrder properties and let the Roblox UI system resolve the rest.
 
 So let's fix it! We'll make our list of `Item` elements use the item's id for its keys instead of the indexes in the `items` list:
 
@@ -132,7 +132,7 @@ function Inventory:render()
 end
 ```
 
-Now the list of children is keyed by the stable, unique id of the item data. Their positions can change according to their LayoutOrder, but no other properties on the item need to be reconciled. When we add the third element to the list, Roact will set the `LayoutOrder` property on for each `ImageLabel` and only set the `Image` property on the newly added one!
+Now the list of children is keyed by the stable, unique id of the item data. Their positions can change according to their LayoutOrder, but no other properties on the item need to be updated. When we add the third element to the list, Roact will set the `LayoutOrder` property on for each `ImageLabel` and only set the `Image` property on the newly added one!
 
 !!! info
 	Switching to static keys might seem insignificant for *this* example, but if our `Item` component becomes more complicated and our inventory gets bigger, it can make a significant difference!

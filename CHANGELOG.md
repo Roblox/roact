@@ -3,6 +3,8 @@
 ## Current `master` branch
 * Renamed `Roact.reify` to `Roact.mount` and `Roact.teardown` to `Roact.unmount` ([#82](https://github.com/Roblox/roact/issues/82))
 	* The old methods are still present as aliases, but will output a warning when used.
+* Renamed `Roact.reconcile` to `Roact.update` ([#194](https://github.com/Roblox/roact/pull/194))
+	* Like `Roact.reify` and `Roact.teardown`, the original method name is still available with a warning.
 * Added `Roact.Change` for subscribing to `GetPropertyChangedSignal` ([#51](https://github.com/Roblox/roact/pull/51))
 * Added the static lifecycle method `getDerivedStateFromProps` ([#57](https://github.com/Roblox/roact/pull/57))
 * Allow canceling render by returning nil from setState callback ([#64](https://github.com/Roblox/roact/pull/64))
@@ -18,6 +20,9 @@
 * Introduce setState suspension to replace event suspension. ([#183](https://github.com/Roblox/roact/pull/183))
 * By default, disable the warning for an element changing types during reconciliation ([#168](https://github.com/Roblox/roact/pull/168))
 * Refactor debugging asserts to be behind config flags ([#188](https://github.com/Roblox/roact/pull/188))
+* Removed some undocumented APIs:
+	* `Roact.getGlobalConfigValue`, which let users read the current internal configuration.
+	* `Roact.Element`, which let users figure out whether something is a Roact element. We'll introduce a proper type-checking API at a later date.
 
 ## 1.0.0 Prerelease 2 (March 22, 2018)
 * Removed `is*Element` methods, this is unlikely to affect anyone ([#50](https://github.com/Roblox/roact/pull/50))

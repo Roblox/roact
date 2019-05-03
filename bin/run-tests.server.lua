@@ -9,7 +9,7 @@ Roact.setGlobalConfig({
 	["internalTypeChecks"] = true,
 	["typeChecks"] = true,
 	["elementTracing"] = true,
-	["propertyValidation"] = true,
+	["propValidation"] = true,
 })
 local results = TestEZ.TestBootstrap:run(ReplicatedStorage.Roact, TestEZ.Reporters.TextReporter)
 

@@ -9,7 +9,7 @@ Bindings and Refs are intended to be used in cases where Roact cannot solve a pr
 
 ## Bindings
 
-Bindings are special objects that the Roact reconciler automatically unwraps into values. When a binding is updated, Roact will change only the specific properties that are subscribed to it.
+Bindings are special objects that Roact automatically unwraps into values. When a binding is updated, Roact will change only the specific properties that are subscribed to it.
 
 ### Binding Properties
 

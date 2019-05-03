@@ -2,10 +2,15 @@ Components are encapsulated, reusable pieces of UI that you can combine to build
 
 Components accept inputs, known as *props*, and return elements to describe the UI that should represent those inputs.
 
-## Functional and Stateful Components
-Components come in two flavors in Roact, *functional* and *stateful*.
+## Types of Components
 
-Functional components are the simplest: they're just functions that accept props as their only argument, and return some elements.
+### Host Components
+A *host* component is nothing more than a string that matches the name of a Roblox class. We used these in our earlier discussion about [elements](../elements) as the first argument to `createElement`. Examples include `"Frame"`, `"ImageButton"`, etc.
+
+When our component is a host component, the props that we pass to it will be turned directly into properties on the Roblox instance that the component refers to.
+
+### Function Components
+*Function* components are the simplest kind of user-defined component: they're just functions that accept props as their only argument, and return some elements.
 
 ```lua
 local function Greeting(props)
@@ -15,7 +20,8 @@ local function Greeting(props)
 end
 ```
 
-Roact also has *stateful* components, which have additional features, like lifecycle methods and state, that we'll talk about in a later section.
+### Stateful Components
+Roact also has *stateful* components, which provide additional features like lifecycle methods and state. We'll talk about these features in a later section.
 
 You can create a stateful component by calling `Roact.Component:extend` and passing in the component's name.
 
@@ -40,7 +46,7 @@ local hello = Roact.createElement(Greeting, {
 })
 ```
 
-The `name` value is passed to our component as props, which we can reference as the `props` argument in our functional component or `self.props` in our stateful component.
+The `name` value is passed to our component as props, which we can reference as the `props` argument in our function component or `self.props` in our stateful component.
 
 ## Components in Components
 Components are designed to make it easy to re-use pieces of UI, so naturally, we can use components inside other components!
@@ -70,7 +76,7 @@ end
 Applications built using Roact usually have one component at the top of the tree, and include all other pieces as children.
 
 ## Incrementing Counter, Part Two
-We can revisit the incrementing counter example from the previous section, now using a functional component. Changed sections are highlighted.
+We can revisit the incrementing counter example from the previous section, now using a function component. Changed sections are highlighted.
 
 ```lua hl_lines="6 7 8 23 24 25 26 33 34 35"
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -78,7 +84,7 @@ local Players = game:GetService("Players")
 
 local Roact = require(ReplicatedStorage.Roact)
 
--- Create a functional component that represents our UI
+-- Create a function component that represents our UI
 local function Clock(props)
 	local currentTime = props.currentTime
 
@@ -105,7 +111,7 @@ while true do
 	wait(1)
 
 	currentTime = currentTime + 1
-	handle = Roact.reconcile(handle, Roact.createElement(Clock, {
+	handle = Roact.update(handle, Roact.createElement(Clock, {
 		currentTime = currentTime
 	}))
 end

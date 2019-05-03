@@ -204,7 +204,7 @@ end
 	error.
 ]]
 function Component:__validateProps(props)
-	if not config.propertyValidation then
+	if not config.propValidation then
 		return
 	end
 

@@ -23,11 +23,8 @@ return function()
 			local tree = noopReconciler.mountVirtualTree(createElement("StringValue"))
 
 			expect(tree).to.be.ok()
-			expect(tree.rootNode).to.be.ok()
 
 			noopReconciler.updateVirtualTree(tree, createElement("StringValue"))
-
-			expect(tree.rootNode).to.be.ok()
 
 			noopReconciler.unmountVirtualTree(tree)
 		end)

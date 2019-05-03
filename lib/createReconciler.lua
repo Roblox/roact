@@ -2,9 +2,12 @@ local Type = require(script.Parent.Type)
 local ElementKind = require(script.Parent.ElementKind)
 local ElementUtils = require(script.Parent.ElementUtils)
 local Children = require(script.Parent.PropMarkers.Children)
+local Symbol = require(script.Parent.Symbol)
 local internalAssert = require(script.Parent.internalAssert)
 
 local config = require(script.Parent.GlobalConfig).get()
+
+local InternalData = Symbol.named("InternalData")
 
 --[[
 	The reconciler is the mechanism in Roact that constructs the virtual tree
@@ -337,17 +340,15 @@ local function createReconciler(renderer)
 
 		local tree = {
 			[Type] = Type.VirtualTree,
-
-			-- TODO: Move these fields into an internal data table?
-
-			-- The root node of the tree, which starts into the hierarchy of
-			-- Roact component instances.
-			rootNode = nil,
-
-			mounted = true,
+			[InternalData] = {
+				-- The root node of the tree, which starts into the hierarchy of
+				-- Roact component instances.
+				rootNode = nil,
+				mounted = true,
+			}
 		}
 
-		tree.rootNode = mountVirtualNode(element, hostParent, hostKey)
+		tree[InternalData].rootNode = mountVirtualNode(element, hostParent, hostKey)
 
 		return tree
 	end
@@ -361,13 +362,14 @@ local function createReconciler(renderer)
 	local function unmountVirtualTree(tree)
 		if config.typeChecks then
 			assert(Type.of(tree) == Type.VirtualTree, "Expected arg #1 to be a Roact handle")
-			assert(tree.mounted, "Cannot unmounted a Roact tree that has already been unmounted")
+			assert(tree[InternalData].mounted, "Cannot unmounted a Roact tree that has already been unmounted")
 		end
 
-		tree.mounted = false
+		tree[InternalData].mounted = false
 
-		if tree.rootNode ~= nil then
-			unmountVirtualNode(tree.rootNode)
+		local rootNode = tree[InternalData].rootNode
+		if rootNode ~= nil then
+			unmountVirtualNode(rootNode)
 		end
 	end
 
@@ -381,7 +383,7 @@ local function createReconciler(renderer)
 			assert(Type.of(newElement) == Type.Element, "Expected arg #2 to be a Roact Element")
 		end
 
-		tree.rootNode = updateVirtualNode(tree.rootNode, newElement)
+		tree[InternalData].rootNode = updateVirtualNode(tree[InternalData].rootNode, newElement)
 
 		return tree
 	end

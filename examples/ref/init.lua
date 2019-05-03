@@ -27,7 +27,7 @@ return function()
 				-- Handle click events on the search button
 				[Roact.Event.Activated] = function()
 					print("Button clicked; have the TextBox capture focus")
-					self.textBoxRef.current:CaptureFocus()
+					self.textBoxRef:getValue():CaptureFocus()
 				end
 			}),
 

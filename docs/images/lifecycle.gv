@@ -11,7 +11,7 @@ digraph G {
 	];
 
 	render1 [label="render"];
-	created [style="rounded", color="#000000", label=<<i>Instances created</i>>];
+	created [style="rounded", color="#000000", label=<<i>Instances Created</i>>];
 	mount [style="rounded", color="#000000", label=<
 		<b>Mounting</b>
 		<br /><br />
@@ -19,15 +19,15 @@ digraph G {
 	>];
 	mount -> init -> render1 -> created -> didMount;
 
-	updated [style="rounded", color="#000000", label=<<i>Instances updated</i>>];
-	reconcile [style="rounded", color="#000000", label=<
-		<b>Reconciliation</b>
+	updated [style="rounded", color="#000000", label=<<i>Instances Updated</i>>];
+	update [style="rounded", color="#000000", label=<
+		<b>Updating</b>
 		<br /><br />
-		<font face="monospace">Roact.reconcile</font>
+		<font face="monospace">Roact.update</font>
 	>];
-	reconcile -> shouldUpdate -> getDerivedStateFromProps -> willUpdate -> render -> updated -> didUpdate;
+	update -> shouldUpdate -> getDerivedStateFromProps -> willUpdate -> render -> updated -> didUpdate;
 
-	unmounted [style="rounded", color="#000000", label=<<i>Component Unmounted</i>>];
+	unmounted [style="rounded", color="#000000", label=<<i>Instances Destroyed</i>>];
 	unmount [style="rounded", color="#000000", label=<
 		<b>Unmounting</b>
 		<br /><br />

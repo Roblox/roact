@@ -15,7 +15,8 @@ The `children` argument is shorthand for adding a `Roact.Children` key to `props
 	Make sure not to modify `props` or `children` after they're passed into `createElement`!
 
 ### Roact.createFragment
-*Added in 1.0.0*
+<span class="api-addition">Added in 1.0.0</span>
+
 ```
 Roact.createFragment(elements) -> RoactFragment
 ```
@@ -74,7 +75,8 @@ If `children` contains more than one child, `oneChild` function will throw an er
 If `children` is `nil` or contains no children, `oneChild` will return `nil`.
 
 ### Roact.createBinding
-*Added in 1.0.0*
+<span class="api-addition">Added in 1.0.0</span>
+
 ```
 Roact.createBinding(initialValue) -> Binding, updateFunction
 where
@@ -411,7 +413,8 @@ By default, components are re-rendered any time a parent component updates, or w
 `PureComponent` implements `shouldUpdate` to only trigger a re-render any time the props are different based on shallow equality. In a future Roact update, *all* components may implement this check by default.
 
 ### validateProps
-*Added in 1.0.0*
+<span class="api-addition">Added in 1.0.0</span>
+
 ```
 static validateProps(props) -> (false, message: string) | true
 ```

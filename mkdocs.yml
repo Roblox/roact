@@ -28,6 +28,9 @@ nav:
     - Reduce Reconcilation: performance/reduce-reconciliation.md
   - API Reference: api-reference.md
 
+extra_css:
+  - extra.css
+
 markdown_extensions:
   - admonition
   - codehilite:

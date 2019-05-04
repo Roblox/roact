@@ -25,5 +25,8 @@ script:
   - luacheck lib benchmarks examples
   - lua -lluacov bin/spec.lua
 
+extra_css:
+  - extra.css
+
 after_success:
   - luacov-coveralls -e $TRAVIS_BUILD_DIR/lua_install

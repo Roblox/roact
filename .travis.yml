@@ -22,7 +22,7 @@ install:
   - luarocks install luacheck
 
 script:
-  - luacheck lib benchmarks examples
+  - luacheck src benchmarks examples
   - lua -lluacov bin/spec.lua
 
 extra_css:

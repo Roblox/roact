@@ -14,6 +14,8 @@ The `children` argument is shorthand for adding a `Roact.Children` key to `props
 !!! caution
 	Make sure not to modify `props` or `children` after they're passed into `createElement`!
 
+---
+
 ### Roact.createFragment
 <div class="api-addition">Added in 1.0.0</div>
 
@@ -26,6 +28,8 @@ Creates a new Roact fragment with the provided table of elements. Fragments allo
 !!! caution
 	Make sure not to modify `elements` after they're passed into `createFragment`!
 
+---
+
 ### Roact.mount
 ```
 Roact.mount(element, [parent, [key]]) -> ComponentInstanceHandle
@@ -37,6 +41,8 @@ Roact.mount(element, [parent, [key]]) -> ComponentInstanceHandle
 Creates a Roblox Instance given a Roact element, and optionally a `parent` to put it in, and a `key` to use as the instance's `Name`.
 
 The result is a `ComponentInstanceHandle`, which is an opaque handle that represents this specific instance of the root component. You can pass this to APIs like `Roact.unmount` and the future debug API.
+
+---
 
 ### Roact.update
 ```
@@ -55,6 +61,8 @@ Updates an existing instance handle with a new element, returning a new handle. 
 
 	Make sure to use the handle that `update` returns in any operations after `update`, including `unmount`.
 
+---
+
 ### Roact.unmount
 ```
 Roact.unmount(instance) -> void
@@ -65,6 +73,8 @@ Roact.unmount(instance) -> void
 
 Destroys the given `ComponentInstanceHandle` and all of its descendants. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.
 
+---
+
 ### Roact.oneChild
 `Roact.oneChild(children) -> RoactElement | nil`
 
@@ -73,6 +83,8 @@ Given a dictionary of children, returns a single child element.
 If `children` contains more than one child, `oneChild` function will throw an error. This is intended to denote an error when using the component using `oneChild`.
 
 If `children` is `nil` or contains no children, `oneChild` will return `nil`.
+
+---
 
 ### Roact.createBinding
 <div class="api-addition">Added in 1.0.0</div>
@@ -106,12 +118,16 @@ where
 
 Returns a new binding that maps the existing binding's value to something else. For example, `map` can be used to transform an animation progress value like `0.4` into a property that can be consumed by a Roblox Instance like `UDim2.new(0.4, 0, 1, 0)`.
 
+---
+
 ### Roact.createRef
 ```
 Roact.createRef() -> Ref
 ```
 
 Creates a new reference object that can be used with [Roact.Ref](#roactref).
+
+---
 
 ### Roact.setGlobalConfig
 ```
@@ -129,7 +145,6 @@ Roact.setGlobalConfig({
 	propValidation = true,
 })
 ```
-
 
 The following are the valid config keys that can be used, and what they do.
 
@@ -152,12 +167,16 @@ Enabling `elementTracing` also allows the use of the [getElementTraceback](#gete
 #### propValidation
 Enables validation of props via the [validateProps](#validateprops) method on components. With this flag enabled, any validation written by component authors in a component's `validateProps` method will be run on every prop change. This is helpful during development for making sure components are being used correctly.
 
+---
+
 ## Constants
 
 ### Roact.Children
 This is the key that Roact uses internally to store the children that are attached to a Roact element.
 
 If you're writing a new function component or stateful component that renders children like a host component, you can access `Roact.Children` in your props table.
+
+---
 
 ### Roact.Ref
 Use `Roact.Ref` as a key into the props of a host element to receive a handle to the underlying Roblox Instance.
@@ -205,6 +224,8 @@ Roact.createElement("Frame", {
 
 See [the refs guide](../advanced/bindings-and-refs#refs) for more details.
 
+---
+
 ### Roact.Event
 Index into `Roact.Event` to receive a key that can be used to connect to events when creating host elements:
 
@@ -224,6 +245,8 @@ Roact.createElement("ImageButton", {
 
 See [the events guide](../guide/events) for more details.
 
+---
+
 ### Roact.Change
 Index into `Roact.Change` to receive a key that can be used to connect to [`GetPropertyChangedSignal`](http://wiki.roblox.com/index.php?title=API:Class/Instance/GetPropertyChangedSignal) events.
 
@@ -240,6 +263,8 @@ Roact.createElement("ScrollingFrame", {
 !!! warning
 	Property changed events are fired by Roact during the reconciliation phase. Be careful not to accidentally trigger a re-render in the middle of a re-render, or an error will be thrown!
 
+---
+
 ### Roact.None
 `Roact.None` is a special value that can be used to clear elements from your component state when calling `setState` or returning from `getDerivedStateFromProps`.
 
@@ -253,6 +278,8 @@ function MyComponent:didMount()
 end
 ```
 
+---
+
 ## Component Types
 
 ### Roact.Component
@@ -260,12 +287,16 @@ The base component instance that can be extended to make stateful components.
 
 Call `Roact.Component:extend("ComponentName")` to make a new stateful component with a given name.
 
+---
+
 ### Roact.PureComponent
 An extension of `Roact.Component` that only re-renders if its props or state change.
 
 `PureComponent` implements the `shouldUpdate` lifecycle event with a shallow equality comparison. It's optimized for use with immutable data structures, which makes it a perfect fit for use with frameworks like Rodux.
 
 `PureComponent` is not *always* faster, but can often result in significant performance improvements when used correctly.
+
+---
 
 ### Roact.Portal
 A component that represents a *portal* to a Roblox Instance. Portals are created using `Roact.createElement`.
@@ -276,6 +307,8 @@ Portals are useful for creating dialogs managed by deeply-nested UI components, 
 
 See [the Portals guide](../advanced/portals) for a small tutorial and more details about portals.
 
+---
+
 ## Component API
 
 ### defaultProps
@@ -284,6 +317,8 @@ static defaultProps: Dictionary<any, any>
 ```
 
 If `defaultProps` is defined on a stateful component, any props that aren't specified when a component is created will be taken from there.
+
+---
 
 ### init
 ```
@@ -313,6 +348,8 @@ function MyComponent:init()
 	}
 end
 ```
+
+---
 
 ### render
 ```
@@ -347,6 +384,8 @@ function MyComponent:render()
 	return nil
 end
 ```
+
+---
 
 ### setState
 ```
@@ -401,6 +440,8 @@ Setting a field in the state to `Roact.None` will clear it from the state. This 
 	* [RFClarification: why is `setState` asynchronous?](https://github.com/facebook/react/issues/11527#issuecomment-360199710)
 	* [Does React keep the order for state updates?](https://stackoverflow.com/a/48610973/802794)
 
+---
+
 ### shouldUpdate
 ```
 shouldUpdate(nextProps, nextState) -> bool
@@ -411,6 +452,8 @@ shouldUpdate(nextProps, nextState) -> bool
 By default, components are re-rendered any time a parent component updates, or when state is updated via `setState`.
 
 `PureComponent` implements `shouldUpdate` to only trigger a re-render any time the props are different based on shallow equality. In a future Roact update, *all* components may implement this check by default.
+
+---
 
 ### validateProps
 <div class="api-addition">Added in 1.0.0</div>
@@ -435,6 +478,8 @@ See [setGlobalConfig](#roactsetglobalconfig) for more details.
 
 !!! warning
 	Depending on the implementation, `validateProps` can impact performance. Recommended practice is to enable prop validation during development and leave it off in production environments.
+
+---
 
 ### getElementTraceback
 ```
@@ -461,6 +506,8 @@ didMount() -> void
 
 `didMount` is a good place to start initial network communications, attach events to services, or modify the Roblox Instance hierarchy.
 
+---
+
 ### willUnmount
 ```
 willUnmount() -> void
@@ -470,12 +517,16 @@ willUnmount() -> void
 
 `willUnmount` acts like a component's destructor, and is a good place to disconnect any manually-connected events.
 
+---
+
 ### willUpdate
 ```
 willUpdate(nextProps, nextState) -> void
 ```
 
 `willUpdate` is fired after an update is started but before a component's state and props are updated.
+
+---
 
 ### didUpdate
 ```
@@ -485,6 +536,8 @@ didUpdate(previousProps, previousState) -> void
 `didUpdate` is fired after at the end of an update. At this point, Roact has updated the properties of any Roblox Instances and the component instance's props and state are up to date.
 
 `didUpdate` is a good place to send network requests or dispatch Rodux actions, but make sure to compare `self.props` and `self.state` with `previousProps` and `previousState` to avoid triggering too many updates.
+
+---
 
 ### getDerivedStateFromProps
 ```

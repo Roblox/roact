@@ -139,8 +139,10 @@ function Component:setState(mapState)
 		newState = assign({}, self.state, partialState)
 	end
 
-	if lifecyclePhase == ComponentLifecyclePhase.Init then
+	if lifecyclePhase == ComponentLifecyclePhase.Init or
+		lifecyclePhase == ComponentLifecyclePhase.ErrorBoundRecovery then
 		-- If `setState` is called in `init`, we can skip triggering an update!
+		-- This also happens when an error boundary is re-rendering itself.
 		local derivedState = self:__getDerivedState(self.props, newState)
 		self.state = assign(newState, derivedState)
 
@@ -197,6 +199,36 @@ function Component:render()
 end
 
 --[[
+	Tries to render a tree and update the virtual node, correctly handling the
+	presence of an error boundary.
+]]
+function Component:__updateVirtualNode(reconciler, virtualNode, renderResult)
+	local hostParent = virtualNode.hostParent
+	local instance = virtualNode.instance
+	local internalData = instance[InternalData]
+
+	-- Only bother with pcall if we actually have something to handle the error.
+	if self.getDerivedStateFromError ~= nil then
+		local success, message = pcall(reconciler.updateVirtualNodeWithRenderResult, virtualNode, hostParent, renderResult)
+
+		if not success then
+			local stateDelta = self.getDerivedStateFromError(message)
+			internalData.lifecyclePhase = ComponentLifecyclePhase.ErrorBoundRecovery
+			instance:setState(stateDelta)
+
+			internalData.lifecyclePhase = ComponentLifecyclePhase.Render
+			renderResult = instance:render()
+			internalData.lifecyclePhase = ComponentLifecyclePhase.ReconcileChildren
+			-- Don't try to handle errors at this point - the component should
+			-- be in a position to render a non-throwing fallback by now.
+			reconciler.updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
+		end
+	else
+		reconciler.updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
+	end
+end
+
+--[[
 	Performs property validation if the static method validateProps is declared.
 	validateProps should follow assert's expected arguments:
 	(false, message: string) | true. The function may return a message in the
@@ -243,7 +275,6 @@ function Component:__mount(reconciler, virtualNode)
 	end
 
 	local currentElement = virtualNode.currentElement
-	local hostParent = virtualNode.hostParent
 
 	-- Contains all the information that we want to keep from consumers of
 	-- Roact, or even other parts of the codebase like the reconciler.
@@ -289,7 +320,7 @@ function Component:__mount(reconciler, virtualNode)
 	local renderResult = instance:render()
 
 	internalData.lifecyclePhase = ComponentLifecyclePhase.ReconcileChildren
-	reconciler.updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
+	self:__updateVirtualNode(reconciler, virtualNode, renderResult)
 
 	if instance.didMount ~= nil then
 		internalData.lifecyclePhase = ComponentLifecyclePhase.DidMount
@@ -452,7 +483,7 @@ function Component:__resolveUpdate(incomingProps, incomingState)
 	local renderResult = virtualNode.instance:render()
 
 	internalData.lifecyclePhase = ComponentLifecyclePhase.ReconcileChildren
-	reconciler.updateVirtualNodeWithRenderResult(virtualNode, virtualNode.hostParent, renderResult)
+	self:__updateVirtualNode(reconciler, virtualNode, renderResult)
 
 	if self.didUpdate ~= nil then
 		internalData.lifecyclePhase = ComponentLifecyclePhase.DidUpdate

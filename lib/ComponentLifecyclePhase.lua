@@ -14,6 +14,7 @@ local ComponentLifecyclePhase = strict({
 	-- Phases describing reconciliation status
 	ReconcileChildren = Symbol.named("reconcileChildren"),
 	Idle = Symbol.named("idle"),
+	ErrorBoundRecovery = Symbol.named("errorBoundRecovery"),
 }, "ComponentLifecyclePhase")
 
 return ComponentLifecyclePhase

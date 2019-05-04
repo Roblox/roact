@@ -21,6 +21,47 @@ return function()
 		end)
 	end)
 
+	describe("Binding.join", function()
+		it("should properly output values", function()
+			local binding1, update1 = Binding.create(1)
+			local binding2, update2 = Binding.create(2)
+
+			local joinedBinding = Binding.join({
+				binding1,
+				binding2,
+			})
+
+			local bindingValue = joinedBinding:getValue()
+			expect(bindingValue).to.be.a("table")
+			expect(bindingValue[1]).to.equal(1)
+			expect(bindingValue[2]).to.equal(2)
+		end)
+
+		it("should update when any one of the subscribed bindings updates", function()
+			local binding1, update1 = Binding.create(1)
+			local binding2, update2 = Binding.create(2)
+
+			local joinedBinding = Binding.join({
+				binding1,
+				binding2,
+			})
+
+			local spy = createSpy()
+			local disconnect = Binding.subscribe(joinedBinding, spy.value)
+
+			expect(spy.callCount).to.equal(0)
+
+			update1(3)
+
+			expect(spy.callCount).to.equal(1)
+
+			local bindingValue = spy.values[1]
+			expect(bindingValue).to.be.a("table")
+			expect(bindingValue[1]).to.equal(3)
+			expect(bindingValue[2]).to.equal(2)
+		end)
+	end)
+
 	describe("Binding object", function()
 		it("should provide a getter and setter", function()
 			local binding, update = Binding.create(1)

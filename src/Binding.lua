@@ -11,6 +11,19 @@ local function identity(value)
 	return value
 end
 
+--[[
+	Maps a table of bindings to their respective values. Used in Binding.join.
+]]
+local function mapBindingsToValues(bindings)
+	local values = {}
+
+	for key, binding in pairs(bindings) do
+		values[key] = binding:getValue()
+	end
+
+	return values
+end
+
 local Binding = {}
 
 --[[
@@ -144,6 +157,35 @@ function Binding.create(initialValue)
 	end
 
 	return binding, setter
+end
+
+--[[
+	Creates a new binding which updates when any of the upstream bindings
+	updates, which can be further mapped into any value. This function will
+	be exposed to users of Roact.
+]]
+function Binding.join(bindings)
+	local joinedBinding, setter = Binding.create(mapBindingsToValues(bindings))
+	local internalData = joinedBinding[InternalData]
+
+	local upstreamConnections = {}
+	internalData.upstreamConnections = upstreamConnections
+	
+	internalData.upstreamDisconnect = function()
+		for _, disconnect in pairs(upstreamConnections) do
+			disconnect()
+		end
+	end
+
+	local function updateBinding()
+		setter(mapBindingsToValues(bindings))
+	end
+
+	for key, binding in pairs(bindings) do
+		upstreamConnections[key] = Binding.subscribe(binding, updateBinding)
+	end
+
+	return joinedBinding
 end
 
 return Binding

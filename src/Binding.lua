@@ -170,7 +170,7 @@ function Binding.join(bindings)
 
 	local upstreamConnections = {}
 	internalData.upstreamConnections = upstreamConnections
-	
+
 	internalData.upstreamDisconnect = function()
 		for _, disconnect in pairs(upstreamConnections) do
 			disconnect()

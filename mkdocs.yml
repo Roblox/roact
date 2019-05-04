@@ -9,7 +9,7 @@ theme:
     primary: 'Light Blue'
     accent: 'Light Blue'
 
-pages:
+nav:
   - Home: index.md
   - Guide:
     - Installation: guide/installation.md

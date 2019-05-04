@@ -6,7 +6,8 @@
 	align-items: center;
 	vertical-align: middle;
 	font-weight: bold;
-	/*font-size: 1.2em;*/
+	border-left: 4px solid green;
+	border-radius: 3px;
 }
 
 .api-addition::before {

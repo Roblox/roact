@@ -108,9 +108,11 @@ end
 function bindingPrototype:__upstreamDisconnect()
 	local internalData = self[InternalData]
 
-	for _, disconnect in pairs(internalData.upstreamConnections) do
+	for _, disconnect in ipairs(internalData.upstreamConnections) do
 		disconnect()
 	end
+
+	internalData.upstreamConnections = {}
 end
 
 --[[

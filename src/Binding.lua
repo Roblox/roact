@@ -12,6 +12,13 @@ local function identity(value)
 end
 
 --[[
+	Determines if a table (array or dictionary) is empty
+]]
+local function isTableEmpty(value)
+	return not next(value)
+end
+
+--[[
 	Maps a table of bindings to their respective values. Used in Binding.join.
 ]]
 local function mapBindingsToValues(bindings)
@@ -50,7 +57,7 @@ function bindingPrototype:getValue()
 		This allows us to avoid subscribing to our source until someone
 		has subscribed to us, and avoid creating dangling connections.
 	]]
-	if internalData.upstreamBindingCount > 0 then
+	if not isTableEmpty(internalData.upstreamBindings) then
 		return internalData.valueTransform(self:__getValueFromUpstreamBindings())
 	end
 
@@ -66,12 +73,9 @@ function bindingPrototype:map(valueTransform)
 	end
 
 	local binding = Binding.create(valueTransform(self:getValue()))
-	local internalData = binding[InternalData]
 
-	internalData.valueTransform = valueTransform
-
-	internalData.upstreamBindings.source = self
-	internalData.upstreamBindingCount = internalData.upstreamBindingCount + 1
+	binding[InternalData].valueTransform = valueTransform
+	binding[InternalData].upstreamBindings.source = self
 
 	return binding
 end
@@ -132,7 +136,7 @@ function Binding.subscribe(binding, handler)
 		we need to create subscriptions to our source bindings so that updates
 		get passed along to us
 	]]
-	if internalData.upstreamBindingCount > 0 and internalData.subscriberCount == 0 then
+	if not isTableEmpty(internalData.upstreamBindings) and internalData.subscriberCount == 0 then
 		local function upstreamCallback()
 			Binding.update(binding, binding:__getValueFromUpstreamBindings())
 		end
@@ -187,7 +191,6 @@ function Binding.create(initialValue)
 			isJoinedBinding = false,
 			upstreamBindings = {},
 			upstreamConnections = {},
-			upstreamBindingCount = 0,
 		},
 	}
 
@@ -224,7 +227,6 @@ function Binding.join(bindings)
 
 	for key, binding in pairs(bindings) do
 		internalData.upstreamBindings[key] = binding
-		internalData.upstreamBindingCount = internalData.upstreamBindingCount + 1
 	end
 
 	return joinedBinding

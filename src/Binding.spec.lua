@@ -55,7 +55,7 @@ return function()
 			update2(4)
 			expect(spy.callCount).to.equal(2)
 
-			local bindingValue = spy.values[1]
+			local bindingValue = joinedBinding:getValue()
 			expect(bindingValue).to.be.a("table")
 			expect(bindingValue[1]).to.equal(3)
 			expect(bindingValue[2]).to.equal(4)

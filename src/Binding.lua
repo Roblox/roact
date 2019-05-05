@@ -69,7 +69,7 @@ function bindingPrototype:map(valueTransform)
 	local internalData = binding[InternalData]
 
 	internalData.valueTransform = valueTransform
-	
+
 	internalData.upstreamBindings.source = self
 	internalData.upstreamBindingCount = internalData.upstreamBindingCount + 1
 
@@ -137,8 +137,8 @@ function Binding.subscribe(binding, handler)
 			Binding.update(binding, binding:__getValueFromUpstreamBindings())
 		end
 
-		for _, binding in pairs(internalData.upstreamBindings) do
-			table.insert(internalData.upstreamConnections, Binding.subscribe(binding, upstreamCallback))
+		for _, upstreamBinding in pairs(internalData.upstreamBindings) do
+			table.insert(internalData.upstreamConnections, Binding.subscribe(upstreamBinding, upstreamCallback))
 		end
 	end
 

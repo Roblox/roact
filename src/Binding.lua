@@ -45,13 +45,13 @@ function bindingPrototype:getValue()
 
 	--[[
 		If our source is another binding but we're not subscribed, we'll
-		return the mapped value from our upstream binding.
+		return the mapped value from our upstream binding(s).
 
 		This allows us to avoid subscribing to our source until someone
 		has subscribed to us, and avoid creating dangling connections.
 	]]
-	if internalData.upstreamBinding ~= nil and internalData.upstreamDisconnect == nil then
-		return internalData.valueTransform(internalData.upstreamBinding:getValue())
+	if internalData.upstreamBindingCount > 0 then
+		return internalData.valueTransform(self:__getValueFromUpstreamBindings())
 	end
 
 	return internalData.value
@@ -66,11 +66,47 @@ function bindingPrototype:map(valueTransform)
 	end
 
 	local binding = Binding.create(valueTransform(self:getValue()))
+	local internalData = binding[InternalData]
 
-	binding[InternalData].valueTransform = valueTransform
-	binding[InternalData].upstreamBinding = self
+	internalData.valueTransform = valueTransform
+	
+	internalData.upstreamBindings.source = self
+	internalData.upstreamBindingCount = internalData.upstreamBindingCount + 1
 
 	return binding
+end
+
+--[[
+	Determines the final (not yet transformed) value from upstream bindings
+]]
+function bindingPrototype:__getValueFromUpstreamBindings()
+	local internalData = self[InternalData]
+	local newValue = mapBindingsToValues(internalData.upstreamBindings)
+
+	if not internalData.isJoinedBinding then
+		--[[
+			If this is not a joined binding, there will always only be one upstream
+			binding.
+
+			To ensure that joined bindings with a single upstream binding always
+			result in a table, we use the internal variable isJoinedBinding
+		]]
+		local _, value = next(newValue)
+		newValue = value
+	end
+
+	return newValue
+end
+
+--[[
+	Disconnects all connections to upstream bindings
+]]
+function bindingPrototype:__upstreamDisconnect()
+	local internalData = self[InternalData]
+
+	for _, disconnect in pairs(internalData.upstreamConnections) do
+		disconnect()
+	end
 end
 
 --[[
@@ -93,13 +129,17 @@ function Binding.subscribe(binding, handler)
 
 	--[[
 		If this binding is mapped to another and does not have any subscribers,
-		we need to create a subscription to our source binding so that updates
+		we need to create subscriptions to our source bindings so that updates
 		get passed along to us
 	]]
-	if internalData.upstreamBinding ~= nil and internalData.subscriberCount == 0 then
-		internalData.upstreamDisconnect = Binding.subscribe(internalData.upstreamBinding, function(value)
-			Binding.update(binding, value)
-		end)
+	if internalData.upstreamBindingCount > 0 and internalData.subscriberCount == 0 then
+		local function upstreamCallback()
+			Binding.update(binding, binding:__getValueFromUpstreamBindings())
+		end
+
+		for _, binding in pairs(internalData.upstreamBindings) do
+			table.insert(internalData.upstreamConnections, Binding.subscribe(binding, upstreamCallback))
+		end
 	end
 
 	local disconnect = internalData.changeSignal:subscribe(handler)
@@ -124,9 +164,8 @@ function Binding.subscribe(binding, handler)
 			If our subscribers count drops to 0, we can safely unsubscribe from
 			our source binding
 		]]
-		if internalData.subscriberCount == 0 and internalData.upstreamDisconnect ~= nil then
-			internalData.upstreamDisconnect()
-			internalData.upstreamDisconnect = nil
+		if internalData.subscriberCount == 0 then
+			binding:__upstreamDisconnect()
 		end
 	end
 end
@@ -145,8 +184,10 @@ function Binding.create(initialValue)
 			subscriberCount = 0,
 
 			valueTransform = identity,
-			upstreamBinding = nil,
-			upstreamDisconnect = nil,
+			isJoinedBinding = false,
+			upstreamBindings = {},
+			upstreamConnections = {},
+			upstreamBindingCount = 0,
 		},
 	}
 
@@ -165,24 +206,14 @@ end
 	be exposed to users of Roact.
 ]]
 function Binding.join(bindings)
-	local joinedBinding, setter = Binding.create(mapBindingsToValues(bindings))
+	local joinedBinding = Binding.create(mapBindingsToValues(bindings))
 	local internalData = joinedBinding[InternalData]
 
-	local upstreamConnections = {}
-	internalData.upstreamConnections = upstreamConnections
-
-	internalData.upstreamDisconnect = function()
-		for _, disconnect in pairs(upstreamConnections) do
-			disconnect()
-		end
-	end
-
-	local function updateBinding()
-		setter(mapBindingsToValues(bindings))
-	end
+	internalData.isJoinedBinding = true
 
 	for key, binding in pairs(bindings) do
-		upstreamConnections[key] = Binding.subscribe(binding, updateBinding)
+		internalData.upstreamBindings[key] = binding
+		internalData.upstreamBindingCount = internalData.upstreamBindingCount + 1
 	end
 
 	return joinedBinding

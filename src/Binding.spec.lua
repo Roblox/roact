@@ -81,15 +81,15 @@ return function()
 
 		it("should throw when a non-table value is passed", function()
 			expect(function()
-				Roact.joinBindings("hi")
+				Binding.join("hi")
 			end).to.throw()
 		end)
 
 		it("should throw when a non-binding value is passed via table", function()
 			expect(function()
-				local binding = Roact.createBinding(123)
+				local binding = Binding.create(123)
 
-				Roact.joinBindings({
+				Binding.join({
 					binding,
 					"abcde",
 				})

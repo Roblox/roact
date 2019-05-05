@@ -55,10 +55,28 @@ return function()
 			update2(4)
 			expect(spy.callCount).to.equal(2)
 
-			local bindingValue = joinedBinding:getValue()
+			local bindingValue = spy.values[1]
 			expect(bindingValue).to.be.a("table")
 			expect(bindingValue[1]).to.equal(3)
 			expect(bindingValue[2]).to.equal(4)
+		end)
+
+		it("should return correct values when there are no subscriptions", function()
+			local binding1, update1 = Binding.create(1)
+			local binding2, update2 = Binding.create(2)
+
+			local joinedBinding = Binding.join({
+				binding1,
+				binding2,
+			})
+
+			update1("foo")
+			update2("bar")
+
+			local bindingValue = joinedBinding:getValue()
+			expect(bindingValue).to.be.a("table")
+			expect(bindingValue[1]).to.equal("foo")
+			expect(bindingValue[2]).to.equal("bar")
 		end)
 
 		it("should throw when a non-table value is passed", function()

@@ -218,7 +218,7 @@ function Binding.join(bindings)
 			--[[
 				Bindings exclusively and always have a InternalData member
 			]]
-			assert(binding[InternalData], ("Non-binding value passed into Binding.join at index %q"):format(key))
+			assert(Type.of(binding) == Type.Binding, ("Non-binding value passed into Binding.join at index %q"):format(key))
 		end
 	end
 

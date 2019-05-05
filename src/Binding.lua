@@ -206,6 +206,17 @@ end
 	be exposed to users of Roact.
 ]]
 function Binding.join(bindings)
+	if config.typeChecks then
+		assert(typeof(bindings) == "table", "Bad arg #1 to Binding.join: expected table")
+
+		for key, binding in pairs(bindings) do
+			--[[
+				Bindings exclusively and always have a InternalData member
+			]]
+			assert(binding[InternalData], ("Non-binding value passed into Binding.join at index %q"):format(key))
+		end
+	end
+
 	local joinedBinding = Binding.create(mapBindingsToValues(bindings))
 	local internalData = joinedBinding[InternalData]
 

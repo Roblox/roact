@@ -60,6 +60,23 @@ return function()
 			expect(bindingValue[1]).to.equal(3)
 			expect(bindingValue[2]).to.equal(4)
 		end)
+
+		it("should throw when a non-table value is passed", function()
+			expect(function()
+				Roact.joinBindings("hi")
+			end).to.throw()
+		end)
+
+		it("should throw when a non-binding value is passed via table", function()
+			expect(function()
+				local binding = Roact.createBinding(123)
+
+				Roact.joinBindings({
+					binding,
+					"abcde",
+				})
+			end).to.throw()
+		end)
 	end)
 
 	describe("Binding object", function()

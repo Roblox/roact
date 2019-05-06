@@ -215,9 +215,6 @@ function Binding.join(bindings)
 		assert(typeof(bindings) == "table", "Bad arg #1 to Binding.join: expected table")
 
 		for key, binding in pairs(bindings) do
-			--[[
-				Bindings exclusively and always have a InternalData member
-			]]
 			assert(Type.of(binding) == Type.Binding, ("Non-binding value passed into Binding.join at index %q"):format(key))
 		end
 	end

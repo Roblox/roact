@@ -119,4 +119,76 @@ return function()
 			expect(lengthSpy.callCount).to.equal(1)
 		end)
 	end)
+
+	describe("Binding.join", function()
+		it("should have getValue", function()
+			local binding1 = Binding.create(1)
+			local binding2 = Binding.create(2)
+			local binding3 = Binding.create(3)
+
+			local joinedBinding = Binding.join({
+				binding1,
+				binding2,
+				foo = binding3,
+			})
+
+			local bindingValue = joinedBinding:getValue()
+			expect(bindingValue).to.be.a("table")
+			expect(bindingValue[1]).to.equal(1)
+			expect(bindingValue[2]).to.equal(2)
+			expect(bindingValue.foo).to.equal(3)
+		end)
+
+		it("should update when any one of the subscribed bindings updates", function()
+			local binding1, update1 = Binding.create(1)
+			local binding2, update2 = Binding.create(2)
+			local binding3, update3 = Binding.create(3)
+
+			local joinedBinding = Binding.join({
+				binding1,
+				binding2,
+				foo = binding3,
+			})
+
+			local spy = createSpy()
+			Binding.subscribe(joinedBinding, spy.value)
+
+			expect(spy.callCount).to.equal(0)
+
+			update1(3)
+			expect(spy.callCount).to.equal(1)
+
+			local args = spy:captureValues("value")
+			expect(args.value).to.be.a("table")
+			expect(args.value[1]).to.equal(3)
+			expect(args.value[2]).to.equal(2)
+			expect(args.value["foo"]).to.equal(3)
+
+			update2(4)
+			expect(spy.callCount).to.equal(2)
+
+			args = spy:captureValues("value")
+			expect(args.value).to.be.a("table")
+			expect(args.value[1]).to.equal(3)
+			expect(args.value[2]).to.equal(4)
+			expect(args.value["foo"]).to.equal(3)
+		end)
+
+		it("should throw when a non-table value is passed", function()
+			expect(function()
+				Binding.join("hi")
+			end).to.throw()
+		end)
+
+		it("should throw when a non-binding value is passed via table", function()
+			expect(function()
+				local binding = Binding.create(123)
+
+				Binding.join({
+					binding,
+					"abcde",
+				})
+			end).to.throw()
+		end)
+	end)
 end

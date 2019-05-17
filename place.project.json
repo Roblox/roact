@@ -32,6 +32,9 @@
 
       "RoactBenchmark": {
         "$path": "benchmarks"
+      },
+      "RoactTests": {
+        "$path": "bin/run-tests.server.lua"
       }
     },
 

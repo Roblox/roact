@@ -211,9 +211,7 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 
 	local children = element.props[Children]
 
-	if children ~= nil then
-		reconciler.updateVirtualNodeWithChildren(virtualNode, virtualNode.hostObject, children)
-	end
+	reconciler.updateVirtualNodeWithChildren(virtualNode, virtualNode.hostObject, children)
 
 	instance.Parent = hostParent
 	virtualNode.hostObject = instance
@@ -268,10 +266,7 @@ function RobloxRenderer.updateHostNode(reconciler, virtualNode, newElement)
 		error(fullMessage, 0)
 	end
 
-	local children = newElement.props[Children]
-	if children ~= nil then
-		reconciler.updateVirtualNodeWithChildren(virtualNode, virtualNode.hostObject, children)
-	end
+	reconciler.updateVirtualNodeWithChildren(virtualNode, virtualNode.hostObject, newElement.props[Children])
 
 	if virtualNode.eventManager ~= nil then
 		virtualNode.eventManager:resume()

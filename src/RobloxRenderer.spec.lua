@@ -419,6 +419,33 @@ return function()
 				expect(message:find("RobloxRenderer%.spec")).to.be.ok()
 			end)
 		end)
+
+		it("should delete instances when reconciling to nil children", function()
+			local parent = Instance.new("Folder")
+			local key = "Some Key"
+
+			local element = createElement("Frame", {
+				Size = UDim2.new(1, 0, 1, 0),
+			}, {
+				child = createElement("Frame"),
+			})
+
+			local node = reconciler.createVirtualNode(element, parent, key)
+
+			RobloxRenderer.mountHostNode(reconciler, node)
+
+			expect(#parent:GetChildren()).to.equal(1)
+
+			local instance = parent:GetChildren()[1]
+			expect(#instance:GetChildren()).to.equal(1)
+
+			local newElement = createElement("Frame", {
+				Size = UDim2.new(0.5, 0, 0.5, 0),
+			})
+
+			RobloxRenderer.updateHostNode(reconciler, node, newElement)
+			expect(#instance:GetChildren()).to.equal(0)
+		end)
 	end)
 
 	describe("unmountHostNode", function()

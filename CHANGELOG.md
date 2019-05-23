@@ -1,5 +1,9 @@
 # Roact Changelog
 
+## Unreleased
+
+* Fixed an issue where updating a host element with children to an element with `nil` children caused the old children to not be unmounted.
+
 ## [1.0.0](https://github.com/Roblox/roact/releases/tag/v1.0.0)
 This release significantly reworks Roact internals to enable new features and optimizations.
 

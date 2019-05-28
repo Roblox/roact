@@ -8,18 +8,18 @@ local BindingImpl = Symbol.named("BindingImpl")
 
 local BindingInternalApi = {}
 
-local BindingPublicMethods = {}
+local bindingPrototype = {}
 
-function BindingPublicMethods:getValue()
+function bindingPrototype:getValue()
 	return BindingInternalApi.getValue(self)
 end
 
-function BindingPublicMethods:map(predicate)
+function bindingPrototype:map(predicate)
 	return BindingInternalApi.map(self, predicate)
 end
 
 local BindingPublicMeta = {
-	__index = BindingPublicMethods,
+	__index = bindingPrototype,
 	__tostring = function(self)
 		return string.format("RoactBinding(%s)", tostring(self:getValue()))
 	end,
@@ -77,7 +77,7 @@ function BindingInternalApi.map(upstreamBinding, predicate)
 	end
 
 	function impl.update(newValue)
-		-- This operation doesn't make sense; we can leave it as a no-op
+		error("Bindings created by Binding:map(fn) cannot be updated directly", 2)
 	end
 
 	function impl.getValue()
@@ -97,7 +97,7 @@ function BindingInternalApi.join(upstreamBindings)
 		for key, value in pairs(upstreamBindings) do
 			if Type.of(value) ~= Type.Binding then
 				local message = (
-					"Expected arg #1 to contain only bindings, but key %s had a non-binding value"
+					"Expected arg #1 to contain only bindings, but key %q had a non-binding value"
 				):format(
 					tostring(key)
 				)
@@ -106,9 +106,7 @@ function BindingInternalApi.join(upstreamBindings)
 		end
 	end
 
-	local impl = {
-		disconnectMethods = nil,
-	}
+	local impl = {}
 
 	local function getValue()
 		local value = {}
@@ -143,7 +141,7 @@ function BindingInternalApi.join(upstreamBindings)
 	end
 
 	function impl.update(newValue)
-		-- This operation doesn't make sense; we can leave it as a no-op
+		error("Bindings created by joinBindings(...) cannot be updated directly", 2)
 	end
 
 	function impl.getValue()

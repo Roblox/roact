@@ -120,6 +120,53 @@ Returns a new binding that maps the existing binding's value to something else. 
 
 ---
 
+### Roact.joinBindings
+<div class="api-addition">Added in XXXX</div>
+
+```
+Roact.joinBindings(bindings) -> Binding
+where
+	bindings: { [any]: Binding }
+```
+
+Combines multiple bindings into a single binding. The new binding's value will have the same keys as the input table of bindings.
+
+`joinBindings` is usually used alongside `Binding:map`:
+
+```lua
+local function Flex()
+	local aSize, setASize = Roact.createBinding(Vector2.new())
+	local bSize, setBSize = Roact.createBinding(Vector2.new())
+
+	return Roact.createElement("Frame", {
+		Size = Roact.joinBindings({aSize, bSize}):map(function(sizes)
+			local sum = Vector2.new()
+			for _, size in ipairs(sizes) do
+				sum = sum + size
+			end
+
+			return UDim2.new(0, sum.X,  0, sum.Y)
+		end),
+	}, {
+		A = Roact.createElement("Frame", {
+			Size = UDim2.new(1, 0, 0, 30),
+			[Roact.Change.AbsoluteSize] = function(instance)
+				setASize(instance.Size)
+			end,
+		}),
+		B = Roact.createElement("Frame", {
+			Size = UDim2.new(1, 0, 0, 30),
+			Position = UDim2.new(0, 0, 0, 30),
+			[Roact.Change.AbsoluteSize] = function(instance)
+				setBSize(instance.Size)
+			end,
+		}),
+	})
+end
+```
+
+---
+
 ### Roact.createRef
 ```
 Roact.createRef() -> Ref

@@ -59,7 +59,7 @@ local function Greeting(props)
 end
 
 local function GreetEveryone()
-	return Roact.createElement("ScreenGui", {
+	return Roact.createElement("ScreenGui", {}, {
 		Layout = Roact.createElement("UIListLayout"),
 
 		HelloJoe = Roact.createElement(Greeting, {

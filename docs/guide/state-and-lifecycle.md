@@ -26,7 +26,7 @@ There's another form of `setState` we can use. When the new state we want our co
 function MyComponent:didMount()
 	self:setState(function(state)
 		return {
-			currentTime = currentTime + state.currentTime
+			currentTime = 1 + state.currentTime
 		}
 	end)
 end

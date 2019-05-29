@@ -1,7 +1,7 @@
 # Roact Changelog
 
 ## Unreleased Changes
-* Added `Roact.joinBindings`, which allows combining multiple bindings into a single binding that can be mapped.
+* Added `Roact.joinBindings`, which allows combining multiple bindings into a single binding that can be mapped. ([#208](https://github.com/Roblox/roact/pull/208))
 
 ## [1.0.0](https://github.com/Roblox/roact/releases/tag/v1.0.0)
 This release significantly reworks Roact internals to enable new features and optimizations.

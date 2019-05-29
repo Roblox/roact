@@ -121,7 +121,7 @@ Returns a new binding that maps the existing binding's value to something else. 
 ---
 
 ### Roact.joinBindings
-<div class="api-addition">Added in XXXX</div>
+<div class="api-addition">Unreleased API</div>
 
 ```
 Roact.joinBindings(bindings) -> Binding
@@ -141,6 +141,7 @@ local function Flex()
 	return Roact.createElement("Frame", {
 		Size = Roact.joinBindings({aSize, bSize}):map(function(sizes)
 			local sum = Vector2.new()
+
 			for _, size in ipairs(sizes) do
 				sum = sum + size
 			end

@@ -118,6 +118,17 @@ return function()
 			expect(isEvenLengthSpy.callCount).to.equal(1)
 			expect(lengthSpy.callCount).to.equal(1)
 		end)
+
+		it("should throw when updated directly", function()
+			local source = Binding.create(1)
+			local mapped = source:map(function(v)
+				return v
+			end)
+
+			expect(function()
+				Binding.update(mapped, 5)
+			end).to.throw()
+		end)
 	end)
 
 	describe("Binding.join", function()
@@ -213,15 +224,20 @@ return function()
 		end)
 
 		it("should be okay with calling disconnect multiple times", function()
-			local binding1 = Binding.create(1)
-			local binding2 = Binding.create(2)
-
-			local joined = Binding.join({binding1, binding2})
+			local joined = Binding.join({})
 
 			local disconnect = Binding.subscribe(joined, function() end)
 
 			disconnect()
 			disconnect()
+		end)
+
+		it("should throw if updated directly", function()
+			local joined = Binding.join({})
+
+			expect(function()
+				Binding.update(joined, 0)
+			end)
 		end)
 
 		it("should throw when a non-table value is passed", function()

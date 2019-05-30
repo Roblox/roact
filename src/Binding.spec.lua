@@ -172,6 +172,15 @@ return function()
 			expect(args.value[1]).to.equal(3)
 			expect(args.value[2]).to.equal(4)
 			expect(args.value["foo"]).to.equal(3)
+
+			update3(8)
+			expect(spy.callCount).to.equal(3)
+
+			args = spy:captureValues("value")
+			expect(args.value).to.be.a("table")
+			expect(args.value[1]).to.equal(3)
+			expect(args.value[2]).to.equal(4)
+			expect(args.value["foo"]).to.equal(8)
 		end)
 
 		it("should throw when a non-table value is passed", function()

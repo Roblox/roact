@@ -183,6 +183,47 @@ return function()
 			expect(args.value["foo"]).to.equal(8)
 		end)
 
+		it("should disconnect from all upstream bindings", function()
+			local binding1, update1 = Binding.create(1)
+			local binding2, update2 = Binding.create(2)
+
+			local joined = Binding.join({binding1, binding2})
+
+			local spy = createSpy()
+			local disconnect = Binding.subscribe(joined, spy.value)
+
+			expect(spy.callCount).to.equal(0)
+
+			update1(3)
+			expect(spy.callCount).to.equal(1)
+
+			update2(3)
+			expect(spy.callCount).to.equal(2)
+
+			disconnect()
+			update1(4)
+			expect(spy.callCount).to.equal(2)
+
+			update2(2)
+			expect(spy.callCount).to.equal(2)
+
+			local value = joined:getValue()
+			expect(value[1]).to.equal(4)
+			expect(value[2]).to.equal(2)
+		end)
+
+		it("should be okay with calling disconnect multiple times", function()
+			local binding1 = Binding.create(1)
+			local binding2 = Binding.create(2)
+
+			local joined = Binding.join({binding1, binding2})
+
+			local disconnect = Binding.subscribe(joined, function() end)
+
+			disconnect()
+			disconnect()
+		end)
+
 		it("should throw when a non-table value is passed", function()
 			expect(function()
 				Binding.join("hi")

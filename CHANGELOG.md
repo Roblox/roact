@@ -1,6 +1,7 @@
 # Roact Changelog
 
 ## Unreleased Changes
+* Fixed an issue where updating a host element with children to an element with `nil` children caused the old children to not be unmounted. ([#210](https://github.com/Roblox/roact/pull/210))
 * Added `Roact.joinBindings`, which allows combining multiple bindings into a single binding that can be mapped. ([#208](https://github.com/Roblox/roact/pull/208))
 
 ## [1.0.0](https://github.com/Roblox/roact/releases/tag/v1.0.0)

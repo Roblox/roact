@@ -271,7 +271,7 @@ function RobloxRenderer.updateHostNode(reconciler, virtualNode, newElement)
 	local children = newElement.props[Children]
 
 	if children ~= nil or oldProps[Children] ~= nil then
-		reconciler.updateVirtualNodeWithChildren(virtualNode, virtualNode.hostObject, newElement.props[Children])
+		reconciler.updateVirtualNodeWithChildren(virtualNode, virtualNode.hostObject, children)
 	end
 
 	if virtualNode.eventManager ~= nil then

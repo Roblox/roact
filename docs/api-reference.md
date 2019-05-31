@@ -157,7 +157,9 @@ local function Flex()
 		}),
 		B = Roact.createElement("Frame", {
 			Size = UDim2.new(1, 0, 0, 30),
-			Position = UDim2.new(0, 0, 0, 30),
+			Position = aSize:map(function(size)
+				return UDim2.new(0, 0, 0, size.Y)
+			end),
 			[Roact.Change.AbsoluteSize] = function(instance)
 				setBSize(instance.Size)
 			end,

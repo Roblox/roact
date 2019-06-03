@@ -80,3 +80,15 @@ When submitting a bug fix, create a test that verifies the broken behavior and t
 When submitting a new feature, add tests for all functionality.
 
 We use [LuaCov](https://keplerproject.github.io/luacov) for keeping track of code coverage. We'd like it to be as close to 100% as possible, but it's not always possible. Adding tests just for the purpose of getting coverage isn't useful; we should strive to make only useful tests!
+
+## Release Checklist
+When releasing a new version of Roact, do these things:
+
+1. Bump the version in `rotriever.toml`
+2. Move the unreleased changes in `CHANGELOG.md` to a new heading
+3. Update `docs/api-reference.md` to flag any unreleased APIs with the new version
+4. Commit with a message like `Release v2.3.7`
+5. Tag the commit: `git tag v2.3.7`
+6. Push: `git push`
+7. Push the new release tag: `git push origin v2.3.7`
+8. Write a release on GitHub, copying release notes from `CHANGELOG.md`

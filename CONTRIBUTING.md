@@ -84,12 +84,17 @@ We use [LuaCov](https://keplerproject.github.io/luacov) for keeping track of cod
 ## Release Checklist
 When releasing a new version of Roact, do these things:
 
-1. Bump the version in `rotriever.toml`
-2. Move the unreleased changes in `CHANGELOG.md` to a new heading
-	- This heading should have a GitHub releases link and release date
-3. Update `docs/api-reference.md` to flag any unreleased APIs with the new version
-4. Commit with a message like `Release v2.3.7`
-5. Tag the commit: `git tag v2.3.7`
-6. Push commits: `git push`
-7. Push the new release tag: `git push origin v2.3.7`
-8. Write a release on GitHub, copying release notes from `CHANGELOG.md`
+1. Bump the version in `rotriever.toml`.
+2. Move the unreleased changes in `CHANGELOG.md` to a new heading.
+	- This heading should have a GitHub release link and release date!
+3. Update `docs/api-reference.md` to flag any unreleased APIs with the new version.
+5. Commit with Git:
+	- Commit: `git commit -m "Release v2.3.7"`
+	- Tag the commit: `git tag v2.3.7`
+	- Push commits: `git push`
+	- Push the tag: `git push origin v2.3.7`
+6. Build a binary with Rojo: `rojo build -o Roact.rbxm`
+7. Write a release on GitHub:
+	- Use the same format as the previous release
+	- Copy the release notes from `CHANGELOG.md`
+	- Attach the `Roact.rbxm` built with Rojo

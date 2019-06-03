@@ -7,6 +7,7 @@ return function()
 			createFragment = "function",
 			createRef = "function",
 			createBinding = "function",
+			joinBindings = "function",
 			mount = "function",
 			unmount = "function",
 			update = "function",

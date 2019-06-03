@@ -28,7 +28,7 @@
 * Rename the folder to `Roact`
 * Use a plugin like [Rojo](https://github.com/LPGhatguy/rojo) to sync the files into a place
 
-## Usage
+## [Documentation](https://roblox.github.io/roact)
 For a detailed guide and examples, check out [the official Roact documentation](https://roblox.github.io/roact).
 
 ```lua

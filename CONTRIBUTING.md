@@ -90,6 +90,6 @@ When releasing a new version of Roact, do these things:
 3. Update `docs/api-reference.md` to flag any unreleased APIs with the new version
 4. Commit with a message like `Release v2.3.7`
 5. Tag the commit: `git tag v2.3.7`
-6. Push: `git push`
+6. Push commits: `git push`
 7. Push the new release tag: `git push origin v2.3.7`
 8. Write a release on GitHub, copying release notes from `CHANGELOG.md`

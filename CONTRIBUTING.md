@@ -86,6 +86,7 @@ When releasing a new version of Roact, do these things:
 
 1. Bump the version in `rotriever.toml`
 2. Move the unreleased changes in `CHANGELOG.md` to a new heading
+	- This heading should have a GitHub releases link and release date
 3. Update `docs/api-reference.md` to flag any unreleased APIs with the new version
 4. Commit with a message like `Release v2.3.7`
 5. Tag the commit: `git tag v2.3.7`

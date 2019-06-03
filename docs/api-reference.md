@@ -121,7 +121,7 @@ Returns a new binding that maps the existing binding's value to something else. 
 ---
 
 ### Roact.joinBindings
-<div class="api-addition">Unreleased API</div>
+<div class="api-addition">Added in 1.1.0</div>
 
 ```
 Roact.joinBindings(bindings) -> Binding

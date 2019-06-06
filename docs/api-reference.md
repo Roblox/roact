@@ -32,7 +32,7 @@ Creates a new Roact fragment with the provided table of elements. Fragments allo
 
 ### Roact.mount
 ```
-Roact.mount(element, [parent, [key]]) -> ComponentInstanceHandle
+Roact.mount(element, [parent, [key]]) -> RoactTree
 ```
 
 !!! info
@@ -40,13 +40,13 @@ Roact.mount(element, [parent, [key]]) -> ComponentInstanceHandle
 
 Creates a Roblox Instance given a Roact element, and optionally a `parent` to put it in, and a `key` to use as the instance's `Name`.
 
-The result is a `ComponentInstanceHandle`, which is an opaque handle that represents this specific instance of the root component. You can pass this to APIs like `Roact.unmount` and the future debug API.
+The result is a `RoactTree`, which is an opaque handle that represents a tree of components owned by Roact. You can pass this to APIs like `Roact.unmount`. It'll also be used for future debugging APIs.
 
 ---
 
 ### Roact.update
 ```
-Roact.update(instanceHandle, element) -> ComponentInstanceHandle
+Roact.update(tree, element) -> RoactTree
 ```
 
 !!! info
@@ -56,22 +56,19 @@ Updates an existing instance handle with a new element, returning a new handle. 
 
 `update` can be used to change the props of a component instance created with `mount` and is useful for putting Roact content into non-Roact applications.
 
-!!! warning
-	`Roact.update` takes ownership of the `instanceHandle` passed into it and may unmount it and mount a new tree!
-
-	Make sure to use the handle that `update` returns in any operations after `update`, including `unmount`.
+As of Roact 1.0, the returned `RoactTree` object will always be the same value as the one passed in.
 
 ---
 
 ### Roact.unmount
 ```
-Roact.unmount(instance) -> void
+Roact.unmount(tree) -> void
 ```
 
 !!! info
 	`Roact.unmount` is also available via the deprecated alias `Roact.teardown`. It will be removed in a future release.
 
-Destroys the given `ComponentInstanceHandle` and all of its descendants. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.
+Destroys the given `RoactTree` and all of its descendants. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.
 
 ---
 

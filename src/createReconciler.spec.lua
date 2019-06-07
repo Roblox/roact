@@ -47,7 +47,7 @@ return function()
 		end)
 	end)
 
-	describe("elements and fragments", function()
+	describe("invalid elements", function()
 		it("should throw errors when attempting to mount invalid elements", function()
 			-- These function components return values with incorrect types
 			local returnsString = function()
@@ -284,6 +284,24 @@ return function()
 			expect(parentComponentSpy.callCount).to.equal(1)
 			expect(childAComponentSpy.callCount).to.equal(1)
 			expect(childBComponentSpy.callCount).to.equal(1)
+		end)
+	end)
+
+	describe("Fragments", function()
+		it("should mount fragments child", function()
+			local childComponentSpy = createSpy(function(props)
+				return nil
+			end)
+			local fragment = createFragment({
+				key = createElement(childComponentSpy.value, {})
+			})
+			local node = noopReconciler.mountVirtualNode(fragment, nil, "test")
+
+			expect(childComponentSpy.callCount).to.equal(1)
+
+			node = noopReconciler.updateVirtualNode(node, true)
+
+			expect(node).to.equal(nil)
 		end)
 	end)
 end

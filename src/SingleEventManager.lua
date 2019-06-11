@@ -53,7 +53,14 @@ function SingleEventManager:connectEvent(key, listener)
 end
 
 function SingleEventManager:connectPropertyChange(key, listener)
-	local event = self._instance:GetPropertyChangedSignal(key)
+	local success, event = pcall(function()
+		return self._instance:GetPropertyChangedSignal(key)
+	end)
+
+	if not success then
+		error(("Cannot get property '%s' changed signal from %s"):format(key, self._instance.ClassName), 0)
+	end
+
 	self:_connect(CHANGE_PREFIX .. key, event, listener)
 end
 

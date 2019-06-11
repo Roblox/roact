@@ -5,6 +5,7 @@ return function()
 	local createSpy = require(script.Parent.createSpy)
 	local NoopRenderer = require(script.Parent.NoopRenderer)
 	local Type = require(script.Parent.Type)
+	local ElementKind = require(script.Parent.ElementKind)
 
 	local createReconciler = require(script.Parent.createReconciler)
 
@@ -288,7 +289,15 @@ return function()
 	end)
 
 	describe("Fragments", function()
-		it("should mount fragments child", function()
+		it("should mount fragments", function()
+			local fragment = createFragment({})
+			local node = noopReconciler.mountVirtualNode(fragment, nil, "test")
+
+			expect(node).to.be.ok()
+			expect(ElementKind.of(node.currentElement)).to.equal(ElementKind.Fragment)
+		end)
+
+		it("should mount fragments children", function()
 			local childComponentSpy = createSpy(function(props)
 				return nil
 			end)
@@ -298,10 +307,7 @@ return function()
 			local node = noopReconciler.mountVirtualNode(fragment, nil, "test")
 
 			expect(childComponentSpy.callCount).to.equal(1)
-
-			node = noopReconciler.updateVirtualNode(node, true)
-
-			expect(node).to.equal(nil)
+			expect(node.children.key).to.be.ok()
 		end)
 	end)
 end

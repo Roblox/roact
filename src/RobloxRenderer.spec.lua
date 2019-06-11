@@ -4,6 +4,7 @@ return function()
 	local Children = require(script.Parent.PropMarkers.Children)
 	local Component = require(script.Parent.Component)
 	local createElement = require(script.Parent.createElement)
+	local createFragment = require(script.Parent.createFragment)
 	local createReconciler = require(script.Parent.createReconciler)
 	local createRef = require(script.Parent.createRef)
 	local createSpy = require(script.Parent.createSpy)
@@ -683,6 +684,88 @@ return function()
 
 			expect(#firstTarget:GetChildren()).to.equal(0)
 			expect(#secondTarget:GetChildren()).to.equal(0)
+		end)
+	end)
+
+	describe("Fragments", function()
+		it("should parent the fragment's elements into the fragment's parent", function()
+			local hostParent = Instance.new("Folder")
+
+			local fragment = createFragment({
+				key = createElement("IntValue", {
+					Value = 1,
+				})
+			})
+
+			local node = reconciler.mountVirtualNode(fragment, hostParent, "test")
+
+			expect(hostParent:FindFirstChild("key")).to.be.ok()
+			expect(hostParent.key.ClassName).to.equal("IntValue")
+			expect(hostParent.key.Value).to.equal(1)
+
+			reconciler.unmountVirtualNode(node)
+
+			expect(#hostParent:GetChildren()).to.equal(0)
+		end)
+
+		it("should allow sibling fragment to have common keys", function()
+			local hostParent = Instance.new("Folder")
+			local hostKey = "Test"
+
+			local childAComponentSpy = createSpy(function(props)
+				return createElement("StringValue", {
+					Value = "A",
+				})
+			end)
+			local childBComponentSpy = createSpy(function(props)
+				return createElement("StringValue", {
+					Value = "B",
+				})
+			end)
+
+			local function parent(props)
+				return createElement("IntValue", {}, {
+					fragments_a = createFragment({
+						key = createElement(childAComponentSpy.value)
+					}),
+					fragments_b = createFragment({
+						key = createElement(childBComponentSpy.value)
+					}),
+				})
+			end
+
+			local node = reconciler.mountVirtualNode(createElement(parent), hostParent, hostKey)
+			local parentChildren = hostParent[hostKey]:GetChildren()
+
+			expect(#parentChildren).to.equal(2)
+			expect(parentChildren[1].ClassName).to.equal("StringValue")
+			expect(parentChildren[2].ClassName).to.equal("StringValue")
+
+			reconciler.unmountVirtualNode(node)
+
+			expect(#hostParent:GetChildren()).to.equal(0)
+		end)
+
+		it("should render nested fragments", function()
+			local hostParent = Instance.new("Folder")
+
+			local fragment = createFragment({
+				key = createFragment({
+					TheValue = createElement("IntValue", {
+						Value = 1,
+					})
+				})
+			})
+
+			local node = reconciler.mountVirtualNode(fragment, hostParent, "Test")
+
+			expect(hostParent:FindFirstChild("TheValue")).to.be.ok()
+			expect(hostParent.TheValue.ClassName).to.equal("IntValue")
+			expect(hostParent.TheValue.Value).to.equal(1)
+
+			reconciler.unmountVirtualNode(node)
+
+			expect(#hostParent:GetChildren()).to.equal(0)
 		end)
 	end)
 

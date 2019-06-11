@@ -767,6 +767,18 @@ return function()
 
 			expect(#hostParent:GetChildren()).to.equal(0)
 		end)
+
+		it("should not add any instances if the fragment is empty", function()
+			local hostParent = Instance.new("Folder")
+
+			local node = reconciler.mountVirtualNode(createFragment({}), hostParent, "test")
+
+			expect(#hostParent:GetChildren()).to.equal(0)
+
+			reconciler.unmountVirtualNode(node)
+
+			expect(#hostParent:GetChildren()).to.equal(0)
+		end)
 	end)
 
 	describe("Context", function()

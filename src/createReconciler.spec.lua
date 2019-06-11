@@ -309,5 +309,13 @@ return function()
 			expect(childComponentSpy.callCount).to.equal(1)
 			expect(node.children.key).to.be.ok()
 		end)
+
+		it("should mount an empty fragment", function()
+			local emptyFragment = createFragment({})
+			local node = noopReconciler.mountVirtualNode(emptyFragment, nil, "test")
+
+			expect(node).to.be.ok()
+			expect(next(node.children)).to.never.be.ok()
+		end)
 	end)
 end

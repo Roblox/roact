@@ -58,7 +58,7 @@ function SingleEventManager:connectPropertyChange(key, listener)
 	end)
 
 	if not success then
-		error(("Cannot get property '%s' changed signal from %s"):format(key, self._instance.ClassName), 0)
+		error(("Cannot get property '%s' changed signal from %s"):format(tostring(key), self._instance.ClassName), 0)
 	end
 
 	self:_connect(CHANGE_PREFIX .. key, event, listener)

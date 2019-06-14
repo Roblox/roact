@@ -738,16 +738,17 @@ return function()
 			local parentChildren = hostParent[hostKey]:GetChildren()
 
 			expect(#parentChildren).to.equal(2)
-			expect(parentChildren[1].ClassName).to.equal("StringValue")
-			expect(parentChildren[2].ClassName).to.equal("StringValue")
 
-			if parentChildren[1].Value ~= "A" then
-				expect(parentChildren[1].Value).to.equal("B")
-				expect(parentChildren[2].Value).to.equal("A")
-			else
-				expect(parentChildren[1].Value).to.equal("A")
-				expect(parentChildren[2].Value).to.equal("B")
+			local childValues = {}
+
+			for _, child in pairs(parentChildren) do
+				expect(child.ClassName).to.equal("StringValue")
+				childValues[child.Value] = 1 + (childValues[child.Value] or 0)
 			end
+
+			-- check if the StringValues have not collided
+			expect(childValues.A).to.equal(1)
+			expect(childValues.B).to.equal(1)
 
 			reconciler.unmountVirtualNode(node)
 

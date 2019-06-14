@@ -712,24 +712,24 @@ return function()
 			local hostParent = Instance.new("Folder")
 			local hostKey = "Test"
 
-			local childAComponentSpy = createSpy(function(props)
+			local childAComponent = function(props)
 				return createElement("StringValue", {
 					Value = "A",
 				})
-			end)
-			local childBComponentSpy = createSpy(function(props)
+			end
+			local childBComponent = function(props)
 				return createElement("StringValue", {
 					Value = "B",
 				})
-			end)
+			end
 
 			local function parent(props)
 				return createElement("IntValue", {}, {
 					fragments_a = createFragment({
-						key = createElement(childAComponentSpy.value)
+						key = createElement(childAComponent)
 					}),
 					fragments_b = createFragment({
-						key = createElement(childBComponentSpy.value)
+						key = createElement(childBComponent)
 					}),
 				})
 			end
@@ -740,6 +740,14 @@ return function()
 			expect(#parentChildren).to.equal(2)
 			expect(parentChildren[1].ClassName).to.equal("StringValue")
 			expect(parentChildren[2].ClassName).to.equal("StringValue")
+
+			if parentChildren[1].Value ~= "A" then
+				expect(parentChildren[1].Value).to.equal("B")
+				expect(parentChildren[2].Value).to.equal("A")
+			else
+				expect(parentChildren[1].Value).to.equal("A")
+				expect(parentChildren[2].Value).to.equal("B")
+			end
 
 			reconciler.unmountVirtualNode(node)
 

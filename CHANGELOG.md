@@ -1,6 +1,7 @@
 # Roact Changelog
 
 ## Unreleased Changes
+* Fixed a bug where fragments could not be used as child of a component. ([#214](https://github.com/Roblox/roact/pull/214))
 
 ## [1.1.0](https://github.com/Roblox/roact/releases/tag/v1.1.0) (June 3rd, 2019)
 * Fixed an issue where updating a host element with children to an element with `nil` children caused the old children to not be unmounted. ([#210](https://github.com/Roblox/roact/pull/210))

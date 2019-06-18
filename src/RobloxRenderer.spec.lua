@@ -694,7 +694,10 @@ return function()
 			local fragment = createFragment({
 				key = createElement("IntValue", {
 					Value = 1,
-				})
+				}),
+				key2 = createElement("IntValue", {
+					Value = 2,
+				}),
 			})
 
 			local node = reconciler.mountVirtualNode(fragment, hostParent, "test")
@@ -702,6 +705,10 @@ return function()
 			expect(hostParent:FindFirstChild("key")).to.be.ok()
 			expect(hostParent.key.ClassName).to.equal("IntValue")
 			expect(hostParent.key.Value).to.equal(1)
+
+			expect(hostParent:FindFirstChild("key2")).to.be.ok()
+			expect(hostParent.key2.ClassName).to.equal("IntValue")
+			expect(hostParent.key2.Value).to.equal(2)
 
 			reconciler.unmountVirtualNode(node)
 
@@ -712,24 +719,23 @@ return function()
 			local hostParent = Instance.new("Folder")
 			local hostKey = "Test"
 
-			local childAComponent = function(props)
-				return createElement("StringValue", {
-					Value = "A",
-				})
-			end
-			local childBComponent = function(props)
-				return createElement("StringValue", {
-					Value = "B",
-				})
-			end
-
 			local function parent(props)
 				return createElement("IntValue", {}, {
-					fragments_a = createFragment({
-						key = createElement(childAComponent)
+					fragmentA = createFragment({
+						key = createElement("StringValue", {
+							Value = "A",
+						}),
+						key2 = createElement("StringValue", {
+							Value = "B",
+						}),
 					}),
-					fragments_b = createFragment({
-						key = createElement(childBComponent)
+					fragmentB = createFragment({
+						key = createElement("StringValue", {
+							Value = "C",
+						}),
+						key2 = createElement("StringValue", {
+							Value = "D",
+						}),
 					}),
 				})
 			end
@@ -737,7 +743,7 @@ return function()
 			local node = reconciler.mountVirtualNode(createElement(parent), hostParent, hostKey)
 			local parentChildren = hostParent[hostKey]:GetChildren()
 
-			expect(#parentChildren).to.equal(2)
+			expect(#parentChildren).to.equal(4)
 
 			local childValues = {}
 
@@ -749,6 +755,8 @@ return function()
 			-- check if the StringValues have not collided
 			expect(childValues.A).to.equal(1)
 			expect(childValues.B).to.equal(1)
+			expect(childValues.C).to.equal(1)
+			expect(childValues.D).to.equal(1)
 
 			reconciler.unmountVirtualNode(node)
 
@@ -762,6 +770,9 @@ return function()
 				key = createFragment({
 					TheValue = createElement("IntValue", {
 						Value = 1,
+					}),
+					TheOtherValue = createElement("IntValue", {
+						Value = 2,
 					})
 				})
 			})
@@ -771,6 +782,10 @@ return function()
 			expect(hostParent:FindFirstChild("TheValue")).to.be.ok()
 			expect(hostParent.TheValue.ClassName).to.equal("IntValue")
 			expect(hostParent.TheValue.Value).to.equal(1)
+
+			expect(hostParent:FindFirstChild("TheOtherValue")).to.be.ok()
+			expect(hostParent.TheOtherValue.ClassName).to.equal("IntValue")
+			expect(hostParent.TheOtherValue.Value).to.equal(2)
 
 			reconciler.unmountVirtualNode(node)
 

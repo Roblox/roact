@@ -297,25 +297,30 @@ return function()
 			expect(ElementKind.of(node.currentElement)).to.equal(ElementKind.Fragment)
 		end)
 
-		it("should mount fragments children", function()
-			local childComponentSpy = createSpy(function(props)
-				return nil
-			end)
-			local fragment = createFragment({
-				key = createElement(childComponentSpy.value, {})
-			})
-			local node = noopReconciler.mountVirtualNode(fragment, nil, "test")
-
-			expect(childComponentSpy.callCount).to.equal(1)
-			expect(node.children.key).to.be.ok()
-		end)
-
 		it("should mount an empty fragment", function()
 			local emptyFragment = createFragment({})
 			local node = noopReconciler.mountVirtualNode(emptyFragment, nil, "test")
 
 			expect(node).to.be.ok()
 			expect(next(node.children)).to.never.be.ok()
+		end)
+
+		it("should mount all fragment's children", function()
+			local childComponentSpy = createSpy(function(props)
+				return nil
+			end)
+			local elements = {}
+			local totalElements = 5
+
+			for i=1, totalElements do
+				elements["key"..tostring(i)] = createElement(childComponentSpy.value, {})
+			end
+
+			local fragments = createFragment(elements)
+			local node = noopReconciler.mountVirtualNode(fragments, nil, "test")
+
+			expect(node).to.be.ok()
+			expect(childComponentSpy.callCount).to.equal(totalElements)
 		end)
 	end)
 end

@@ -58,9 +58,9 @@ function SingleEventManager:connectPropertyChange(key, listener)
 	end)
 
 	if not success then
-		error(("Cannot subscribe to changed signal: %q is not a property of %s"):format(
+		error(("Cannot get changed signal on property %q: %s"):format(
 			tostring(key),
-			self._instance.ClassName
+			event
 		), 0)
 	end
 

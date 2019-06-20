@@ -5,6 +5,7 @@ return function()
 	local createSpy = require(script.Parent.createSpy)
 	local NoopRenderer = require(script.Parent.NoopRenderer)
 	local Type = require(script.Parent.Type)
+	local ElementKind = require(script.Parent.ElementKind)
 
 	local createReconciler = require(script.Parent.createReconciler)
 
@@ -47,7 +48,7 @@ return function()
 		end)
 	end)
 
-	describe("elements and fragments", function()
+	describe("invalid elements", function()
 		it("should throw errors when attempting to mount invalid elements", function()
 			-- These function components return values with incorrect types
 			local returnsString = function()
@@ -284,6 +285,42 @@ return function()
 			expect(parentComponentSpy.callCount).to.equal(1)
 			expect(childAComponentSpy.callCount).to.equal(1)
 			expect(childBComponentSpy.callCount).to.equal(1)
+		end)
+	end)
+
+	describe("Fragments", function()
+		it("should mount fragments", function()
+			local fragment = createFragment({})
+			local node = noopReconciler.mountVirtualNode(fragment, nil, "test")
+
+			expect(node).to.be.ok()
+			expect(ElementKind.of(node.currentElement)).to.equal(ElementKind.Fragment)
+		end)
+
+		it("should mount an empty fragment", function()
+			local emptyFragment = createFragment({})
+			local node = noopReconciler.mountVirtualNode(emptyFragment, nil, "test")
+
+			expect(node).to.be.ok()
+			expect(next(node.children)).to.never.be.ok()
+		end)
+
+		it("should mount all fragment's children", function()
+			local childComponentSpy = createSpy(function(props)
+				return nil
+			end)
+			local elements = {}
+			local totalElements = 5
+
+			for i=1, totalElements do
+				elements["key"..tostring(i)] = createElement(childComponentSpy.value, {})
+			end
+
+			local fragments = createFragment(elements)
+			local node = noopReconciler.mountVirtualNode(fragments, nil, "test")
+
+			expect(node).to.be.ok()
+			expect(childComponentSpy.callCount).to.equal(totalElements)
 		end)
 	end)
 end

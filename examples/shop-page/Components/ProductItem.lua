@@ -6,6 +6,27 @@ local Roact = require(ReplicatedStorage.Roact)
 
 local ProductItem = Roact.Component:extend("ProductItem")
 
+function ProductItem.validateProps(props)
+	return pcall(function()
+		assert(
+			type(props.image) == "string",
+			("props.image should be a string (got %q)"):format(type(props.image))
+		)
+		assert(
+			type(props.price) == "number",
+			("props.price should be a number (got %q)"):format(type(props.price))
+		)
+		assert(
+			type(props.productId) == "string" or type(props.productId) == "number",
+			("props.productId should be a string or a number (got %q)"):format(type(props.productId))
+		)
+		assert(
+			props.order == nil or type(props.order) == "number",
+			("props.order should be a number (got %q)"):format(type(props.order))
+		)
+	end)
+end
+
 function ProductItem:init()
 	self:setState({
 		onMouseEnter = function()
@@ -56,27 +77,6 @@ function ProductItem:render()
 			Size = UDim2.new(1, 0, 0.3, 0),
 		}),
 	})
-end
-
-function ProductItem.validateProps(props)
-	return pcall(function()
-		assert(
-			type(props.image) == "string",
-			("props.image should be a string (got %q)"):format(type(props.image))
-		)
-		assert(
-			type(props.price) == "number",
-			("props.price should be a number (got %q)"):format(type(props.price))
-		)
-		assert(
-			type(props.productId) == "string" or type(props.productId) == "number",
-			("props.productId should be a string or a number (got %q)"):format(type(props.productId))
-		)
-		assert(
-			props.order == nil or type(props.order) == "number",
-			("props.order should be a number (got %q)"):format(type(props.order))
-		)
-	end)
 end
 
 return ProductItem

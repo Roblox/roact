@@ -30,7 +30,7 @@ function Item:render()
 	local layoutOrder = self.props.layoutOrder
 
 	-- Create a list item with the item's icon and name
-	Roact.createElement("ImageLabel", {
+	return Roact.createElement("ImageLabel", {
 		LayoutOrder = layoutOrder,
 		Image = icon,
 	})

@@ -7,14 +7,11 @@ local Roact = require(ReplicatedStorage.Roact)
 
 local ProductItemList = require(Components:WaitForChild("ProductItemList"))
 
-local excludePropsForFrame = {
-	items = true,
-	itemsPerRow = true,
-	itemAspectRatio = true,
-	padding = true
-}
-
 local ShopPage = Roact.Component:extend("ShopPage")
+
+ShopPage.defaultProps = {
+	padding = 0,
+}
 
 function ShopPage:init()
 	self:setState({
@@ -25,7 +22,7 @@ function ShopPage:init()
 	self.onAbsoluteSizeChanged = function(frame)
 		local props = self.props
 		local state = self.state
-		local padding = props.padding or 0
+		local padding = props.padding
 		local itemsPerRow = props.itemsPerRow
 
 		local totalWidth = frame.AbsoluteSize.X
@@ -44,16 +41,14 @@ end
 function ShopPage:render()
 	local props = self.props
 	local state = self.state
-	local padding = props.padding or 0
+	local padding = props.padding
 	local cellSize = state.cellSize
 	local canvasHeight = state.canvasHeight
 
 	local frameProps = {}
 
-	for key, value in pairs(props) do
-		if not excludePropsForFrame[key] then
-			frameProps[key] = value
-		end
+	for key, value in pairs(props.frameProps) do
+		frameProps[key] = value
 	end
 
 	frameProps.CanvasSize = UDim2.new(0, 0, 0, canvasHeight)
@@ -72,6 +67,19 @@ function ShopPage:render()
 			items = props.items
 		}),
 	})
+end
+
+function ShopPage.validateProps(props)
+	return pcall(function()
+		assert(
+			type(props.padding) == "number",
+			("props.padding should be a number (got %q)"):format(type(props.padding))
+		)
+		assert(
+			type(props.frameProps) == "table",
+			("props.frameProps should be a table (got %q)"):format(type(props.frameProps))
+		)
+	end)
 end
 
 return ShopPage

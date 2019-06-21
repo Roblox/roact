@@ -6,18 +6,6 @@ local Roact = require(ReplicatedStorage.Roact)
 
 local ProductItem = Roact.Component:extend("ProductItem")
 
---[[
-	Props: {
-		image: the image displayed
-		price: how much robux the product cost
-		productId: the developer product id
-
-		-- Optional props
-		order: the index at which the item should be shown. If not
-		       provided, the price will be used as the index.
-	}
-]]
-
 function ProductItem:init()
 	self:setState({
 		onMouseEnter = function()
@@ -42,8 +30,9 @@ function ProductItem:render()
 
 	return Roact.createElement("ImageButton", {
 		BackgroundTransparency = 1,
-		Image = '',
+		Image = "",
 		LayoutOrder = props.order or props.price,
+		[Roact.Event.Activated] = state.onActivated,
 		[Roact.Event.MouseEnter] = state.onMouseEnter,
 		[Roact.Event.MouseLeave] = state.onMouseLeave,
 	}, {
@@ -57,13 +46,37 @@ function ProductItem:render()
 		PriceLabel = Roact.createElement("TextLabel", {
 			AnchorPoint = Vector2.new(0.5, 1),
 			BackgroundTransparency = 1,
+			Font = Enum.Font.SourceSans,
 			Text = ("R$ %d"):format(props.price),
 			TextColor3 = Color3.fromRGB(10, 200, 10),
 			TextScaled = true,
+			TextStrokeTransparency = 0,
+			TextStrokeColor3 = Color3.fromRGB(255, 255, 255),
 			Position = UDim2.new(0.5, 0, 1, 0),
 			Size = UDim2.new(1, 0, 0.3, 0),
 		}),
 	})
+end
+
+function ProductItem.validateProps(props)
+	return pcall(function()
+		assert(
+			type(props.image) == "string",
+			("props.image should be a string (got %q)"):format(type(props.image))
+		)
+		assert(
+			type(props.price) == "number",
+			("props.price should be a number (got %q)"):format(type(props.price))
+		)
+		assert(
+			type(props.productId) == "string" or type(props.productId) == "number",
+			("props.productId should be a string or a number (got %q)"):format(type(props.productId))
+		)
+		assert(
+			props.order == nil or type(props.order) == "number",
+			("props.order should be a number (got %q)"):format(type(props.order))
+		)
+	end)
 end
 
 return ProductItem

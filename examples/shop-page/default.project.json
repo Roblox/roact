@@ -2,10 +2,13 @@
 	"name": "Roact Test Place",
 	"tree": {
 		"$className": "DataModel",
-		"ReplicatedFirst": {
-			"$className": "ReplicatedFirst",
-			"main": {
-				"$path": "main.client.lua"
+		"StarterPlayer": {
+			"$className": "StarterPlayer",
+			"StarterPlayerScripts": {
+				"$className": "StarterPlayerScripts",
+				"main": {
+					"$path": "main.client.lua"
+				}
 			}
 		},
 		"ReplicatedStorage": {

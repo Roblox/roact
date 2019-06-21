@@ -18,6 +18,7 @@ Let's start by creating the top level component, that will be the page containin
 
 ## Product Item
 [remind state and props]
+[props validation]
 
 ### Adding some animations
 

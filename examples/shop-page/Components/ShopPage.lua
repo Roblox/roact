@@ -1,5 +1,4 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
 
 local Components = ReplicatedStorage:WaitForChild("Components")
 
@@ -13,6 +12,23 @@ ShopPage.defaultProps = {
 	padding = 0,
 }
 
+function ShopPage.validateProps(props)
+	return pcall(function()
+		assert(
+			type(props.padding) == "number",
+			("props.padding should be a number (got %q)"):format(type(props.padding))
+		)
+		assert(
+			type(props.frameProps) == "table",
+			("props.frameProps should be a table (got %q)"):format(type(props.frameProps))
+		)
+		assert(
+			type(props.padding) == "number",
+			("props.padding should be a number (got %q)"):format(type(props.padding))
+		)
+	end)
+end
+
 function ShopPage:init()
 	self:setState({
 		cellSize = 100,
@@ -21,7 +37,6 @@ function ShopPage:init()
 
 	self.onAbsoluteSizeChanged = function(frame)
 		local props = self.props
-		local state = self.state
 		local padding = props.padding
 		local itemsPerRow = props.itemsPerRow
 
@@ -67,19 +82,6 @@ function ShopPage:render()
 			items = props.items
 		}),
 	})
-end
-
-function ShopPage.validateProps(props)
-	return pcall(function()
-		assert(
-			type(props.padding) == "number",
-			("props.padding should be a number (got %q)"):format(type(props.padding))
-		)
-		assert(
-			type(props.frameProps) == "table",
-			("props.frameProps should be a table (got %q)"):format(type(props.frameProps))
-		)
-	end)
 end
 
 return ShopPage

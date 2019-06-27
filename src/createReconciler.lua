@@ -101,7 +101,6 @@ local function createReconciler(renderer)
 	end
 
 	local function updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
-		-- TODO: Consider reordering checks (https://github.com/Roblox/roact/issues/200)
 		if Type.of(renderResult) == Type.Element
 			or renderResult == nil
 			or typeof(renderResult) == "boolean"

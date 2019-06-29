@@ -43,6 +43,9 @@ function ShopPage:render()
 	local cellSize = state.cellSize
 	local canvasHeight = state.canvasHeight
 
+	local itemAspectRatio = props.itemAspectRatio
+	local items = props.items
+
 	local frameProps = {}
 
 	for key, value in pairs(props.frameProps) do
@@ -56,13 +59,13 @@ function ShopPage:render()
 	return Roact.createElement("ScrollingFrame", frameProps, {
 		UIGrid = Roact.createElement("UIGridLayout", {
 			CellPadding = UDim2.new(0, padding, 0, padding),
-			CellSize = UDim2.new(0, cellSize, 0, cellSize * props.itemAspectRatio),
+			CellSize = UDim2.new(0, cellSize, 0, cellSize * itemAspectRatio),
 			HorizontalAlignment = Enum.HorizontalAlignment.Center,
 			VerticalAlignment = Enum.VerticalAlignment.Center,
 			SortOrder = Enum.SortOrder.LayoutOrder,
 		}),
 		ProductItems = Roact.createElement(ProductItemList, {
-			items = props.items
+			items = items
 		}),
 	})
 end

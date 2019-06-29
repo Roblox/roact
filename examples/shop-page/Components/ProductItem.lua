@@ -28,10 +28,14 @@ function ProductItem:render()
 	local state = self.state
 	local padding = self.padding
 
+	local image = props.image
+	local price = props.price
+	local order = props.order or price
+
 	return Roact.createElement("ImageButton", {
 		BackgroundTransparency = 1,
 		Image = "",
-		LayoutOrder = props.order or props.price,
+		LayoutOrder = order,
 		[Roact.Event.Activated] = state.onActivated,
 		[Roact.Event.MouseEnter] = state.onMouseEnter,
 		[Roact.Event.MouseLeave] = state.onMouseLeave,
@@ -39,7 +43,7 @@ function ProductItem:render()
 		Icon = Roact.createElement("ImageLabel", {
 			AnchorPoint = Vector2.new(0.5, 0.5),
 			BackgroundTransparency = 1,
-			Image = props.image,
+			Image = image,
 			Position = UDim2.new(0.5, 0, 0.5, 0),
 			Size = UDim2.new(1, padding, 1, padding),
 		}),
@@ -47,7 +51,7 @@ function ProductItem:render()
 			AnchorPoint = Vector2.new(0.5, 1),
 			BackgroundTransparency = 1,
 			Font = Enum.Font.SourceSans,
-			Text = ("R$ %d"):format(props.price),
+			Text = ("R$ %d"):format(price),
 			TextColor3 = Color3.fromRGB(10, 200, 10),
 			TextScaled = true,
 			TextStrokeTransparency = 0,

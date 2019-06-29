@@ -1,18 +1,21 @@
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 
 local Roact = require(ReplicatedStorage.Roact)
 
 local ProductItem = Roact.Component:extend("ProductItem")
 
+local PADDING = 20
+
 function ProductItem:init()
 	self:setState({
 		onMouseEnter = function()
-			-- grow the icon a little
+			self.toBigIcon:Play()
 		end,
 		onMouseLeave = function()
-			-- go back to original size
+			self.toNormalIcon:Play()
 		end,
 		onActivated = function()
 			local props = self.props
@@ -20,13 +23,12 @@ function ProductItem:init()
 			MarketplaceService:PromptProductPurchase(Players.LocalPlayer, props.productId)
 		end
 	})
-	self.padding, self.updatePadding = Roact.createBinding(0)
+	self.ref = Roact.createRef()
 end
 
 function ProductItem:render()
 	local props = self.props
 	local state = self.state
-	local padding = self.padding
 
 	local image = props.image
 	local price = props.price
@@ -45,7 +47,8 @@ function ProductItem:render()
 			BackgroundTransparency = 1,
 			Image = image,
 			Position = UDim2.new(0.5, 0, 0.5, 0),
-			Size = UDim2.new(1, padding, 1, padding),
+			Size = UDim2.new(1, -PADDING, 1, -PADDING),
+			[Roact.Ref] = self.ref,
 		}),
 		PriceLabel = Roact.createElement("TextLabel", {
 			AnchorPoint = Vector2.new(0.5, 1),
@@ -60,6 +63,23 @@ function ProductItem:render()
 			Size = UDim2.new(1, 0, 0.3, 0),
 		}),
 	})
+end
+
+function ProductItem:didMount()
+	local tweenInfo = TweenInfo.new(0.2)
+	local icon = self.ref:getValue()
+
+	self.toBigIcon = TweenService:Create(icon, tweenInfo, {
+		Size = UDim2.new(1, 0, 1, 0),
+	})
+	self.toNormalIcon = TweenService:Create(icon, tweenInfo, {
+		Size = UDim2.new(1, -PADDING, 1, -PADDING),
+	})
+end
+
+function ProductItem:willUnmount()
+	self.toBigIcon:Destroy()
+	self.toNormalIcon:Destroy()
 end
 
 return ProductItem

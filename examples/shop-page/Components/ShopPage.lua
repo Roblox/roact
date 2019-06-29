@@ -12,23 +12,6 @@ ShopPage.defaultProps = {
 	padding = 0,
 }
 
-function ShopPage.validateProps(props)
-	return pcall(function()
-		assert(
-			type(props.padding) == "number",
-			("props.padding should be a number (got %q)"):format(type(props.padding))
-		)
-		assert(
-			type(props.frameProps) == "table",
-			("props.frameProps should be a table (got %q)"):format(type(props.frameProps))
-		)
-		assert(
-			type(props.padding) == "number",
-			("props.padding should be a number (got %q)"):format(type(props.padding))
-		)
-	end)
-end
-
 function ShopPage:init()
 	self:setState({
 		cellSize = 100,

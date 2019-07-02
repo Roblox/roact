@@ -162,6 +162,57 @@ return function()
 			})
 			expect(#childB).to.equal(1)
 		end)
+
+		it("should unwrap children when depth is two", function()
+			local element = createElement(ComponentWithChildren)
+
+			local result = shallow(element, {
+				depth = 2,
+			})
+
+			local hostChild = result:find({
+				component = unwrappedClassName,
+			})
+			expect(#hostChild).to.equal(1)
+
+			local unwrappedBChild = result:find({
+				component = A,
+			})
+			expect(#unwrappedBChild).to.equal(1)
+		end)
+
+		it("should not include any children when depth is zero", function()
+			local element = createElement(ComponentWithChildren)
+
+			local result = shallow(element, {
+				depth = 0,
+			})
+
+			expect(result:childrenCount()).to.equal(0)
+		end)
+
+		it("should not include any grand-children when depth is one", function()
+			local function ParentComponent()
+				return createElement("Folder", {}, {
+					Child = createElement(ComponentWithChildren),
+				})
+			end
+
+			local element = createElement(ParentComponent)
+
+			local result = shallow(element, {
+				depth = 1,
+			})
+
+			expect(result:childrenCount()).to.equal(1)
+
+			local componentWithChildrenWrapper = result:find({
+				component = ComponentWithChildren,
+			})[1]
+			expect(componentWithChildrenWrapper).to.be.ok()
+
+			expect(componentWithChildrenWrapper:childrenCount()).to.equal(0)
+		end)
 	end)
 
 	describe("childrenCount", function()
@@ -581,8 +632,44 @@ return function()
 			end)
 		end)
 
-		-- it("should return children that matches all contraints", function()
+		it("should throw if the constraint does not exist", function()
+			local element = createElement("Frame")
 
-		-- end)
+			local result = shallow(element)
+
+			local function findWithInvalidConstraint()
+				result:find({
+					nothing = false,
+				})
+			end
+
+			expect(findWithInvalidConstraint).to.throw()
+		end)
+
+		it("should return children that matches all contraints", function()
+			local function ComponentWithChildren()
+				return createElement("Frame", {}, {
+					ChildA = createElement("TextLabel", {
+						Visible = false,
+					}),
+					ChildB = createElement("TextButton", {
+						Visible = false,
+					}),
+				})
+			end
+
+			local element = createElement(ComponentWithChildren)
+
+			local result = shallow(element)
+
+			local children = result:find({
+				className = "TextLabel",
+				props = {
+					Visible = false,
+				},
+			})
+
+			expect(#children).to.equal(1)
+		end)
 	end)
 end

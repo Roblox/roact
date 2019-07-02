@@ -5,6 +5,11 @@ local ElementUtils = require(script.Parent.ElementUtils)
 
 local robloxReconciler = createReconciler(RobloxRenderer)
 
+local ShallowWrapper = {}
+local ShallowWrapperMetatable = {
+	__index = ShallowWrapper,
+}
+
 local function getTypeFromVirtualNode(virtualNode)
 	local element = virtualNode.currentElement
 	local kind = ElementKind.of(element)
@@ -25,7 +30,7 @@ local function getTypeFromVirtualNode(virtualNode)
 			component = element.component,
 		}
 	else
-		error(('shallow wrapper does not support element of kind %q'):format(kind))
+		error(('shallow wrapper does not support element of kind %q'):format(tostring(kind)))
 	end
 end
 
@@ -44,19 +49,18 @@ local function findNextVirtualNode(virtualNode, maxDepth)
 end
 
 local ContraintFunctions = {
-	kind = function(virtualNode, expectKind)
-		return ElementKind.of(virtualNode.currentElement) == expectKind
+	kind = function(element, expectKind)
+		return ElementKind.of(element) == expectKind
 	end,
-	className = function(virtualNode, className)
-		local element = virtualNode.currentElement
+	className = function(element, className)
 		local isHost = ElementKind.of(element) == ElementKind.Host
 		return isHost and element.component == className
 	end,
-	component = function(virtualNode, expectComponentValue)
-		return virtualNode.currentElement.component == expectComponentValue
+	component = function(element, expectComponentValue)
+		return element.component == expectComponentValue
 	end,
-	props = function(virtualNode, propSubSet)
-		local elementProps = virtualNode.currentElement.props
+	props = function(element, propSubSet)
+		local elementProps = element.props
 
 		for propKey, propValue in pairs(propSubSet) do
 			if elementProps[propKey] ~= propValue then
@@ -68,10 +72,36 @@ local ContraintFunctions = {
 	end
 }
 
-local ShallowWrapper = {}
-local ShallowWrapperMetatable = {
-	__index = ShallowWrapper,
-}
+local function countChildrenOfElement(element)
+	if ElementKind.of(element) == ElementKind.Fragment then
+		local count = 0
+
+		for _, subElement in pairs(element.elements) do
+			count = count + countChildrenOfElement(subElement)
+		end
+
+		return count
+	else
+		return 1
+	end
+end
+
+local function findChildren(virtualNode, constraints, results, maxDepth)
+	if ElementKind.of(virtualNode.currentElement) == ElementKind.Fragment then
+		for _, subVirtualNode in pairs(virtualNode.children) do
+			findChildren(subVirtualNode, constraints, results, maxDepth)
+		end
+	else
+		local childWrapper = ShallowWrapper.new(
+			virtualNode,
+			maxDepth
+		)
+
+		if childWrapper:_satisfiesAllContraints(constraints) then
+			table.insert(results, childWrapper)
+		end
+	end
+end
 
 function ShallowWrapper.new(virtualNode, maxDepth)
 	virtualNode = findNextVirtualNode(virtualNode, maxDepth)
@@ -90,38 +120,37 @@ end
 function ShallowWrapper:childrenCount()
 	local count = 0
 
-	for _ in pairs(self._children) do
-		count = count + 1
+	for _, virtualNode in pairs(self._children) do
+		local element = virtualNode.currentElement
+		count = count + countChildrenOfElement(element)
 	end
 
 	return count
 end
 
 function ShallowWrapper:find(constraints)
-	local results = {}
-
 	for constraint in pairs(constraints) do
 		if not ContraintFunctions[constraint] then
 			error(('unknown constraint %q'):format(constraint))
 		end
 	end
 
-	for _, child in pairs(self._children) do
-		local childWrapper = ShallowWrapper.new(child, self._childrenMaxDepth)
+	local results = {}
 
-		if self:_satisfiesAllContraints(childWrapper._virtualNode, constraints) then
-			table.insert(results, childWrapper)
-		end
+	for _, childVirtualNode in pairs(self._children) do
+		findChildren(childVirtualNode, constraints, results, self._childrenMaxDepth)
 	end
 
 	return results
 end
 
-function ShallowWrapper:_satisfiesAllContraints(virtualNode, constraints)
+function ShallowWrapper:_satisfiesAllContraints(constraints)
+	local element = self._virtualNode.currentElement
+
 	for constraint, value in pairs(constraints) do
 		local constraintFunction = ContraintFunctions[constraint]
 
-		if not constraintFunction(virtualNode, value) then
+		if not constraintFunction(element, value) then
 			return false
 		end
 	end

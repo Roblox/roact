@@ -3,6 +3,7 @@ return function()
 
 	local ElementKind = require(script.Parent.ElementKind)
 	local createElement = require(script.Parent.createElement)
+	local createFragment = require(script.Parent.createFragment)
 	local RoactComponent = require(script.Parent.Component)
 
 	describe("single host element", function()
@@ -246,6 +247,35 @@ return function()
 			local result = shallow(element)
 
 			expect(result:childrenCount()).to.equal(0)
+		end)
+
+		it("should count children in a fragment", function()
+			local element = createElement("Frame", {}, {
+				Frag = createFragment({
+					Label = createElement("TextLabel"),
+					Button = createElement("TextButton"),
+				})
+			})
+
+			local result = shallow(element)
+
+			expect(result:childrenCount()).to.equal(2)
+		end)
+
+		it("should count children nested in fragments", function()
+			local element = createElement("Frame", {}, {
+				Frag = createFragment({
+					SubFrag = createFragment({
+						Frame = createElement("Frame"),
+					}),
+					Label = createElement("TextLabel"),
+					Button = createElement("TextButton"),
+				})
+			})
+
+			local result = shallow(element)
+
+			expect(result:childrenCount()).to.equal(3)
 		end)
 	end)
 
@@ -667,6 +697,52 @@ return function()
 				props = {
 					Visible = false,
 				},
+			})
+
+			expect(#children).to.equal(1)
+		end)
+
+		it("should return children from fragments", function()
+			local childClassName = "TextLabel"
+
+			local function ComponentWithFragment()
+				return createElement("Frame", {}, {
+					Fragment = createFragment({
+						Child = createElement(childClassName),
+					}),
+				})
+			end
+
+			local element = createElement(ComponentWithFragment)
+
+			local result = shallow(element)
+
+			local children = result:find({
+				className = childClassName
+			})
+
+			expect(#children).to.equal(1)
+		end)
+
+		it("should return children from nested fragments", function()
+			local childClassName = "TextLabel"
+
+			local function ComponentWithFragment()
+				return createElement("Frame", {}, {
+					Fragment = createFragment({
+						SubFragment = createFragment({
+							Child = createElement(childClassName),
+						}),
+					}),
+				})
+			end
+
+			local element = createElement(ComponentWithFragment)
+
+			local result = shallow(element)
+
+			local children = result:find({
+				className = childClassName
 			})
 
 			expect(#children).to.equal(1)

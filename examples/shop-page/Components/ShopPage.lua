@@ -39,24 +39,26 @@ end
 function ShopPage:render()
 	local props = self.props
 	local state = self.state
+
+	local items = props.items
+	local itemAspectRatio = props.itemAspectRatio
+	local frameProps = props.frameProps
 	local padding = props.padding
+
 	local cellSize = state.cellSize
 	local canvasHeight = state.canvasHeight
 
-	local itemAspectRatio = props.itemAspectRatio
-	local items = props.items
+	local newFrameProps = {}
 
-	local frameProps = {}
-
-	for key, value in pairs(props.frameProps) do
+	for key, value in pairs(frameProps) do
 		frameProps[key] = value
 	end
 
-	frameProps.CanvasSize = UDim2.new(0, 0, 0, canvasHeight)
-	frameProps.ClipsDescendants = true
-	frameProps[Roact.Change.AbsoluteSize] = self.onAbsoluteSizeChanged
+	newFrameProps.CanvasSize = UDim2.new(0, 0, 0, canvasHeight)
+	newFrameProps.ClipsDescendants = true
+	newFrameProps[Roact.Change.AbsoluteSize] = self.onAbsoluteSizeChanged
 
-	return Roact.createElement("ScrollingFrame", frameProps, {
+	return Roact.createElement("ScrollingFrame", newFrameProps, {
 		UIGrid = Roact.createElement("UIGridLayout", {
 			CellPadding = UDim2.new(0, padding, 0, padding),
 			CellSize = UDim2.new(0, cellSize, 0, cellSize * itemAspectRatio),

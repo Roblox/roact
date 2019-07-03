@@ -5,10 +5,6 @@ local Components = ReplicatedStorage:WaitForChild("Components")
 
 local Roact = require(ReplicatedStorage.Roact)
 
-Roact.setGlobalConfig({
-	propValidation = true
-})
-
 local ShopPage = require(Components:WaitForChild("ShopPage"))
 
 local screenGui = Instance.new("ScreenGui")

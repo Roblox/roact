@@ -25,6 +25,7 @@ return function()
 			Children = true,
 			Event = true,
 			Change = true,
+			Style = true,
 			Ref = true,
 			None = true,
 			UNSTABLE = true,

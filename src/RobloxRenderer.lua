@@ -10,6 +10,7 @@ local ElementKind = require(script.Parent.ElementKind)
 local SingleEventManager = require(script.Parent.SingleEventManager)
 local getDefaultInstanceProperty = require(script.Parent.getDefaultInstanceProperty)
 local Ref = require(script.Parent.PropMarkers.Ref)
+local Style = require(script.Parent.PropMarkers.Style)
 local Type = require(script.Parent.Type)
 local internalAssert = require(script.Parent.internalAssert)
 
@@ -109,8 +110,8 @@ local function applyProp(virtualNode, key, newValue, oldValue)
 		return
 	end
 
-	if key == Ref or key == Children then
-		-- Refs and children are handled in a separate pass
+	if key == Ref or key == Children or key == Style then
+		-- Refs, children, and style are handled in a separate pass
 		return
 	end
 
@@ -152,7 +153,29 @@ local function applyProps(virtualNode, props)
 	end
 end
 
+local empty = {}
+
 local function updateProps(virtualNode, oldProps, newProps)
+	local oldStyle = oldProps[Style] or empty
+	local newStyle = newProps[Style] or empty
+
+	if oldStyle ~= newStyle then
+		for propKey, newValue in pairs(newStyle) do
+			local oldValue = oldStyle[propKey]
+
+			applyProp(virtualNode, propKey, newValue, oldValue)
+		end
+
+		-- Clean up props that were removed
+		for propKey, oldValue in pairs(oldStyle) do
+			local newValue = newStyle[propKey]
+
+			if newValue == nil then
+				applyProp(virtualNode, propKey, nil, oldValue)
+			end
+		end
+	end
+
 	-- Apply props that were added or updated
 	for propKey, newValue in pairs(newProps) do
 		local oldValue = oldProps[propKey]
@@ -165,7 +188,7 @@ local function updateProps(virtualNode, oldProps, newProps)
 		local newValue = newProps[propKey]
 
 		if newValue == nil then
-			applyProp(virtualNode, propKey, nil, oldValue)
+			applyProp(virtualNode, propKey, newStyle[propKey], oldValue)
 		end
 	end
 end
@@ -191,6 +214,11 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 
 	local instance = Instance.new(element.component)
 	virtualNode.hostObject = instance
+
+	local style = element.props[Style]
+	if style ~= nil then
+		applyProps(virtualNode, style)
+	end
 
 	local success, errorMessage = xpcall(function()
 		applyProps(virtualNode, element.props)

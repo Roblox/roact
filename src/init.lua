@@ -28,6 +28,7 @@ local Roact = strict {
 	Children = require(script.PropMarkers.Children),
 	Event = require(script.PropMarkers.Event),
 	Ref = require(script.PropMarkers.Ref),
+	Style = require(script.PropMarkers.Style),
 
 	mount = robloxReconciler.mountVirtualTree,
 	unmount = robloxReconciler.unmountVirtualTree,

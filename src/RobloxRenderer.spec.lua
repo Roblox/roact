@@ -11,6 +11,7 @@ return function()
 	local GlobalConfig = require(script.Parent.GlobalConfig)
 	local Portal = require(script.Parent.Portal)
 	local Ref = require(script.Parent.PropMarkers.Ref)
+	local Style = require(script.Parent.PropMarkers.Style)
 
 	local RobloxRenderer = require(script.Parent.RobloxRenderer)
 
@@ -871,6 +872,28 @@ return function()
 			assertDeepEqual(capturedContext, {
 				foo = "bar"
 			})
+		end)
+	end)
+
+	describe("Style", function()
+		it("should do style things", function()
+			local BetterDefaultFolder = {
+				BackgroundColor3 = Color3.new(1, 1, 1),
+				BorderSizePixel = 0,
+			}
+
+			local element = createElement("Frame", {
+				[Style] = BetterDefaultFolder,
+				BackgroundColor3 = Color3.new(0, 0, 0),
+			})
+			local hostParent = Instance.new("Folder")
+			local hostKey = "Child"
+			reconciler.mountVirtualNode(element, hostParent, hostKey)
+
+			local instance = hostParent[hostKey]
+
+			expect(instance.BorderSizePixel).to.equal(0)
+			expect(instance.BackgroundColor3).to.equal(Color3.new(0, 0, 0))
 		end)
 	end)
 end

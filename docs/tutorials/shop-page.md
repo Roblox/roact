@@ -15,9 +15,9 @@ In our case, the ShopPage component we're making will receive it's products from
 > On the other hand, props are used to pass data from parent components to child components. It implies that both parent component and it's child are aware of the structure of the props dictionary and depends on it.
 
 For our first draft of the component, we will define some props to be able to pass parameters to customize our shop page. We will start by adding the following:
- - frameProps: a dictionary of props that will be passed to the scrolling frame to change it's visuals
- - items: a list of table that represents our products we want to sell
- - padding: the number of pixels between each of our items in the shop-page
+ - __frameProps:__ a dictionary of props that will be passed to the scrolling frame to change it's visuals
+ - __items:__ a list of table that represents our products we want to sell
+ - __padding:__ the number of pixels between each of our items in the shop-page
 
 ```lua
 local ShopPage = Roact.Component:extend("ShopPage")
@@ -36,9 +36,6 @@ function ShopPage:render()
 			HorizontalAlignment = Enum.HorizontalAlignment.Center,
 			VerticalAlignment = Enum.VerticalAlignment.Center,
 			SortOrder = Enum.SortOrder.LayoutOrder,
-		}),
-		ProductItems = Roact.createElement(ProductItemList, {
-			items = items
 		}),
 	})
 end
@@ -84,8 +81,69 @@ The two important things to notice here are:
  - an element is created from our ShopPage component, where we specified the different props we want
  - `Roact.mount` will create the real UI objects we need to see the results
 
-## Items Grid
+## Adding Items
 
+In the previous section we created a scrolling frame that contains a UIGridLayout object. Now, we want to add elements that represent each item we sell in our shop. In order to be able to add a variable amount of items in our component, we will iterate on the list of products to create an element for each of them.
+
+To keep our component simple, let's divide this feature into different components:
+ - __ProductItem:__ a card that shows the price of an item with its image and when clicked prompt the player to buy the product
+ - __ProductItemList:__ iterate on the list of items to create each individual ProductItem element
+
+### ProductItemList
+
+This component will simply be given the product list and create all the ProductItem elements. Since it does not need any internal state, a functional component will do the job. We have not done our ProductItem yet, but we will suppose it is there for now.
+
+```lua
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Components = ReplicatedStorage:WaitForChild("Components")
+
+local Roact = require(ReplicatedStorage.Roact)
+
+local ProductItem = require(Components:WaitForChild("ProductItem"))
+
+local function ProductItemList(props)
+	local items = props.items
+
+	local elements = {}
+
+	for i=1, #items do
+		local item = items[i]
+
+		elements[item.identifier] = Roact.createElement(ProductItem, {
+			image = item.image,
+			price = item.price,
+			productId = item.productId,
+			order = item.order,
+		})
+	end
+
+	return Roact.createFragment(elements)
+end
+
+return ProductItemList
+```
+
+With that, we can go change our render function in the ShopPage component to create an element of ProductItemList and pass the items list as a prop.
+
+```lua
+return Roact.createElement("ScrollingFrame", frameProps, {
+	UIGrid = Roact.createElement("UIGridLayout", {
+		CellPadding = UDim2.new(0, padding, 0, padding),
+		CellSize = UDim2.new(0, 100, 0, 100),
+		HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		VerticalAlignment = Enum.VerticalAlignment.Center,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}),
+	ProductItems = Roact.createElement(ProductItemList, {
+		items = items
+	}),
+})
+```
+
+> Fragments
+>
+> In case you have forgotten about fragments, they are used to group multiple elements together.
 
 ## Product Item
 [remind state and props]

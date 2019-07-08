@@ -7,10 +7,12 @@ local Roact = require(ReplicatedStorage.Roact)
 local ProductItem = require(Components:WaitForChild("ProductItem"))
 
 local function ProductItemList(props)
+	local items = props.items
+
 	local elements = {}
 
-	for i=1, #props.items do
-		local item = props.items[i]
+	for i=1, #items do
+		local item = items[i]
 
 		elements[item.identifier] = Roact.createElement(ProductItem, {
 			image = item.image,

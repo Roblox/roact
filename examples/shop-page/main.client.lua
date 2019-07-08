@@ -60,4 +60,4 @@ local shopPage = Roact.createElement(ShopPage, {
 	},
 })
 
-local handle = Roact.mount(shopPage, screenGui)
+Roact.mount(shopPage, screenGui)

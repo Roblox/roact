@@ -87,10 +87,10 @@ local function countChildrenOfElement(element)
 	end
 end
 
-local function findChildren(virtualNode, constraints, results, maxDepth)
+local function getChildren(virtualNode, results, maxDepth)
 	if ElementKind.of(virtualNode.currentElement) == ElementKind.Fragment then
 		for _, subVirtualNode in pairs(virtualNode.children) do
-			findChildren(subVirtualNode, constraints, results, maxDepth)
+			getChildren(subVirtualNode, results, maxDepth)
 		end
 	else
 		local childWrapper = ShallowWrapper.new(
@@ -98,9 +98,7 @@ local function findChildren(virtualNode, constraints, results, maxDepth)
 			maxDepth
 		)
 
-		if childWrapper:_satisfiesAllContraints(constraints) then
-			table.insert(results, childWrapper)
-		end
+		table.insert(results, childWrapper)
 	end
 end
 
@@ -126,7 +124,8 @@ function ShallowWrapper.new(virtualNode, maxDepth)
 	local wrapper = {
 		_virtualNode = virtualNode,
 		_childrenMaxDepth = maxDepth - 1,
-		_children = maxDepth == 0 and {} or virtualNode.children,
+		_virtualNodeChildren = maxDepth == 0 and {} or virtualNode.children,
+		_shallowChildren = nil,
 		type = getTypeFromVirtualNode(virtualNode),
 		props = filterProps(virtualNode.currentElement.props),
 	}
@@ -137,7 +136,7 @@ end
 function ShallowWrapper:childrenCount()
 	local count = 0
 
-	for _, virtualNode in pairs(self._children) do
+	for _, virtualNode in pairs(self._virtualNodeChildren) do
 		local element = virtualNode.currentElement
 		count = count + countChildrenOfElement(element)
 	end
@@ -153,11 +152,30 @@ function ShallowWrapper:find(constraints)
 	end
 
 	local results = {}
+	local children = self:getChildren()
 
-	for _, childVirtualNode in pairs(self._children) do
-		findChildren(childVirtualNode, constraints, results, self._childrenMaxDepth)
+	for i=1, #children do
+		local childWrapper = children[i]
+		if childWrapper:_satisfiesAllContraints(constraints) then
+			table.insert(results, childWrapper)
+		end
 	end
 
+	return results
+end
+
+function ShallowWrapper:getChildren()
+	if self._shallowChildren then
+		return self._shallowChildren
+	end
+
+	local results = {}
+
+	for _, childVirtualNode in pairs(self._virtualNodeChildren) do
+		getChildren(childVirtualNode, results, self._childrenMaxDepth)
+	end
+
+	self._shallowChildren = results
 	return results
 end
 

@@ -1,6 +1,8 @@
 return function()
 	local shallow = require(script.Parent.shallow)
 
+	local assertDeepEqual = require(script.Parent.assertDeepEqual)
+	local Children = require(script.Parent.PropMarkers.Children)
 	local ElementKind = require(script.Parent.ElementKind)
 	local createElement = require(script.Parent.createElement)
 	local createFragment = require(script.Parent.createFragment)
@@ -296,12 +298,7 @@ return function()
 			expect(result.type.kind).to.equal(ElementKind.Host)
 			expect(result.props).to.be.ok()
 
-			for key, value in pairs(props) do
-				expect(result.props[key]).to.equal(value)
-			end
-			for key, value in pairs(result.props) do
-				expect(props[key]).to.equal(value)
-			end
+			assertDeepEqual(props, result.props)
 		end)
 
 		it("should have the same props using function element", function()
@@ -317,6 +314,10 @@ return function()
 				BackgroundTransparency = 1,
 				Visible = false,
 			}
+			local propsCopy = {}
+			for key, value in pairs(props) do
+				propsCopy[key] = value
+			end
 			local element = createElement(Component, props)
 
 			local result = shallow(element)
@@ -324,12 +325,7 @@ return function()
 			expect(result.type.kind).to.equal(ElementKind.Function)
 			expect(result.props).to.be.ok()
 
-			for key, value in pairs(props) do
-				expect(result.props[key]).to.equal(value)
-			end
-			for key, value in pairs(result.props) do
-				expect(props[key]).to.equal(value)
-			end
+			assertDeepEqual(propsCopy, result.props)
 		end)
 
 		it("should not have the children property", function()
@@ -343,18 +339,13 @@ return function()
 				BackgroundTransparency = 1,
 				Visible = false,
 			}
+
 			local element = createElement(ComponentWithChildren, props)
 
 			local result = shallow(element)
 
 			expect(result.props).to.be.ok()
-
-			for key, value in pairs(props) do
-				expect(result.props[key]).to.equal(value)
-			end
-			for key, value in pairs(result.props) do
-				expect(props[key]).to.equal(value)
-			end
+			expect(result.props[Children]).never.to.be.ok()
 		end)
 
 		it("should have the inherited props", function()
@@ -384,12 +375,7 @@ return function()
 				LayoutOrder = 7,
 			}
 
-			for key, value in pairs(expectProps) do
-				expect(result.props[key]).to.equal(value)
-			end
-			for key, value in pairs(result.props) do
-				expect(expectProps[key]).to.equal(value)
-			end
+			assertDeepEqual(expectProps, result.props)
 		end)
 	end)
 

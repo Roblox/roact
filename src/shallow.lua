@@ -1,4 +1,5 @@
 local createReconciler = require(script.Parent.createReconciler)
+local Children = require(script.Parent.PropMarkers.Children)
 local RobloxRenderer = require(script.Parent.RobloxRenderer)
 local ElementKind = require(script.Parent.ElementKind)
 local ElementUtils = require(script.Parent.ElementUtils)
@@ -103,6 +104,22 @@ local function findChildren(virtualNode, constraints, results, maxDepth)
 	end
 end
 
+local function filterProps(props)
+	if props[Children] == nil then
+		return props
+	end
+
+	local filteredProps = {}
+
+	for key, value in pairs(props) do
+		if key ~= Children then
+			props[key] = value
+		end
+	end
+
+	return filteredProps
+end
+
 function ShallowWrapper.new(virtualNode, maxDepth)
 	virtualNode = findNextVirtualNode(virtualNode, maxDepth)
 
@@ -111,7 +128,7 @@ function ShallowWrapper.new(virtualNode, maxDepth)
 		_childrenMaxDepth = maxDepth - 1,
 		_children = maxDepth == 0 and {} or virtualNode.children,
 		type = getTypeFromVirtualNode(virtualNode),
-		props = virtualNode.currentElement.props,
+		props = filterProps(virtualNode.currentElement.props),
 	}
 
 	return setmetatable(wrapper, ShallowWrapperMetatable)

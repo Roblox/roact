@@ -14,7 +14,7 @@ return function()
 			-- followed by their normal event arguments.
 			[Roact.Event.Activated] = function(rbx)
 				print("The button was clicked!")
-			end
+			end,
 		}),
 	})
 

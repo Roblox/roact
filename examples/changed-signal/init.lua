@@ -11,11 +11,11 @@ return function()
 		local onTextChanged = props.onTextChanged
 		local layoutOrder = props.layoutOrder
 
-		return Roact.createElement("TextBox",{
+		return Roact.createElement("TextBox", {
 			LayoutOrder = layoutOrder,
 			Text = "Type Here!",
 			Size = UDim2.new(1, 0, 0.5, 0),
-			[Roact.Change.Text] = onTextChanged
+			[Roact.Change.Text] = onTextChanged,
 		})
 	end
 
@@ -26,7 +26,7 @@ return function()
 		local inputText = props.inputText
 		local layoutOrder = props.layoutOrder
 
-		return Roact.createElement("TextLabel",{
+		return Roact.createElement("TextLabel", {
 			LayoutOrder = layoutOrder,
 			Size = UDim2.new(1, 0, 0.5, 0),
 			Text = "Reversed: " .. inputText:reverse(),
@@ -62,12 +62,12 @@ return function()
 					self:setState({
 						text = rbx.Text or "",
 					})
-				end
+				end,
 			}),
 			ReversedText = Roact.createElement(ReversedText, {
 				layoutOrder = 2,
 				inputText = text,
-			})
+			}),
 		})
 	end
 

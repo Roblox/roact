@@ -62,7 +62,7 @@ return function()
 					self:setState({
 						text = rbx.Text or "",
 					})
-				end
+				end,
 			}),
 			ReversedText = Roact.createElement(ReversedText, {
 				layoutOrder = 2,

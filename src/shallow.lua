@@ -3,6 +3,7 @@ local Children = require(script.Parent.PropMarkers.Children)
 local RobloxRenderer = require(script.Parent.RobloxRenderer)
 local ElementKind = require(script.Parent.ElementKind)
 local ElementUtils = require(script.Parent.ElementUtils)
+local snapshot = require(script.Parent.snapshot)
 
 local robloxReconciler = createReconciler(RobloxRenderer)
 
@@ -50,18 +51,19 @@ local function findNextVirtualNode(virtualNode, maxDepth)
 end
 
 local ContraintFunctions = {
-	kind = function(element, expectKind)
-		return ElementKind.of(element) == expectKind
+	kind = function(virtualNode, expectKind)
+		return ElementKind.of(virtualNode.currentElement) == expectKind
 	end,
-	className = function(element, className)
+	className = function(virtualNode, className)
+		local element = virtualNode.currentElement
 		local isHost = ElementKind.of(element) == ElementKind.Host
 		return isHost and element.component == className
 	end,
-	component = function(element, expectComponentValue)
-		return element.component == expectComponentValue
+	component = function(virtualNode, expectComponentValue)
+		return virtualNode.currentElement.component == expectComponentValue
 	end,
-	props = function(element, propSubSet)
-		local elementProps = element.props
+	props = function(virtualNode, propSubSet)
+		local elementProps = virtualNode.currentElement.props
 
 		for propKey, propValue in pairs(propSubSet) do
 			if elementProps[propKey] ~= propValue then
@@ -70,7 +72,10 @@ local ContraintFunctions = {
 		end
 
 		return true
-	end
+	end,
+	hostKey = function(virtualNode, expectHostKey)
+		return virtualNode.hostKey == expectHostKey
+	end,
 }
 
 local function countChildrenOfElement(element)
@@ -111,7 +116,7 @@ local function filterProps(props)
 
 	for key, value in pairs(props) do
 		if key ~= Children then
-			props[key] = value
+			filteredProps[key] = value
 		end
 	end
 
@@ -128,6 +133,8 @@ function ShallowWrapper.new(virtualNode, maxDepth)
 		_shallowChildren = nil,
 		type = getTypeFromVirtualNode(virtualNode),
 		props = filterProps(virtualNode.currentElement.props),
+		hostKey = virtualNode.hostKey,
+		instance = virtualNode.hostObject,
 	}
 
 	return setmetatable(wrapper, ShallowWrapperMetatable)
@@ -145,7 +152,7 @@ function ShallowWrapper:childrenCount()
 end
 
 function ShallowWrapper:find(constraints)
-	for constraint in pairs(constraints) do
+	for constraint in pairs(constraints)	 do
 		if not ContraintFunctions[constraint] then
 			error(('unknown constraint %q'):format(constraint))
 		end
@@ -164,6 +171,27 @@ function ShallowWrapper:find(constraints)
 	return results
 end
 
+function ShallowWrapper:findUnique(constraints)
+	local children = self:getChildren()
+
+	if constraints == nil then
+		assert(
+			#children == 1,
+			("expect to contain exactly one child, but found %d"):format(#children)
+		)
+		return children[1]
+	end
+
+	local constrainedChildren = self:find(constraints)
+
+	assert(
+		#constrainedChildren == 1,
+		("expect to find only one child, but found %d"):format(#constrainedChildren)
+	)
+
+	return constrainedChildren[1]
+end
+
 function ShallowWrapper:getChildren()
 	if self._shallowChildren then
 		return self._shallowChildren
@@ -179,13 +207,21 @@ function ShallowWrapper:getChildren()
 	return results
 end
 
+function ShallowWrapper:toMatchSnapshot(identifier)
+	assert(typeof(identifier) == "string", "Snapshot identifier must be a string")
+
+	local snapshotResult = snapshot(identifier, self)
+
+	snapshotResult:match()
+end
+
 function ShallowWrapper:_satisfiesAllContraints(constraints)
-	local element = self._virtualNode.currentElement
+	local virtualNode = self._virtualNode
 
 	for constraint, value in pairs(constraints) do
 		local constraintFunction = ContraintFunctions[constraint]
 
-		if not constraintFunction(element, value) then
+		if not constraintFunction(virtualNode, value) then
 			return false
 		end
 	end

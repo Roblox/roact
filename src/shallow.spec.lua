@@ -379,6 +379,37 @@ return function()
 		end)
 	end)
 
+	describe("instance", function()
+		it("should contain the instance when it is a host component", function()
+			local className = "Frame"
+			local function Component(props)
+				return createElement(className)
+			end
+
+			local element = createElement(Component)
+
+			local result = shallow(element)
+
+			expect(result.instance).to.be.ok()
+			expect(result.instance.ClassName).to.equal(className)
+		end)
+
+		it("should not have an instance if it is a function component", function()
+			local function Child()
+				return createElement("Frame")
+			end
+			local function Component(props)
+				return createElement(Child)
+			end
+
+			local element = createElement(Component)
+
+			local result = shallow(element)
+
+			expect(result.instance).never.to.be.ok()
+		end)
+	end)
+
 	describe("find children", function()
 		local function Component(props)
 			return createElement("Frame", {}, props.children)
@@ -648,6 +679,47 @@ return function()
 			end)
 		end)
 
+		describe("hostKey constraint", function()
+			it("should find the child element", function()
+				local hostKey = "Child"
+				local element = createElement(Component, {
+					children = {
+						[hostKey] = createElement("TextLabel"),
+					},
+				})
+
+				local result = shallow(element)
+
+				local constraints = {
+					hostKey = hostKey,
+				}
+				local children = result:find(constraints)
+
+				expect(#children).to.equal(1)
+
+				local child = children[1]
+
+				expect(child.type.kind).to.equal(ElementKind.Host)
+			end)
+
+			it("should return an empty list when no children is found", function()
+				local element = createElement(Component, {
+					children = {
+						Child = createElement("TextLabel"),
+					},
+				})
+
+				local result = shallow(element)
+
+				local constraints = {
+					hostKey = "NotFound",
+				}
+				local children = result:find(constraints)
+
+				expect(next(children)).never.to.be.ok()
+			end)
+		end)
+
 		it("should throw if the constraint does not exist", function()
 			local element = createElement("Frame")
 
@@ -732,6 +804,65 @@ return function()
 			})
 
 			expect(#children).to.equal(1)
+		end)
+	end)
+
+	describe("findUnique", function()
+		it("should return the only child when no constraints are given", function()
+			local element = createElement("Frame", {}, {
+				Child = createElement("TextLabel"),
+			})
+
+			local result = shallow(element)
+
+			local child = result:findUnique()
+
+			expect(child.type.kind).to.equal(ElementKind.Host)
+			expect(child.type.className).to.equal("TextLabel")
+		end)
+
+		it("should return the only child that satifies the constraint", function()
+			local element = createElement("Frame", {}, {
+				ChildA = createElement("TextLabel"),
+				ChildB = createElement("TextButton"),
+			})
+
+			local result = shallow(element)
+
+			local child = result:findUnique({
+				className = "TextLabel",
+			})
+
+			expect(child.type.className).to.equal("TextLabel")
+		end)
+
+		it("should throw if there is not any child element", function()
+			local element = createElement("Frame")
+
+			local result = shallow(element)
+
+			local function shouldThrow()
+				result:findUnique()
+			end
+
+			expect(shouldThrow).to.throw()
+		end)
+
+		it("should throw if more than one child satisfies the constraint", function()
+			local element = createElement("Frame", {}, {
+				ChildA = createElement("TextLabel"),
+				ChildB = createElement("TextLabel"),
+			})
+
+			local result = shallow(element)
+
+			local function shouldThrow()
+				result:findUnique({
+					className = "TextLabel",
+				})
+			end
+
+			expect(shouldThrow).to.throw()
 		end)
 	end)
 end

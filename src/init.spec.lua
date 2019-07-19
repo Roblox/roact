@@ -13,6 +13,7 @@ return function()
 			update = "function",
 			oneChild = "function",
 			setGlobalConfig = "function",
+			shallow = "function",
 
 			-- These functions are deprecated and throw warnings!
 			reify = "function",

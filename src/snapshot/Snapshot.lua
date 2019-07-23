@@ -1,6 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local AnonymousFunction = require(script.Parent.Serialize.AnonymousFunction)
+local Markers = require(script.Parent.Serialize.Markers)
 local Serialize = require(script.Parent.Serialize)
 local deepEqual = require(script.Parent.Parent.deepEqual)
 local ElementKind = require(script.Parent.Parent.ElementKind)
@@ -53,6 +53,7 @@ end
 function Snapshot:serialize()
 	local folder = Snapshot.getSnapshotFolder()
 
+	local snapshotSource = Serialize.snapshotDataToString(self.data)
 	local existingData = folder:FindFirstChild(self._identifier)
 
 	if not existingData then
@@ -61,7 +62,7 @@ function Snapshot:serialize()
 		existingData.Parent = folder
 	end
 
-	existingData.Value = Serialize.snapshotDataToString(self.data)
+	existingData.Value = snapshotSource
 end
 
 function Snapshot.getSnapshotFolder()
@@ -90,7 +91,7 @@ function Snapshot._loadExistingData(identifier)
 	return loadSnapshot({
 		Roact = require(script.Parent.Parent),
 		ElementKind = ElementKind,
-		AnonymousFunction = AnonymousFunction,
+		Markers = Markers,
 	})
 end
 

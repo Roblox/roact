@@ -1,11 +1,9 @@
-local AnonymousFunction = require(script.Parent.AnonymousFunction)
-local ElementKind = require(script.Parent.Parent.Parent.ElementKind)
+local RoactRoot = script.Parent.Parent.Parent
+local ElementKind = require(RoactRoot.ElementKind)
+local Ref = require(RoactRoot.PropMarkers.Ref)
+local Type = require(RoactRoot.Type)
+local Markers = require(script.Parent.Markers)
 local IndentedOutput = require(script.Parent.IndentedOutput)
-local Type = require(script.Parent.Parent.Parent.Type)
-
-local function sortRoactEvents(a, b)
-	return a.name < b.name
-end
 
 local Serializer = {}
 
@@ -34,111 +32,138 @@ function Serializer.type(data, output)
 	output:popAndWrite("},")
 end
 
-function Serializer.propKey(key)
-	if key:match("^%a%w+$") then
+function Serializer.tableKey(key)
+	local keyType = type(key)
+
+	if keyType == "string" and key:match("^%a%w+$") then
 		return key
 	else
-		return ("[%q]"):format(key)
+		return ("[%s]"):format(Serializer.tableValue(key))
 	end
 end
 
-function Serializer.propValue(prop)
-	local propType = typeof(prop)
+function Serializer.tableValue(value)
+	local valueType = typeof(value)
 
-	if propType == "string" then
-		return ("%q"):format(prop)
+	if valueType == "string" then
+		return ("%q"):format(value)
 
-	elseif propType == "number" or propType == "boolean" then
-		return ("%s"):format(tostring(prop))
+	elseif valueType == "number" or valueType == "boolean" then
+		return ("%s"):format(tostring(value))
 
-	elseif propType == "Color3" then
-		return ("Color3.new(%s, %s, %s)"):format(prop.r, prop.g, prop.b)
+	elseif valueType == "Color3" then
+		return ("Color3.new(%s, %s, %s)"):format(value.r, value.g, value.b)
 
-	elseif propType == "EnumItem" then
-		return ("%s"):format(tostring(prop))
+	elseif valueType == "EnumItem" then
+		return ("%s"):format(tostring(value))
 
-	elseif propType == "UDim" then
-		return ("UDim.new(%s, %s)"):format(prop.Scale, prop.Offset)
+	elseif valueType == "UDim" then
+		return ("UDim.new(%s, %s)"):format(value.Scale, value.Offset)
 
-	elseif propType == "UDim2" then
+	elseif valueType == "UDim2" then
 		return ("UDim2.new(%s, %s, %s, %s)"):format(
-			prop.X.Scale,
-			prop.X.Offset,
-			prop.Y.Scale,
-			prop.Y.Offset
+			value.X.Scale,
+			value.X.Offset,
+			value.Y.Scale,
+			value.Y.Offset
 		)
 
-	elseif propType == "Vector2" then
-		return ("Vector2.new(%s, %s)"):format(prop.X, prop.Y)
+	elseif valueType == "Vector2" then
+		return ("Vector2.new(%s, %s)"):format(value.X, value.Y)
 
-	elseif prop == AnonymousFunction then
-		return "AnonymousFunction"
+	elseif Type.of(value) == Type.HostEvent then
+		return ("Roact.Event.%s"):format(value.name)
+
+	elseif Type.of(value) == Type.HostChangeEvent then
+		return ("Roact.Change.%s"):format(value.name)
+
+	elseif value == Ref then
+		return "Roact.Ref"
 
 	else
-		error(("Cannot serialize prop %q with value of type %q"):format(
-			tostring(prop),
-			propType
+		for markerName, marker in pairs(Markers) do
+			if value == marker then
+				return ("Markers.%s"):format(markerName)
+			end
+		end
+
+		error(("Cannot serialize value %q of type %q"):format(
+			tostring(value),
+			valueType
 		))
 	end
 end
 
-function Serializer.tableContent(dict, output)
+function Serializer.getKeyTypeOrder(key)
+	if type(key) == "string" then
+		return 1
+	elseif Type.of(key) == Type.HostEvent then
+		return 2
+	elseif Type.of(key) == Type.HostChangeEvent then
+		return 3
+	elseif key == Ref then
+		return 4
+	else
+		return math.huge
+	end
+end
+
+function Serializer.compareKeys(a, b)
+	-- a and b are of the same type here, because Serializer.sortTableKeys
+	-- will only use this function to compare keys of the same type
+	if Type.of(a) == Type.HostEvent or Type.of(a) == Type.HostChangeEvent then
+		return a.name < b.name
+	else
+		return a < b
+	end
+end
+
+function Serializer.sortTableKeys(a, b)
+	-- first sort by the type of key, to place string props, then Roact.Event
+	-- events, Roact.Change events and the Ref
+	local orderA = Serializer.getKeyTypeOrder(a)
+	local orderB = Serializer.getKeyTypeOrder(b)
+
+	if orderA == orderB then
+		return Serializer.compareKeys(a, b)
+	else
+		return orderA < orderB
+	end
+end
+
+function Serializer.table(tableKey, dict, output)
+	if next(dict) == nil then
+		output:write("%s = {},", tableKey)
+		return
+	end
+
+	output:writeAndPush("%s = {", tableKey)
+
 	local keys = {}
 
 	for key in pairs(dict) do
 		table.insert(keys, key)
 	end
 
-	table.sort(keys)
+	table.sort(keys, Serializer.sortTableKeys)
 
 	for i=1, #keys do
 		local key = keys[i]
-		output:write("%s = %s,", Serializer.propKey(key), Serializer.propValue(dict[key], output))
-	end
-end
+		local value = dict[key]
+		local serializedKey = Serializer.tableKey(key)
 
-function Serializer.props(props, output)
-	if next(props) == nil then
-		output:write("props = {},")
-		return
-	end
-
-	local stringProps = {}
-	local events = {}
-	local changedEvents = {}
-
-	output:writeAndPush("props = {")
-
-	for key, value in pairs(props) do
-		if type(key) == "string" then
-			stringProps[key] = value
-
-		elseif Type.of(key) == Type.HostEvent then
-			table.insert(events, key)
-
-		elseif Type.of(key) == Type.HostChangeEvent then
-			table.insert(changedEvents, key)
-
+		if type(value) == "table" then
+			Serializer.table(serializedKey, value, output)
+		else
+			output:write("%s = %s,", serializedKey, Serializer.tableValue(value))
 		end
 	end
 
-	Serializer.tableContent(stringProps, output)
-	table.sort(events, sortRoactEvents)
-	table.sort(changedEvents, sortRoactEvents)
-
-	for i=1, #events do
-		local event = events[i]
-		local serializedPropValue = Serializer.propValue(props[event], output)
-		output:write("[Roact.Event.%s] = %s,", event.name, serializedPropValue)
-	end
-
-	for i=1, #changedEvents do
-		local changedEvent = changedEvents[i]
-		local serializedPropValue = Serializer.propValue(props[changedEvent], output)
-		output:write("[Roact.Change.%s] = %s,", changedEvent.name, serializedPropValue)
-	end
-
 	output:popAndWrite("},")
+end
+
+function Serializer.props(props, output)
+	Serializer.table("props", props, output)
 end
 
 function Serializer.children(children, output)
@@ -174,7 +199,7 @@ function Serializer.firstSnapshotData(snapshotData)
 	output:writeAndPush("return function(dependencies)")
 	output:write("local Roact = dependencies.Roact")
 	output:write("local ElementKind = dependencies.ElementKind")
-	output:write("local AnonymousFunction = dependencies.AnonymousFunction")
+	output:write("local Markers = dependencies.Markers")
 	output:write("")
 	output:writeAndPush("return {")
 

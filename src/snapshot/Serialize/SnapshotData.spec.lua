@@ -1,13 +1,16 @@
 return function()
 	local RoactRoot = script.Parent.Parent.Parent
 
-	local AnonymousFunction = require(script.Parent.AnonymousFunction)
+	local Markers = require(script.Parent.Markers)
 	local assertDeepEqual = require(RoactRoot.assertDeepEqual)
+	local Binding = require(RoactRoot.Binding)
 	local Change = require(RoactRoot.PropMarkers.Change)
 	local Component = require(RoactRoot.Component)
 	local createElement = require(RoactRoot.createElement)
+	local createRef = require(RoactRoot.createRef)
 	local ElementKind = require(RoactRoot.ElementKind)
 	local Event = require(RoactRoot.PropMarkers.Event)
+	local Ref = require(RoactRoot.PropMarkers.Ref)
 	local shallow = require(RoactRoot.shallow)
 
 	local SnapshotData = require(script.Parent.SnapshotData)
@@ -72,6 +75,23 @@ return function()
 		end)
 	end)
 
+	describe("signal", function()
+		it("should convert signals", function()
+			local signalName = "Foo"
+			local signalMock = setmetatable({}, {
+				__tostring = function()
+					return "Signal " .. signalName
+				end
+			})
+
+			local result = SnapshotData.signal(signalMock)
+
+			assertDeepEqual(result, {
+				[Markers.Signal] = signalName
+			})
+		end)
+	end)
+
 	describe("propValue", function()
 		it("should return the same value", function()
 			local propValues = {7, "hello", Enum.SortOrder.LayoutOrder}
@@ -87,7 +107,13 @@ return function()
 		it("should return the AnonymousFunction symbol when given a function", function()
 			local result = SnapshotData.propValue(function() end)
 
-			expect(result).to.equal(AnonymousFunction)
+			expect(result).to.equal(Markers.AnonymousFunction)
+		end)
+
+		it("should return the Unknown symbol when given an unexpected value", function()
+			local result = SnapshotData.propValue({})
+
+			expect(result).to.equal(Markers.Unknown)
 		end)
 	end)
 
@@ -111,7 +137,7 @@ return function()
 			local result = SnapshotData.props(props)
 
 			assertDeepEqual(result, {
-				[Event.Activated] = AnonymousFunction,
+				[Event.Activated] = Markers.AnonymousFunction,
 			})
 		end)
 
@@ -123,7 +149,37 @@ return function()
 			local result = SnapshotData.props(props)
 
 			assertDeepEqual(result, {
-				[Change.Position] = AnonymousFunction,
+				[Change.Position] = Markers.AnonymousFunction,
+			})
+		end)
+
+		it("should map empty refs to the EmptyRef symbol", function()
+			local props = {
+				[Ref] = createRef(),
+			}
+
+			local result = SnapshotData.props(props)
+
+			assertDeepEqual(result, {
+				[Ref] = Markers.EmptyRef,
+			})
+		end)
+
+		it("should map refs with value to their symbols", function()
+			local instanceClassName = "Folder"
+			local ref = createRef()
+			Binding.update(ref, Instance.new(instanceClassName))
+
+			local props = {
+				[Ref] = ref,
+			}
+
+			local result = SnapshotData.props(props)
+
+			assertDeepEqual(result, {
+				[Ref] = {
+					className = instanceClassName,
+				},
 			})
 		end)
 
@@ -166,7 +222,7 @@ return function()
 			}
 			local expectProps = {
 				LayoutOrder = 3,
-				[Change.Size] = AnonymousFunction,
+				[Change.Size] = Markers.AnonymousFunction,
 			}
 
 			local wrapper = shallow(createElement("Frame", props))

@@ -35,14 +35,14 @@ function IndentedOutput:pop()
 	self._level = math.max(self._level - 1, 0)
 end
 
-function IndentedOutput:writeAndPush(line)
-	self:write(line)
+function IndentedOutput:writeAndPush(...)
+	self:write(...)
 	self:push()
 end
 
-function IndentedOutput:popAndWrite(line)
+function IndentedOutput:popAndWrite(...)
 	self:pop()
-	self:write(line)
+	self:write(...)
 end
 
 function IndentedOutput:join(separator)

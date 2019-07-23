@@ -1,5 +1,5 @@
 return function()
-	local AnonymousFunction = require(script.Parent.AnonymousFunction)
+	local Markers = require(script.Parent.Markers)
 	local Change = require(script.Parent.Parent.Parent.PropMarkers.Change)
 	local Event = require(script.Parent.Parent.Parent.PropMarkers.Event)
 	local ElementKind = require(script.Parent.Parent.Parent.ElementKind)
@@ -51,13 +51,13 @@ return function()
 		end)
 	end)
 
-	describe("propKey", function()
+	describe("tableKey", function()
 		it("should serialize to a named dictionary field", function()
 			local keys = {"foo", "foo1"}
 
 			for i=1, #keys do
 				local key = keys[i]
-				local result = Serializer.propKey(key)
+				local result = Serializer.tableKey(key)
 
 				expect(result).to.equal(key)
 			end
@@ -68,71 +68,103 @@ return function()
 
 			for i=1, #keys do
 				local key = keys[i]
-				local result = Serializer.propKey(key)
+				local result = Serializer.tableKey(key)
 
 				expect(result).to.equal('["' .. key .. '"]')
 			end
 		end)
 	end)
 
-	describe("propValue", function()
+	describe("tableValue", function()
 		it("should serialize strings", function()
-			local result = Serializer.propValue("foo")
+			local result = Serializer.tableValue("foo")
 
 			expect(result).to.equal('"foo"')
 		end)
 
 		it("should serialize strings with \"", function()
-			local result = Serializer.propValue('foo"bar')
+			local result = Serializer.tableValue('foo"bar')
 
 			expect(result).to.equal('"foo\\"bar"')
 		end)
 
 		it("should serialize numbers", function()
-			local result = Serializer.propValue(10.5)
+			local result = Serializer.tableValue(10.5)
 
 			expect(result).to.equal("10.5")
 		end)
 
 		it("should serialize booleans", function()
-			expect(Serializer.propValue(true)).to.equal("true")
-			expect(Serializer.propValue(false)).to.equal("false")
+			expect(Serializer.tableValue(true)).to.equal("true")
+			expect(Serializer.tableValue(false)).to.equal("false")
 		end)
 
 		it("should serialize enum items", function()
-			local result = Serializer.propValue(Enum.SortOrder.LayoutOrder)
+			local result = Serializer.tableValue(Enum.SortOrder.LayoutOrder)
 
 			expect(result).to.equal("Enum.SortOrder.LayoutOrder")
 		end)
 
 		it("should serialize Color3", function()
-			local result = Serializer.propValue(Color3.new(0.1, 0.2, 0.3))
+			local result = Serializer.tableValue(Color3.new(0.1, 0.2, 0.3))
 
 			expect(result).to.equal("Color3.new(0.1, 0.2, 0.3)")
 		end)
 
 		it("should serialize UDim", function()
-			local result = Serializer.propValue(UDim.new(1, 0.5))
+			local result = Serializer.tableValue(UDim.new(1, 0.5))
 
 			expect(result).to.equal("UDim.new(1, 0.5)")
 		end)
 
 		it("should serialize UDim2", function()
-			local result = Serializer.propValue(UDim2.new(1, 0.5, 2, 2.5))
+			local result = Serializer.tableValue(UDim2.new(1, 0.5, 2, 2.5))
 
 			expect(result).to.equal("UDim2.new(1, 0.5, 2, 2.5)")
 		end)
 
 		it("should serialize Vector2", function()
-			local result = Serializer.propValue(Vector2.new(1.5, 0.3))
+			local result = Serializer.tableValue(Vector2.new(1.5, 0.3))
 
 			expect(result).to.equal("Vector2.new(1.5, 0.3)")
 		end)
 
-		it("should serialize AnonymousFunction symbol", function()
-			local result = Serializer.propValue(AnonymousFunction)
+		it("should serialize markers symbol", function()
+			for name, marker in pairs(Markers) do
+				local result = Serializer.tableValue(marker)
 
-			expect(result).to.equal("AnonymousFunction")
+				expect(result).to.equal(("Markers.%s"):format(name))
+			end
+		end)
+
+		it("should serialize Roact.Event events", function()
+			local result = Serializer.tableValue(Event.Activated)
+
+			expect(result).to.equal("Roact.Event.Activated")
+		end)
+
+		it("should serialize Roact.Change events", function()
+			local result = Serializer.tableValue(Change.AbsoluteSize)
+
+			expect(result).to.equal("Roact.Change.AbsoluteSize")
+		end)
+	end)
+
+	describe("table", function()
+		it("should serialize an empty nested table", function()
+			local output = IndentedOutput.new()
+			Serializer.table("sub", {}, output)
+
+			expect(output:join()).to.equal("sub = {},")
+		end)
+
+		it("should serialize an nested table", function()
+			local output = IndentedOutput.new()
+			Serializer.table("sub", {
+				foo = 1,
+			}, output)
+
+			expect(output:join()).to.equal("sub = {\n  foo = 1,\n},")
 		end)
 	end)
 
@@ -156,26 +188,58 @@ return function()
 		it("should serialize Roact.Event", function()
 			local output = IndentedOutput.new()
 			Serializer.props({
-				[Event.Activated] = AnonymousFunction,
+				[Event.Activated] = Markers.AnonymousFunction,
 			}, output)
 
 			expect(output:join()).to.equal(
 				   "props = {\n"
-				.. "  [Roact.Event.Activated] = AnonymousFunction,\n"
+				.. "  [Roact.Event.Activated] = Markers.AnonymousFunction,\n"
 				.. "},"
+			)
+		end)
+
+		it("should sort Roact.Event", function()
+			local output = IndentedOutput.new()
+			Serializer.props({
+				[Event.Activated] = Markers.AnonymousFunction,
+				[Event.MouseEnter] = Markers.AnonymousFunction,
+			}, output)
+
+			expect(output:join()).to.equal(
+				   "props = {\n"
+				   .. "  [Roact.Event.Activated] = Markers.AnonymousFunction,\n"
+				   .. "  [Roact.Event.MouseEnter] = Markers.AnonymousFunction,\n"
+				   .. "},"
 			)
 		end)
 
 		it("should serialize Roact.Change", function()
 			local output = IndentedOutput.new()
 			Serializer.props({
-				[Change.Position] = AnonymousFunction,
+				[Change.Position] = Markers.AnonymousFunction,
 			}, output)
 
 			expect(output:join()).to.equal(
 				   "props = {\n"
-				.. "  [Roact.Change.Position] = AnonymousFunction,\n"
+				.. "  [Roact.Change.Position] = Markers.AnonymousFunction,\n"
 				.. "},"
+			)
+		end)
+
+		it("should sort props, Roact.Event and Roact.Change", function()
+			local output = IndentedOutput.new()
+			Serializer.props({
+				foo = 1,
+				[Event.Activated] = Markers.AnonymousFunction,
+				[Change.Position] = Markers.AnonymousFunction,
+			}, output)
+
+			expect(output:join()).to.equal(
+				   "props = {\n"
+				   .. "  foo = 1,\n"
+				   .. "  [Roact.Event.Activated] = Markers.AnonymousFunction,\n"
+				   .. "  [Roact.Change.Position] = Markers.AnonymousFunction,\n"
+				   .. "},"
 			)
 		end)
 	end)

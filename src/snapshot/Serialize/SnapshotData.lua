@@ -1,6 +1,8 @@
-local AnonymousFunction = require(script.Parent.AnonymousFunction)
-local ElementKind = require(script.Parent.Parent.Parent.ElementKind)
-local Type = require(script.Parent.Parent.Parent.Type)
+local RoactRoot = script.Parent.Parent.Parent
+local Markers = require(script.Parent.Markers)
+local ElementKind = require(RoactRoot.ElementKind)
+local Type = require(RoactRoot.Type)
+local Ref = require(RoactRoot.PropMarkers.Ref)
 
 local function sortSerializedChildren(childA, childB)
 	return childA.hostKey < childB.hostKey
@@ -22,24 +24,41 @@ function SnapshotData.type(wrapperType)
 	return typeData
 end
 
+function SnapshotData.signal(signal)
+	local signalToString = tostring(signal)
+	local signalName = signalToString:match("Signal (%w+)")
+
+	assert(signalName ~= nil, ("Can not extract signal name from %q"):format(signalToString))
+
+	return {
+		[Markers.Signal] = signalName
+	}
+end
+
 function SnapshotData.propValue(prop)
 	local propType = type(prop)
 
 	if propType == "string"
 		or propType == "number"
 		or propType == "boolean"
-		or propType == "userdata"
 	then
 		return prop
 
-	elseif propType == 'function' then
-		return AnonymousFunction
+	elseif propType == "function" then
+		return Markers.AnonymousFunction
+
+	elseif typeof(prop) == "RBXScriptSignal" then
+		return SnapshotData.signal(prop)
+
+	elseif propType == "userdata" then
+		return prop
 
 	else
-		error(("SnapshotData does not support prop with value %q (type %q)"):format(
+		warn(("SnapshotData does not support prop with value %q (type %q)"):format(
 			tostring(prop),
 			propType
 		))
+		return Markers.Unknown
 	end
 end
 
@@ -52,6 +71,17 @@ function SnapshotData.props(wrapperProps)
 			or Type.of(key) == Type.HostEvent
 		then
 			serializedProps[key] = SnapshotData.propValue(prop)
+
+		elseif key == Ref then
+			local current = prop:getValue()
+
+			if current then
+				serializedProps[key] = {
+					className = current.ClassName,
+				}
+			else
+				serializedProps[key] = Markers.EmptyRef
+			end
 
 		else
 			error(("SnapshotData does not support prop with key %q (type: %s)"):format(

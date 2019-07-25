@@ -10,6 +10,7 @@ local ProductItem = Roact.Component:extend("ProductItem")
 local PADDING = 20
 
 function ProductItem:init()
+	self.ref = Roact.createRef()
 	self.onMouseEnter = function()
 		self.toBigIcon:Play()
 	end
@@ -21,7 +22,6 @@ function ProductItem:init()
 
 		MarketplaceService:PromptProductPurchase(Players.LocalPlayer, props.productId)
 	end
-	self.ref = Roact.createRef()
 end
 
 function ProductItem:render()

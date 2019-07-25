@@ -55,7 +55,6 @@ function ShopPage:render()
 	end
 
 	newFrameProps.CanvasSize = UDim2.new(0, 0, 0, canvasHeight)
-	newFrameProps.ClipsDescendants = true
 	newFrameProps[Roact.Change.AbsoluteSize] = self.onAbsoluteSizeChanged
 
 	return Roact.createElement("ScrollingFrame", newFrameProps, {

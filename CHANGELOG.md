@@ -1,6 +1,7 @@
 # Roact Changelog
 
 ## Unreleased Changes
+* Improved the error message when an invalid changed hook name is used. ([#216](https://github.com/Roblox/roact/pull/216))
 * Fixed a bug where fragments could not be used as children of an element or another fragment. ([#214](https://github.com/Roblox/roact/pull/214))
 
 ## [1.1.0](https://github.com/Roblox/roact/releases/tag/v1.1.0) (June 3rd, 2019)

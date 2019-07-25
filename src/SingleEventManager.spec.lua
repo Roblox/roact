@@ -226,5 +226,14 @@ return function()
 			instance.Name = "baz"
 			expect(eventSpy.callCount).to.equal(2)
 		end)
+
+		it("should throw an error if the property is invalid", function()
+			local instance = Instance.new("Folder")
+			local manager = SingleEventManager.new(instance)
+
+			expect(function()
+				manager:connectPropertyChange("foo", function() end)
+			end).to.throw()
+		end)
 	end)
 end

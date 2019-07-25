@@ -1,9 +1,12 @@
 return function()
+	local RoactRoot = script.Parent.Parent.Parent
+
 	local Markers = require(script.Parent.Markers)
-	local Change = require(script.Parent.Parent.Parent.PropMarkers.Change)
-	local Event = require(script.Parent.Parent.Parent.PropMarkers.Event)
-	local ElementKind = require(script.Parent.Parent.Parent.ElementKind)
+	local Change = require(RoactRoot.PropMarkers.Change)
+	local Event = require(RoactRoot.PropMarkers.Event)
+	local ElementKind = require(RoactRoot.ElementKind)
 	local IndentedOutput = require(script.Parent.IndentedOutput)
+	local Ref = require(RoactRoot.PropMarkers.Ref)
 	local Serializer = require(script.Parent.Serializer)
 
 	describe("type", function()
@@ -75,6 +78,25 @@ return function()
 		end)
 	end)
 
+	describe("number", function()
+		it("should format integers", function()
+			expect(Serializer.number(1)).to.equal("1")
+			expect(Serializer.number(0)).to.equal("0")
+			expect(Serializer.number(10)).to.equal("10")
+		end)
+
+		it("should minimize floating points zeros", function()
+			expect(Serializer.number(1.2)).to.equal("1.2")
+			expect(Serializer.number(0.002)).to.equal("0.002")
+			expect(Serializer.number(5.5001)).to.equal("5.5001")
+		end)
+
+		it("should keep only 7 decimals", function()
+			expect(Serializer.number(0.123456789)).to.equal("0.1234568")
+			expect(Serializer.number(0.123456709)).to.equal("0.1234567")
+		end)
+	end)
+
 	describe("tableValue", function()
 		it("should serialize strings", function()
 			local result = Serializer.tableValue("foo")
@@ -112,15 +134,15 @@ return function()
 		end)
 
 		it("should serialize UDim", function()
-			local result = Serializer.tableValue(UDim.new(1, 0.5))
+			local result = Serializer.tableValue(UDim.new(1.2, 0))
 
-			expect(result).to.equal("UDim.new(1, 0.5)")
+			expect(result).to.equal("UDim.new(1.2, 0)")
 		end)
 
 		it("should serialize UDim2", function()
-			local result = Serializer.tableValue(UDim2.new(1, 0.5, 2, 2.5))
+			local result = Serializer.tableValue(UDim2.new(1.5, 5, 2, 3))
 
-			expect(result).to.equal("UDim2.new(1, 0.5, 2, 2.5)")
+			expect(result).to.equal("UDim2.new(1.5, 5, 2, 3)")
 		end)
 
 		it("should serialize Vector2", function()
@@ -207,9 +229,9 @@ return function()
 
 			expect(output:join()).to.equal(
 				   "props = {\n"
-				   .. "  [Roact.Event.Activated] = Markers.AnonymousFunction,\n"
-				   .. "  [Roact.Event.MouseEnter] = Markers.AnonymousFunction,\n"
-				   .. "},"
+				.. "  [Roact.Event.Activated] = Markers.AnonymousFunction,\n"
+				.. "  [Roact.Event.MouseEnter] = Markers.AnonymousFunction,\n"
+				.. "},"
 			)
 		end)
 
@@ -226,20 +248,37 @@ return function()
 			)
 		end)
 
-		it("should sort props, Roact.Event and Roact.Change", function()
+		it("should sort props, Roact.Event, Roact.Change and Ref", function()
 			local output = IndentedOutput.new()
 			Serializer.props({
 				foo = 1,
 				[Event.Activated] = Markers.AnonymousFunction,
 				[Change.Position] = Markers.AnonymousFunction,
+				[Ref] = Markers.EmptyRef,
 			}, output)
 
 			expect(output:join()).to.equal(
 				   "props = {\n"
-				   .. "  foo = 1,\n"
-				   .. "  [Roact.Event.Activated] = Markers.AnonymousFunction,\n"
-				   .. "  [Roact.Change.Position] = Markers.AnonymousFunction,\n"
-				   .. "},"
+				.. "  foo = 1,\n"
+				.. "  [Roact.Event.Activated] = Markers.AnonymousFunction,\n"
+				.. "  [Roact.Change.Position] = Markers.AnonymousFunction,\n"
+				.. "  [Roact.Ref] = Markers.EmptyRef,\n"
+				.. "},"
+			)
+		end)
+
+		it("should sort props within themselves", function()
+			local output = IndentedOutput.new()
+			Serializer.props({
+				foo = 1,
+				bar = 2,
+			}, output)
+
+			expect(output:join()).to.equal(
+				   "props = {\n"
+				.. "  bar = 2,\n"
+				.. "  foo = 1,\n"
+				.. "},"
 			)
 		end)
 	end)

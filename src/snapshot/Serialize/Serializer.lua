@@ -42,34 +42,54 @@ function Serializer.tableKey(key)
 	end
 end
 
+function Serializer.number(value)
+	local _, fraction = math.modf(value)
+
+	if fraction == 0 then
+		return ("%s"):format(tostring(value))
+	else
+		return ("%0.7f"):format(value):gsub("%.?0+$", "")
+	end
+end
+
 function Serializer.tableValue(value)
 	local valueType = typeof(value)
 
 	if valueType == "string" then
 		return ("%q"):format(value)
 
-	elseif valueType == "number" or valueType == "boolean" then
+	elseif valueType == "number" then
+		return Serializer.number(value)
+
+	elseif valueType == "boolean" then
 		return ("%s"):format(tostring(value))
 
 	elseif valueType == "Color3" then
-		return ("Color3.new(%s, %s, %s)"):format(value.r, value.g, value.b)
+		return ("Color3.new(%s, %s, %s)"):format(
+			Serializer.number(value.r),
+			Serializer.number(value.g),
+			Serializer.number(value.b)
+		)
 
 	elseif valueType == "EnumItem" then
 		return ("%s"):format(tostring(value))
 
 	elseif valueType == "UDim" then
-		return ("UDim.new(%s, %s)"):format(value.Scale, value.Offset)
+		return ("UDim.new(%s, %d)"):format(Serializer.number(value.Scale), value.Offset)
 
 	elseif valueType == "UDim2" then
-		return ("UDim2.new(%s, %s, %s, %s)"):format(
-			value.X.Scale,
+		return ("UDim2.new(%s, %d, %s, %d)"):format(
+			Serializer.number(value.X.Scale),
 			value.X.Offset,
-			value.Y.Scale,
+			Serializer.number(value.Y.Scale),
 			value.Y.Offset
 		)
 
 	elseif valueType == "Vector2" then
-		return ("Vector2.new(%s, %s)"):format(value.X, value.Y)
+		return ("Vector2.new(%s, %s)"):format(
+			Serializer.number(value.X),
+			Serializer.number(value.Y)
+		)
 
 	elseif Type.of(value) == Type.HostEvent then
 		return ("Roact.Event.%s"):format(value.name)

@@ -35,7 +35,7 @@ setmetatable(Event, {
 		Event[eventName] = event
 
 		return event
-	end
+	end,
 })
 
 return Event

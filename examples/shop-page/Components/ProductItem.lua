@@ -10,25 +10,22 @@ local ProductItem = Roact.Component:extend("ProductItem")
 local PADDING = 20
 
 function ProductItem:init()
-	self:setState({
-		onMouseEnter = function()
-			self.toBigIcon:Play()
-		end,
-		onMouseLeave = function()
-			self.toNormalIcon:Play()
-		end,
-		onActivated = function()
-			local props = self.props
+	self.onMouseEnter = function()
+		self.toBigIcon:Play()
+	end
+	self.onMouseLeave = function()
+		self.toNormalIcon:Play()
+	end
+	self.onActivated = function()
+		local props = self.props
 
-			MarketplaceService:PromptProductPurchase(Players.LocalPlayer, props.productId)
-		end
-	})
+		MarketplaceService:PromptProductPurchase(Players.LocalPlayer, props.productId)
+	end
 	self.ref = Roact.createRef()
 end
 
 function ProductItem:render()
 	local props = self.props
-	local state = self.state
 
 	local image = props.image
 	local price = props.price
@@ -38,9 +35,9 @@ function ProductItem:render()
 		BackgroundTransparency = 1,
 		Image = "",
 		LayoutOrder = order,
-		[Roact.Event.Activated] = state.onActivated,
-		[Roact.Event.MouseEnter] = state.onMouseEnter,
-		[Roact.Event.MouseLeave] = state.onMouseLeave,
+		[Roact.Event.Activated] = self.onActivated,
+		[Roact.Event.MouseEnter] = self.onMouseEnter,
+		[Roact.Event.MouseLeave] = self.onMouseLeave,
 	}, {
 		Icon = Roact.createElement("ImageLabel", {
 			AnchorPoint = Vector2.new(0.5, 0.5),

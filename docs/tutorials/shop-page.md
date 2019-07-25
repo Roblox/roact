@@ -91,7 +91,7 @@ To keep our component simple, let's divide this feature into different component
 
 ### ProductItemList
 
-This component will simply be given the product list and create all the ProductItem elements. Since it does not need any internal state, a functional component will do the job. We have not done our ProductItem yet, but we will suppose it is there for now.
+This component will simply be given the product list and create all the ProductItem elements. Since it does not need any internal state, a functional component will do the job. We have not done our ProductItem component yet, but we will suppose it is there for now.
 
 ```lua
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -143,11 +143,79 @@ return Roact.createElement("ScrollingFrame", frameProps, {
 
 > Fragments
 >
-> In case you have forgotten about fragments, they are used to group multiple elements together.
+> In case you have forgotten about fragments: elements contained in a fragment are parented to the fragment's parent. That way, we can split the responsability of the grid view from the content. The ShopPage component will handle the grid view, so it owns the *UIGridLayout* object, and it will give the responsability to the *ProductItemList* component to take care of the content.
 
 ## Product Item
-[remind state and props]
-[props validation]
+For our last component, we are going to use a stateful component to be able to use some lifecycle methods. Let's start first by doing a basic view of our props.
+
+```lua
+local PADDING = 20
+
+local ProductItem = Roact.Component:extend("ProductItem")
+
+function ProductItem:render()
+	local props = self.props
+
+	local image = props.image
+	local price = props.price
+	local order = props.order or price
+
+	return Roact.createElement("ImageButton", {
+		BackgroundTransparency = 1,
+		Image = "",
+		LayoutOrder = order,
+	}, {
+		Icon = Roact.createElement("ImageLabel", {
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			BackgroundTransparency = 1,
+			Image = image,
+			Position = UDim2.new(0.5, 0, 0.5, 0),
+			Size = UDim2.new(1, -PADDING, 1, -PADDING),
+		}),
+		PriceLabel = Roact.createElement("TextLabel", {
+			AnchorPoint = Vector2.new(0.5, 1),
+			BackgroundTransparency = 1,
+			Font = Enum.Font.SourceSans,
+			Text = ("R$ %d"):format(price),
+			TextColor3 = Color3.fromRGB(10, 200, 10),
+			TextScaled = true,
+			TextStrokeTransparency = 0,
+			TextStrokeColor3 = Color3.fromRGB(255, 255, 255),
+			Position = UDim2.new(0.5, 0, 1, 0),
+			Size = UDim2.new(1, 0, 0.3, 0),
+		}),
+	})
+end
+
+return ProductItem
+```
+
+Now, we want to prompt the player to buy the product when he clicks on the button. For that, we will use the *Activated* event to fire a function. We can create this function in the _init_ lifecycle method.
+
+```lua
+local MarketplaceService = game:GetService("MarketplaceService")
+
+function ProductItem:init()
+	self.onActivated = function()
+		local props = self.props
+
+		MarketplaceService:PromptProductPurchase(Players.LocalPlayer, props.productId)
+	end
+end
+```
+
+Then, we simply use `Roact.Event.Activated` to tell Roact to connect the function to the _Activated_ event.
+
+```lua
+return Roact.createElement("ImageButton", {
+	BackgroundTransparency = 1,
+	Image = "",
+	LayoutOrder = order,
+	[Roact.Event.Activated] = self.onActivated,
+}, {
+	...
+}
+```
 
 ### Adding some animations
 

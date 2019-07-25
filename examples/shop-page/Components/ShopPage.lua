@@ -51,7 +51,7 @@ function ShopPage:render()
 	local newFrameProps = {}
 
 	for key, value in pairs(frameProps) do
-		frameProps[key] = value
+		newFrameProps[key] = value
 	end
 
 	newFrameProps.CanvasSize = UDim2.new(0, 0, 0, canvasHeight)

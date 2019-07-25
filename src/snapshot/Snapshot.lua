@@ -41,8 +41,8 @@ function Snapshot:match()
 		return
 	end
 
-	local failingSnapshot = Snapshot.new(self._identifier .. ".FAILED", self.data)
-	failingSnapshot:serialize()
+	local newSnapshot = Snapshot.new(self._identifier .. ".NEW", self.data)
+	newSnapshot:serialize()
 
 	local innerMessage = innerMessageTemplate
 		:gsub("{1}", "new")

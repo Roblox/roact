@@ -1,11 +1,7 @@
-local createReconciler = require(script.Parent.createReconciler)
 local Children = require(script.Parent.PropMarkers.Children)
-local RobloxRenderer = require(script.Parent.RobloxRenderer)
 local ElementKind = require(script.Parent.ElementKind)
 local ElementUtils = require(script.Parent.ElementUtils)
 local snapshot = require(script.Parent.snapshot)
-
-local robloxReconciler = createReconciler(RobloxRenderer)
 
 local ShallowWrapper = {}
 local ShallowWrapperMetatable = {
@@ -38,16 +34,16 @@ end
 
 local function findNextVirtualNode(virtualNode, maxDepth)
 	local currentDepth = 0
-	local wrapVirtualNode = virtualNode
-	local nextNode = wrapVirtualNode.children[ElementUtils.UseParentKey]
+	local currentNode = virtualNode
+	local nextNode = currentNode.children[ElementUtils.UseParentKey]
 
 	while currentDepth < maxDepth and nextNode ~= nil do
-		wrapVirtualNode = nextNode
-		nextNode = wrapVirtualNode.children[ElementUtils.UseParentKey]
+		currentNode = nextNode
+		nextNode = currentNode.children[ElementUtils.UseParentKey]
 		currentDepth = currentDepth + 1
 	end
 
-	return wrapVirtualNode
+	return currentNode
 end
 
 local ContraintFunctions = {
@@ -229,15 +225,4 @@ function ShallowWrapper:_satisfiesAllContraints(constraints)
 	return true
 end
 
-local function shallow(element, options)
-	options = options or {}
-
-	local tempParent = Instance.new("Folder")
-	local virtualNode = robloxReconciler.mountVirtualNode(element, tempParent, "ShallowTree")
-
-	local maxDepth = options.depth or 1
-
-	return ShallowWrapper.new(virtualNode, maxDepth)
-end
-
-return shallow
+return ShallowWrapper

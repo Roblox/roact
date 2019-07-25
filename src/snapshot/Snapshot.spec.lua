@@ -6,7 +6,8 @@ return function()
 
 	local snapshotFolder = Instance.new("Folder")
 	local originalGetSnapshotFolder = Snapshot.getSnapshotFolder
-	Snapshot.getSnapshotFolder = function()
+
+	local function mockGetSnapshotFolder()
 		return snapshotFolder
 	end
 
@@ -92,6 +93,8 @@ return function()
 
 	describe("serialize", function()
 		it("should create a StringValue if it does not exist", function()
+			Snapshot.getSnapshotFolder = mockGetSnapshotFolder
+
 			local identifier = "foo"
 
 			local snapshot = Snapshot.new(identifier, {
@@ -106,14 +109,22 @@ return function()
 			snapshot:serialize()
 			local stringValue = snapshotFolder:FindFirstChild(identifier)
 
+			Snapshot.getSnapshotFolder = originalGetSnapshotFolder
+
 			expect(stringValue).to.be.ok()
 			expect(stringValue.Value:len() > 0).to.equal(true)
+
+			stringValue:Destroy()
 		end)
 	end)
 
 	describe("_loadExistingData", function()
 		it("should return nil if data is not found", function()
+			Snapshot.getSnapshotFolder = mockGetSnapshotFolder
+
 			local result = Snapshot._loadExistingData("foo")
+
+			Snapshot.getSnapshotFolder = originalGetSnapshotFolder
 
 			expect(result).never.to.be.ok()
 		end)
@@ -121,12 +132,10 @@ return function()
 
 	describe("getSnapshotFolder", function()
 		it("should create a folder in the ReplicatedStorage if it is not found", function()
-			local folder = originalGetSnapshotFolder()
+			local folder = Snapshot.getSnapshotFolder()
 
 			expect(folder).to.be.ok()
 			expect(folder.Parent).to.equal(game:GetService("ReplicatedStorage"))
-
-			folder:Destroy()
 		end)
 	end)
 end

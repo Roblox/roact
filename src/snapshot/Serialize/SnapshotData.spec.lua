@@ -7,13 +7,28 @@ return function()
 	local Change = require(RoactRoot.PropMarkers.Change)
 	local Component = require(RoactRoot.Component)
 	local createElement = require(RoactRoot.createElement)
+	local createReconciler = require(RoactRoot.createReconciler)
 	local createRef = require(RoactRoot.createRef)
 	local ElementKind = require(RoactRoot.ElementKind)
 	local Event = require(RoactRoot.PropMarkers.Event)
 	local Ref = require(RoactRoot.PropMarkers.Ref)
-	local shallow = require(RoactRoot.shallow)
+	local RobloxRenderer = require(RoactRoot.RobloxRenderer)
+	local ShallowWrapper = require(RoactRoot.ShallowWrapper)
 
 	local SnapshotData = require(script.Parent.SnapshotData)
+
+	local robloxReconciler = createReconciler(RobloxRenderer)
+
+	local function shallow(element, options)
+		options = options or {}
+		local maxDepth = options.depth or 1
+		local hostKey = options.hostKey or "ShallowTree"
+		local hostParent = options.hostParent or Instance.new("Folder")
+
+		local virtualNode = robloxReconciler.mountVirtualNode(element, hostParent, hostKey)
+
+		return ShallowWrapper.new(virtualNode, maxDepth)
+	end
 
 	describe("type", function()
 		describe("host elements", function()

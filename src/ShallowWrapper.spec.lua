@@ -1,12 +1,27 @@
 return function()
-	local shallow = require(script.Parent.shallow)
+	local ShallowWrapper = require(script.Parent.ShallowWrapper)
 
 	local assertDeepEqual = require(script.Parent.assertDeepEqual)
 	local Children = require(script.Parent.PropMarkers.Children)
 	local ElementKind = require(script.Parent.ElementKind)
 	local createElement = require(script.Parent.createElement)
 	local createFragment = require(script.Parent.createFragment)
+	local createReconciler = require(script.Parent.createReconciler)
 	local RoactComponent = require(script.Parent.Component)
+	local RobloxRenderer = require(script.Parent.RobloxRenderer)
+
+	local robloxReconciler = createReconciler(RobloxRenderer)
+
+	local function shallow(element, options)
+		options = options or {}
+		local maxDepth = options.depth or 1
+		local hostKey = options.hostKey or "ShallowTree"
+		local hostParent = options.hostParent or Instance.new("Folder")
+
+		local virtualNode = robloxReconciler.mountVirtualNode(element, hostParent, hostKey)
+
+		return ShallowWrapper.new(virtualNode, maxDepth)
+	end
 
 	describe("single host element", function()
 		local className = "TextLabel"

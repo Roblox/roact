@@ -180,6 +180,12 @@ To keep our component simple, let's divide this feature into different component
 
 This component will simply be given the product list and create all the ProductItem elements. Since it does not need any internal state, a functional component will do the job. We have not done our ProductItem component yet, but we will suppose it is there for now.
 
+We will define the props that the ProductItem will use to render it's component. We will make the ProductItem component accept these props:
+	**image:** the image representing the product that will be shown by the component.
+	**price:** how much robux the product costs.
+	**productId:** the identifier of the developer product.
+	**order:** use to specify the order of the items in the shop. We will make this optional, so if it is not provided, it will sort the items by their costs.
+
 ```lua
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -275,6 +281,29 @@ function ProductItem:render()
 end
 
 return ProductItem
+```
+
+We can now populate our shop with an item! Let's go back to where we mount our ShopPage component and add an item to our list.
+
+```lua
+local shopPage = Roact.createElement(ShopPage, {
+	items = {
+		{
+			identifier = "Red Visor",
+			image = "https://www.roblox.com/asset-thumbnail/image?assetId=139618072&width=420&height=420&format=png",
+			price = 30,
+			productId = 0,
+		},
+	},
+	frameProps = {
+		-- here we define the properties of our ShopPage scrolling frame
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		BorderSizePixel = 0,
+		Position = UDim2.new(0.5, 0, 0.5, 0),
+		Size = UDim2.new(0.5, 0, 0.5, 0),
+	},
+	padding = 10,
+})
 ```
 
 Now, we want to prompt the player to buy the product when he clicks on the button. For that, we will use the *Activated* event to fire a function. We can create this function in the [`init`](https://roblox.github.io/roact/guide/state-and-lifecycle/#lifecycle-methods) lifecycle method.

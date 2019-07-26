@@ -1,9 +1,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Components = ReplicatedStorage:WaitForChild("Components")
+local Components = script.Parent
 
 local Roact = require(ReplicatedStorage.Roact)
-
 local ProductItemList = require(Components:WaitForChild("ProductItemList"))
 
 local ShopPage = Roact.Component:extend("ShopPage")

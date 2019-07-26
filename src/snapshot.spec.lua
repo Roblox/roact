@@ -1,7 +1,9 @@
 return function()
 	local Change = require(script.Parent.PropMarkers.Change)
+	local Component = require(script.Parent.Component)
 	local createElement = require(script.Parent.createElement)
 	local createReconciler = require(script.Parent.createReconciler)
+	local Event = require(script.Parent.PropMarkers.Event)
 	local RobloxRenderer = require(script.Parent.RobloxRenderer)
 	local snapshot = require(script.Parent.snapshot)
 
@@ -41,6 +43,44 @@ return function()
 		local wrapper = tree:getTestRenderOutput()
 
 		snapshot("function-component-children", wrapper):match()
+	end)
+
+	it("should match snapshot of stateful component", function()
+		local StatefulComponent = Component:extend("CoolComponent")
+
+		function StatefulComponent:render()
+			return createElement("TextLabel")
+		end
+
+		local element = createElement("Frame", {}, {
+			Child = createElement(StatefulComponent, {
+				label = {
+					Text = "foo",
+				},
+			}),
+		})
+
+		local tree = robloxReconciler.mountVirtualTree(element)
+		local wrapper = tree:getTestRenderOutput()
+
+		snapshot("stateful-component-children", wrapper):match()
+	end)
+
+	it("should match snapshot with event props", function()
+		local function emptyFunction()
+		end
+
+		local element = createElement("Frame", {
+			[Change.AbsoluteSize] = emptyFunction,
+			[Change.Visible] = emptyFunction,
+			[Event.MouseEnter] = emptyFunction,
+			[Event.MouseLeave] = emptyFunction,
+		})
+
+		local tree = robloxReconciler.mountVirtualTree(element)
+		local wrapper = tree:getTestRenderOutput()
+
+		snapshot("component-with-event-props", wrapper):match()
 	end)
 
 	it("should throw if the identifier contains invalid characters", function()

@@ -11,9 +11,11 @@ return function()
 
 	it("should match snapshot of host component with multiple props", function()
 		local element = createElement("Frame", {
+			AnchorPoint = Vector2.new(0, 0.5),
 			BackgroundColor3 = Color3.new(0.1, 0.2, 0.3),
 			BackgroundTransparency = 0.205,
 			ClipsDescendants = false,
+			Size = UDim2.new(0.5, 0, 0.4, 1),
 			SizeConstraint = Enum.SizeConstraint.RelativeXY,
 			Visible = true,
 			ZIndex = 5,
@@ -32,10 +34,10 @@ return function()
 
 		local element = createElement("Frame", {}, {
 			LabelA = createElement(LabelComponent, {
-				Text = "I am label A"
+				Text = "I am label A",
 			}),
 			LabelB = createElement(LabelComponent, {
-				Text = "I am label B"
+				Text = "I am label B",
 			}),
 		})
 

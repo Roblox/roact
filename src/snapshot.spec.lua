@@ -7,29 +7,32 @@ return function()
 
 	local robloxReconciler = createReconciler(RobloxRenderer)
 
-	it("should match previous snapshot format of host component", function()
+	it("should match snapshot of host component with multiple props", function()
 		local element = createElement("Frame", {
+			BackgroundColor3 = Color3.new(0.1, 0.2, 0.3),
 			BackgroundTransparency = 0.205,
+			ClipsDescendants = false,
+			SizeConstraint = Enum.SizeConstraint.RelativeXY,
 			Visible = true,
-			[Change.AbsoluteSize] = function() end,
+			ZIndex = 5,
 		})
 
 		local tree = robloxReconciler.mountVirtualTree(element)
 		local wrapper = tree:getTestRenderOutput()
 
-		snapshot("host-frame-props", wrapper):match()
+		snapshot("host-frame-with-multiple-props", wrapper):match()
 	end)
 
-	it("should match previous snapshot format of function component", function()
-		local function ChildComponent(props)
+	it("should match snapshot of function component children", function()
+		local function LabelComponent(props)
 			return createElement("TextLabel", props)
 		end
 
 		local element = createElement("Frame", {}, {
-			LabelA = createElement(ChildComponent, {
+			LabelA = createElement(LabelComponent, {
 				Text = "I am label A"
 			}),
-			LabelB = createElement(ChildComponent, {
+			LabelB = createElement(LabelComponent, {
 				Text = "I am label B"
 			}),
 		})
@@ -37,7 +40,7 @@ return function()
 		local tree = robloxReconciler.mountVirtualTree(element)
 		local wrapper = tree:getTestRenderOutput()
 
-		snapshot("function-component", wrapper):match()
+		snapshot("function-component-children", wrapper):match()
 	end)
 
 	it("should throw if the identifier contains invalid characters", function()

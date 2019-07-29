@@ -114,8 +114,8 @@ With these new props, we are going to be able to compute the optimal cell size f
 function ShopPage:init()
 	-- set default values
 	self:setState({
-		cellSize = 100,
-		canvasHeight = 100,
+		cellSize = 0,
+		canvasHeight = 0,
 	})
 end
 ```

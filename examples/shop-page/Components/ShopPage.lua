@@ -13,8 +13,8 @@ ShopPage.defaultProps = {
 
 function ShopPage:init()
 	self:setState({
-		cellSize = 100,
-		canvasHeight = 100,
+		cellSize = 0,
+		canvasHeight = 0,
 	})
 
 	self.onAbsoluteSizeChanged = function(frame)

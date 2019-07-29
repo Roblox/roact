@@ -4,9 +4,9 @@ local Components = script.Parent
 
 local Roact = require(ReplicatedStorage.Roact)
 
-local ProductItem = require(Components:WaitForChild("ProductItem"))
+local Item = require(Components:WaitForChild("Item"))
 
-local function ProductItemList(props)
+local function ItemList(props)
 	local items = props.items
 
 	local elements = {}
@@ -14,7 +14,7 @@ local function ProductItemList(props)
 	for i=1, #items do
 		local item = items[i]
 
-		elements[item.identifier] = Roact.createElement(ProductItem, {
+		elements[item.identifier] = Roact.createElement(Item, {
 			image = item.image,
 			price = item.price,
 			productId = item.productId,
@@ -25,4 +25,4 @@ local function ProductItemList(props)
 	return Roact.createFragment(elements)
 end
 
-return ProductItemList
+return ItemList

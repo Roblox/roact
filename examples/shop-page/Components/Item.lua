@@ -5,11 +5,11 @@ local TweenService = game:GetService("TweenService")
 
 local Roact = require(ReplicatedStorage.Roact)
 
-local ProductItem = Roact.Component:extend("ProductItem")
+local Item = Roact.Component:extend("Item")
 
 local PADDING = 20
 
-function ProductItem:init()
+function Item:init()
 	self.ref = Roact.createRef()
 	self.onMouseEnter = function()
 		self.toBigIcon:Play()
@@ -24,7 +24,7 @@ function ProductItem:init()
 	end
 end
 
-function ProductItem:render()
+function Item:render()
 	local props = self.props
 
 	local image = props.image
@@ -62,7 +62,7 @@ function ProductItem:render()
 	})
 end
 
-function ProductItem:didMount()
+function Item:didMount()
 	local tweenInfo = TweenInfo.new(0.2)
 	local icon = self.ref:getValue()
 
@@ -74,9 +74,9 @@ function ProductItem:didMount()
 	})
 end
 
-function ProductItem:willUnmount()
+function Item:willUnmount()
 	self.toBigIcon:Destroy()
 	self.toNormalIcon:Destroy()
 end
 
-return ProductItem
+return Item

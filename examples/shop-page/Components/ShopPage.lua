@@ -3,7 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Components = script.Parent
 
 local Roact = require(ReplicatedStorage.Roact)
-local ProductItemList = require(Components:WaitForChild("ProductItemList"))
+local ItemList = require(Components:WaitForChild("ItemList"))
 
 local ShopPage = Roact.Component:extend("ShopPage")
 
@@ -24,7 +24,7 @@ function ShopPage:init()
 
 		local totalWidth = frame.AbsoluteSize.X
 		local cellWidth = (totalWidth - padding * (itemsPerRow + 1)) / itemsPerRow
-		local cellHeight = cellWidth * props.itemAspectRatio
+		local cellHeight = cellWidth / props.itemAspectRatio
 		local rows = math.ceil(#props.items / itemsPerRow)
 		local canvasHeight = rows * cellHeight + padding * (rows + 1)
 
@@ -59,13 +59,13 @@ function ShopPage:render()
 	return Roact.createElement("ScrollingFrame", newFrameProps, {
 		UIGrid = Roact.createElement("UIGridLayout", {
 			CellPadding = UDim2.new(0, padding, 0, padding),
-			CellSize = UDim2.new(0, cellSize, 0, cellSize * itemAspectRatio),
+			CellSize = UDim2.new(0, cellSize, 0, cellSize / itemAspectRatio),
 			HorizontalAlignment = Enum.HorizontalAlignment.Center,
 			VerticalAlignment = Enum.VerticalAlignment.Center,
 			SortOrder = Enum.SortOrder.LayoutOrder,
 		}),
-		ProductItems = Roact.createElement(ProductItemList, {
-			items = items
+		Items = Roact.createElement(ItemList, {
+			items = items,
 		}),
 	})
 end

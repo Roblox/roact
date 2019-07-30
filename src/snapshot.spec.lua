@@ -72,11 +72,11 @@ return function()
 		local function emptyFunction()
 		end
 
-		local element = createElement("Frame", {
+		local element = createElement("TextButton", {
 			[Change.AbsoluteSize] = emptyFunction,
 			[Change.Visible] = emptyFunction,
-			[Event.MouseEnter] = emptyFunction,
-			[Event.MouseLeave] = emptyFunction,
+			[Event.Activated] = emptyFunction,
+			[Event.MouseButton1Click] = emptyFunction,
 		})
 
 		local tree = robloxReconciler.mountVirtualTree(element)

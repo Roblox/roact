@@ -59,7 +59,7 @@ function Snapshot:serialize()
 	local snapshotSource = Serialize.snapshotDataToString(self.data)
 	local existingData = folder:FindFirstChild(self._identifier)
 
-	if not existingData then
+	if not (existingData and existingData:IsA('StringValue')) then
 		existingData = Instance.new("StringValue")
 		existingData.Name = self._identifier
 		existingData.Parent = folder

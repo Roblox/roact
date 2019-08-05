@@ -108,7 +108,7 @@ return function()
 	end)
 
 	describe("propValue", function()
-		it("should return the same value", function()
+		it("should return the same value for basic types", function()
 			local propValues = {7, "hello", Enum.SortOrder.LayoutOrder}
 
 			for i=1, #propValues do
@@ -119,6 +119,23 @@ return function()
 			end
 		end)
 
+		it("should return an empty table given an empty table", function()
+			local result = Snapshot.propValue({})
+
+			expect(next(result)).never.to.be.ok()
+		end)
+
+		it("should serialize a table as a props table", function()
+			local key = "some key"
+			local value = {
+				[key] = "foo",
+			}
+			local result = Snapshot.propValue(value)
+
+			expect(result[key]).to.equal("foo")
+			expect(next(result, key)).never.to.be.ok()
+		end)
+
 		it("should return the AnonymousFunction symbol when given a function", function()
 			local result = Snapshot.propValue(function() end)
 
@@ -126,7 +143,7 @@ return function()
 		end)
 
 		it("should return the Unknown symbol when given an unexpected value", function()
-			local result = Snapshot.propValue({})
+			local result = Snapshot.propValue(nil)
 
 			expect(result).to.equal(Markers.Unknown)
 		end)

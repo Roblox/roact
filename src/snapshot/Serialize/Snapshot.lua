@@ -53,6 +53,9 @@ function Snapshot.propValue(prop)
 	elseif propType == "userdata" then
 		return prop
 
+	elseif propType == "table" then
+		return Snapshot.props(prop)
+
 	else
 		warn(("Snapshot does not support prop with value %q (type %q)"):format(
 			tostring(prop),

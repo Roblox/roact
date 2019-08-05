@@ -362,7 +362,7 @@ local function createReconciler(renderer)
 
 		local rootNode = mountVirtualNode(element, hostParent, hostKey)
 
-		return VirtualTree.new(rootNode, InternalData)
+		return VirtualTree.new(rootNode, InternalData, true)
 	end
 
 	--[[

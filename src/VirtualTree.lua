@@ -5,12 +5,12 @@ local config = require(script.Parent.GlobalConfig).get()
 
 local VirtualTree = {}
 
-function VirtualTree.new(rootNode, internalDataSymbol)
+function VirtualTree.new(rootNode, internalDataSymbol, mounted)
 	local tree = {
 		[Type] = Type.VirtualTree,
 		[internalDataSymbol] = {
 			rootNode = rootNode,
-			mounted = true,
+			mounted = mounted,
 		}
 	}
 

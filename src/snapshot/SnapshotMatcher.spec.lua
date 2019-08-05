@@ -1,17 +1,17 @@
 return function()
-	local Snapshot = require(script.Parent.Snapshot)
+	local SnapshotMatcher = require(script.Parent.SnapshotMatcher)
 
 	local ElementKind = require(script.Parent.Parent.ElementKind)
 	local createSpy = require(script.Parent.Parent.createSpy)
 
 	local snapshotFolder = Instance.new("Folder")
-	local originalGetSnapshotFolder = Snapshot.getSnapshotFolder
+	local originalGetSnapshotFolder = SnapshotMatcher.getSnapshotFolder
 
 	local function mockGetSnapshotFolder()
 		return snapshotFolder
 	end
 
-	local originalLoadExistingData = Snapshot._loadExistingData
+	local originalLoadExistingData = SnapshotMatcher._loadExistingData
 	local loadExistingDataSpy = nil
 
 	describe("match", function()
@@ -23,44 +23,43 @@ return function()
 			loadExistingDataSpy = createSpy(function(identifier)
 				return snapshotMap[identifier]
 			end)
-			Snapshot._loadExistingData = loadExistingDataSpy.value
+			SnapshotMatcher._loadExistingData = loadExistingDataSpy.value
 		end
 
 		local function cleanTest()
 			loadExistingDataSpy = nil
-			Snapshot._loadExistingData = originalLoadExistingData
+			SnapshotMatcher._loadExistingData = originalLoadExistingData
 		end
 
 		it("should serialize the snapshot if no data is found", function()
 			beforeTest()
 
-			local data = {}
-
+			local snapshot = {}
 			local serializeSpy = createSpy()
 
-			local snapshot = Snapshot.new("foo", data)
-			snapshot.serialize = serializeSpy.value
+			local matcher = SnapshotMatcher.new("foo", snapshot)
+			matcher.serialize = serializeSpy.value
 
-			snapshot:match()
+			matcher:match()
 
 			cleanTest()
 
-			serializeSpy:assertCalledWith(snapshot)
+			serializeSpy:assertCalledWith(matcher)
 		end)
 
 		it("should not serialize if the snapshot already exist", function()
 			beforeTest()
 
-			local data = {}
+			local snapshot = {}
 			local identifier = "foo"
-			snapshotMap[identifier] = data
+			snapshotMap[identifier] = snapshot
 
 			local serializeSpy = createSpy()
 
-			local snapshot = Snapshot.new(identifier, data)
-			snapshot.serialize = serializeSpy.value
+			local matcher = SnapshotMatcher.new(identifier, snapshot)
+			matcher.serialize = serializeSpy.value
 
-			snapshot:match()
+			matcher:match()
 
 			cleanTest()
 
@@ -70,7 +69,7 @@ return function()
 		it("should throw an error if the previous snapshot does not match", function()
 			beforeTest()
 
-			local data = {}
+			local snapshot = {}
 			local identifier = "foo"
 			snapshotMap[identifier] = {
 				Key = "Value"
@@ -78,11 +77,11 @@ return function()
 
 			local serializeSpy = createSpy()
 
-			local snapshot = Snapshot.new(identifier, data)
-			snapshot.serialize = serializeSpy.value
+			local matcher = SnapshotMatcher.new(identifier, snapshot)
+			matcher.serialize = serializeSpy.value
 
 			local function shouldThrow()
-				snapshot:match()
+				matcher:match()
 			end
 
 			cleanTest()
@@ -93,11 +92,11 @@ return function()
 
 	describe("serialize", function()
 		it("should create a StringValue if it does not exist", function()
-			Snapshot.getSnapshotFolder = mockGetSnapshotFolder
+			SnapshotMatcher.getSnapshotFolder = mockGetSnapshotFolder
 
 			local identifier = "foo"
 
-			local snapshot = Snapshot.new(identifier, {
+			local matcher = SnapshotMatcher.new(identifier, {
 				type = {
 					kind = ElementKind.Function,
 				},
@@ -106,10 +105,10 @@ return function()
 				children = {},
 			})
 
-			snapshot:serialize()
+			matcher:serialize()
 			local stringValue = snapshotFolder:FindFirstChild(identifier)
 
-			Snapshot.getSnapshotFolder = originalGetSnapshotFolder
+			SnapshotMatcher.getSnapshotFolder = originalGetSnapshotFolder
 
 			expect(stringValue).to.be.ok()
 			expect(stringValue.Value:len() > 0).to.equal(true)
@@ -120,11 +119,11 @@ return function()
 
 	describe("_loadExistingData", function()
 		it("should return nil if data is not found", function()
-			Snapshot.getSnapshotFolder = mockGetSnapshotFolder
+			SnapshotMatcher.getSnapshotFolder = mockGetSnapshotFolder
 
-			local result = Snapshot._loadExistingData("foo")
+			local result = SnapshotMatcher._loadExistingData("foo")
 
-			Snapshot.getSnapshotFolder = originalGetSnapshotFolder
+			SnapshotMatcher.getSnapshotFolder = originalGetSnapshotFolder
 
 			expect(result).never.to.be.ok()
 		end)
@@ -132,7 +131,7 @@ return function()
 
 	describe("getSnapshotFolder", function()
 		it("should create a folder in the ReplicatedStorage if it is not found", function()
-			local folder = Snapshot.getSnapshotFolder()
+			local folder = SnapshotMatcher.getSnapshotFolder()
 
 			expect(folder).to.be.ok()
 			expect(folder.Parent).to.equal(game:GetService("ReplicatedStorage"))

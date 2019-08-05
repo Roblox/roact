@@ -1,5 +1,5 @@
 local Serialize = require(script.Serialize)
-local Snapshot = require(script.Snapshot)
+local SnapshotMatcher = require(script.SnapshotMatcher)
 
 local characterClass = "%w_%-%."
 local identifierPattern = "^[" .. characterClass .. "]+$"
@@ -11,7 +11,7 @@ return function(identifier, shallowWrapper)
 	end
 
 	local data = Serialize.wrapperToSnapshotData(shallowWrapper)
-	local snapshot = Snapshot.new(identifier, data)
+	local matcher = SnapshotMatcher.new(identifier, data)
 
-	return snapshot
+	return matcher
 end

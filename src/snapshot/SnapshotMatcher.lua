@@ -8,19 +8,19 @@ local ElementKind = require(script.Parent.Parent.ElementKind)
 local SnapshotFolderName = "RoactSnapshots"
 local SnapshotFolder = ReplicatedStorage:FindFirstChild(SnapshotFolderName)
 
-local Snapshot = {}
+local SnapshotMatcher = {}
 local SnapshotMetatable = {
-	__index = Snapshot,
+	__index = SnapshotMatcher,
 	__tostring = function(snapshot)
 		return Serialize.snapshotDataToString(snapshot.data)
 	end
 }
 
-function Snapshot.new(identifier, data)
+function SnapshotMatcher.new(identifier, data)
 	local snapshot = {
 		_identifier = identifier,
 		data = data,
-		_existingData = Snapshot._loadExistingData(identifier),
+		_existingData = SnapshotMatcher._loadExistingData(identifier),
 	}
 
 	setmetatable(snapshot, SnapshotMetatable)
@@ -28,7 +28,7 @@ function Snapshot.new(identifier, data)
 	return snapshot
 end
 
-function Snapshot:match()
+function SnapshotMatcher:match()
 	if self._existingData == nil then
 		self:serialize()
 		self._existingData = self.data
@@ -41,7 +41,7 @@ function Snapshot:match()
 		return
 	end
 
-	local newSnapshot = Snapshot.new(self._identifier .. ".NEW", self.data)
+	local newSnapshot = SnapshotMatcher.new(self._identifier .. ".NEW", self.data)
 	newSnapshot:serialize()
 
 	local innerMessage = innerMessageTemplate
@@ -53,8 +53,8 @@ function Snapshot:match()
 	error(message, 2)
 end
 
-function Snapshot:serialize()
-	local folder = Snapshot.getSnapshotFolder()
+function SnapshotMatcher:serialize()
+	local folder = SnapshotMatcher.getSnapshotFolder()
 
 	local snapshotSource = Serialize.snapshotDataToString(self.data)
 	local existingData = folder:FindFirstChild(self._identifier)
@@ -68,7 +68,7 @@ function Snapshot:serialize()
 	existingData.Value = snapshotSource
 end
 
-function Snapshot.getSnapshotFolder()
+function SnapshotMatcher.getSnapshotFolder()
 	SnapshotFolder = ReplicatedStorage:FindFirstChild(SnapshotFolderName)
 
 	if not SnapshotFolder then
@@ -80,8 +80,8 @@ function Snapshot.getSnapshotFolder()
 	return SnapshotFolder
 end
 
-function Snapshot._loadExistingData(identifier)
-	local folder = Snapshot.getSnapshotFolder()
+function SnapshotMatcher._loadExistingData(identifier)
+	local folder = SnapshotMatcher.getSnapshotFolder()
 
 	local existingData = folder:FindFirstChild(identifier)
 
@@ -98,4 +98,4 @@ function Snapshot._loadExistingData(identifier)
 	})
 end
 
-return Snapshot
+return SnapshotMatcher

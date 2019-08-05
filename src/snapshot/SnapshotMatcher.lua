@@ -17,15 +17,15 @@ local SnapshotMetatable = {
 }
 
 function SnapshotMatcher.new(identifier, snapshot)
-	local snapshot = {
+	local snapshotMatcher = {
 		_identifier = identifier,
 		_snapshot = snapshot,
 		_existingSnapshot = SnapshotMatcher._loadExistingData(identifier),
 	}
 
-	setmetatable(snapshot, SnapshotMetatable)
+	setmetatable(snapshotMatcher, SnapshotMetatable)
 
-	return snapshot
+	return snapshotMatcher
 end
 
 function SnapshotMatcher:match()

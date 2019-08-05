@@ -1,11 +1,11 @@
 local Serializer = require(script.Serializer)
-local SnapshotData = require(script.SnapshotData)
+local Snapshot = require(script.Snapshot)
 
 return {
-	wrapperToSnapshotData = function(wrapper)
-		return SnapshotData.wrapper(wrapper)
+	wrapperToSnapshot = function(wrapper)
+		return Snapshot.wrapper(wrapper)
 	end,
-	snapshotDataToString = function(data)
-		return Serializer.firstSnapshotData(data)
+	snapshotToString = function(snapshot)
+		return Serializer.firstSnapshotData(snapshot)
 	end,
 }

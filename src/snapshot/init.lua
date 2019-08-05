@@ -10,8 +10,8 @@ return function(identifier, shallowWrapper)
 		error(("Snapshot identifier has invalid character: '%s'"):format(identifier:match(invalidPattern)))
 	end
 
-	local data = Serialize.wrapperToSnapshotData(shallowWrapper)
-	local matcher = SnapshotMatcher.new(identifier, data)
+	local snapshot = Serialize.wrapperToSnapshot(shallowWrapper)
+	local matcher = SnapshotMatcher.new(identifier, snapshot)
 
 	return matcher
 end

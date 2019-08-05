@@ -15,7 +15,7 @@ return function()
 	local RobloxRenderer = require(RoactRoot.RobloxRenderer)
 	local ShallowWrapper = require(RoactRoot.ShallowWrapper)
 
-	local SnapshotData = require(script.Parent.SnapshotData)
+	local Snapshot = require(script.Parent.Snapshot)
 
 	local robloxReconciler = createReconciler(RobloxRenderer)
 
@@ -35,7 +35,7 @@ return function()
 			it("should contain the host kind", function()
 				local wrapper = shallow(createElement("Frame"))
 
-				local result = SnapshotData.type(wrapper.type)
+				local result = Snapshot.type(wrapper.type)
 
 				expect(result.kind).to.equal(ElementKind.Host)
 			end)
@@ -44,7 +44,7 @@ return function()
 				local className = "Frame"
 				local wrapper = shallow(createElement(className))
 
-				local result = SnapshotData.type(wrapper.type)
+				local result = Snapshot.type(wrapper.type)
 
 				expect(result.className).to.equal(className)
 			end)
@@ -58,7 +58,7 @@ return function()
 			it("should contain the host kind", function()
 				local wrapper = shallow(createElement(SomeComponent))
 
-				local result = SnapshotData.type(wrapper.type)
+				local result = Snapshot.type(wrapper.type)
 
 				expect(result.kind).to.equal(ElementKind.Function)
 			end)
@@ -75,7 +75,7 @@ return function()
 			it("should contain the host kind", function()
 				local wrapper = shallow(createElement(SomeComponent))
 
-				local result = SnapshotData.type(wrapper.type)
+				local result = Snapshot.type(wrapper.type)
 
 				expect(result.kind).to.equal(ElementKind.Stateful)
 			end)
@@ -83,7 +83,7 @@ return function()
 			it("should contain the component name", function()
 				local wrapper = shallow(createElement(SomeComponent))
 
-				local result = SnapshotData.type(wrapper.type)
+				local result = Snapshot.type(wrapper.type)
 
 				expect(result.componentName).to.equal(componentName)
 			end)
@@ -99,7 +99,7 @@ return function()
 				end
 			})
 
-			local result = SnapshotData.signal(signalMock)
+			local result = Snapshot.signal(signalMock)
 
 			assertDeepEqual(result, {
 				[Markers.Signal] = signalName
@@ -113,20 +113,20 @@ return function()
 
 			for i=1, #propValues do
 				local prop = propValues[i]
-				local result = SnapshotData.propValue(prop)
+				local result = Snapshot.propValue(prop)
 
 				expect(result).to.equal(prop)
 			end
 		end)
 
 		it("should return the AnonymousFunction symbol when given a function", function()
-			local result = SnapshotData.propValue(function() end)
+			local result = Snapshot.propValue(function() end)
 
 			expect(result).to.equal(Markers.AnonymousFunction)
 		end)
 
 		it("should return the Unknown symbol when given an unexpected value", function()
-			local result = SnapshotData.propValue({})
+			local result = Snapshot.propValue({})
 
 			expect(result).to.equal(Markers.Unknown)
 		end)
@@ -139,7 +139,7 @@ return function()
 				text = "never",
 			}
 
-			local result = SnapshotData.props(props)
+			local result = Snapshot.props(props)
 
 			assertDeepEqual(result, props)
 		end)
@@ -149,7 +149,7 @@ return function()
 				[Event.Activated] = function() end,
 			}
 
-			local result = SnapshotData.props(props)
+			local result = Snapshot.props(props)
 
 			assertDeepEqual(result, {
 				[Event.Activated] = Markers.AnonymousFunction,
@@ -161,7 +161,7 @@ return function()
 				[Change.Position] = function() end,
 			}
 
-			local result = SnapshotData.props(props)
+			local result = Snapshot.props(props)
 
 			assertDeepEqual(result, {
 				[Change.Position] = Markers.AnonymousFunction,
@@ -173,7 +173,7 @@ return function()
 				[Ref] = createRef(),
 			}
 
-			local result = SnapshotData.props(props)
+			local result = Snapshot.props(props)
 
 			assertDeepEqual(result, {
 				[Ref] = Markers.EmptyRef,
@@ -189,7 +189,7 @@ return function()
 				[Ref] = ref,
 			}
 
-			local result = SnapshotData.props(props)
+			local result = Snapshot.props(props)
 
 			assertDeepEqual(result, {
 				[Ref] = {
@@ -200,7 +200,7 @@ return function()
 
 		it("should throw when the key is a table", function()
 			local function shouldThrow()
-				SnapshotData.props({
+				Snapshot.props({
 					[{}] = "invalid",
 				})
 			end
@@ -215,7 +215,7 @@ return function()
 			local wrapper = shallow(createElement("Frame"))
 			wrapper.hostKey = hostKey
 
-			local result = SnapshotData.wrapper(wrapper)
+			local result = Snapshot.wrapper(wrapper)
 
 			expect(result.hostKey).to.equal(hostKey)
 		end)
@@ -223,7 +223,7 @@ return function()
 		it("should contain the element type", function()
 			local wrapper = shallow(createElement("Frame"))
 
-			local result = SnapshotData.wrapper(wrapper)
+			local result = Snapshot.wrapper(wrapper)
 
 			expect(result.type).to.be.ok()
 			expect(result.type.kind).to.equal(ElementKind.Host)
@@ -242,7 +242,7 @@ return function()
 
 			local wrapper = shallow(createElement("Frame", props))
 
-			local result = SnapshotData.wrapper(wrapper)
+			local result = Snapshot.wrapper(wrapper)
 
 			expect(result.props).to.be.ok()
 			assertDeepEqual(result.props, expectProps)
@@ -253,7 +253,7 @@ return function()
 				Child = createElement("TextLabel"),
 			}))
 
-			local result = SnapshotData.wrapper(wrapper)
+			local result = Snapshot.wrapper(wrapper)
 
 			expect(result.children).to.be.ok()
 			expect(#result.children).to.equal(1)
@@ -268,7 +268,7 @@ return function()
 				Label = createElement("TextLabel"),
 			}))
 
-			local result = SnapshotData.wrapper(wrapper)
+			local result = Snapshot.wrapper(wrapper)
 
 			expect(result.children).to.be.ok()
 			expect(#result.children).to.equal(2)

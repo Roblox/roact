@@ -12,15 +12,15 @@ local SnapshotMatcher = {}
 local SnapshotMetatable = {
 	__index = SnapshotMatcher,
 	__tostring = function(snapshot)
-		return Serialize.snapshotDataToString(snapshot.data)
+		return Serialize.snapshotToString(snapshot._snapshot)
 	end
 }
 
-function SnapshotMatcher.new(identifier, data)
+function SnapshotMatcher.new(identifier, snapshot)
 	local snapshot = {
 		_identifier = identifier,
-		data = data,
-		_existingData = SnapshotMatcher._loadExistingData(identifier),
+		_snapshot = snapshot,
+		_existingSnapshot = SnapshotMatcher._loadExistingData(identifier),
 	}
 
 	setmetatable(snapshot, SnapshotMetatable)
@@ -29,19 +29,19 @@ function SnapshotMatcher.new(identifier, data)
 end
 
 function SnapshotMatcher:match()
-	if self._existingData == nil then
+	if self._existingSnapshot == nil then
 		self:serialize()
-		self._existingData = self.data
+		self._existingSnapshot = self._snapshot
 		return
 	end
 
-	local areEqual, innerMessageTemplate = deepEqual(self.data, self._existingData)
+	local areEqual, innerMessageTemplate = deepEqual(self._snapshot, self._existingSnapshot)
 
 	if areEqual then
 		return
 	end
 
-	local newSnapshot = SnapshotMatcher.new(self._identifier .. ".NEW", self.data)
+	local newSnapshot = SnapshotMatcher.new(self._identifier .. ".NEW", self._snapshot)
 	newSnapshot:serialize()
 
 	local innerMessage = innerMessageTemplate
@@ -56,7 +56,7 @@ end
 function SnapshotMatcher:serialize()
 	local folder = SnapshotMatcher.getSnapshotFolder()
 
-	local snapshotSource = Serialize.snapshotDataToString(self.data)
+	local snapshotSource = Serialize.snapshotToString(self._snapshot)
 	local existingData = folder:FindFirstChild(self._identifier)
 
 	if not (existingData and existingData:IsA('StringValue')) then

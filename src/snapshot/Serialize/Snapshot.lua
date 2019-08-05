@@ -8,9 +8,9 @@ local function sortSerializedChildren(childA, childB)
 	return childA.hostKey < childB.hostKey
 end
 
-local SnapshotData = {}
+local Snapshot = {}
 
-function SnapshotData.type(wrapperType)
+function Snapshot.type(wrapperType)
 	local typeData = {
 		kind = wrapperType.kind,
 	}
@@ -24,7 +24,7 @@ function SnapshotData.type(wrapperType)
 	return typeData
 end
 
-function SnapshotData.signal(signal)
+function Snapshot.signal(signal)
 	local signalToString = tostring(signal)
 	local signalName = signalToString:match("Signal (%w+)")
 
@@ -35,7 +35,7 @@ function SnapshotData.signal(signal)
 	}
 end
 
-function SnapshotData.propValue(prop)
+function Snapshot.propValue(prop)
 	local propType = type(prop)
 
 	if propType == "string"
@@ -48,13 +48,13 @@ function SnapshotData.propValue(prop)
 		return Markers.AnonymousFunction
 
 	elseif typeof(prop) == "RBXScriptSignal" then
-		return SnapshotData.signal(prop)
+		return Snapshot.signal(prop)
 
 	elseif propType == "userdata" then
 		return prop
 
 	else
-		warn(("SnapshotData does not support prop with value %q (type %q)"):format(
+		warn(("Snapshot does not support prop with value %q (type %q)"):format(
 			tostring(prop),
 			propType
 		))
@@ -62,7 +62,7 @@ function SnapshotData.propValue(prop)
 	end
 end
 
-function SnapshotData.props(wrapperProps)
+function Snapshot.props(wrapperProps)
 	local serializedProps = {}
 
 	for key, prop in pairs(wrapperProps) do
@@ -70,7 +70,7 @@ function SnapshotData.props(wrapperProps)
 			or Type.of(key) == Type.HostChangeEvent
 			or Type.of(key) == Type.HostEvent
 		then
-			serializedProps[key] = SnapshotData.propValue(prop)
+			serializedProps[key] = Snapshot.propValue(prop)
 
 		elseif key == Ref then
 			local current = prop:getValue()
@@ -84,7 +84,7 @@ function SnapshotData.props(wrapperProps)
 			end
 
 		else
-			error(("SnapshotData does not support prop with key %q (type: %s)"):format(
+			error(("Snapshot does not support prop with key %q (type: %s)"):format(
 				tostring(key),
 				type(key)
 			))
@@ -94,13 +94,13 @@ function SnapshotData.props(wrapperProps)
 	return serializedProps
 end
 
-function SnapshotData.children(children)
+function Snapshot.children(children)
 	local serializedChildren = {}
 
 	for i=1, #children do
 		local childWrapper = children[i]
 
-		serializedChildren[i] = SnapshotData.wrapper(childWrapper)
+		serializedChildren[i] = Snapshot.wrapper(childWrapper)
 	end
 
 	table.sort(serializedChildren, sortSerializedChildren)
@@ -108,13 +108,13 @@ function SnapshotData.children(children)
 	return serializedChildren
 end
 
-function SnapshotData.wrapper(wrapper)
+function Snapshot.wrapper(wrapper)
 	return {
-		type = SnapshotData.type(wrapper.type),
+		type = Snapshot.type(wrapper.type),
 		hostKey = wrapper.hostKey,
-		props = SnapshotData.props(wrapper.props),
-		children = SnapshotData.children(wrapper:getChildren()),
+		props = Snapshot.props(wrapper.props),
+		children = Snapshot.children(wrapper:getChildren()),
 	}
 end
 
-return SnapshotData
+return Snapshot

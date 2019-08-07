@@ -205,12 +205,20 @@ function ShallowWrapper:getChildren()
 	return results
 end
 
-function ShallowWrapper:toMatchSnapshot(identifier)
+function ShallowWrapper:matchSnapshot(identifier)
 	assert(typeof(identifier) == "string", "Snapshot identifier must be a string")
 
 	local snapshotResult = snapshot(identifier, self)
 
 	snapshotResult:match()
+end
+
+function ShallowWrapper:getSnapshotString(identifier)
+	assert(typeof(identifier) == "string", "Snapshot identifier must be a string")
+
+	local snapshotResult = snapshot(identifier, self)
+
+	return snapshotResult:getSnapshotString()
 end
 
 function ShallowWrapper:_satisfiesAllContraints(constraints)

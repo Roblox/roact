@@ -12,9 +12,6 @@ local SnapshotFolder = ReplicatedStorage:FindFirstChild(SnapshotFolderName)
 local SnapshotMatcher = {}
 local SnapshotMetatable = {
 	__index = SnapshotMatcher,
-	__tostring = function(snapshot)
-		return Serialize.snapshotToString(snapshot._snapshot)
-	end
 }
 
 function SnapshotMatcher.new(identifier, snapshot)
@@ -54,10 +51,14 @@ function SnapshotMatcher:match()
 	error(message, 2)
 end
 
+function SnapshotMatcher:getSnapshotString()
+	return Serialize.snapshotToString(self._snapshot)
+end
+
 function SnapshotMatcher:serialize()
 	local folder = SnapshotMatcher.getSnapshotFolder()
 
-	local snapshotSource = Serialize.snapshotToString(self._snapshot)
+	local snapshotSource = self:getSnapshotString()
 	local existingData = folder:FindFirstChild(self._identifier)
 
 	if not (existingData and existingData:IsA('StringValue')) then

@@ -7,9 +7,12 @@ return function()
 	local createReconciler = require(RoactRoot.createReconciler)
 	local Event = require(RoactRoot.PropMarkers.Event)
 	local RobloxRenderer = require(RoactRoot.RobloxRenderer)
+	local ShallowWrapper = require(script.Parent.ShallowWrapper)
 	local snapshot = require(script.Parent.snapshot)
 
 	local robloxReconciler = createReconciler(RobloxRenderer)
+
+	local hostTreeKey = "RoactTree"
 
 	it("should match snapshot of host component with multiple props", function()
 		local element = createElement("Frame", {
@@ -23,8 +26,8 @@ return function()
 			ZIndex = 5,
 		})
 
-		local tree = robloxReconciler.mountVirtualTree(element)
-		local wrapper = tree:getTestRenderOutput()
+		local rootNode = robloxReconciler.mountVirtualNode(element, nil, hostTreeKey)
+		local wrapper = ShallowWrapper.new(rootNode, 1)
 
 		snapshot("host-frame-with-multiple-props", wrapper):match()
 	end)
@@ -43,8 +46,8 @@ return function()
 			}),
 		})
 
-		local tree = robloxReconciler.mountVirtualTree(element)
-		local wrapper = tree:getTestRenderOutput()
+		local rootNode = robloxReconciler.mountVirtualNode(element, nil, hostTreeKey)
+		local wrapper = ShallowWrapper.new(rootNode, 1)
 
 		snapshot("function-component-children", wrapper):match()
 	end)
@@ -64,8 +67,8 @@ return function()
 			}),
 		})
 
-		local tree = robloxReconciler.mountVirtualTree(element)
-		local wrapper = tree:getTestRenderOutput()
+		local rootNode = robloxReconciler.mountVirtualNode(element, nil, hostTreeKey)
+		local wrapper = ShallowWrapper.new(rootNode, 1)
 
 		snapshot("stateful-component-children", wrapper):match()
 	end)
@@ -81,8 +84,8 @@ return function()
 			[Event.MouseButton1Click] = emptyFunction,
 		})
 
-		local tree = robloxReconciler.mountVirtualTree(element)
-		local wrapper = tree:getTestRenderOutput()
+		local rootNode = robloxReconciler.mountVirtualNode(element, nil, hostTreeKey)
+		local wrapper = ShallowWrapper.new(rootNode, 1)
 
 		snapshot("component-with-event-props", wrapper):match()
 	end)

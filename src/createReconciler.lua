@@ -4,7 +4,6 @@ local ElementUtils = require(script.Parent.ElementUtils)
 local Children = require(script.Parent.PropMarkers.Children)
 local Symbol = require(script.Parent.Symbol)
 local internalAssert = require(script.Parent.internalAssert)
-local VirtualTree = require(script.Parent.VirtualTree)
 
 local config = require(script.Parent.GlobalConfig).get()
 
@@ -360,9 +359,19 @@ local function createReconciler(renderer)
 			hostKey = "RoactTree"
 		end
 
-		local rootNode = mountVirtualNode(element, hostParent, hostKey)
+		local tree = {
+			[Type] = Type.VirtualTree,
+			[InternalData] = {
+				-- The root node of the tree, which starts into the hierarchy of
+				-- Roact component instances.
+				rootNode = nil,
+				mounted = true,
+			},
+		}
 
-		return VirtualTree.new(rootNode, InternalData, true)
+		tree[InternalData].rootNode = mountVirtualNode(element, hostParent, hostKey)
+
+		return tree
 	end
 
 	--[[

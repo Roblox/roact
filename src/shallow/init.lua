@@ -1,16 +1,21 @@
-local ShallowWrapper = require(script.Parent.ShallowWrapper)
+local createReconciler = require(script.Parent.createReconciler)
+local Type = require(script.Parent.Type)
+local RobloxRenderer = require(script.Parent.RobloxRenderer)
+local ShallowWrapper = require(script.ShallowWrapper)
 
-local function shallow()
+local robloxReconciler = createReconciler(RobloxRenderer)
+
+local shallowTreeKey = "RoactTree"
+
+local function shallow(element, options)
+	assert(Type.of(element) == Type.Element, "Expected arg #1 to be an Element")
+
 	options = options or {}
 	local maxDepth = options.depth or 1
-	local internalData = self[internalDataSymbol]
 
-	if config.typeChecks then
-		assert(Type.of(self) == Type.VirtualTree, "Expected arg #1 to be a Roact handle")
-		assert(internalData.mounted, "Cannot get render output from an unmounted Roact tree")
-	end
+	local rootNode = robloxReconciler.mountVirtualNode(element, nil, shallowTreeKey)
 
-	return ShallowWrapper.new(internalData.rootNode, maxDepth)
+	return ShallowWrapper.new(rootNode, maxDepth)
 end
 
 return shallow

@@ -1,6 +1,6 @@
 return function()
-	local createElement = require(script.Parent.createElement)
-	local shallow = require(script.Parent.shallow)
+	local createElement = require(script.Parent.Parent.createElement)
+	local shallow = require(script.Parent)
 
 	it("should return a shallow wrapper with depth = 1 by default", function()
 		local element = createElement("Frame", {}, {

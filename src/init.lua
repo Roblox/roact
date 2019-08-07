@@ -8,6 +8,7 @@ local createReconcilerCompat = require(script.createReconcilerCompat)
 local RobloxRenderer = require(script.RobloxRenderer)
 local strict = require(script.strict)
 local Binding = require(script.Binding)
+local shallow = require(script.shallow)
 
 local robloxReconciler = createReconciler(RobloxRenderer)
 local reconcilerCompat = createReconcilerCompat(robloxReconciler)
@@ -32,6 +33,7 @@ local Roact = strict {
 	mount = robloxReconciler.mountVirtualTree,
 	unmount = robloxReconciler.unmountVirtualTree,
 	update = robloxReconciler.updateVirtualTree,
+	shallow = shallow,
 
 	reify = reconcilerCompat.reify,
 	teardown = reconcilerCompat.teardown,

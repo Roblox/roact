@@ -1,4 +1,4 @@
-local ShallowWrapper = require(script.Parent.ShallowWrapper)
+local ShallowWrapper = require(script.Parent.shallow.ShallowWrapper)
 local Type = require(script.Parent.Type)
 
 local config = require(script.Parent.GlobalConfig).get()

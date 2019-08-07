@@ -1,4 +1,5 @@
-local RoactRoot = script.Parent.Parent.Parent
+local RoactRoot = script.Parent.Parent.Parent.Parent
+
 local ElementKind = require(RoactRoot.ElementKind)
 local Ref = require(RoactRoot.PropMarkers.Ref)
 local Type = require(RoactRoot.Type)

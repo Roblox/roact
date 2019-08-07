@@ -1,9 +1,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RoactRoot = script.Parent.Parent.Parent
 
 local Markers = require(script.Parent.Serialize.Markers)
 local Serialize = require(script.Parent.Serialize)
-local deepEqual = require(script.Parent.Parent.deepEqual)
-local ElementKind = require(script.Parent.Parent.ElementKind)
+local deepEqual = require(RoactRoot.deepEqual)
+local ElementKind = require(RoactRoot.ElementKind)
 
 local SnapshotFolderName = "RoactSnapshots"
 local SnapshotFolder = ReplicatedStorage:FindFirstChild(SnapshotFolderName)

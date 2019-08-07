@@ -1,5 +1,5 @@
 return function()
-	local RoactRoot = script.Parent.Parent.Parent
+	local RoactRoot = script.Parent.Parent.Parent.Parent
 
 	local Markers = require(script.Parent.Markers)
 	local assertDeepEqual = require(RoactRoot.assertDeepEqual)
@@ -13,7 +13,7 @@ return function()
 	local Event = require(RoactRoot.PropMarkers.Event)
 	local Ref = require(RoactRoot.PropMarkers.Ref)
 	local RobloxRenderer = require(RoactRoot.RobloxRenderer)
-	local ShallowWrapper = require(RoactRoot.ShallowWrapper)
+	local ShallowWrapper = require(script.Parent.Parent.Parent.ShallowWrapper)
 
 	local Snapshot = require(script.Parent.Snapshot)
 

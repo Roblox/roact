@@ -1,4 +1,6 @@
-local strict = require(script.Parent.Parent.Parent.strict)
+local RoactRoot = script.Parent.Parent.Parent.Parent
+
+local strict = require(RoactRoot.strict)
 
 return strict({
 	AnonymousFunction = require(script.AnonymousFunction),

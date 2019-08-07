@@ -1,8 +1,10 @@
 return function()
+	local RoactRoot = script.Parent.Parent.Parent
+
 	local SnapshotMatcher = require(script.Parent.SnapshotMatcher)
 
-	local ElementKind = require(script.Parent.Parent.ElementKind)
-	local createSpy = require(script.Parent.Parent.createSpy)
+	local ElementKind = require(RoactRoot.ElementKind)
+	local createSpy = require(RoactRoot.createSpy)
 
 	local snapshotFolder = Instance.new("Folder")
 	local originalGetSnapshotFolder = SnapshotMatcher.getSnapshotFolder

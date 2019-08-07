@@ -1,10 +1,12 @@
 return function()
-	local Change = require(script.Parent.PropMarkers.Change)
-	local Component = require(script.Parent.Component)
-	local createElement = require(script.Parent.createElement)
-	local createReconciler = require(script.Parent.createReconciler)
-	local Event = require(script.Parent.PropMarkers.Event)
-	local RobloxRenderer = require(script.Parent.RobloxRenderer)
+	local RoactRoot = script.Parent.Parent
+
+	local Change = require(RoactRoot.PropMarkers.Change)
+	local Component = require(RoactRoot.Component)
+	local createElement = require(RoactRoot.createElement)
+	local createReconciler = require(RoactRoot.createReconciler)
+	local Event = require(RoactRoot.PropMarkers.Event)
+	local RobloxRenderer = require(RoactRoot.RobloxRenderer)
 	local snapshot = require(script.Parent.snapshot)
 
 	local robloxReconciler = createReconciler(RobloxRenderer)

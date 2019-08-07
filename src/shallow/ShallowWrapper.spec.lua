@@ -1,14 +1,15 @@
 return function()
+	local RoactRoot = script.Parent.Parent
 	local ShallowWrapper = require(script.Parent.ShallowWrapper)
 
-	local assertDeepEqual = require(script.Parent.assertDeepEqual)
-	local Children = require(script.Parent.PropMarkers.Children)
-	local ElementKind = require(script.Parent.ElementKind)
-	local createElement = require(script.Parent.createElement)
-	local createFragment = require(script.Parent.createFragment)
-	local createReconciler = require(script.Parent.createReconciler)
-	local RoactComponent = require(script.Parent.Component)
-	local RobloxRenderer = require(script.Parent.RobloxRenderer)
+	local assertDeepEqual = require(RoactRoot.assertDeepEqual)
+	local Children = require(RoactRoot.PropMarkers.Children)
+	local ElementKind = require(RoactRoot.ElementKind)
+	local createElement = require(RoactRoot.createElement)
+	local createFragment = require(RoactRoot.createFragment)
+	local createReconciler = require(RoactRoot.createReconciler)
+	local RoactComponent = require(RoactRoot.Component)
+	local RobloxRenderer = require(RoactRoot.RobloxRenderer)
 
 	local robloxReconciler = createReconciler(RobloxRenderer)
 

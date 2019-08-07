@@ -1,6 +1,8 @@
-local Children = require(script.Parent.PropMarkers.Children)
-local ElementKind = require(script.Parent.ElementKind)
-local ElementUtils = require(script.Parent.ElementUtils)
+local RoactRoot = script.Parent.Parent
+
+local Children = require(RoactRoot.PropMarkers.Children)
+local ElementKind = require(RoactRoot.ElementKind)
+local ElementUtils = require(RoactRoot.ElementUtils)
 local snapshot = require(script.Parent.snapshot)
 
 local ShallowWrapper = {}

@@ -128,7 +128,6 @@ function ShallowWrapper.new(virtualNode, maxDepth)
 		_virtualNode = virtualNode,
 		_childrenMaxDepth = maxDepth - 1,
 		_virtualNodeChildren = maxDepth == 0 and {} or virtualNode.children,
-		_shallowChildren = nil,
 		type = getTypeFromVirtualNode(virtualNode),
 		props = filterProps(virtualNode.currentElement.props),
 		hostKey = virtualNode.hostKey,
@@ -191,17 +190,12 @@ function ShallowWrapper:findUnique(constraints)
 end
 
 function ShallowWrapper:getChildren()
-	if self._shallowChildren then
-		return self._shallowChildren
-	end
-
 	local results = {}
 
 	for _, childVirtualNode in pairs(self._virtualNodeChildren) do
 		getChildren(childVirtualNode, results, self._childrenMaxDepth)
 	end
 
-	self._shallowChildren = results
 	return results
 end
 

@@ -232,7 +232,7 @@ return function()
 			local wrapper = shallow(createElement("Frame"))
 			wrapper.hostKey = hostKey
 
-			local result = Snapshot.wrapper(wrapper)
+			local result = Snapshot.new(wrapper)
 
 			expect(result.hostKey).to.equal(hostKey)
 		end)
@@ -240,7 +240,7 @@ return function()
 		it("should contain the element type", function()
 			local wrapper = shallow(createElement("Frame"))
 
-			local result = Snapshot.wrapper(wrapper)
+			local result = Snapshot.new(wrapper)
 
 			expect(result.type).to.be.ok()
 			expect(result.type.kind).to.equal(ElementKind.Host)
@@ -259,7 +259,7 @@ return function()
 
 			local wrapper = shallow(createElement("Frame", props))
 
-			local result = Snapshot.wrapper(wrapper)
+			local result = Snapshot.new(wrapper)
 
 			expect(result.props).to.be.ok()
 			assertDeepEqual(result.props, expectProps)
@@ -270,7 +270,7 @@ return function()
 				Child = createElement("TextLabel"),
 			}))
 
-			local result = Snapshot.wrapper(wrapper)
+			local result = Snapshot.new(wrapper)
 
 			expect(result.children).to.be.ok()
 			expect(#result.children).to.equal(1)
@@ -285,7 +285,7 @@ return function()
 				Label = createElement("TextLabel"),
 			}))
 
-			local result = Snapshot.wrapper(wrapper)
+			local result = Snapshot.new(wrapper)
 
 			expect(result.children).to.be.ok()
 			expect(#result.children).to.equal(2)

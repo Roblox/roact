@@ -149,7 +149,7 @@ function ShallowWrapper:childrenCount()
 end
 
 function ShallowWrapper:find(constraints)
-	for constraint in pairs(constraints)	 do
+	for constraint in pairs(constraints) do
 		if not ContraintFunctions[constraint] then
 			error(('unknown constraint %q'):format(constraint))
 		end

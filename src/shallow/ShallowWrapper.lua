@@ -3,6 +3,7 @@ local RoactRoot = script.Parent.Parent
 local Children = require(RoactRoot.PropMarkers.Children)
 local ElementKind = require(RoactRoot.ElementKind)
 local ElementUtils = require(RoactRoot.ElementUtils)
+local VirtualNodeConstraints = require(script.Parent.VirtualNodeConstraints)
 local Snapshot = require(script.Parent.Snapshot)
 
 local ShallowWrapper = {}
@@ -47,34 +48,6 @@ local function findNextVirtualNode(virtualNode, maxDepth)
 
 	return currentNode
 end
-
-local ContraintFunctions = {
-	kind = function(virtualNode, expectKind)
-		return ElementKind.of(virtualNode.currentElement) == expectKind
-	end,
-	className = function(virtualNode, className)
-		local element = virtualNode.currentElement
-		local isHost = ElementKind.of(element) == ElementKind.Host
-		return isHost and element.component == className
-	end,
-	component = function(virtualNode, expectComponentValue)
-		return virtualNode.currentElement.component == expectComponentValue
-	end,
-	props = function(virtualNode, propSubSet)
-		local elementProps = virtualNode.currentElement.props
-
-		for propKey, propValue in pairs(propSubSet) do
-			if elementProps[propKey] ~= propValue then
-				return false
-			end
-		end
-
-		return true
-	end,
-	hostKey = function(virtualNode, expectHostKey)
-		return virtualNode.hostKey == expectHostKey
-	end,
-}
 
 local function countChildrenOfElement(element)
 	if ElementKind.of(element) == ElementKind.Fragment then
@@ -149,18 +122,15 @@ function ShallowWrapper:childrenCount()
 end
 
 function ShallowWrapper:find(constraints)
-	for constraint in pairs(constraints) do
-		if not ContraintFunctions[constraint] then
-			error(('unknown constraint %q'):format(constraint))
-		end
-	end
+	VirtualNodeConstraints.validate(constraints)
 
 	local results = {}
 	local children = self:getChildren()
 
 	for i=1, #children do
 		local childWrapper = children[i]
-		if childWrapper:_satisfiesAllContraints(constraints) then
+
+		if VirtualNodeConstraints.satisfiesAll(childWrapper._virtualNode, constraints) then
 			table.insert(results, childWrapper)
 		end
 	end
@@ -209,20 +179,6 @@ end
 
 function ShallowWrapper:snapshotToString()
 	return Snapshot.toString(self)
-end
-
-function ShallowWrapper:_satisfiesAllContraints(constraints)
-	local virtualNode = self._virtualNode
-
-	for constraint, value in pairs(constraints) do
-		local constraintFunction = ContraintFunctions[constraint]
-
-		if not constraintFunction(virtualNode, value) then
-			return false
-		end
-	end
-
-	return true
 end
 
 return ShallowWrapper

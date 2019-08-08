@@ -1,5 +1,5 @@
 return function()
-	local RoactRoot = script.Parent.Parent
+	local RoactRoot = script.Parent.Parent.Parent
 
 	local Change = require(RoactRoot.PropMarkers.Change)
 	local Component = require(RoactRoot.Component)
@@ -7,8 +7,8 @@ return function()
 	local createReconciler = require(RoactRoot.createReconciler)
 	local Event = require(RoactRoot.PropMarkers.Event)
 	local RobloxRenderer = require(RoactRoot.RobloxRenderer)
-	local ShallowWrapper = require(script.Parent.ShallowWrapper)
-	local snapshot = require(script.Parent.snapshot)
+	local ShallowWrapper = require(script.Parent.Parent.ShallowWrapper)
+	local Snapshot = require(script.Parent)
 
 	local robloxReconciler = createReconciler(RobloxRenderer)
 
@@ -29,7 +29,7 @@ return function()
 		local rootNode = robloxReconciler.mountVirtualNode(element, nil, hostTreeKey)
 		local wrapper = ShallowWrapper.new(rootNode, 1)
 
-		snapshot("host-frame-with-multiple-props", wrapper):match()
+		Snapshot.createMatcher("host-frame-with-multiple-props", wrapper):match()
 	end)
 
 	it("should match snapshot of function component children", function()
@@ -49,7 +49,7 @@ return function()
 		local rootNode = robloxReconciler.mountVirtualNode(element, nil, hostTreeKey)
 		local wrapper = ShallowWrapper.new(rootNode, 1)
 
-		snapshot("function-component-children", wrapper):match()
+		Snapshot.createMatcher("function-component-children", wrapper):match()
 	end)
 
 	it("should match snapshot of stateful component", function()
@@ -70,7 +70,7 @@ return function()
 		local rootNode = robloxReconciler.mountVirtualNode(element, nil, hostTreeKey)
 		local wrapper = ShallowWrapper.new(rootNode, 1)
 
-		snapshot("stateful-component-children", wrapper):match()
+		Snapshot.createMatcher("stateful-component-children", wrapper):match()
 	end)
 
 	it("should match snapshot with event props", function()
@@ -87,7 +87,7 @@ return function()
 		local rootNode = robloxReconciler.mountVirtualNode(element, nil, hostTreeKey)
 		local wrapper = ShallowWrapper.new(rootNode, 1)
 
-		snapshot("component-with-event-props", wrapper):match()
+		Snapshot.createMatcher("component-with-event-props", wrapper):match()
 	end)
 
 	it("should throw if the identifier contains invalid characters", function()
@@ -95,7 +95,7 @@ return function()
 
 		for i=1, #invalidCharacters do
 			local function shouldThrow()
-				snapshot("id" .. invalidCharacters[i], {})
+				Snapshot.createMatcher("id" .. invalidCharacters[i], {})
 			end
 
 			expect(shouldThrow).to.throw()

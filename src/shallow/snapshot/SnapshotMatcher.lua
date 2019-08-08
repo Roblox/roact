@@ -51,17 +51,13 @@ function SnapshotMatcher:match()
 	error(message, 2)
 end
 
-function SnapshotMatcher:getSnapshotString()
-	return Serialize.snapshotToString(self._snapshot)
-end
-
 function SnapshotMatcher:serialize()
 	local folder = SnapshotMatcher.getSnapshotFolder()
 
-	local snapshotSource = self:getSnapshotString()
+	local snapshotSource = Serialize.snapshotToString(self._snapshot)
 	local existingData = folder:FindFirstChild(self._identifier)
 
-	if not (existingData and existingData:IsA('StringValue')) then
+	if not (existingData and existingData:IsA("StringValue")) then
 		existingData = Instance.new("StringValue")
 		existingData.Name = self._identifier
 		existingData.Parent = folder
@@ -94,7 +90,7 @@ function SnapshotMatcher._loadExistingData(identifier)
 	local loadSnapshot = require(existingData)
 
 	return loadSnapshot({
-		Roact = require(script.Parent.Parent),
+		Roact = require(RoactRoot),
 		ElementKind = ElementKind,
 		Markers = Markers,
 	})

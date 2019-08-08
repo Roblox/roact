@@ -3,7 +3,7 @@ local RoactRoot = script.Parent.Parent
 local Children = require(RoactRoot.PropMarkers.Children)
 local ElementKind = require(RoactRoot.ElementKind)
 local ElementUtils = require(RoactRoot.ElementUtils)
-local snapshot = require(script.Parent.snapshot)
+local Snapshot = require(script.Parent.Snapshot)
 
 local ShallowWrapper = {}
 local ShallowWrapperMetatable = {
@@ -202,17 +202,13 @@ end
 function ShallowWrapper:matchSnapshot(identifier)
 	assert(typeof(identifier) == "string", "Snapshot identifier must be a string")
 
-	local snapshotResult = snapshot(identifier, self)
+	local snapshotResult = Snapshot.createMatcher(identifier, self)
 
 	snapshotResult:match()
 end
 
-function ShallowWrapper:getSnapshotString(identifier)
-	assert(typeof(identifier) == "string", "Snapshot identifier must be a string")
-
-	local snapshotResult = snapshot(identifier, self)
-
-	return snapshotResult:getSnapshotString()
+function ShallowWrapper:snapshotToString()
+	return Snapshot.toString(self)
 end
 
 function ShallowWrapper:_satisfiesAllContraints(constraints)

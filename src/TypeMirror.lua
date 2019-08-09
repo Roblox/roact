@@ -1,3 +1,13 @@
+--[[
+	Mirrors a subset of values from Type.lua for external use, allowing
+	type checking on Roact objects without exposing internal Type symbols
+
+	TypeMirror: {
+		Type: Roact.Type,
+		typeof: function(value: table) -> Roact.Type | nil
+	}
+]]
+
 local Type = require(script.Parent.Type)
 local Symbol = require(script.Parent.Symbol)
 local strict = require(script.Parent.strict)

@@ -7,7 +7,7 @@ local invalidPattern = "[^" .. characterClass .. "]"
 
 local function createMatcher(identifier, shallowWrapper)
 	if not identifier:match(identifierPattern) then
-		error(("Snapshot identifier has invalid character: '%s'"):format(identifier:match(invalidPattern)))
+		error(("Snapshot identifier has invalid character: %q"):format(identifier:match(invalidPattern)))
 	end
 
 	local snapshot = Serialize.wrapperToSnapshot(shallowWrapper)

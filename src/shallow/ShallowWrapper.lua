@@ -31,7 +31,7 @@ local function getTypeFromVirtualNode(virtualNode)
 			component = element.component,
 		}
 	else
-		error(('shallow wrapper does not support element of kind %q'):format(tostring(kind)))
+		error(("shallow wrapper does not support element of kind %q"):format(tostring(kind)))
 	end
 end
 

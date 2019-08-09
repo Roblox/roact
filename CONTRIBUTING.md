@@ -81,6 +81,9 @@ When submitting a new feature, add tests for all functionality.
 
 We use [LuaCov](https://keplerproject.github.io/luacov) for keeping track of code coverage. We'd like it to be as close to 100% as possible, but it's not always possible. Adding tests just for the purpose of getting coverage isn't useful; we should strive to make only useful tests!
 
+### Snapshots
+As part of the test suite, there are tests that generates snapshot files (located under `./RoactSnapshots`). To sync back the generated StringValues produce by these on the file system, we suggest using a tool like [`run-in-roblox`](https://github.com/LPGhatguy/run-in-roblox) to make the workflow as simple as possible. In the case where you only need to sync a few files, you can use the plugin to automatically copy back the generated string values from the run mode into module scripts when going back to edit mode. Then simply copy-paste into the new snapshots into the file-system.
+
 ## Release Checklist
 When releasing a new version of Roact, do these things:
 

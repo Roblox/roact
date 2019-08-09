@@ -1,6 +1,8 @@
-In certain situations, such as when building highly reusable and customizable components, props may be composed of Roact objects, such as an element or a component class. To facilitate safer development for these kinds of situations, Roact exposes a type enumeration and a type checking function.
+In certain situations, such as when building highly reusable and customizable components, props may be composed of Roact objects, such as an element or a component class.
 
-## Without Type Checking
+To facilitate safer development for these kinds of situations, Roact exposes the `Roact.typeOf` function to inspect Roact objects and return a value from the `Roact.Type` enumeration.
+
+## Without Object Inspection
 
 Suppose we want to write a Header component with a prop for the title child element:
 ```lua
@@ -10,19 +12,19 @@ function Header:render()
 	return Roact.createElement("Frame", {
 		-- Props for Frame...
 	}, {
-		Title = Roact.createElement(titleViewClass, {
+		Title = Roact.createElement(titleClass, {
 			-- Props for Title...
 		})
 	})
 end
 ```
 
-Now suppose we want to validate that a titleClass is actually a class using [validateProps](../../api-reference/#validateprops). Unfortunately, the best we can do is inspect Header to see if it contains characteristics of a Component class:
+Now suppose we want to validate that titleClass is actually a class using [validateProps](../../api-reference/#validateprops). Unfortunately, the best we can do is inspect Header to see if it contains characteristics of a Component class:
 ```lua
 local Header = Component:extend("Header")
 Header.validateProps = function()
 	local titleClass = props.titleClass
-	if titleClass.render then
+	if type(titleClass.render) == "function" then
 		return true
 	end
 	return false, tostring(Header) .. " prop titleClass cannot render"
@@ -47,7 +49,7 @@ We can even provide props which can be of multiple different Roact object types 
 local Header = Component:extend("Header")
 Header.validateProps = function()
 	local title = props.title -- Type.Element | Type.StatefulComponentClass
-	local type = Roact.typeOf(titleClass)
+	local type = Roact.typeOf(title)
 	local isElement = type == Roact.Type.Element
 	local isClass = type == Roact.Type.StatefulComponentClass
 	if isElement or isClass then

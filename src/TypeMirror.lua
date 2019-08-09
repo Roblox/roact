@@ -4,7 +4,7 @@
 
 	TypeMirror: {
 		Type: Roact.Type,
-		typeof: function(value: table) -> Roact.Type | nil
+		typeOf: function(value: table) -> Roact.Type | nil
 	}
 ]]
 
@@ -22,37 +22,38 @@ local ALLOWED_TYPES = {
 	Type.VirtualTree
 }
 
-local MirroredType = newproxy(true)
-local MirroredTypeInternal = {}
+local MirroredType = {}
 for _, type in ipairs(ALLOWED_TYPES) do
 	local name = Type.nameOf(type)
-	MirroredTypeInternal[name] = Symbol.named("Roact" .. name)
+	MirroredType[name] = Symbol.named("Roact" .. name)
 end
 
-getmetatable(MirroredType).__index = MirroredTypeInternal
-getmetatable(MirroredType).__tostring = function()
-	return "RoactType"
-end
+setmetatable(MirroredType, {
+	__tostring = function()
+		return "RoactType"
+	end
+})
 
-strict(MirroredTypeInternal, "Type")
+strict(MirroredType, "Type")
 
-local Mirror = newproxy(true)
-local MirrorInternal = {
+local Mirror = {
+	typeList = ALLOWED_TYPES,
 	Type = MirroredType,
 	typeOf = function(value)
 		local name = Type.nameOf(Type.of(value))
 		if not name then
 			return nil
 		end
-		return MirroredTypeInternal[name]
+		return MirroredType[name]
 	end,
 }
 
-getmetatable(Mirror).__index = MirrorInternal
-getmetatable(Mirror).__tostring = function()
-	return "TypeMirror"
-end
+setmetatable(Mirror, {
+	__tostring = function()
+		return "TypeMirror"
+	end
+})
 
-strict(MirrorInternal, "TypeMirror")
+strict(Mirror, "TypeMirror")
 
 return Mirror

@@ -1,15 +1,6 @@
 return function()
 	local Type = require(script.Parent.Type)
 	local Mirror = require(script.Parent.TypeMirror)
-	local allowedTypes = {
-		Type.Binding,
-		Type.Element,
-		Type.HostChangeEvent,
-		Type.HostEvent,
-		Type.StatefulComponentClass,
-		Type.StatefulComponentInstance,
-		Type.VirtualTree
-	}
 
 	describe("Type", function()
 		it("should return a mirror of an internal type", function()
@@ -25,7 +16,7 @@ return function()
 		end)
 
 		it("should include all allowed types", function()
-			for _, type in ipairs(allowedTypes) do
+			for _, type in ipairs(Mirror.typeList) do
 				local name = Type.nameOf(type)
 				local mirroredType = Mirror.Type[name]
 				expect(mirroredType).to.be.ok()
@@ -42,15 +33,16 @@ return function()
 	end)
 
 	describe("typeOf", function()
-		it("should return nil if the value is not a table", function()
-			expect(Mirror.typeOf(1)).to.equal(nil)
-			expect(Mirror.typeOf(true)).to.equal(nil)
-			expect(Mirror.typeOf("test")).to.equal(nil)
-			expect(Mirror.typeOf(print)).to.equal(nil)
-		end)
-
-		it("should return nil if the table has no type", function()
-			expect(Mirror.typeOf({})).to.equal(nil)
+		it("should throw if the value is not a valid type", function()
+			local typeOfCheck = function(value)
+				local _ = Mirror.typeOf(value)
+			end
+			expect(pcall(typeOfCheck, 1)).to.equal(false)
+			expect(pcall(typeOfCheck, true)).to.equal(false)
+			expect(pcall(typeOfCheck, "test")).to.equal(false)
+			expect(pcall(typeOfCheck, print)).to.equal(false)
+			expect(pcall(typeOfCheck, {})).to.equal(false)
+			expect(pcall(typeOfCheck, newproxy(true))).to.equal(false)
 		end)
 
 		it("should return the assigned type", function()

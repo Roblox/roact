@@ -44,6 +44,22 @@ The result is a `RoactTree`, which is an opaque handle that represents a tree of
 
 ---
 
+### Roact.shallow
+```
+Roact.shallow(element, [options]) -> ShallowWrapper
+```
+Options:
+```lua
+{
+	depth: number -- default to 1
+}
+```
+
+Mounts the tree from the given element and wraps the root virtual node into a ShallowWrapper.
+-- is this too specific/technical?
+
+---
+
 ### Roact.update
 ```
 Roact.update(tree, element) -> RoactTree
@@ -609,3 +625,139 @@ As with `setState`, you can set use the constant `Roact.None` to remove a field 
 
 !!! note
 	`getDerivedStateFromProps` is a *static* lifecycle method. It does not have access to `self`, and must be a pure function.
+
+---
+
+## ShallowWrapper
+
+### Fields
+
+#### type
+```
+type: {
+	kind: ElementKind
+}
+```
+
+The type dictionary always has the `kind` field that tell the component type. Additionally, depending of the kind of component, other information can be included.
+
+| kind | fields | description |
+| --- | --- | --- |
+| Host | className: string | the ClassName of the instance |
+| Function | functionComponent: function | the function that renders the element |
+| Stateful | component: table | the class-like table used to render the element |
+
+---
+
+#### props
+The props of the ShallowWrapper.
+
+!!! note
+	This dictionary will not contain the `Roact.Children` prop. To obtain the children elements wrapped into a ShallowWrapper, use the method `getChildren()`
+
+---
+
+#### hostKey
+The `hostKey` that is used to map the element to it's parent.
+
+---
+
+### Methods
+
+#### childrenCount
+```
+childrenCount() -> number
+```
+Returns the amount of children that the current ShallowWrapper contains.
+
+---
+
+#### find
+```
+find([constraints]) -> list[ShallowWrapper]
+```
+When a dictionary of constraints is provided, the function will filter the children that do not satisfy all given constraints. Otherwise, as `getChildren` do, it returns a list of all children wrapped into ShallowWrappers.
+
+---
+
+#### findUnique
+```
+findUnique([constraints]) -> ShallowWrapper
+```
+Similar to `find`, this method will assert that only one child satisfies the given constraints, or in the case where none is provided, will assert that there is simply only one child.
+
+---
+
+#### getChildren
+```
+getChildren() -> list[ShallowWrapper]
+```
+Returns a list of all children wrapped into ShallowWrappers.
+
+---
+
+#### getInstance
+```
+getInstance() -> Instance or nil
+```
+Returns the instance object associated with the ShallowWrapper. It can return `nil` if the component wrapped by the ShallowWrapper does not render an instance, but rather another component. Here is an example:
+
+```lua
+local function CoolComponent(props)
+	return Roact.createElement("TextLabel")
+end
+
+local function MainComponent(props)
+	return Roact.createElement("Frame", {}, {
+		Cool = Roact.createElement(CoolComponent),
+	})
+end
+```
+
+If we shallow-render the `MainComponent`, the default depth will not render the CoolComponent.
+
+```lua
+local element = Roact.createElement(MainComponent)
+
+local tree = Roact.mount(element)
+
+local wrapper = tree:getShallowWrapper()
+
+print(wrapper:getInstance() == nil) -- prints false
+
+local coolWrapper = wrapper:findUnique()
+
+print(coolWrapper:getInstance() == nil) -- prints true
+```
+
+---
+
+#### matchSnapshot
+```
+matchSnapshot(identifier)
+```
+If no previous snapshot with the given identifier exists, it will create a new StringValue instance that will contain Lua code representing the current ShallowWrapper. When an existing snapshot is found (a ModuleScript named as the provided identifier), it will require the ModuleScript and load the data from it. Then, if the loaded data is different from the current ShallowWrapper, an error will be thrown.
+
+!!! note
+	As mentionned, `matchSnapshot` will create a StringValue, named like the given identifier, in which the generated lua code will be assigned to the Value property. When these values are generated in Studio during run mode, it's important to copy back the values and convert them into ModuleScripts.
+
+---
+
+#### snapshotToString
+```
+snapshotToString() -> string
+```
+Returns the string source of the snapshot. Useful for debugging purposes.
+
+---
+
+##### Constraints
+Constraints are passed through a dictionary that maps a constraint name to it's value.
+
+| name | value type | description |
+| --- | --- | --- |
+| kind | ElementKind | Filters with the ElementKind of the rendered elements |
+| className | string | Filters children that renders to host instance of the given class name |
+| component | string, function or table | Filter children from their components, by finding the functional component original function, the sub-class table of Roact.Component or from the class name of the instance rendered |
+| props | dictionary | Filters elements that contains at least the given set of props |
+| hostKey | string | Filters elements by the host key used |

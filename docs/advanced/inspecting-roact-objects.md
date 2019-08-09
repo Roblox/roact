@@ -49,9 +49,9 @@ We can even provide props which can be of multiple different Roact object types 
 local Header = Component:extend("Header")
 Header.validateProps = function()
 	local title = props.title -- Type.Element | Type.StatefulComponentClass
-	local type = Roact.typeOf(title)
-	local isElement = type == Roact.Type.Element
-	local isClass = type == Roact.Type.StatefulComponentClass
+	local titleType = Roact.typeOf(title)
+	local isElement = titleType == Roact.Type.Element
+	local isClass = titleType == Roact.Type.StatefulComponentClass
 	if isElement or isClass then
 		return true
 	end
@@ -60,7 +60,7 @@ end
 function Header:render()
 	local title = props.title
 	local isElement = Roact.typeOf(title) == Roact.Type.Element
-	local isClass = type == Roact.Type.StatefulComponentClass
+	local isClass = Roact.typeOf(title) == Roact.Type.StatefulComponentClass
 	return Roact.createElement("Frame", {
 		-- Props for Frame...
 	}, {

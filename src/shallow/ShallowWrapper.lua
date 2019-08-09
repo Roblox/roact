@@ -3,12 +3,17 @@ local RoactRoot = script.Parent.Parent
 local Children = require(RoactRoot.PropMarkers.Children)
 local ElementKind = require(RoactRoot.ElementKind)
 local ElementUtils = require(RoactRoot.ElementUtils)
-local VirtualNodeConstraints = require(script.Parent.VirtualNodeConstraints)
+local strict = require(RoactRoot.strict)
+local Symbol = require(RoactRoot.Symbol)
 local Snapshot = require(script.Parent.Snapshot)
+local VirtualNodeConstraints = require(script.Parent.VirtualNodeConstraints)
+
+local InternalData = Symbol.named("InternalData")
 
 local ShallowWrapper = {}
+local ShallowWrapperPublic = {}
 local ShallowWrapperMetatable = {
-	__index = ShallowWrapper,
+	__index = ShallowWrapperPublic,
 }
 
 local function getTypeFromVirtualNode(virtualNode)
@@ -98,22 +103,25 @@ function ShallowWrapper.new(virtualNode, maxDepth)
 	virtualNode = findNextVirtualNode(virtualNode, maxDepth)
 
 	local wrapper = {
-		_virtualNode = virtualNode,
-		_childrenMaxDepth = maxDepth - 1,
-		_virtualNodeChildren = maxDepth == 0 and {} or virtualNode.children,
+		[InternalData] = {
+			virtualNode = virtualNode,
+			childrenMaxDepth = maxDepth - 1,
+			virtualNodeChildren = maxDepth == 0 and {} or virtualNode.children,
+			instance = virtualNode.hostObject,
+		},
 		type = getTypeFromVirtualNode(virtualNode),
 		props = filterProps(virtualNode.currentElement.props),
 		hostKey = virtualNode.hostKey,
-		instance = virtualNode.hostObject,
 	}
 
 	return setmetatable(wrapper, ShallowWrapperMetatable)
 end
 
-function ShallowWrapper:childrenCount()
+function ShallowWrapperPublic:childrenCount()
 	local count = 0
+	local internalData = self[InternalData]
 
-	for _, virtualNode in pairs(self._virtualNodeChildren) do
+	for _, virtualNode in pairs(internalData.virtualNodeChildren) do
 		local element = virtualNode.currentElement
 		count = count + countChildrenOfElement(element)
 	end
@@ -121,7 +129,7 @@ function ShallowWrapper:childrenCount()
 	return count
 end
 
-function ShallowWrapper:find(constraints)
+function ShallowWrapperPublic:find(constraints)
 	VirtualNodeConstraints.validate(constraints)
 
 	local results = {}
@@ -129,8 +137,9 @@ function ShallowWrapper:find(constraints)
 
 	for i=1, #children do
 		local childWrapper = children[i]
+		local childInternalData = childWrapper[InternalData]
 
-		if VirtualNodeConstraints.satisfiesAll(childWrapper._virtualNode, constraints) then
+		if VirtualNodeConstraints.satisfiesAll(childInternalData.virtualNode, constraints) then
 			table.insert(results, childWrapper)
 		end
 	end
@@ -138,7 +147,7 @@ function ShallowWrapper:find(constraints)
 	return results
 end
 
-function ShallowWrapper:findUnique(constraints)
+function ShallowWrapperPublic:findUnique(constraints)
 	local children = self:getChildren()
 
 	if constraints == nil then
@@ -159,17 +168,24 @@ function ShallowWrapper:findUnique(constraints)
 	return constrainedChildren[1]
 end
 
-function ShallowWrapper:getChildren()
+function ShallowWrapperPublic:getChildren()
 	local results = {}
+	local internalData = self[InternalData]
 
-	for _, childVirtualNode in pairs(self._virtualNodeChildren) do
-		getChildren(childVirtualNode, results, self._childrenMaxDepth)
+	for _, childVirtualNode in pairs(internalData.virtualNodeChildren) do
+		getChildren(childVirtualNode, results, internalData.childrenMaxDepth)
 	end
 
 	return results
 end
 
-function ShallowWrapper:matchSnapshot(identifier)
+function ShallowWrapperPublic:getInstance()
+	local internalData = self[InternalData]
+
+	return internalData.instance
+end
+
+function ShallowWrapperPublic:matchSnapshot(identifier)
 	assert(typeof(identifier) == "string", "Snapshot identifier must be a string")
 
 	local snapshotResult = Snapshot.createMatcher(identifier, self)
@@ -177,8 +193,10 @@ function ShallowWrapper:matchSnapshot(identifier)
 	snapshotResult:match()
 end
 
-function ShallowWrapper:snapshotToString()
+function ShallowWrapperPublic:snapshotToString()
 	return Snapshot.toString(self)
 end
 
-return ShallowWrapper
+strict(ShallowWrapperPublic, "ShallowWrapper")
+
+return strict(ShallowWrapper, "ShallowWrapper")

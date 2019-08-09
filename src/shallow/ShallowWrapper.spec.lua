@@ -395,22 +395,23 @@ return function()
 		end)
 	end)
 
-	describe("instance", function()
-		it("should contain the instance when it is a host component", function()
+	describe("getInstance", function()
+		it("should return the instance when it is a host component", function()
 			local className = "Frame"
 			local function Component(props)
 				return createElement(className)
 			end
 
 			local element = createElement(Component)
+			local wrapper = shallow(element)
 
-			local result = shallow(element)
+			local instance = wrapper:getInstance()
 
-			expect(result.instance).to.be.ok()
-			expect(result.instance.ClassName).to.equal(className)
+			expect(instance).to.be.ok()
+			expect(instance.ClassName).to.equal(className)
 		end)
 
-		it("should not have an instance if it is a function component", function()
+		it("should return nil if it is a function component", function()
 			local function Child()
 				return createElement("Frame")
 			end
@@ -419,10 +420,11 @@ return function()
 			end
 
 			local element = createElement(Component)
+			local wrapper = shallow(element)
 
-			local result = shallow(element)
+			local instance = wrapper:getInstance()
 
-			expect(result.instance).never.to.be.ok()
+			expect(instance).never.to.be.ok()
 		end)
 	end)
 

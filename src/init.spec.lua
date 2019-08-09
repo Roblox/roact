@@ -13,6 +13,7 @@ return function()
 			update = "function",
 			oneChild = "function",
 			setGlobalConfig = "function",
+			typeOf = "function",
 
 			-- These functions are deprecated and throw warnings!
 			reify = "function",
@@ -26,6 +27,7 @@ return function()
 			Event = true,
 			Change = true,
 			Ref = true,
+			Type = true,
 			None = true,
 			UNSTABLE = true,
 		}

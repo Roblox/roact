@@ -15,9 +15,12 @@ local strict = require(script.Parent.strict)
 local Type = newproxy(true)
 
 local TypeInternal = {}
+local TypeNames = {}
 
 local function addType(name)
-	TypeInternal[name] = Symbol.named("Roact" .. name)
+	local symbol = Symbol.named("Roact" .. name)
+	TypeNames[symbol] = name
+	TypeInternal[name] = symbol
 end
 
 addType("Binding")
@@ -37,6 +40,14 @@ function TypeInternal.of(value)
 	return value[Type]
 end
 
+function TypeInternal.nameOf(type)
+	if typeof(type) ~= "userdata" then
+		return nil
+	end
+
+	return TypeNames[type]
+end
+
 getmetatable(Type).__index = TypeInternal
 
 getmetatable(Type).__tostring = function()
@@ -44,5 +55,6 @@ getmetatable(Type).__tostring = function()
 end
 
 strict(TypeInternal, "Type")
+strict(TypeNames, "TypeNames")
 
 return Type

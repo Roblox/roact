@@ -2,7 +2,7 @@ In certain situations, such as when building highly reusable and customizable co
 
 To facilitate safer development for these kinds of situations, Roact exposes the `Roact.typeOf` function to inspect Roact objects and return a value from the `Roact.Type` enumeration.
 
-## Without Object Inspection
+## Without Object Type Inspection
 
 Suppose we want to write a Header component with a prop for the title child element:
 ```lua
@@ -19,7 +19,7 @@ function Header:render()
 end
 ```
 
-Now suppose we want to validate that titleClass is actually a class using [validateProps](../../api-reference/#validateprops). Unfortunately, the best we can do is inspect Header to see if it contains characteristics of a Component class:
+Now suppose we want to validate that titleClass is actually a class using [validateProps](../../api-reference/#validateprops). Unfortunately, the best we can do is query Header to see if it contains characteristics of a Component class:
 ```lua
 local Header = Component:extend("Header")
 Header.validateProps = function()
@@ -31,9 +31,9 @@ Header.validateProps = function()
 end
 ```
 
-## With Type Checking
+## With Object Type Inspection
 
-With type checking, we can be certain we have a Component class:
+With `Roact.typeOf`, we can be certain we have a Component class:
 ```lua
 Header.validateProps = function()
 	local titleClass = props.titleClass

@@ -2,10 +2,19 @@ return function()
 	local createElement = require(script.Parent.createElement)
 	local NoopRenderer = require(script.Parent.NoopRenderer)
 	local createReconciler = require(script.Parent.createReconciler)
+	local VirtualTree = require(script.Parent.VirtualTree)
 
 	local PureComponent = require(script.Parent.PureComponent)
 
 	local noopReconciler = createReconciler(NoopRenderer)
+
+	local function mountWithNoop(element, hostParent, hostKey)
+		return VirtualTree.mount(element, {
+			hostParent = hostParent,
+			hostKey = hostKey,
+			reconciler = noopReconciler
+		})
+	end
 
 	it("should be extendable", function()
 		local MyComponent = PureComponent:extend("MyComponent")
@@ -50,7 +59,7 @@ return function()
 		end
 
 		local element = createElement(PureContainer)
-		local tree = noopReconciler.mountVirtualTree(element, nil, "PureComponent Tree")
+		local tree = mountWithNoop(element, nil, "PureComponent Tree")
 
 		expect(updateCount).to.equal(0)
 
@@ -70,6 +79,6 @@ return function()
 
 		expect(updateCount).to.equal(3)
 
-		noopReconciler.unmountVirtualTree(tree)
+		VirtualTree.unmount(tree)
 	end)
 end

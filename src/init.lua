@@ -3,15 +3,19 @@
 ]]
 
 local GlobalConfig = require(script.GlobalConfig)
-local createReconciler = require(script.createReconciler)
 local createReconcilerCompat = require(script.createReconcilerCompat)
-local RobloxRenderer = require(script.RobloxRenderer)
 local strict = require(script.strict)
 local Binding = require(script.Binding)
-local shallow = require(script.shallow)
+local VirtualTree = require(script.VirtualTree)
 
-local robloxReconciler = createReconciler(RobloxRenderer)
-local reconcilerCompat = createReconcilerCompat(robloxReconciler)
+local function mount(element, hostParent, hostKey)
+	return VirtualTree.mount(element, {
+		hostParent = hostParent,
+		hostKey = hostKey,
+	})
+end
+
+local reconcilerCompat = createReconcilerCompat(VirtualTree)
 
 local Roact = strict {
 	Component = require(script.Component),
@@ -30,10 +34,9 @@ local Roact = strict {
 	Event = require(script.PropMarkers.Event),
 	Ref = require(script.PropMarkers.Ref),
 
-	mount = robloxReconciler.mountVirtualTree,
-	unmount = robloxReconciler.unmountVirtualTree,
-	update = robloxReconciler.updateVirtualTree,
-	shallow = shallow,
+	mount = mount,
+	unmount = VirtualTree.unmount,
+	update = VirtualTree.update,
 
 	reify = reconcilerCompat.reify,
 	teardown = reconcilerCompat.teardown,

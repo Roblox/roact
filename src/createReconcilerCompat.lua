@@ -20,25 +20,25 @@ Roact.reconcile has been renamed to Roact.update and will be removed in a future
 Check the call to Roact.reconcile at:
 ]]
 
-local function createReconcilerCompat(reconciler)
+local function createReconcilerCompat(virtualTree)
 	local compat = {}
 
 	function compat.reify(...)
 		Logging.warnOnce(reifyMessage)
 
-		return reconciler.mountVirtualTree(...)
+		return virtualTree.mount(...)
 	end
 
 	function compat.teardown(...)
 		Logging.warnOnce(teardownMessage)
 
-		return reconciler.unmountVirtualTree(...)
+		return virtualTree.unmount(...)
 	end
 
 	function compat.reconcile(...)
 		Logging.warnOnce(reconcileMessage)
 
-		return reconciler.updateVirtualTree(...)
+		return virtualTree.update(...)
 	end
 
 	return compat

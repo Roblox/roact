@@ -2,12 +2,9 @@ local Type = require(script.Parent.Type)
 local ElementKind = require(script.Parent.ElementKind)
 local ElementUtils = require(script.Parent.ElementUtils)
 local Children = require(script.Parent.PropMarkers.Children)
-local Symbol = require(script.Parent.Symbol)
 local internalAssert = require(script.Parent.internalAssert)
 
 local config = require(script.Parent.GlobalConfig).get()
-
-local InternalData = Symbol.named("InternalData")
 
 --[[
 	The reconciler is the mechanism in Roact that constructs the virtual tree
@@ -345,78 +342,10 @@ local function createReconciler(renderer)
 		return virtualNode
 	end
 
-	--[[
-		Constructs a new Roact virtual tree, constructs a root node for
-		it, and mounts it.
-	]]
-	local function mountVirtualTree(element, hostParent, hostKey)
-		if config.typeChecks then
-			assert(Type.of(element) == Type.Element, "Expected arg #1 to be of type Element")
-			assert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
-		end
-
-		if hostKey == nil then
-			hostKey = "RoactTree"
-		end
-
-		local tree = {
-			[Type] = Type.VirtualTree,
-			[InternalData] = {
-				-- The root node of the tree, which starts into the hierarchy of
-				-- Roact component instances.
-				rootNode = nil,
-				mounted = true,
-			},
-		}
-
-		tree[InternalData].rootNode = mountVirtualNode(element, hostParent, hostKey)
-
-		return tree
-	end
-
-	--[[
-		Unmounts the virtual tree, freeing all of its resources.
-
-		No further operations should be done on the tree after it's been
-		unmounted, as indicated by its the `mounted` field.
-	]]
-	local function unmountVirtualTree(tree)
-		local internalData = tree[InternalData]
-		if config.typeChecks then
-			assert(Type.of(tree) == Type.VirtualTree, "Expected arg #1 to be a Roact handle")
-			assert(internalData.mounted, "Cannot unmounted a Roact tree that has already been unmounted")
-		end
-
-		internalData.mounted = false
-
-		if internalData.rootNode ~= nil then
-			unmountVirtualNode(internalData.rootNode)
-		end
-	end
-
-	--[[
-		Utility method for updating the root node of a virtual tree given a new
-		element.
-	]]
-	local function updateVirtualTree(tree, newElement)
-		local internalData = tree[InternalData]
-		if config.typeChecks then
-			assert(Type.of(tree) == Type.VirtualTree, "Expected arg #1 to be a Roact handle")
-			assert(Type.of(newElement) == Type.Element, "Expected arg #2 to be a Roact Element")
-		end
-
-		internalData.rootNode = updateVirtualNode(internalData.rootNode, newElement)
-
-		return tree
-	end
-
 	reconciler = {
-		mountVirtualTree = mountVirtualTree,
-		unmountVirtualTree = unmountVirtualTree,
-		updateVirtualTree = updateVirtualTree,
-
 		createVirtualNode = createVirtualNode,
 		mountVirtualNode = mountVirtualNode,
+		isHostObject = renderer.isHostObject,
 		unmountVirtualNode = unmountVirtualNode,
 		updateVirtualNode = updateVirtualNode,
 		updateVirtualNodeWithChildren = updateVirtualNodeWithChildren,

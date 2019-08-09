@@ -3,11 +3,25 @@ return function()
 	local createReconciler = require(script.Parent.createReconciler)
 	local Logging = require(script.Parent.Logging)
 	local NoopRenderer = require(script.Parent.NoopRenderer)
+	local VirtualTree = require(script.Parent.VirtualTree)
 
 	local createReconcilerCompat = require(script.Parent.createReconcilerCompat)
 
 	local noopReconciler = createReconciler(NoopRenderer)
-	local compatReconciler = createReconcilerCompat(noopReconciler)
+
+	local function mountWithNoop(element, hostParent, hostKey)
+		return VirtualTree.mount(element, {
+			hostParent = hostParent,
+			hostKey = hostKey,
+			reconciler = noopReconciler
+		})
+	end
+
+	local compatReconciler = createReconcilerCompat({
+		mount = mountWithNoop,
+		unmount = VirtualTree.unmount,
+		update = VirtualTree.update,
+	})
 
 	it("reify should only warn once per call site", function()
 		local logInfo = Logging.capture(function()
@@ -15,7 +29,7 @@ return function()
 			-- warning hopefully.
 			for _ = 1, 2 do
 				local handle = compatReconciler.reify(createElement("StringValue"))
-				noopReconciler.unmountVirtualTree(handle)
+				VirtualTree.unmount(handle)
 			end
 		end)
 
@@ -25,7 +39,7 @@ return function()
 		logInfo = Logging.capture(function()
 			-- This is a different call site, which should trigger another warning.
 			local handle = compatReconciler.reify(createElement("StringValue"))
-			noopReconciler.unmountVirtualTree(handle)
+			VirtualTree.unmount(handle)
 		end)
 
 		expect(#logInfo.warnings).to.equal(1)
@@ -37,7 +51,7 @@ return function()
 			-- We're using a loop so that we get the same stack trace and only one
 			-- warning hopefully.
 			for _ = 1, 2 do
-				local handle = noopReconciler.mountVirtualTree(createElement("StringValue"))
+				local handle = mountWithNoop(createElement("StringValue"))
 				compatReconciler.teardown(handle)
 			end
 		end)
@@ -47,7 +61,7 @@ return function()
 
 		logInfo = Logging.capture(function()
 			-- This is a different call site, which should trigger another warning.
-			local handle = noopReconciler.mountVirtualTree(createElement("StringValue"))
+			local handle = mountWithNoop(createElement("StringValue"))
 			compatReconciler.teardown(handle)
 		end)
 
@@ -60,9 +74,9 @@ return function()
 			-- We're using a loop so that we get the same stack trace and only one
 			-- warning hopefully.
 			for _ = 1, 2 do
-				local handle = noopReconciler.mountVirtualTree(createElement("StringValue"))
+				local handle = mountWithNoop(createElement("StringValue"))
 				compatReconciler.reconcile(handle, createElement("StringValue"))
-				noopReconciler.unmountVirtualTree(handle)
+				VirtualTree.unmount(handle)
 			end
 		end)
 
@@ -71,9 +85,9 @@ return function()
 
 		logInfo = Logging.capture(function()
 			-- This is a different call site, which should trigger another warning.
-			local handle = noopReconciler.mountVirtualTree(createElement("StringValue"))
+			local handle = mountWithNoop(createElement("StringValue"))
 			compatReconciler.reconcile(handle, createElement("StringValue"))
-			noopReconciler.unmountVirtualTree(handle)
+			VirtualTree.unmount(handle)
 		end)
 
 		expect(#logInfo.warnings).to.equal(1)

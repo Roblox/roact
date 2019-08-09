@@ -4,10 +4,19 @@ return function()
 	local createSpy = require(script.Parent.Parent.createSpy)
 	local None = require(script.Parent.Parent.None)
 	local NoopRenderer = require(script.Parent.Parent.NoopRenderer)
+	local VirtualTree = require(script.Parent.Parent.VirtualTree)
 
 	local Component = require(script.Parent.Parent.Component)
 
 	local noopReconciler = createReconciler(NoopRenderer)
+
+	local function mountWithNoop(element, hostParent, hostKey)
+		return VirtualTree.mount(element, {
+			hostParent = hostParent,
+			hostKey = hostKey,
+			reconciler = noopReconciler
+		})
+	end
 
 	describe("setState", function()
 		it("should not trigger an extra update when called in init", function()
@@ -35,7 +44,7 @@ return function()
 
 			local initElement = createElement(InitComponent)
 
-			noopReconciler.mountVirtualTree(initElement)
+			mountWithNoop(initElement)
 
 			expect(renderCount).to.equal(1)
 			expect(updateCount).to.equal(0)
@@ -53,7 +62,7 @@ return function()
 
 			local renderElement = createElement(TestComponent)
 
-			local success, result = pcall(noopReconciler.mountVirtualTree, renderElement)
+			local success, result = pcall(mountWithNoop, renderElement)
 
 			expect(success).to.equal(false)
 			expect(result:match("render")).to.be.ok()
@@ -76,9 +85,9 @@ return function()
 			local initialElement = createElement(TestComponent)
 			local updatedElement = createElement(TestComponent)
 
-			local tree = noopReconciler.mountVirtualTree(initialElement)
+			local tree = mountWithNoop(initialElement)
 
-			local success, result = pcall(noopReconciler.updateVirtualTree, tree, updatedElement)
+			local success, result = pcall(VirtualTree.update, tree, updatedElement)
 
 			expect(success).to.equal(false)
 			expect(result:match("shouldUpdate")).to.be.ok()
@@ -100,9 +109,9 @@ return function()
 
 			local initialElement = createElement(TestComponent)
 			local updatedElement = createElement(TestComponent)
-			local tree = noopReconciler.mountVirtualTree(initialElement)
+			local tree = mountWithNoop(initialElement)
 
-			local success, result = pcall(noopReconciler.updateVirtualTree, tree, updatedElement)
+			local success, result = pcall(VirtualTree.update, tree, updatedElement)
 
 			expect(success).to.equal(false)
 			expect(result:match("willUpdate")).to.be.ok()
@@ -123,9 +132,9 @@ return function()
 			end
 
 			local element = createElement(TestComponent)
-			local tree = noopReconciler.mountVirtualTree(element)
+			local tree = mountWithNoop(element)
 
-			local success, result = pcall(noopReconciler.unmountVirtualTree, tree)
+			local success, result = pcall(VirtualTree.unmount, tree)
 
 			expect(success).to.equal(false)
 			expect(result:match("willUnmount")).to.be.ok()

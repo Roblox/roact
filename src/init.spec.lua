@@ -11,7 +11,6 @@ return function()
 			mount = "function",
 			unmount = "function",
 			update = "function",
-			shallow = "function",
 			oneChild = "function",
 			setGlobalConfig = "function",
 

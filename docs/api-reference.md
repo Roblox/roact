@@ -170,7 +170,11 @@ end
 ### Roact.typeOf
 <div class="api-addition">Added in 1.2.0</div>
 
+```
+Roact.typeOf(roactObject) -> Roact.Type
+```
 
+Returns the [Roact.Type](#roacttype) of the passed in Roact object
 
 ---
 

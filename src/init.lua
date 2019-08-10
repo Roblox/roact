@@ -38,6 +38,7 @@ local Roact = strict {
 	teardown = reconcilerCompat.teardown,
 	reconcile = reconcilerCompat.reconcile,
 
+	isValidElementType = require(script.isValidElementType),
 	typeOf = TypeMirror.typeOf,
 	Type = TypeMirror.Type,
 

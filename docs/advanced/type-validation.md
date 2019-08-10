@@ -9,10 +9,12 @@ Suppose we want to write a `Header` component with a prop for the title child el
 local Header = Component:extend("Header")
 
 function Header:render()
+	local title = props.title
+
 	return Roact.createElement("Frame", {
 		-- Props for Frame...
 	}, {
-		Title = props.title
+		Title = title
 	})
 end
 ```
@@ -22,7 +24,7 @@ Now suppose we want to validate that `title` is actually an element using [valid
 Header.validateProps = function()
 	local title = props.title
 
-	if props.title.component then
+	if title.component then
 		return true
 	end
 

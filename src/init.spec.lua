@@ -14,7 +14,7 @@ return function()
 			oneChild = "function",
 			setGlobalConfig = "function",
 			typeOf = "function",
-			isValidElementType = "function",
+			isComponent = "function",
 
 			-- These functions are deprecated and throw warnings!
 			reify = "function",

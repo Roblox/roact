@@ -178,11 +178,11 @@ Returns the [Roact.Type](#roacttype) of the passed in Roact object
 
 ---
 
-### Roact.isValidElementType
+### Roact.isComponent
 <div class="api-addition">Added in 1.2.0</div>
 
 ```
-Roact.isValidElementType(value) -> bool
+Roact.isComponent(value) -> bool
 ```
 
 Returns true is the provided value can be used by [Roact.createElement](#roactcreateelement).

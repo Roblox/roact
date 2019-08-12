@@ -26,8 +26,12 @@ for _, module in ipairs(LOAD_MODULES) do
 	container.Parent = root
 end
 
-local benchmarks = habitat:loadFromFs("benchmarks")
-benchmarks.Name = "Benchmark"
-benchmarks.Parent = root
+local runBenchMarks = habitat:loadFromFs("benchmarks/init.server.lua")
+runBenchMarks.Name = "RoactBenchmark"
+runBenchMarks.Parent = root
 
-habitat:require(benchmarks)
+local benchmarks = habitat:loadFromFs("benchmarks")
+benchmarks.Name = "Benchmarks"
+benchmarks.Parent = runBenchMarks
+
+habitat:require(runBenchMarks)

@@ -32,7 +32,7 @@ Creates a new Roact fragment with the provided table of elements. Fragments allo
 
 ### Roact.mount
 ```
-Roact.mount(element, [parent, [key]]) -> RoactTree
+Roact.mount(element, [parent, [key]]) -> VirtualTree
 ```
 
 !!! info
@@ -40,29 +40,13 @@ Roact.mount(element, [parent, [key]]) -> RoactTree
 
 Creates a Roblox Instance given a Roact element, and optionally a `parent` to put it in, and a `key` to use as the instance's `Name`.
 
-The result is a `RoactTree`, which is an opaque handle that represents a tree of components owned by Roact. You can pass this to APIs like `Roact.unmount`. It'll also be used for future debugging APIs.
-
----
-
-### Roact.shallow
-```
-Roact.shallow(element, [options]) -> ShallowWrapper
-```
-Options:
-```lua
-{
-	depth: number -- default to 1
-}
-```
-
-Mounts the tree from the given element and wraps the root virtual node into a ShallowWrapper.
--- is this too specific/technical?
+The result is a `VirtualTree`, which is an opaque handle that represents a tree of components owned by Roact. You can pass this to APIs like `Roact.unmount`. It'll also be used for future debugging APIs.
 
 ---
 
 ### Roact.update
 ```
-Roact.update(tree, element) -> RoactTree
+Roact.update(tree, element) -> VirtualTree
 ```
 
 !!! info
@@ -72,7 +56,7 @@ Updates an existing instance handle with a new element, returning a new handle. 
 
 `update` can be used to change the props of a component instance created with `mount` and is useful for putting Roact content into non-Roact applications.
 
-As of Roact 1.0, the returned `RoactTree` object will always be the same value as the one passed in.
+As of Roact 1.0, the returned `VirtualTree` object will always be the same value as the one passed in.
 
 ---
 
@@ -84,7 +68,7 @@ Roact.unmount(tree) -> void
 !!! info
 	`Roact.unmount` is also available via the deprecated alias `Roact.teardown`. It will be removed in a future release.
 
-Destroys the given `RoactTree` and all of its descendants. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.
+Destroys the given `VirtualTree` and all of its descendants. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.
 
 ---
 
@@ -761,3 +745,22 @@ Constraints are passed through a dictionary that maps a constraint name to it's 
 | component | string, function or table | Filter children from their components, by finding the functional component original function, the sub-class table of Roact.Component or from the class name of the instance rendered |
 | props | dictionary | Filters elements that contains at least the given set of props |
 | hostKey | string | Filters elements by the host key used |
+
+---
+
+## VirtualTree
+
+### Methods
+
+#### getShallowWrapper
+```
+getShallowWrapper(options) -> ShallowWrapper
+```
+Options:
+```lua
+{
+	depth: number -- default to 1
+}
+```
+
+Wraps the current tree into a ShallowWrapper.

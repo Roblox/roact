@@ -84,6 +84,21 @@ We use [LuaCov](https://keplerproject.github.io/luacov) for keeping track of cod
 ### Snapshots
 As part of the test suite, there are tests that generates snapshot files (located under `./RoactSnapshots`). To sync back the generated StringValues produce by these on the file system, we suggest using a tool like [`run-in-roblox`](https://github.com/LPGhatguy/run-in-roblox) to make the workflow as simple as possible. In the case where you only need to sync a few files, you can use the plugin to automatically copy back the generated string values from the run mode into module scripts when going back to edit mode. Then simply copy-paste into the new snapshots into the file-system.
 
+#### Using run-in-roblox
+You can install run-in-roblox using [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) with the following command.
+```
+cargo install run-in-roblox
+```
+Once installed, run the [syncing script](bin/sync_snapshots.lua) to execute the tests and sync the created ModuleScripts from Roblox Studio to the file system. This script works by doing 3 tasks:
+1. Build a test place with rojo
+2. Use run-in-roblox to run [run-tests-snapshots.lua](bin/run-tests-snapshots.lua) in the place file
+3. Parse the output of run-in-roblox to copy back the new snapshots to the file system
+
+Run this script using lua stand alone interpreter
+```
+lua bin/run-tests-snapshots.lua
+```
+
 ## Release Checklist
 When releasing a new version of Roact, do these things:
 

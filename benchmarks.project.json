@@ -1,5 +1,5 @@
 {
-  "name": "Roact Test Place",
+  "name": "Roact Benchmarks Place",
   "tree": {
     "$className": "DataModel",
 
@@ -8,30 +8,14 @@
 
       "Roact": {
         "$path": "src"
-      },
-
-      "TestEZ": {
-        "$path": "modules/testez/lib"
-      }
-    },
-
-    "StarterPlayer": {
-      "$className": "StarterPlayer",
-
-      "StarterPlayerScripts": {
-        "$className": "StarterPlayerScripts",
-
-        "RoactExamples": {
-          "$path": "examples"
-        }
       }
     },
 
     "ServerScriptService": {
       "$className": "ServerScriptService",
 
-      "RoactTests": {
-        "$path": "bin/run-tests.server.lua"
+      "RoactBenchmark": {
+        "$path": "benchmarks"
       }
     },
 

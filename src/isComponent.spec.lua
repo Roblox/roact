@@ -25,7 +25,7 @@ return function()
 	end)
 
 	-- In the future, an exhaustive enum of all possible host instance types could enable this check
-	itSKIP("should not return true for a function that returns an invalid type", function() end)
+	itSKIP("should not return true for an invalid host component name", function() end)
 
 	it("should return true for a portal", function()
 		expect(isComponent(Portal)).to.equal(true)

@@ -27,6 +27,9 @@ Snapshots are files that contains serialized data. In Roact's case, snapshots of
 
 During the tests execution, these snapshots are used to verify that they do not change through time.
 
+!!! Note
+	For those using [luacheck](https://github.com/mpeterv/luacheck/) to analyse their Lua files, make sure to run the tool on the generated files. The format of the generated snapshots will probably fail luacheck (often just because of unused variables). There are no advantage to have these files match a specific format.
+
 ---
 
 ### What are Snapshot Tests
@@ -47,15 +50,13 @@ Here is a break down of what happen behind this method.
 
 ---
 
-###
-
-### Where Snapshot Tests Are Good
+#### Where They Are Good
 
 Snapshot tests really shine when comes the time to test for regression.
 
 ---
 
-### Where Snapshot Tests Are Bad
+#### Where They Are Bad
 
 ---
 
@@ -64,8 +65,6 @@ Snapshot tests really shine when comes the time to test for regression.
 ### Within Roblox Studio
 
 When the tests are executed in Run mode (after Run is pressed), the snapshots are going to be created as StringValue objects inside a folder (ReplicatedStorage.RoactSnapshots). Then, pressing Stop to go back edit the place will delete all the new created snapshots values. In order to keep those values, a special plugin is needed to serialize the RoactSnapshots content into a plugin setting. Once the place go back in edit mode, the same plugin will detect the new content in the setting value and recreate the snapshots as ModuleScript objects.
-
-
 
 ---
 

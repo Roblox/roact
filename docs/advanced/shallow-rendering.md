@@ -46,17 +46,117 @@ Here is a break down of what happen behind this method.
 2. If no snapshot exists, generate a new one from the ShallowWrapper and exit, otherwise continue
 3. Require the ModuleScript (the snapshot) to obtain the table containing the data
 4. Compare the loaded data with the generated data from the ShallowWrapper
-5. Throw an error if the data is different from the loaded one
+5. Throw an error if the data is different from the loaded one and generate a new ModuleScript that contains the new generated snapshot (useful for comparison)
+
+---
+
+#### Workflow Example
+
+For a concrete example, suppose the following component (probably in a script named `ComponentToTest`).
+
+```lua
+local function ComponentToTest(props)
+	return Roact.createElement("TextLabel", {
+		Text = "foo",
+	})
+end
+```
+
+A snapshot test could be written this way (probably in a script named `ComponentToTest.spec`).
+
+```lua
+it("should match the snapshot", function()
+	local element = Roact.createElement(ComponentToTest)
+	local tree = Roact.mount(element)
+	local shallowWrapper = tree:getShallowWrapper()
+
+	shallowWrapper:matchSnapshot("ComponentToTest")
+end)
+```
+
+After the first run, the test will have created a new script under `RoactSnapshots` called `ComponentToTest` that contains the following Lua code.
+
+```lua
+return function(dependencies)
+  local Roact = dependencies.Roact
+  local ElementKind = dependencies.ElementKind
+  local Markers = dependencies.Markers
+
+  return {
+    type = {
+      kind = ElementKind.Host,
+      className = "TextLabel",
+    },
+    hostKey = "RoactTree",
+    props = {
+      Text = "foo",
+    },
+    children = {},
+  }
+end
+```
+
+Since these tests require the previous snapshots to compare with the current generated one, snapshots need to be committed to the version control software used for development. So the new component, the test and the generated snapshot would be commit and ready for review. The reviewer(s) will be able to review your snapshot as part of the normal review process.
+
+Suppose now ComponentToTest needs a change. We update it to the following snippet.
+
+```lua
+local function ComponentToTest(props)
+	return Roact.createElement("TextLabel", {
+		Text = "bar",
+	})
+end
+```
+
+When we run back the previous test, it will fail and the message is going to tell us that the snapshots did not match. There will be a new script under `RoactSnapshots` called `ComponentToTest.NEW` that shows the new version of the snapshot.
+
+```lua
+return function(dependencies)
+  local Roact = dependencies.Roact
+  local ElementKind = dependencies.ElementKind
+  local Markers = dependencies.Markers
+
+  return {
+    type = {
+      kind = ElementKind.Host,
+      className = "TextLabel",
+    },
+    hostKey = "RoactTree",
+    props = {
+      Text = "bar",
+    },
+    children = {},
+  }
+end
+```
+
+Since this example is trivial, it is easy to diff with human eyes and see that only the `Text` prop value changed from *foo* to *bar*. Since these changes are expected from the modification made to the component, we can delete the old snapshot and remove the `.NEW` from the newest one. If the tests are run again, they should all pass now.
+
+Again, the updated snapshot will be committed to source control along with the component changes. That way, the reviewer will see exactly what changed in the snapshot, so they can make sure the changes are expected. But why go through all this process for such a trivial change?
+
+Well, in most project complexity arise soon and components start to have more behavior. To make sure that certain behavior is not lost with a change, snapshot tests can assert that a button has a certain state after being clicked or while hovered.
 
 ---
 
 #### Where They Are Good
 
+##### Regression
+
 Snapshot tests really shine when comes the time to test for regression.
+
+##### Carefully Reviewed
 
 ---
 
 #### Where They Are Bad
+
+##### Large Snapshots
+
+If a snapshot is created from a top level component with a ShallowWrapper that renders deeply, it can produce a really large snapshot file with lots of details. What is bad with this snapshot, is that everytime a child of this component will change, the snapshot will fail.
+
+This snapshot test will soon become an inconvenience and developers will slowly stop caring about it. The snapsot will not be reviewed correctly, because developers will be used to see the snapshot update on every new change submitted.
+
+To avoid this situation, it is truly important that each snapshots is kept as simple and small as possible. That is why the ShallowWrapper is deeply linked with the snapshot generation: it is needed to abstract the children of a component instead of making a snapshot that contains the whole tree.
 
 ---
 

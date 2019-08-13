@@ -146,6 +146,8 @@ Snapshot tests really shine when comes the time to test for regression.
 
 ##### Carefully Reviewed
 
+Changes made to a snapshot file needs to be reviewed carefully as if it was hand written code. A reviewer needs to be able to catch any unexpected changes to a component. Any source control software should provide some way to see a diff of the changes that are going to be submitted. If a snapshot diff shows a difference of color property for a change that is supposed to update the sizing, the reviewer should point it to the developer and make sure the issue is solved because accepting the changes.
+
 ---
 
 #### Where They Are Bad
@@ -156,7 +158,7 @@ If a snapshot is created from a top level component with a ShallowWrapper that r
 
 This snapshot test will soon become an inconvenience and developers will slowly stop caring about it. The snapsot will not be reviewed correctly, because developers will be used to see the snapshot update on every new change submitted.
 
-To avoid this situation, it is truly important that each snapshots is kept as simple and small as possible. That is why the ShallowWrapper is deeply linked with the snapshot generation: it is needed to abstract the children of a component instead of making a snapshot that contains the whole tree.
+To avoid this situation, it is truly important that each snapshot is kept as simple and as small as possible. That is why the ShallowWrapper is deeply linked with the snapshot generation: it is needed to abstract the children of a component instead of making a snapshot that contains the whole tree.
 
 ---
 

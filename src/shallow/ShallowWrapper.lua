@@ -193,7 +193,7 @@ function ShallowWrapperPublic:matchSnapshot(identifier)
 	snapshotResult:match()
 end
 
-function ShallowWrapperPublic:snapshotToString()
+function ShallowWrapperPublic:toSnapshotString()
 	return Snapshot.toString(self)
 end
 

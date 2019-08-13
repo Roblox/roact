@@ -740,9 +740,9 @@ If no previous snapshot with the given identifier exists, it will create a new S
 
 ---
 
-#### snapshotToString
+#### toSnapshotString
 ```
-snapshotToString() -> string
+toSnapshotString() -> string
 ```
 Returns the string source of the snapshot. Useful for debugging purposes.
 

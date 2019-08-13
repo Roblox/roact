@@ -1,6 +1,7 @@
 # Roact Changelog
 
 ## Unreleased Changes
+* Fixed a bug where derived state was lost when assigning directly to state in init ([#232](https://github.com/Roblox/roact/pull/232/))
 * Improved the error message when an invalid changed hook name is used. ([#216](https://github.com/Roblox/roact/pull/216))
 * Fixed a bug where fragments could not be used as children of an element or another fragment. ([#214](https://github.com/Roblox/roact/pull/214))
 

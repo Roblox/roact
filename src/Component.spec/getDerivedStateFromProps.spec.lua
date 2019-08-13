@@ -91,7 +91,12 @@ return function()
 			someState = 2,
 		})
 
-		expect(getDerivedSpy.callCount).to.equal(3)
+		-- getDerivedStateFromProps will be called:
+		-- * Once on empty props
+		-- * Once during the self:setState in init
+		-- * Once more, defensively, on the resulting state AFTER init
+		-- * On updating with new state via updateVirtualNode
+		expect(getDerivedSpy.callCount).to.equal(4)
 
 		local values = getDerivedSpy:captureValues("props", "state")
 
@@ -123,7 +128,11 @@ return function()
 
 		noopReconciler.mountVirtualNode(element, hostParent, hostKey)
 
-		expect(getDerivedSpy.callCount).to.equal(2)
+		-- getDerivedStateFromProps will be called:
+		-- * Once on empty props
+		-- * Once during the self:setState in init
+		-- * Once more, defensively, on the resulting state AFTER init
+		expect(getDerivedSpy.callCount).to.equal(3)
 
 		local values = getDerivedSpy:captureValues("props", "state")
 

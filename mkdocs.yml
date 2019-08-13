@@ -23,6 +23,7 @@ nav:
     - Portals: advanced/portals.md
     - Bindings and Refs: advanced/bindings-and-refs.md
     - Context: advanced/context.md
+    - Shallow Rendering: advanced/shallow-rendering.md
   - Performance Optimization:
     - Overview: performance/overview.md
     - Reduce Reconcilation: performance/reduce-reconciliation.md

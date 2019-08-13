@@ -28,7 +28,7 @@ return function()
 				[Roact.Event.Activated] = function()
 					print("Button clicked; have the TextBox capture focus")
 					self.textBoxRef:getValue():CaptureFocus()
-				end
+				end,
 			}),
 
 			SearchTextBox = Roact.createElement("TextBox", {
@@ -36,7 +36,7 @@ return function()
 				Position = UDim2.new(0, 50, 0, 0),
 
 				-- Use Roact.Ref to get a reference to the underlying object
-				[Roact.Ref] = self.textBoxRef
+				[Roact.Ref] = self.textBoxRef,
 			}),
 		})
 	end

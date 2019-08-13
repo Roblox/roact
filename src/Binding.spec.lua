@@ -1,6 +1,7 @@
 return function()
 	local createSpy = require(script.Parent.createSpy)
 	local Type = require(script.Parent.Type)
+	local GlobalConfig = require(script.Parent.GlobalConfig)
 
 	local Binding = require(script.Parent.Binding)
 
@@ -241,20 +242,28 @@ return function()
 		end)
 
 		it("should throw when a non-table value is passed", function()
-			expect(function()
-				Binding.join("hi")
-			end).to.throw()
+			GlobalConfig.scoped({
+				typeChecks = true,
+			}, function()
+				expect(function()
+					Binding.join("hi")
+				end).to.throw()
+			end)
 		end)
 
 		it("should throw when a non-binding value is passed via table", function()
-			expect(function()
-				local binding = Binding.create(123)
+			GlobalConfig.scoped({
+				typeChecks = true,
+			}, function()
+				expect(function()
+					local binding = Binding.create(123)
 
-				Binding.join({
-					binding,
-					"abcde",
-				})
-			end).to.throw()
+					Binding.join({
+						binding,
+						"abcde",
+					})
+				end).to.throw()
+			end)
 		end)
 	end)
 end

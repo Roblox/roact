@@ -18,7 +18,7 @@ stds.roblox = {
 		"CFrame",
 		"Enum",
 		"Instance",
-        "TweenInfo",
+		"TweenInfo",
 	}
 }
 

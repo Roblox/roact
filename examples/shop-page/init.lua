@@ -19,6 +19,7 @@ return function()
 		padding = 10,
 		frameProps = {
 			AnchorPoint = Vector2.new(0.5, 0.5),
+			BackgroundColor3 = Color3.fromRGB(0, 3, 20),
 			BorderSizePixel = 0,
 			Position = UDim2.new(0.5, 0, 0.5, 0),
 			Size = UDim2.new(0.5, 0, 0.5, 0),

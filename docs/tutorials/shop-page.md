@@ -1,24 +1,31 @@
 # Shop page
 _Goal: Create a page to sell developer products in a game._
 
-[add an image of the result we are expecting]
+<div align="center">
+	<a href="../../images/shop-page.jpg">
+		<img src="../../images/shop-page.jpg" alt="Shop Page Preview" />
+	</a>
+</div>
 
-## The ShopPage component
+---
+
+## The ShopPage Component
 
 Let's start by creating the top level component, which will be the page that contains the items for sale in the game. When creating a new component, we need to think about what this component will manage and what will be given to that component from the parent component.
 
 In our case, the ShopPage component we're making will receive its products from a parent component: that means that the product items will be received as props in our component.
 
-> Props or state?
->
-> This is a question that often comes to our mind when we start working with Roact. Remember that state is internal to the component. Things that are relevant only to a component should go in the state.
->
-> On the other hand, props are used to pass data from parent components to child components. It implies that both parent component and its child are aware of the structure of the props dictionary and depend on it.
+!!! Note
+	<h5>Props or state?</h5>
+	This is a question that often comes to our mind when we start working with Roact. Remember that state is internal to the component. Things that are relevant only to a component should go in the state.
+
+	On the other hand, props are used to pass data from parent components to child components. It implies that both parent component and its child are aware of the structure of the props dictionary and depend on it.
 
 For our first draft of the component, we will define some props to be able to pass parameters to customize our shop page. We will start by adding the following:
- - **frameProps:** a dictionary of props that will be passed to the ScrollingFrame to change its visuals
- - **items:** a list of objects that represent the products we want to sell
- - **padding:** the number of pixels between each of our items in the shop
+
+  - **frameProps:** a dictionary of props that will be passed to the ScrollingFrame to change its visuals
+  - **items:** a list of objects that represent the products we want to sell
+  - **padding:** the number of pixels between each of our items in the shop
 
 ```lua
 local ShopPage = Roact.Component:extend("ShopPage")
@@ -46,7 +53,9 @@ return ShopPage
 
 As you can see, `frameProps` is used when creating the ScrollingFrame! This way, we can control how the container looks from outside the parent of the component.
 
-### Viewing the component
+---
+
+### Viewing the Component
 
 Now that we have started working on our first component, we want to be able to see the results. To do that, let's create a LocalScript that will let us view our component. This script needs to mount our ShopPage into a parent, which will simply be a ScreenGui.
 
@@ -54,7 +63,8 @@ Now that we have started working on our first component, we want to be able to s
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
--- we assume here that the components are located in a folder under ReplicatedStorage
+-- we assume here that the components are located in
+-- a folder under ReplicatedStorage
 local Components = ReplicatedStorage:WaitForChild("Components")
 
 local Roact = require(ReplicatedStorage.Roact)
@@ -65,11 +75,15 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 
 local shopPage = Roact.createElement(ShopPage, {
-	items = {}, -- we're not ready for this yet so it's just an empty list
+	-- we're not ready for this yet so it's just
+	-- an empty list
+	items = {},
 	padding = 10,
 	frameProps = {
-		-- here we define the properties of the ScrollingFrame for our ShopPage
+		-- here we define the properties of the ScrollingFrame
+		-- for our ShopPage
 		AnchorPoint = Vector2.new(0.5, 0.5),
+		BackgroundColor3 = Color3.fromRGB(0, 3, 20),
 		BorderSizePixel = 0,
 		Position = UDim2.new(0.5, 0, 0.5, 0),
 		Size = UDim2.new(0.5, 0, 0.5, 0),
@@ -80,14 +94,18 @@ Roact.mount(shopPage, screenGui)
 ```
 
 The two important things to notice here are:
- - An element is created from our ShopPage component, where we specified the different props we want
- - `Roact.mount` will create the real GUI instances we need to see the results
+
+  - An element is created from our ShopPage component, where we specified the different props we want
+  - `Roact.mount` will create the real GUI instances we need to see the results
+
+---
 
 ### Adjusting Canvas Size from Items
 
 We want to adjust the ScrollingFrame so its *CanvasSize* property always fits the height of the items. For that, we will add new props to control the sizing of the grid elements.
- - **itemsPerRow:** the number of items on each row
- - **itemAspectRatio:** the aspect ratio of each item
+
+  - **itemsPerRow:** the number of items on each row
+  - **itemAspectRatio:** the aspect ratio of each item
 
 We can pass those props down from the script that mounts the ShopPage component. We can edit the previous script to add those props.
 
@@ -101,6 +119,7 @@ local shopPage = Roact.createElement(ShopPage, {
 	padding = 10,
 	frameProps = {
 		AnchorPoint = Vector2.new(0.5, 0.5),
+		BackgroundColor3 = Color3.fromRGB(0, 3, 20),
 		BorderSizePixel = 0,
 		Position = UDim2.new(0.5, 0, 0.5, 0),
 		Size = UDim2.new(0.5, 0, 0.5, 0),
@@ -189,35 +208,44 @@ function ShopPage:render()
 end
 ```
 
-> Aspect Ratio
->
-> Aspect ratio is a number that represent the relation between the width and the height of an image. It can easily be calculated by dividing the width by the height of the image. In the previous snippet, we are using the given aspect ratio to calculate the space needed to fit all the items. We start by calculating the width of a cell by taking the width of the scrolling frame, removing the padding between all the items and then divide it by the number of items on a row.
-> ```lua
-> availableWidth = totalWidth - padding * (itemsPerRow + 1)
-> cellWidth = availableWidth / itemsPerRow
-> ```
-> So now in order to maintain the aspect ratio, we can calculate the height of the cell by dividing the width by the aspect ratio.
-> ```lua
-> cellHeight = cellWidth / aspectRatio
-> ```
+!!! Note
+	<h5>Aspect Ratio</h5>
+	Aspect ratio is a number that represent the relation between the width and the height of an image. It can easily be calculated by dividing the width by the height of the image. In the previous snippet, we are using the given aspect ratio to calculate the space needed to fit all the items. We start by calculating the width of a cell by taking the width of the scrolling frame, removing the padding between all the items and then divide it by the number of items on a row.
+
+	```lua
+	availableWidth = totalWidth - padding * (itemsPerRow + 1)
+	cellWidth = availableWidth / itemsPerRow
+	```
+
+	So now in order to maintain the aspect ratio, we can calculate the height of the cell by dividing the width by the aspect ratio.
+
+	```lua
+	cellHeight = cellWidth / aspectRatio
+	```
+
+---
 
 ## Adding Items
 
 In the previous section we created a ScrollingFrame that contains a UIGridLayout object. Now, we want to add elements that represent each item we sell in our shop. In order to be able to add a variable amount of items in our component, we will iterate on the list of products to create an element for each of them.
 
 To keep our component simple, let's divide this feature into different components:
- - **Item:** a card that shows the price of an item with its image, and when clicked prompts the player to buy the product
- - **ItemList:** iterate on the list of items to create each individual Item element
+
+  - **Item:** a card that shows the price of an item with its image, and when clicked prompts the player to buy the product
+  - **ItemList:** iterate on the list of items to create each individual Item element
+
+---
 
 ### ItemList
 
 This component will simply be given the product list and create all the Item elements. Since it does not need any internal state, a functional component will do the job. We have not made our Item component yet, but we will pretend it is there for now.
 
 We will define the props that the Item component will use to render its component. We will make it accepts these props:
-- **image:** the image representing the product that the component will display.
-- **price:** how many robux the product costs.
-- **productId:** the identifier of the developer product.
-- **order:** used to specify the order of the items in the shop. We will make this optional, so if it is not provided, it will sort the items by their costs.
+
+  - **image:** the image representing the product that the component will display.
+  - **price:** how many robux the product costs.
+  - **productId:** the identifier of the developer product.
+  - **order:** used to specify the order of the items in the shop. We will make this optional, so if it is not provided, it will sort the items by their costs.
 
 ```lua
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -250,9 +278,9 @@ end
 return ItemList
 ```
 
-> **Fragments**
->
-> Elements contained in a Fragment are parented to the Fragment's parent. That way responsibilities of the grid view can be split from the content. The ShopPage component will handle the grid view, so it owns the *UIGridLayout* object, and it will give the responsibility to the *ItemList* component to take care of the content.
+!!! Note
+	<h5>Fragments</h5>
+	Elements contained in a Fragment are parented to the Fragment's parent. That way responsibilities of the grid view can be split from the content. The ShopPage component will handle the grid view, so it owns the *UIGridLayout* object, and it will give the responsibility to the *ItemList* component to take care of the content.
 
 With that, we can go change our render function in the ShopPage component to create an element of ItemList and pass the items list as a prop.
 
@@ -271,6 +299,7 @@ return Roact.createElement("ScrollingFrame", frameProps, {
 })
 ```
 
+---
 
 ## Item
 For our last component, we are going to use a stateful component to be able to use some lifecycle methods. Let's start first by doing a basic view of our props.
@@ -333,6 +362,7 @@ local shopPage = Roact.createElement(ShopPage, {
 	frameProps = {
 		-- here we define the properties of the ScrollingFrame for our ShopPage
 		AnchorPoint = Vector2.new(0.5, 0.5),
+		BackgroundColor3 = Color3.fromRGB(0, 3, 20),
 		BorderSizePixel = 0,
 		Position = UDim2.new(0.5, 0, 0.5, 0),
 		Size = UDim2.new(0.5, 0, 0.5, 0),
@@ -373,11 +403,14 @@ return Roact.createElement("ImageButton", {
 	...
 end
 ```
-> **Why are there brackets here?**
->
-> In lua, the keys in a table can be any value. The most common way to map keys and values in a table construction is with `foo = something`. In this case, `foo` will be considered a string. So if we had this entry in a table `t`, we can access its value with `t.foo` or `t["foo"]`.
->
-> What if we want a key like `"foo.bar"`? For this, the lua syntax allow us to write this entry as `["foo.bar"] = something`. So between the brackets, any value can be given. That is why brackets are use for `Roact.Event.Activated`: we don't want to pass a string that could collide with other props, instead we use a unique value owned by Roact.
+
+!!! Note
+	<h5>Why are there brackets here?</h5>
+	In lua, the keys in a table can be any value. The most common way to map keys and values in a table construction is with `foo = something`. In this case, `foo` will be considered a string. So if we had this entry in a table `t`, we can access its value with `t.foo` or `t["foo"]`.
+
+	What if we want a key like `"foo.bar"`? For this, the lua syntax allow us to write this entry as `["foo.bar"] = something`. So between the brackets, any value can be given. That is why brackets are use for `Roact.Event.Activated`: we don't want to pass a string that could collide with other props, instead we use a unique value owned by Roact.
+
+---
 
 ## Adding Animations
 
@@ -428,8 +461,10 @@ function Item:willUnmount()
 end
 ```
 
+---
+
 ## Integration in a non-Roact project
-If your game already already has UI elements, you don't have to redo them in Roact in order to integrate this ShopPage component into your game. Roact can be used in an existing UI tree. For example, let's say you would already have a ScreenGui with a Frame inside where you'd would like to put this component. In a LocalScript, you would simply have to mount the ShopPage component in the Frame.
+If your game already has UI elements, you don't have to redo them in Roact in order to integrate this ShopPage component into your game. Roact can be used in an existing UI tree. For example, let's say you would have a ScreenGui with a Frame inside where you'd would like to put this component. In a LocalScript, you would simply have to mount the ShopPage component in the Frame.
 
 ```lua
 local Players = game:GetService("Players")
@@ -445,8 +480,8 @@ local shopPage = Roact.createElement(ShopPage, {
 	itemsPerRow = 3,
 	padding = 10,
 	frameProps = {
-		-- Customize the scrolling frame here. For example, we can make this
-		-- one transparent and fill up the container
+		-- Customize the scrolling frame here. For example, we can
+		-- make this one transparent and fill up the container
 		BackgroundTransparency = 1,
 		Position = UDim2.new(0, 0, 0, 0),
 		Size = UDim2.new(1, 0, 1, 0),

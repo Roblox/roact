@@ -54,20 +54,6 @@ local function findNextVirtualNode(virtualNode, maxDepth)
 	return currentNode
 end
 
-local function countChildrenOfElement(element)
-	if ElementKind.of(element) == ElementKind.Fragment then
-		local count = 0
-
-		for _, subElement in pairs(element.elements) do
-			count = count + countChildrenOfElement(subElement)
-		end
-
-		return count
-	else
-		return 1
-	end
-end
-
 local function getChildren(virtualNode, results, maxDepth)
 	if ElementKind.of(virtualNode.currentElement) == ElementKind.Fragment then
 		for _, subVirtualNode in pairs(virtualNode.children) do
@@ -122,10 +108,6 @@ function ShallowWrapper.new(virtualNode, maxDepth)
 	end
 
 	return setmetatable(wrapper, ShallowWrapperMetatable)
-end
-
-function ShallowWrapperPublic:childrenCount()
-	return #self.children
 end
 
 function ShallowWrapperPublic:find(constraints)

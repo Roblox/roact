@@ -653,14 +653,6 @@ The `hostKey` that is used to map the element to it's parent.
 
 ### Methods
 
-#### childrenCount
-```
-childrenCount() -> number
-```
-Returns the amount of children that the current ShallowWrapper contains.
-
----
-
 #### find
 ```
 find([constraints]) -> list[ShallowWrapper]

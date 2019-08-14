@@ -21,6 +21,6 @@ return function()
 		local wrapper = shallow(rootNode)
 		local childWrapper = wrapper:findUnique()
 
-		expect(childWrapper:childrenCount()).to.equal(0)
+		expect(#childWrapper.children).to.equal(0)
 	end)
 end

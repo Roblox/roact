@@ -52,7 +52,7 @@ return function()
 
 			local result = shallow(element)
 
-			expect(result:childrenCount()).to.equal(0)
+			expect(#result.children).to.equal(0)
 		end)
 	end)
 
@@ -207,7 +207,7 @@ return function()
 				depth = 0,
 			})
 
-			expect(result:childrenCount()).to.equal(0)
+			expect(#result.children).to.equal(0)
 		end)
 
 		it("should not include any grand-children when depth is one", function()
@@ -223,18 +223,18 @@ return function()
 				depth = 1,
 			})
 
-			expect(result:childrenCount()).to.equal(1)
+			expect(#result.children).to.equal(1)
 
 			local componentWithChildrenWrapper = result:find({
 				component = ComponentWithChildren,
 			})[1]
 			expect(componentWithChildrenWrapper).to.be.ok()
 
-			expect(componentWithChildrenWrapper:childrenCount()).to.equal(0)
+			expect(#componentWithChildrenWrapper.children).to.equal(0)
 		end)
 	end)
 
-	describe("childrenCount", function()
+	describe("children count", function()
 		local childClassName = "TextLabel"
 
 		local function Component(props)
@@ -247,24 +247,24 @@ return function()
 			return createElement("Frame", {}, children)
 		end
 
-		it("should return 1 when the element contains only one child element", function()
+		it("should have 1 child when the element contains only one element", function()
 			local element = createElement(Component, {
 				childrenCount = 1,
 			})
 
 			local result = shallow(element)
 
-			expect(result:childrenCount()).to.equal(1)
+			expect(#result.children).to.equal(1)
 		end)
 
-		it("should return 0 when the element does not contain elements", function()
+		it("should not have any children when the element does not contain elements", function()
 			local element = createElement(Component, {
 				childrenCount = 0,
 			})
 
 			local result = shallow(element)
 
-			expect(result:childrenCount()).to.equal(0)
+			expect(#result.children).to.equal(0)
 		end)
 
 		it("should count children in a fragment", function()
@@ -277,7 +277,7 @@ return function()
 
 			local result = shallow(element)
 
-			expect(result:childrenCount()).to.equal(2)
+			expect(#result.children).to.equal(2)
 		end)
 
 		it("should count children nested in fragments", function()
@@ -293,7 +293,7 @@ return function()
 
 			local result = shallow(element)
 
-			expect(result:childrenCount()).to.equal(3)
+			expect(#result.children).to.equal(3)
 		end)
 	end)
 

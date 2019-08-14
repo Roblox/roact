@@ -280,10 +280,7 @@ function Component:__mount(reconciler, virtualNode)
 
 	if instance.init ~= nil then
 		instance:init(instance.props)
-		instance.state = assign(
-			instance.state,
-			instance:__getDerivedState(instance.props, instance.state)
-		)
+		assign(instance.state, instance:__getDerivedState(instance.props, instance.state))
 	end
 
 	-- It's possible for init() to redefine _context!

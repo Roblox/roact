@@ -1,7 +1,6 @@
 return function()
 	local RoactRoot = script.Parent.Parent.Parent
 
-	local ElementKind = require(RoactRoot.ElementKind)
 	local createElement = require(RoactRoot.createElement)
 	local createReconciler = require(RoactRoot.createReconciler)
 	local RoactComponent = require(RoactRoot.Component)

@@ -18,26 +18,6 @@ return function()
 		return robloxReconciler.mountVirtualNode(element, HOST_PARENT, HOST_KEY)
 	end
 
-	describe("kind", function()
-		it("should return true when the element is of the same kind", function()
-			local element = createElement("TextLabel")
-			local virtualNode = getVirtualNode(element)
-
-			local result = Constraints.kind(virtualNode, ElementKind.Host)
-
-			expect(result).to.equal(true)
-		end)
-
-		it("should return false when the element is not of the same kind", function()
-			local element = createElement("TextLabel")
-			local virtualNode = getVirtualNode(element)
-
-			local result = Constraints.kind(virtualNode, ElementKind.Stateful)
-
-			expect(result).to.equal(false)
-		end)
-	end)
-
 	describe("className", function()
 		it("should return true when a host virtualNode has the given class name", function()
 			local className = "TextLabel"

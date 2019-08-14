@@ -8,10 +8,6 @@ local Constraints = setmetatable({}, {
 	end,
 })
 
-function Constraints.kind(virtualNode, expectKind)
-	return ElementKind.of(virtualNode.currentElement) == expectKind
-end
-
 function Constraints.className(virtualNode, className)
 	local element = virtualNode.currentElement
 	local isHost = ElementKind.of(element) == ElementKind.Host

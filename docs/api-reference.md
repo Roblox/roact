@@ -669,7 +669,6 @@ Constraints are passed through a dictionary that maps a constraint name to it's 
 
 | name | value type | description |
 | --- | --- | --- |
-| kind | ElementKind | Filters with the ElementKind of the rendered elements |
 | className | string | Filters children that renders to host instance of the given class name |
 | component | string, function or table | Filter children from their components, by finding the functional component original function, the sub-class table of Roact.Component or from the class name of the instance rendered |
 | props | dictionary | Filters elements that contains at least the given set of props |

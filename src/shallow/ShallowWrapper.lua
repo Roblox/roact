@@ -102,41 +102,39 @@ end
 function ShallowWrapper.new(virtualNode, maxDepth)
 	virtualNode = findNextVirtualNode(virtualNode, maxDepth)
 
+	local internalData = {
+		virtualNode = virtualNode,
+		childrenMaxDepth = maxDepth - 1,
+		virtualNodeChildren = maxDepth == 0 and {} or virtualNode.children,
+		instance = virtualNode.hostObject,
+	}
+
 	local wrapper = {
-		[InternalData] = {
-			virtualNode = virtualNode,
-			childrenMaxDepth = maxDepth - 1,
-			virtualNodeChildren = maxDepth == 0 and {} or virtualNode.children,
-			instance = virtualNode.hostObject,
-		},
+		[InternalData] = internalData,
 		type = getTypeFromVirtualNode(virtualNode),
 		props = filterProps(virtualNode.currentElement.props),
 		hostKey = virtualNode.hostKey,
+		children = {},
 	}
+
+	for _, childVirtualNode in pairs(internalData.virtualNodeChildren) do
+		getChildren(childVirtualNode, wrapper.children, internalData.childrenMaxDepth)
+	end
 
 	return setmetatable(wrapper, ShallowWrapperMetatable)
 end
 
 function ShallowWrapperPublic:childrenCount()
-	local count = 0
-	local internalData = self[InternalData]
-
-	for _, virtualNode in pairs(internalData.virtualNodeChildren) do
-		local element = virtualNode.currentElement
-		count = count + countChildrenOfElement(element)
-	end
-
-	return count
+	return #self.children
 end
 
 function ShallowWrapperPublic:find(constraints)
 	VirtualNodeConstraints.validate(constraints)
 
 	local results = {}
-	local children = self:getChildren()
 
-	for i=1, #children do
-		local childWrapper = children[i]
+	for i=1, #self.children do
+		local childWrapper = self.children[i]
 		local childInternalData = childWrapper[InternalData]
 
 		if VirtualNodeConstraints.satisfiesAll(childInternalData.virtualNode, constraints) then
@@ -148,14 +146,12 @@ function ShallowWrapperPublic:find(constraints)
 end
 
 function ShallowWrapperPublic:findUnique(constraints)
-	local children = self:getChildren()
-
 	if constraints == nil then
 		assert(
-			#children == 1,
-			("expect to contain exactly one child, but found %d"):format(#children)
+			#self.children == 1,
+			("expect to contain exactly one child, but found %d"):format(#self.children)
 		)
-		return children[1]
+		return self.children[1]
 	end
 
 	local constrainedChildren = self:find(constraints)
@@ -166,17 +162,6 @@ function ShallowWrapperPublic:findUnique(constraints)
 	)
 
 	return constrainedChildren[1]
-end
-
-function ShallowWrapperPublic:getChildren()
-	local results = {}
-	local internalData = self[InternalData]
-
-	for _, childVirtualNode in pairs(internalData.virtualNodeChildren) do
-		getChildren(childVirtualNode, results, internalData.childrenMaxDepth)
-	end
-
-	return results
 end
 
 function ShallowWrapperPublic:getInstance()

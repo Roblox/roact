@@ -117,7 +117,7 @@ function Snapshot.new(wrapper)
 		type = Snapshot.type(wrapper.type),
 		hostKey = wrapper.hostKey,
 		props = Snapshot.props(wrapper.props),
-		children = Snapshot.children(wrapper:getChildren()),
+		children = Snapshot.children(wrapper.children),
 	}
 end
 

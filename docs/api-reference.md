@@ -633,11 +633,16 @@ The type dictionary always has the `kind` field that tell the component type. Ad
 
 ---
 
+#### children
+The list of children components wrapped into ShallowWrappers.
+
+---
+
 #### props
 The props of the ShallowWrapper.
 
 !!! note
-	This dictionary will not contain the `Roact.Children` prop. To obtain the children elements wrapped into a ShallowWrapper, use the method `getChildren()`
+	This dictionary will not contain the `Roact.Children` prop. To obtain the children elements wrapped into a ShallowWrapper, use the `children` field.
 
 ---
 
@@ -660,7 +665,7 @@ Returns the amount of children that the current ShallowWrapper contains.
 ```
 find([constraints]) -> list[ShallowWrapper]
 ```
-When a dictionary of constraints is provided, the function will filter the children that do not satisfy all given constraints. Otherwise, as `getChildren` do, it returns a list of all children wrapped into ShallowWrappers.
+When a dictionary of constraints is provided, the function will filter the children that do not satisfy all given constraints. Otherwise, it returns the `children` field that contains all children wrapped into ShallowWrappers.
 
 ---
 
@@ -684,13 +689,6 @@ Similar to `find`, this method will assert that only one child satisfies the giv
 
 ---
 
-#### getChildren
-```
-getChildren() -> list[ShallowWrapper]
-```
-Returns a list of all children wrapped into ShallowWrappers.
-
----
 
 #### getInstance
 ```

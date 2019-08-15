@@ -395,7 +395,7 @@ return function()
 		end)
 	end)
 
-	describe("getInstance", function()
+	describe("getHostObject", function()
 		it("should return the instance when it is a host component", function()
 			local className = "Frame"
 			local function Component(props)
@@ -405,7 +405,7 @@ return function()
 			local element = createElement(Component)
 			local wrapper = shallow(element)
 
-			local instance = wrapper:getInstance()
+			local instance = wrapper:getHostObject()
 
 			expect(instance).to.be.ok()
 			expect(instance.ClassName).to.equal(className)
@@ -422,7 +422,7 @@ return function()
 			local element = createElement(Component)
 			local wrapper = shallow(element)
 
-			local instance = wrapper:getInstance()
+			local instance = wrapper:getHostObject()
 
 			expect(instance).never.to.be.ok()
 		end)

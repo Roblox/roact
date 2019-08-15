@@ -146,7 +146,7 @@ function ShallowWrapperPublic:findUnique(constraints)
 	return constrainedChildren[1]
 end
 
-function ShallowWrapperPublic:getInstance()
+function ShallowWrapperPublic:getHostObject()
 	local internalData = self[InternalData]
 
 	return internalData.instance

@@ -682,9 +682,9 @@ Similar to `find`, this method will assert that only one child satisfies the giv
 ---
 
 
-#### getInstance
+#### getHostObject
 ```
-getInstance() -> Instance or nil
+getHostObject() -> Instance or nil
 ```
 Returns the instance object associated with the ShallowWrapper. It can return `nil` if the component wrapped by the ShallowWrapper does not render an instance, but rather another component. Here is an example:
 
@@ -709,11 +709,11 @@ local tree = Roact.mount(element)
 
 local wrapper = tree:getShallowWrapper()
 
-print(wrapper:getInstance() == nil) -- prints false
+print(wrapper:getHostObject() == nil) -- prints false
 
 local coolWrapper = wrapper:findUnique()
 
-print(coolWrapper:getInstance() == nil) -- prints true
+print(coolWrapper:getHostObject() == nil) -- prints true
 ```
 
 ---

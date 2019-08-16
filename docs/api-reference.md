@@ -681,7 +681,6 @@ Similar to `find`, this method will assert that only one child satisfies the giv
 
 ---
 
-
 #### getHostObject
 ```
 getHostObject() -> Instance or nil

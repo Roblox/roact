@@ -75,6 +75,14 @@ function Serializer.tableValue(value)
 	elseif valueType == "EnumItem" then
 		return ("%s"):format(tostring(value))
 
+	elseif valueType == "Rect" then
+		return ("Rect.new(%s, %s, %s, %s)"):format(
+			Serializer.number(value.Min.X),
+			Serializer.number(value.Min.Y),
+			Serializer.number(value.Max.X),
+			Serializer.number(value.Max.Y)
+		)
+
 	elseif valueType == "UDim" then
 		return ("UDim.new(%s, %d)"):format(Serializer.number(value.Scale), value.Offset)
 

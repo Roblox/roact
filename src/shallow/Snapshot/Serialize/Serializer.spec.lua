@@ -133,6 +133,12 @@ return function()
 			expect(result).to.equal("Color3.new(0.1, 0.2, 0.3)")
 		end)
 
+		it("should serialize Rect", function()
+			local result = Serializer.tableValue(Rect.new(0.1, 0.2, 0.3, 0.4))
+
+			expect(result).to.equal("Rect.new(0.1, 0.2, 0.3, 0.4)")
+		end)
+
 		it("should serialize UDim", function()
 			local result = Serializer.tableValue(UDim.new(1.2, 0))
 

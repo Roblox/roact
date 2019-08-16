@@ -104,7 +104,7 @@ function Snapshot.children(children)
 	for i=1, #children do
 		local childWrapper = children[i]
 
-		serializedChildren[i] = Snapshot.new(childWrapper)
+		serializedChildren[i] = Snapshot.child(childWrapper)
 	end
 
 	table.sort(serializedChildren, sortSerializedChildren)
@@ -112,13 +112,20 @@ function Snapshot.children(children)
 	return serializedChildren
 end
 
-function Snapshot.new(wrapper)
+function Snapshot.child(wrapper)
 	return {
 		type = Snapshot.type(wrapper.type),
 		hostKey = wrapper.hostKey,
 		props = Snapshot.props(wrapper.props),
 		children = Snapshot.children(wrapper.children),
 	}
+end
+
+function Snapshot.new(wrapper)
+	local childSnapshot = Snapshot.child(wrapper)
+	childSnapshot.hostKey = nil
+
+	return childSnapshot
 end
 
 return Snapshot

@@ -226,15 +226,81 @@ return function()
 		end)
 	end)
 
-	describe("wrapper", function()
+	describe("child", function()
 		it("should have the host key", function()
 			local hostKey = "SomeKey"
 			local wrapper = shallow(createElement("Frame"))
 			wrapper.hostKey = hostKey
 
-			local result = Snapshot.new(wrapper)
+			local result = Snapshot.child(wrapper)
 
 			expect(result.hostKey).to.equal(hostKey)
+		end)
+
+		it("should contain the element type", function()
+			local wrapper = shallow(createElement("Frame"))
+
+			local result = Snapshot.child(wrapper)
+
+			expect(result.type).to.be.ok()
+			expect(result.type.kind).to.equal(ElementKind.Host)
+			expect(result.type.className).to.equal("Frame")
+		end)
+
+		it("should contain the props", function()
+			local props = {
+				LayoutOrder = 3,
+				[Change.Size] = function() end,
+			}
+			local expectProps = {
+				LayoutOrder = 3,
+				[Change.Size] = Markers.AnonymousFunction,
+			}
+
+			local wrapper = shallow(createElement("Frame", props))
+
+			local result = Snapshot.child(wrapper)
+
+			expect(result.props).to.be.ok()
+			assertDeepEqual(result.props, expectProps)
+		end)
+
+		it("should contain the element children", function()
+			local wrapper = shallow(createElement("Frame", {}, {
+				Child = createElement("TextLabel"),
+			}))
+
+			local result = Snapshot.child(wrapper)
+
+			expect(result.children).to.be.ok()
+			expect(#result.children).to.equal(1)
+			local childData = result.children[1]
+			expect(childData.type.kind).to.equal(ElementKind.Host)
+			expect(childData.type.className).to.equal("TextLabel")
+		end)
+
+		it("should sort children by their host key", function()
+			local wrapper = shallow(createElement("Frame", {}, {
+				Child = createElement("TextLabel"),
+				Label = createElement("TextLabel"),
+			}))
+
+			local result = Snapshot.child(wrapper)
+
+			expect(result.children).to.be.ok()
+			expect(#result.children).to.equal(2)
+			expect(result.children[1].hostKey).to.equal("Child")
+			expect(result.children[2].hostKey).to.equal("Label")
+		end)
+	end)
+
+	describe("new", function()
+		it("should clear the host key", function()
+			local wrapper = shallow(createElement("Frame"))
+
+			local result = Snapshot.new(wrapper)
+
+			expect(result.hostKey).never.to.be.ok()
 		end)
 
 		it("should contain the element type", function()

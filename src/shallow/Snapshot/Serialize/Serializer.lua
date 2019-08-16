@@ -210,14 +210,18 @@ function Serializer.children(children, output)
 	output:popAndWrite("},")
 end
 
-function Serializer.snapshotDataContent(snapshotData, output)
+function Serializer.snapshotDataContent(snapshotData, output, skipHostKey)
 	Serializer.type(snapshotData.type, output)
-	output:write("hostKey = %q,", snapshotData.hostKey)
+
+	if not skipHostKey then
+		output:write("hostKey = %q,", snapshotData.hostKey)
+	end
+
 	Serializer.props(snapshotData.props, output)
 	Serializer.children(snapshotData.children, output)
 end
 
-function Serializer.snapshotData(snapshotData, output)
+function Serializer.snapshotData(snapshotData, output, skipHostKey)
 	output:writeAndPush("{")
 	Serializer.snapshotDataContent(snapshotData, output)
 	output:popAndWrite("},")
@@ -232,7 +236,7 @@ function Serializer.firstSnapshotData(snapshotData)
 	output:write("")
 	output:writeAndPush("return {")
 
-	Serializer.snapshotDataContent(snapshotData, output)
+	Serializer.snapshotDataContent(snapshotData, output, true)
 
 	output:popAndWrite("}")
 	output:popAndWrite("end")

@@ -61,7 +61,7 @@ it("should match the snapshot", function()
 end)
 ```
 
-After the first run, the test will have created a new script under `RoactSnapshots` in `ReplicatedStorage` called `ComponentToTest` that contains the following Lua code:
+After the first run, the test will fail and create a new script under `RoactSnapshots` in `ReplicatedStorage` called `ComponentToTest.NEW` that contains the following Lua code:
 
 ```lua
 return function(dependencies)
@@ -82,7 +82,10 @@ return function(dependencies)
 end
 ```
 
-Since these tests require the previous snapshots to compare with the current generated one, snapshots should be saved (if using Studio) or committed to version control (if using file system development).
+After reviewing the snapshot, it can be renamed to `ComponentToTest`. If the test is run again it will now pass since the serialized snapshot match the generated one.
+
+!!! Note
+	Since snapshot tests require the previous snapshots to compare with the current generated one, snapshots should be saved (if using Studio) or committed to version control (if using file system development).
 
 Suppose now `ComponentToTest` is updated as follows:
 
@@ -94,7 +97,7 @@ local function ComponentToTest(props)
 end
 ```
 
-When the test is run again, it will fail, noting that the snapshots did not match. There will be a new script under `RoactSnapshots` called `ComponentToTest.NEW` that shows the new version of the snapshot.
+When the test is run again, it will fail because that the snapshots did not match. There will be a new script under `RoactSnapshots` called `ComponentToTest.NEW` that shows the new version of the snapshot.
 
 ```lua
 return function(dependencies)

@@ -721,10 +721,12 @@ print(coolWrapper:getHostObject() == nil) -- prints true
 ```
 matchSnapshot(identifier)
 ```
-If no previous snapshot with the given identifier exists, it will create a new StringValue instance that will contain Lua code representing the current ShallowWrapper. When an existing snapshot is found (a ModuleScript named as the provided identifier), it will require the ModuleScript and load the data from it. Then, if the loaded data is different from the current ShallowWrapper, an error will be thrown.
+When an existing snapshot with the given identifier is found (a ModuleScript named as the provided identifier), it will require the ModuleScript and load the data from it. Then, if the loaded data is different from the current ShallowWrapper, an error will be thrown. If no previous snapshot exists, it will throw error.
+
+When an error is thrown, a StringValue instance is created with the given identifier followed by *.NEW*. Its Value property will contain Lua code representing the current ShallowWrapper.
 
 !!! note
-	As mentionned, `matchSnapshot` will create a StringValue, named like the given identifier, in which the generated lua code will be assigned to the Value property. When these values are generated in Studio during run mode, it's important to copy back the values and convert them into ModuleScripts.
+	As mentionned, `matchSnapshot` may create a new StringValue, named like the given identifier, in which the generated lua code will be assigned to the Value property. When these values are generated in Studio during run mode, it's important to copy back the values and convert them into ModuleScripts.
 
 ---
 

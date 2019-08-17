@@ -13,6 +13,17 @@ return function()
 		return snapshotFolder
 	end
 
+	local function getSnapshotMock()
+		return {
+			type = {
+				kind = ElementKind.Function,
+			},
+			hostKey = "HostKey",
+			props = {},
+			children = {},
+		}
+	end
+
 	local originalLoadExistingData = SnapshotMatcher._loadExistingData
 	local loadExistingDataSpy = nil
 
@@ -26,33 +37,38 @@ return function()
 				return snapshotMap[identifier]
 			end)
 			SnapshotMatcher._loadExistingData = loadExistingDataSpy.value
+			SnapshotMatcher.getSnapshotFolder = mockGetSnapshotFolder
 		end
 
 		local function cleanTest()
 			loadExistingDataSpy = nil
 			SnapshotMatcher._loadExistingData = originalLoadExistingData
+			SnapshotMatcher.getSnapshotFolder = originalGetSnapshotFolder
+			snapshotFolder:ClearAllChildren()
 		end
 
-		it("should serialize the snapshot if no data is found", function()
+		it("should throw if no snapshot is found", function()
 			beforeTest()
 
-			local snapshot = {}
-			local serializeSpy = createSpy()
+			local snapshot = getSnapshotMock()
 
 			local matcher = SnapshotMatcher.new("foo", snapshot)
-			matcher.serialize = serializeSpy.value
 
-			matcher:match()
+			local function shouldThrow()
+				matcher:match()
+			end
+
+			expect(shouldThrow).to.throw()
+
+			expect(snapshotFolder:FindFirstChild("foo.NEW")).to.be.ok()
 
 			cleanTest()
-
-			serializeSpy:assertCalledWith(matcher)
 		end)
 
 		it("should not serialize if the snapshot already exist", function()
 			beforeTest()
 
-			local snapshot = {}
+			local snapshot = getSnapshotMock()
 			local identifier = "foo"
 			snapshotMap[identifier] = snapshot
 
@@ -71,7 +87,7 @@ return function()
 		it("should throw an error if the previous snapshot does not match", function()
 			beforeTest()
 
-			local snapshot = {}
+			local snapshot = getSnapshotMock()
 			local identifier = "foo"
 			snapshotMap[identifier] = {
 				Key = "Value"
@@ -86,9 +102,9 @@ return function()
 				matcher:match()
 			end
 
-			cleanTest()
-
 			expect(shouldThrow).to.throw()
+
+			cleanTest()
 		end)
 	end)
 
@@ -98,14 +114,7 @@ return function()
 
 			local identifier = "foo"
 
-			local matcher = SnapshotMatcher.new(identifier, {
-				type = {
-					kind = ElementKind.Function,
-				},
-				hostKey = "HostKey",
-				props = {},
-				children = {},
-			})
+			local matcher = SnapshotMatcher.new(identifier, getSnapshotMock())
 
 			matcher:serialize()
 			local stringValue = snapshotFolder:FindFirstChild(identifier)

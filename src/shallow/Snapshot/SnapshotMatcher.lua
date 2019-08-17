@@ -14,6 +14,13 @@ local SnapshotMetatable = {
 	__index = SnapshotMatcher,
 }
 
+local function throwSnapshotError(matcher, message)
+	local newSnapshot = SnapshotMatcher.new(matcher._identifier .. ".NEW", matcher._snapshot)
+	newSnapshot:serialize()
+
+	error(message, 3)
+end
+
 function SnapshotMatcher.new(identifier, snapshot)
 	local snapshotMatcher = {
 		_identifier = identifier,
@@ -28,9 +35,7 @@ end
 
 function SnapshotMatcher:match()
 	if self._existingSnapshot == nil then
-		self:serialize()
-		self._existingSnapshot = self._snapshot
-		return
+		throwSnapshotError(self, ("Snapshot %q not found"):format(self._identifier))
 	end
 
 	local areEqual, innerMessageTemplate = deepEqual(self._snapshot, self._existingSnapshot)
@@ -39,16 +44,13 @@ function SnapshotMatcher:match()
 		return
 	end
 
-	local newSnapshot = SnapshotMatcher.new(self._identifier .. ".NEW", self._snapshot)
-	newSnapshot:serialize()
-
 	local innerMessage = innerMessageTemplate
 		:gsub("{1}", "new")
 		:gsub("{2}", "existing")
 
 	local message = ("Snapshots do not match.\n%s"):format(innerMessage)
 
-	error(message, 2)
+	throwSnapshotError(self, message)
 end
 
 function SnapshotMatcher:serialize()

@@ -25,7 +25,7 @@ setmetatable(Change, {
 	__index = function(self, propertyName)
 		local changeListener = {
 			[Type] = Type.HostChangeEvent,
-			name = propertyName
+			name = propertyName,
 		}
 
 		setmetatable(changeListener, changeMetatable)

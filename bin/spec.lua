@@ -6,6 +6,7 @@
 local LOAD_MODULES = {
 	{"src", "Roact"},
 	{"modules/testez/lib", "TestEZ"},
+	{"RoactSnapshots", "RoactSnapshots"},
 }
 
 -- This makes sure we can load Lemur and other libraries that depend on init.lua

@@ -174,7 +174,7 @@ end
 Roact.typeOf(roactObject) -> Roact.Type
 ```
 
-Returns the [Roact.Type](#roacttype) of the passed in Roact object
+Returns the [Roact.Type](#roacttype) of the passed in Roact object, or `nil` if the input is not a Roact object.
 
 ---
 

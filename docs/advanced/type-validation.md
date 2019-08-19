@@ -2,7 +2,7 @@ In certain situations, such as when building reusable and customizable component
 
 To facilitate safer development for these kinds of situations, Roact provides the `Roact.typeOf` and `Roact.isComponent` functions to help validate these objects.
 
-## Without Type Validation
+## Roact Object Type Validation
 
 Suppose we want to write a `Header` component with a prop for the title child element:
 ```lua
@@ -19,23 +19,7 @@ function Header:render()
 end
 ```
 
-Now suppose we want to validate that `title` is actually an element using [validateProps](../../api-reference/#validateprops). Without a type checking function, `title` must be queried to check for characteristics of an element:
-```lua
-Header.validateProps = function()
-	local title = props.title
-
-	if title.component then
-		return true
-	end
-
-	return false, tostring(Header) .. " prop title is not an element"
-end
-```
-This approach is fragile, since it relies on undocumented internals.
-
-## Roact Object Type Validation
-
-With `Roact.typeOf` we can be certain we have a Roact Element:
+Now suppose we want to validate that `title` is actually an element using [validateProps](../../api-reference/#validateprops). With `Roact.typeOf` we can be certain we have a Roact Element:
 ```lua
 Header.validateProps = function()
 	local title = props.title
@@ -44,7 +28,7 @@ Header.validateProps = function()
 		return true
 	end
 
-	return false, tostring(Header) .. " prop title is not an element"
+	return false, "prop title is not an element"
 end
 ```
 
@@ -62,7 +46,7 @@ Header.validateProps = function()
 		return true
 	end
 
-	return false, tostring(Header) .. " prop title can not be an element"
+	return false, "prop title can not be an element"
 end
 
 function Header:render()
@@ -76,6 +60,3 @@ function Header:render()
 	})
 end
 ```
-
-!!! info
-	Because strings (hosts) and functions are valid component types, `Roact.isComponent` is less safe than `Roact.typeOf`. If safety is paramount, consider only allowing component classes, and checking that the `typeOf` the prop is `Roact.Type.StatefulComponentClass`.

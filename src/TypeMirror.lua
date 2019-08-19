@@ -48,12 +48,6 @@ local Mirror = {
 	end,
 }
 
-setmetatable(Mirror, {
-	__tostring = function()
-		return "TypeMirror"
-	end
-})
-
 strict(Mirror, "TypeMirror")
 
 return Mirror

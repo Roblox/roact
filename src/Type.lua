@@ -41,6 +41,10 @@ function TypeInternal.of(value)
 end
 
 function TypeInternal.nameOf(type)
+	if typeof(type) ~= "userdata" then
+		return nil
+	end
+
 	return TypeNames[type]
 end
 

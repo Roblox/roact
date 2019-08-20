@@ -31,6 +31,17 @@ return function()
 
 			expect(output:join()).to.equal("foo\n  bar")
 		end)
+
+		it("should remove trailing whitespaces", function()
+			local output = IndentedOutput.new()
+
+			output:push()
+			output:write("foo")
+			output:write("")
+			output:write("bar")
+
+			expect(output:join()).to.equal("  foo\n\n  bar")
+		end)
 	end)
 
 	describe("pop", function()

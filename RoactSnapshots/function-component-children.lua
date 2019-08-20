@@ -2,7 +2,7 @@ return function(dependencies)
   local Roact = dependencies.Roact
   local ElementKind = dependencies.ElementKind
   local Markers = dependencies.Markers
-  
+
   return {
     type = {
       kind = ElementKind.Host,

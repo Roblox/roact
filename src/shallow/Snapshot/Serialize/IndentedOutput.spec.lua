@@ -21,17 +21,7 @@ return function()
 		end)
 	end)
 
-	describe("push", function()
-		it("should indent next written lines", function()
-			local output = IndentedOutput.new()
-
-			output:write("foo")
-			output:push()
-			output:write("bar")
-
-			expect(output:join()).to.equal("foo\n  bar")
-		end)
-
+	describe("write", function()
 		it("should remove trailing whitespaces", function()
 			local output = IndentedOutput.new()
 
@@ -41,6 +31,18 @@ return function()
 			output:write("bar")
 
 			expect(output:join()).to.equal("  foo\n\n  bar")
+		end)
+	end)
+
+	describe("push", function()
+		it("should indent next written lines", function()
+			local output = IndentedOutput.new()
+
+			output:write("foo")
+			output:push()
+			output:write("bar")
+
+			expect(output:join()).to.equal("foo\n  bar")
 		end)
 	end)
 

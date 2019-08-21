@@ -72,7 +72,7 @@ return function()
 	end)
 
 	describe("popAndWrite", function()
-		it("should write the line and push", function()
+		it("should pop and write the line", function()
 			local output = IndentedOutput.new()
 
 			output:writeAndPush("foo")

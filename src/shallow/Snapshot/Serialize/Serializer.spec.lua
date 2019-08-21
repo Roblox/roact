@@ -330,13 +330,34 @@ return function()
 				children = {},
 			}
 			local output = IndentedOutput.new()
-			Serializer.snapshotDataContent(snapshotData, output)
+			Serializer.snapshotDataContent(snapshotData, output, true)
 
 			expect(output:join()).to.equal(
 				   "type = {\n"
 				.. "  kind = ElementKind.Function,\n"
 				.. "},\n"
 				.. 'hostKey = "HostKey",\n'
+				.. "props = {},\n"
+				.. "children = {},"
+			)
+		end)
+
+		it("should not include the host key", function()
+			local snapshotData = {
+				type = {
+					kind = ElementKind.Function,
+				},
+				hostKey = "HostKey",
+				props = {},
+				children = {},
+			}
+			local output = IndentedOutput.new()
+			Serializer.snapshotDataContent(snapshotData, output, false)
+
+			expect(output:join()).to.equal(
+				   "type = {\n"
+				.. "  kind = ElementKind.Function,\n"
+				.. "},\n"
 				.. "props = {},\n"
 				.. "children = {},"
 			)
@@ -355,7 +376,7 @@ return function()
 			}
 			local contentOutput = IndentedOutput.new()
 			contentOutput:push()
-			Serializer.snapshotDataContent(snapshotData, contentOutput)
+			Serializer.snapshotDataContent(snapshotData, contentOutput, true)
 
 			local output = IndentedOutput.new()
 			Serializer.snapshotData(snapshotData, output)

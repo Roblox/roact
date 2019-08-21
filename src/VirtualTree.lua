@@ -6,7 +6,7 @@ local Type = require(script.Parent.Type)
 
 local config = require(script.Parent.GlobalConfig).get()
 
-local DEFAULT_RENDERER = createReconciler(RobloxRenderer)
+local DEFAULT_RECONCILER = createReconciler(RobloxRenderer)
 
 local InternalData = Symbol.named("InternalData")
 
@@ -18,7 +18,7 @@ function VirtualTree.mount(element, options)
 	options = options or {}
 	local hostParent = options.hostParent
 	local hostKey = options.hostKey or "RoactTree"
-	local reconciler = options.reconciler or DEFAULT_RENDERER
+	local reconciler = options.reconciler or DEFAULT_RECONCILER
 
 	if config.typeChecks then
 		assert(Type.of(element) == Type.Element, "Expected arg #1 to be of type Element")

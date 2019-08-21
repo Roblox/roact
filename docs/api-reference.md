@@ -616,20 +616,14 @@ As with `setState`, you can set use the constant `Roact.None` to remove a field 
 
 ### Fields
 
-#### type
-```
-type: {
-	kind: ElementKind
-}
-```
+#### component
+The component field can be a string, a function or a table depending of the kind of component. For example, if the ShallowWrapper comes from a host component, the component field will contain the class name of the host object created. The following table summarize the different cases.
 
-The type dictionary always has the `kind` field that tell the component type. Additionally, depending of the kind of component, other information can be included.
-
-| kind | fields | description |
+| field type | kind | description |
 | --- | --- | --- |
-| Host | className: string | the ClassName of the instance |
-| Function | functionComponent: function | the function that renders the element |
-| Stateful | component: table | the class-like table used to render the element |
+| string | Host | the ClassName of the instance |
+| function | Function | the function that renders the element |
+| table | Stateful | the class-like table used to render the element |
 
 ---
 

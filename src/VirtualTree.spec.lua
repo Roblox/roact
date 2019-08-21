@@ -43,7 +43,7 @@ return function()
 			local wrapper = tree:getShallowWrapper()
 
 			expect(wrapper).to.be.ok()
-			expect(wrapper.type.className).to.equal("StringValue")
+			expect(wrapper.component).to.equal("StringValue")
 		end)
 	end)
 end

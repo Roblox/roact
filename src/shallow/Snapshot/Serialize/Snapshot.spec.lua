@@ -35,7 +35,7 @@ return function()
 			it("should contain the host kind", function()
 				local wrapper = shallow(createElement("Frame"))
 
-				local result = Snapshot.type(wrapper.type)
+				local result = Snapshot.type(wrapper.component)
 
 				expect(result.kind).to.equal(ElementKind.Host)
 			end)
@@ -44,7 +44,7 @@ return function()
 				local className = "Frame"
 				local wrapper = shallow(createElement(className))
 
-				local result = Snapshot.type(wrapper.type)
+				local result = Snapshot.type(wrapper.component)
 
 				expect(result.className).to.equal(className)
 			end)
@@ -58,7 +58,7 @@ return function()
 			it("should contain the host kind", function()
 				local wrapper = shallow(createElement(SomeComponent))
 
-				local result = Snapshot.type(wrapper.type)
+				local result = Snapshot.type(wrapper.component)
 
 				expect(result.kind).to.equal(ElementKind.Function)
 			end)
@@ -75,7 +75,7 @@ return function()
 			it("should contain the host kind", function()
 				local wrapper = shallow(createElement(SomeComponent))
 
-				local result = Snapshot.type(wrapper.type)
+				local result = Snapshot.type(wrapper.component)
 
 				expect(result.kind).to.equal(ElementKind.Stateful)
 			end)
@@ -83,7 +83,7 @@ return function()
 			it("should contain the component name", function()
 				local wrapper = shallow(createElement(SomeComponent))
 
-				local result = Snapshot.type(wrapper.type)
+				local result = Snapshot.type(wrapper.component)
 
 				expect(result.componentName).to.equal(componentName)
 			end)

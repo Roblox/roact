@@ -11,15 +11,17 @@ end
 
 local Snapshot = {}
 
-function Snapshot.type(wrapperType)
+function Snapshot.type(wrapperComponent)
+	local kind = ElementKind.fromComponent(wrapperComponent)
+
 	local typeData = {
-		kind = wrapperType.kind,
+		kind = kind,
 	}
 
-	if wrapperType.kind == ElementKind.Host then
-		typeData.className = wrapperType.className
-	elseif wrapperType.kind == ElementKind.Stateful then
-		typeData.componentName = tostring(wrapperType.component)
+	if kind == ElementKind.Host then
+		typeData.className = wrapperComponent
+	elseif kind == ElementKind.Stateful then
+		typeData.componentName = tostring(wrapperComponent)
 	end
 
 	return typeData
@@ -114,7 +116,7 @@ end
 
 function Snapshot.child(wrapper)
 	return {
-		type = Snapshot.type(wrapper.type),
+		type = Snapshot.type(wrapper.component),
 		hostKey = wrapper.hostKey,
 		props = Snapshot.props(wrapper.props),
 		children = Snapshot.children(wrapper.children),

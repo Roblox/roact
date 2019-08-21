@@ -16,25 +16,15 @@ local ShallowWrapperMetatable = {
 	__index = ShallowWrapperPublic,
 }
 
-local function getTypeFromVirtualNode(virtualNode)
+local function getComponentFromVirtualNode(virtualNode)
 	local element = virtualNode.currentElement
 	local kind = ElementKind.of(element)
 
-	if kind == ElementKind.Host then
-		return {
-			kind = ElementKind.Host,
-			className = element.component,
-		}
-	elseif kind == ElementKind.Function then
-		return {
-			kind = ElementKind.Function,
-			functionComponent = element.component,
-		}
-	elseif kind == ElementKind.Stateful then
-		return {
-			kind = ElementKind.Stateful,
-			component = element.component,
-		}
+	if kind == ElementKind.Host
+		or kind == ElementKind.Function
+		or kind == ElementKind.Stateful
+	then
+		return element.component
 	else
 		error(("shallow wrapper does not support element of kind %q"):format(tostring(kind)))
 	end
@@ -97,7 +87,7 @@ function ShallowWrapper.new(virtualNode, maxDepth)
 
 	local wrapper = {
 		[InternalData] = internalData,
-		type = getTypeFromVirtualNode(virtualNode),
+		component = getComponentFromVirtualNode(virtualNode),
 		props = filterProps(virtualNode.currentElement.props),
 		hostKey = virtualNode.hostKey,
 		children = {},

@@ -4,7 +4,6 @@ return function()
 
 	local assertDeepEqual = require(RoactRoot.assertDeepEqual)
 	local Children = require(RoactRoot.PropMarkers.Children)
-	local ElementKind = require(RoactRoot.ElementKind)
 	local createElement = require(RoactRoot.createElement)
 	local createFragment = require(RoactRoot.createFragment)
 	local createReconciler = require(RoactRoot.createReconciler)
@@ -31,20 +30,12 @@ return function()
 			return createElement(className, props)
 		end
 
-		it("should have it's type.kind to Host", function()
+		it("should have its component set to the given instance class", function()
 			local element = createElement(Component)
 
 			local result = shallow(element)
 
-			expect(result.type.kind).to.equal(ElementKind.Host)
-		end)
-
-		it("should have its type.className to given instance class", function()
-			local element = createElement(Component)
-
-			local result = shallow(element)
-
-			expect(result.type.className).to.equal(className)
+			expect(result.component).to.equal(className)
 		end)
 
 		it("children count should be zero", function()
@@ -65,20 +56,12 @@ return function()
 			return createElement(FunctionComponent, props)
 		end
 
-		it("should have its type.kind to Function", function()
+		it("should have its component set to the functional component", function()
 			local element = createElement(Component)
 
 			local result = shallow(element)
 
-			expect(result.type.kind).to.equal(ElementKind.Function)
-		end)
-
-		it("should have its type.functionComponent to Function", function()
-			local element = createElement(Component)
-
-			local result = shallow(element)
-
-			expect(result.type.functionComponent).to.equal(FunctionComponent)
+			expect(result.component).to.equal(FunctionComponent)
 		end)
 	end)
 
@@ -93,20 +76,12 @@ return function()
 			return createElement(StatefulComponent, props)
 		end
 
-		it("should have its type.kind to Stateful", function()
+		it("should have its component set to the given component class", function()
 			local element = createElement(Component)
 
 			local result = shallow(element)
 
-			expect(result.type.kind).to.equal(ElementKind.Stateful)
-		end)
-
-		it("should have its type.component to given component class", function()
-			local element = createElement(Component)
-
-			local result = shallow(element)
-
-			expect(result.type.component).to.equal(StatefulComponent)
+			expect(result.component).to.equal(StatefulComponent)
 		end)
 	end)
 
@@ -138,8 +113,7 @@ return function()
 				depth = 3,
 			})
 
-			expect(result.type.kind).to.equal(ElementKind.Host)
-			expect(result.type.className).to.equal(unwrappedClassName)
+			expect(result.component).to.equal(unwrappedClassName)
 		end)
 
 		it("should stop unwrapping function components when depth has exceeded", function()
@@ -149,8 +123,7 @@ return function()
 				depth = 2,
 			})
 
-			expect(result.type.kind).to.equal(ElementKind.Function)
-			expect(result.type.functionComponent).to.equal(A)
+			expect(result.component).to.equal(A)
 		end)
 
 		it("should not unwrap the element when depth is zero", function()
@@ -160,8 +133,7 @@ return function()
 				depth = 0,
 			})
 
-			expect(result.type.kind).to.equal(ElementKind.Function)
-			expect(result.type.functionComponent).to.equal(Component)
+			expect(result.component).to.equal(Component)
 		end)
 
 		it("should not unwrap children when depth is one", function()
@@ -311,7 +283,6 @@ return function()
 
 			local result = shallow(element)
 
-			expect(result.type.kind).to.equal(ElementKind.Host)
 			expect(result.props).to.be.ok()
 
 			assertDeepEqual(props, result.props)
@@ -338,7 +309,7 @@ return function()
 
 			local result = shallow(element)
 
-			expect(result.type.kind).to.equal(ElementKind.Function)
+			expect(result.component).to.equal(ChildComponent)
 			expect(result.props).to.be.ok()
 
 			assertDeepEqual(propsCopy, result.props)
@@ -526,8 +497,7 @@ return function()
 
 			local child = result:findUnique()
 
-			expect(child.type.kind).to.equal(ElementKind.Host)
-			expect(child.type.className).to.equal("TextLabel")
+			expect(child.component).to.equal("TextLabel")
 		end)
 
 		it("should return the only child that satifies the constraint", function()
@@ -542,7 +512,7 @@ return function()
 				className = "TextLabel",
 			})
 
-			expect(child.type.className).to.equal("TextLabel")
+			expect(child.component).to.equal("TextLabel")
 		end)
 
 		it("should throw if there is not any child element", function()

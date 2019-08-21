@@ -10,19 +10,19 @@ return function()
 
 			expect(output:join()).to.equal("foo\nbar")
 		end)
-
-		it("should concat the lines with the given string", function()
-			local output = IndentedOutput.new()
-
-			output:write("foo")
-			output:write("bar")
-
-			expect(output:join("-")).to.equal("foo-bar")
-		end)
 	end)
 
 	describe("write", function()
-		it("should remove trailing whitespaces", function()
+		it("should preceed the line with the current indentation level", function()
+			local output = IndentedOutput.new()
+
+			output:push()
+			output:write("foo")
+
+			expect(output:join()).to.equal("  foo")
+		end)
+
+		it("should not write indentation spaces when line is empty", function()
 			local output = IndentedOutput.new()
 
 			output:push()

@@ -3,17 +3,13 @@ local IndentedOutputMetatable = {
 	__index = IndentedOutput,
 }
 
-function IndentedOutput.new(indentation, removeTrailingWhitespaces)
+function IndentedOutput.new(indentation)
 	indentation = indentation or 2
-	if removeTrailingWhitespaces == nil then
-		removeTrailingWhitespaces = true
-	end
 
 	local output = {
 		_level = 0,
 		_indentation = (" "):rep(indentation),
 		_lines = {},
-		_removeTrailingWhitespaces = removeTrailingWhitespaces,
 	}
 
 	setmetatable(output, IndentedOutputMetatable)
@@ -26,7 +22,7 @@ function IndentedOutput:write(line, ...)
 		line = line:format(...)
 	end
 
-	if self._removeTrailingWhitespaces and line == "" then
+	if line == "" then
 		table.insert(self._lines, line)
 	else
 		table.insert(self._lines, ("%s%s"):format(self._indentation:rep(self._level), line))
@@ -51,10 +47,8 @@ function IndentedOutput:popAndWrite(...)
 	self:write(...)
 end
 
-function IndentedOutput:join(separator)
-	separator = separator or "\n"
-
-	return table.concat(self._lines, separator)
+function IndentedOutput:join()
+	return table.concat(self._lines, "\n")
 end
 
 return IndentedOutput

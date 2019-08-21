@@ -6,17 +6,11 @@ return function()
 
 	local noopReconciler = createReconciler(NoopRenderer)
 
-	local function mountWithNoop(element, hostParent, hostKey)
-		return VirtualTree.mount(element, {
-			hostParent = hostParent,
-			hostKey = hostKey,
-			reconciler = noopReconciler
-		})
-	end
-
 	describe("tree operations", function()
 		it("should mount and unmount", function()
-			local tree = mountWithNoop(createElement("StringValue"))
+			local tree = VirtualTree.mountWithOptions(createElement("StringValue"), {
+				reconciler = noopReconciler,
+			})
 
 			expect(tree).to.be.ok()
 
@@ -24,7 +18,9 @@ return function()
 		end)
 
 		it("should mount, update, and unmount", function()
-			local tree = mountWithNoop(createElement("StringValue"))
+			local tree = VirtualTree.mountWithOptions(createElement("StringValue"), {
+				reconciler = noopReconciler,
+			})
 
 			expect(tree).to.be.ok()
 
@@ -36,7 +32,9 @@ return function()
 
 	describe("getShallowWrapper", function()
 		it("should return a shallow wrapper", function()
-			local tree = VirtualTree.mount(createElement("StringValue"))
+			local tree = VirtualTree.mountWithOptions(createElement("StringValue"), {
+				reconciler = noopReconciler,
+			})
 
 			expect(tree).to.be.ok()
 

@@ -14,7 +14,7 @@ local VirtualTree = {}
 local VirtualTreePublic = {}
 VirtualTreePublic.__index = VirtualTreePublic
 
-function VirtualTree.mount(element, options)
+function VirtualTree.mountWithOptions(element, options)
 	options = options or {}
 	local hostParent = options.hostParent
 	local hostKey = options.hostKey or "RoactTree"
@@ -39,6 +39,13 @@ function VirtualTree.mount(element, options)
 	setmetatable(tree, VirtualTreePublic)
 
 	return tree
+end
+
+function VirtualTree.mount(element, hostParent, hostKey)
+	return VirtualTree.mountWithOptions(element, {
+		hostParent = hostParent,
+		hostKey = hostKey,
+	})
 end
 
 function VirtualTree.update(tree, newElement)

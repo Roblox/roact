@@ -11,7 +11,7 @@ return function()
 	local noopReconciler = createReconciler(NoopRenderer)
 
 	local function mountWithNoop(element, hostParent, hostKey)
-		return VirtualTree.mount(element, {
+		return VirtualTree.mountWithOptions(element, {
 			hostParent = hostParent,
 			hostKey = hostKey,
 			reconciler = noopReconciler

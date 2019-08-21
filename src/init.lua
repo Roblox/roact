@@ -8,13 +8,6 @@ local strict = require(script.strict)
 local Binding = require(script.Binding)
 local VirtualTree = require(script.VirtualTree)
 
-local function mount(element, hostParent, hostKey)
-	return VirtualTree.mount(element, {
-		hostParent = hostParent,
-		hostKey = hostKey,
-	})
-end
-
 local reconcilerCompat = createReconcilerCompat(VirtualTree)
 
 local Roact = strict {
@@ -34,7 +27,7 @@ local Roact = strict {
 	Event = require(script.PropMarkers.Event),
 	Ref = require(script.PropMarkers.Ref),
 
-	mount = mount,
+	mount = VirtualTree.mount,
 	unmount = VirtualTree.unmount,
 	update = VirtualTree.update,
 

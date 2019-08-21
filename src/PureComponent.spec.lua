@@ -8,14 +8,6 @@ return function()
 
 	local noopReconciler = createReconciler(NoopRenderer)
 
-	local function mountWithNoop(element, hostParent, hostKey)
-		return VirtualTree.mount(element, {
-			hostParent = hostParent,
-			hostKey = hostKey,
-			reconciler = noopReconciler
-		})
-	end
-
 	it("should be extendable", function()
 		local MyComponent = PureComponent:extend("MyComponent")
 
@@ -59,7 +51,9 @@ return function()
 		end
 
 		local element = createElement(PureContainer)
-		local tree = mountWithNoop(element, nil, "PureComponent Tree")
+		local tree = VirtualTree.mountWithOptions(element, {
+			reconciler = noopReconciler
+		})
 
 		expect(updateCount).to.equal(0)
 

@@ -173,7 +173,7 @@ Here are examples of this kind of script written in Lua ([link](../scripts/sync-
 
 Sometimes during testing, components need to be wrapped into other components that provides some of their props. When comes the time to make a snapshot of that components, it's preferable to snapshot it without the wrapping component. The main reason for this is to avoid snapshot test failure when there is a change in the wrapping component that does not affect the wrapped component.
 
-In the case where the component is wrapped in a host component (a component that render a Roblox instance), use ShallowWrapper's [`find`](/api-reference/#find) or [`findUnique`](/api-reference/#findunique) methods to get to your child component. Otherwise, increase the depth option to get deep enough so that the parent component is consumed.
+In the case where the component is wrapped in a host component (a component that render a Roblox instance), use ShallowWrapper's [`find`](/api-reference/#find) or [`findUnique`](/api-reference/#findunique) methods to get to your child component. Otherwise, increase the depth parameter to get deep enough so that the parent component is consumed.
 
 !!! Note
 	When making snapshot tests, depth is generally used more often than `find` or `findUnique`. Components may have multiple layer of elements nested: that will require adjusting the depth to render at least until the last element. The ShallowWrapper's methods that access its children are more used when working on generic components. These generic components may be a bit harder or tricky to test because they depend on other concrete components that get wrappred into them.
@@ -264,9 +264,7 @@ local element = Roact.createElement(CoolComponent)
 
 local tree = Roact.mount(element)
 
-local wrapper = tree:getShallowWrapper({
-	depth = 2,
-})
+local wrapper = tree:getShallowWrapper(2)
 
 wrapper:matchSnapshot("CoolComponent")
 ```
@@ -314,9 +312,7 @@ local element = Roact.createElement(CoolComponent)
 
 local tree = Roact.mount(element)
 
-local wrapper = tree:getShallowWrapper({
-	depth = 2,
-})
+local wrapper = tree:getShallowWrapper(2)
 
 local coolWrapper = wrapper:findUnique()
 
@@ -420,15 +416,13 @@ And the generated snapshot looks like this:
 
 When writing the test to snapshot `CoolComponent`, you will want to use to avoid having details of the `StyleConsumer`. The reason is that if `StyleConsumer` changes, the test may fail without really changing the important part of our snapshot, which is the information about `CoolComponent`.
 
-Also, notice that there is no information about the `TextLabel`, because the method `getShallowWrapper` only returns a shallow version of the mounted tree. If we want to have access to the next depth of the tree, we need to pass the option `depth = 2`.
+Also, notice that there is no information about the `TextLabel`, because the method `getShallowWrapper` only returns a shallow version of the mounted tree. If we want to have access to the next depth of the tree, we need to pass 2 to the depth parameter.
 
 ```lua
 local element = Roact.createElement(CoolComponent)
 
 local tree = Roact.mount(element)
-local wrapper = tree:getShallowWrapper({
-	depth = 2,
-})
+local wrapper = tree:getShallowWrapper(2)
 
 wrapper:matchSnapshot("CoolSnapshot")
 ```

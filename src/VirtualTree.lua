@@ -81,13 +81,13 @@ function VirtualTree.unmount(tree)
 	end
 end
 
-function VirtualTreePublic:getShallowWrapper(options)
+function VirtualTreePublic:getShallowWrapper(depth)
 	assert(Type.of(self) == Type.VirtualTree, "Expected method getShallowWrapper to be called with `:`")
 
 	local internalData = self[InternalData]
 	local rootNode = internalData.rootNode
 
-	return shallow(rootNode, options)
+	return shallow(rootNode, depth)
 end
 
 return VirtualTree

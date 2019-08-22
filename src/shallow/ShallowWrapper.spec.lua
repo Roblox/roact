@@ -12,15 +12,13 @@ return function()
 
 	local robloxReconciler = createReconciler(RobloxRenderer)
 
-	local function shallow(element, options)
-		options = options or {}
-		local maxDepth = options.depth or 1
-		local hostKey = options.hostKey or "ShallowTree"
-		local hostParent = options.hostParent or Instance.new("Folder")
+	local function shallow(element, depth)
+		depth = depth or 1
+		local hostParent = Instance.new("Folder")
 
-		local virtualNode = robloxReconciler.mountVirtualNode(element, hostParent, hostKey)
+		local virtualNode = robloxReconciler.mountVirtualNode(element, hostParent, "ShallowTree")
 
-		return ShallowWrapper.new(virtualNode, maxDepth)
+		return ShallowWrapper.new(virtualNode, depth)
 	end
 
 	describe("single host element", function()
@@ -109,9 +107,7 @@ return function()
 		it("should unwrap function components when depth has not exceeded", function()
 			local element = createElement(Component)
 
-			local result = shallow(element, {
-				depth = 3,
-			})
+			local result = shallow(element, 3)
 
 			expect(result.component).to.equal(unwrappedClassName)
 		end)
@@ -119,9 +115,7 @@ return function()
 		it("should stop unwrapping function components when depth has exceeded", function()
 			local element = createElement(Component)
 
-			local result = shallow(element, {
-				depth = 2,
-			})
+			local result = shallow(element, 2)
 
 			expect(result.component).to.equal(A)
 		end)
@@ -129,9 +123,7 @@ return function()
 		it("should not unwrap the element when depth is zero", function()
 			local element = createElement(Component)
 
-			local result = shallow(element, {
-				depth = 0,
-			})
+			local result = shallow(element, 0)
 
 			expect(result.component).to.equal(Component)
 		end)
@@ -139,9 +131,7 @@ return function()
 		it("should not unwrap children when depth is one", function()
 			local element = createElement(ComponentWithChildren)
 
-			local result = shallow(element, {
-				depth = 1,
-			})
+			local result = shallow(element)
 
 			local childA = result:find({
 				component = A,
@@ -157,9 +147,7 @@ return function()
 		it("should unwrap children when depth is two", function()
 			local element = createElement(ComponentWithChildren)
 
-			local result = shallow(element, {
-				depth = 2,
-			})
+			local result = shallow(element, 2)
 
 			local hostChild = result:find({
 				component = unwrappedClassName,
@@ -175,9 +163,7 @@ return function()
 		it("should not include any children when depth is zero", function()
 			local element = createElement(ComponentWithChildren)
 
-			local result = shallow(element, {
-				depth = 0,
-			})
+			local result = shallow(element, 0)
 
 			expect(#result.children).to.equal(0)
 		end)
@@ -191,9 +177,7 @@ return function()
 
 			local element = createElement(ParentComponent)
 
-			local result = shallow(element, {
-				depth = 1,
-			})
+			local result = shallow(element, 1)
 
 			expect(#result.children).to.equal(1)
 

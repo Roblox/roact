@@ -1,15 +1,13 @@
 local Type = require(script.Parent.Type)
 local ShallowWrapper = require(script.ShallowWrapper)
-local validateShallowOptions = require(script.validateShallowOptions)
 
-local function shallow(rootNode, options)
+local function shallow(rootNode, depth)
 	assert(Type.of(rootNode) == Type.VirtualNode, "Expected arg #1 to be a VirtualNode")
-	assert(validateShallowOptions(options))
+	assert(depth == nil or type(depth) == "number", "Expected arg #2 to be a number")
 
-	options = options or {}
-	local maxDepth = options.depth or 1
+	depth = depth or 1
 
-	return ShallowWrapper.new(rootNode, maxDepth)
+	return ShallowWrapper.new(rootNode, depth)
 end
 
 return shallow

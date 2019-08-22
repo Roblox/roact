@@ -738,13 +738,6 @@ Returns the string source of the snapshot. Useful for debugging purposes.
 
 #### getShallowWrapper
 ```
-getShallowWrapper(options) -> ShallowWrapper
+getShallowWrapper(depth: number = 1) -> ShallowWrapper
 ```
-Options:
-```lua
-{
-	depth: number -- default to 1
-}
-```
-
-Wraps the current tree into a ShallowWrapper.
+Wraps the current tree into a ShallowWrapper. The depth parameter is optional and 1 by default. For more information about depth, visit the [shallow rendering page](/advanced/shallow-rendering#example-with-depth).

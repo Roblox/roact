@@ -416,7 +416,7 @@ And the generated snapshot looks like this:
 
 When writing the test to snapshot `CoolComponent`, you will want to use to avoid having details of the `StyleConsumer`. The reason is that if `StyleConsumer` changes, the test may fail without really changing the important part of our snapshot, which is the information about `CoolComponent`.
 
-Also, notice that there is no information about the `TextLabel`, because the method `getShallowWrapper` only returns a shallow version of the mounted tree. If we want to have access to the next depth of the tree, we need to pass 2 to the depth parameter.
+Also, notice that there is no information about the `TextLabel`, because the method `getShallowWrapper` only returns a shallow version of the mounted tree. If we want to have access to the next depth of the tree, we need to pass 2 as the depth parameter.
 
 ```lua
 local element = Roact.createElement(CoolComponent)

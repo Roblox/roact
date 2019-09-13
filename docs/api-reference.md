@@ -32,7 +32,7 @@ Creates a new Roact fragment with the provided table of elements. Fragments allo
 
 ### Roact.mount
 ```
-Roact.mount(element, [parent, [key]]) -> RoactTree
+Roact.mount(element, [parent, [key]]) -> VirtualTree
 ```
 
 !!! info
@@ -40,13 +40,13 @@ Roact.mount(element, [parent, [key]]) -> RoactTree
 
 Creates a Roblox Instance given a Roact element, and optionally a `parent` to put it in, and a `key` to use as the instance's `Name`.
 
-The result is a `RoactTree`, which is an opaque handle that represents a tree of components owned by Roact. You can pass this to APIs like `Roact.unmount`. It'll also be used for future debugging APIs.
+The result is a `VirtualTree`, which is an opaque handle that represents a tree of components owned by Roact. You can pass this to APIs like `Roact.unmount`. It'll also be used for future debugging APIs.
 
 ---
 
 ### Roact.update
 ```
-Roact.update(tree, element) -> RoactTree
+Roact.update(tree, element) -> VirtualTree
 ```
 
 !!! info
@@ -56,7 +56,7 @@ Updates an existing instance handle with a new element, returning a new handle. 
 
 `update` can be used to change the props of a component instance created with `mount` and is useful for putting Roact content into non-Roact applications.
 
-As of Roact 1.0, the returned `RoactTree` object will always be the same value as the one passed in.
+As of Roact 1.0, the returned `VirtualTree` object will always be the same value as the one passed in.
 
 ---
 
@@ -68,7 +68,7 @@ Roact.unmount(tree) -> void
 !!! info
 	`Roact.unmount` is also available via the deprecated alias `Roact.teardown`. It will be removed in a future release.
 
-Destroys the given `RoactTree` and all of its descendants. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.
+Destroys the given `VirtualTree` and all of its descendants. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.
 
 ---
 
@@ -609,3 +609,135 @@ As with `setState`, you can set use the constant `Roact.None` to remove a field 
 
 !!! note
 	`getDerivedStateFromProps` is a *static* lifecycle method. It does not have access to `self`, and must be a pure function.
+
+---
+
+## ShallowWrapper
+
+### Fields
+
+#### component
+The component field can be a string, a function or a table depending of the kind of component. For example, if the ShallowWrapper comes from a host component, the component field will contain the class name of the host object created. The following table summarize the different cases.
+
+| field type | kind | description |
+| --- | --- | --- |
+| string | Host | the ClassName of the instance |
+| function | Function | the function that renders the element |
+| table | Stateful | the class-like table used to render the element |
+
+---
+
+#### children
+The list of children components wrapped into ShallowWrappers.
+
+---
+
+#### props
+The props of the ShallowWrapper.
+
+!!! note
+	This dictionary will not contain the `Roact.Children` prop. To obtain the children elements wrapped into a ShallowWrapper, use the `children` field.
+
+---
+
+#### hostKey
+The `hostKey` that is used to map the element to it's parent.
+
+---
+
+### Methods
+
+#### find
+```
+find([constraints]) -> list[ShallowWrapper]
+```
+When a dictionary of constraints is provided, the function will filter the children that do not satisfy all given constraints. Otherwise, it returns the `children` field that contains all children wrapped into ShallowWrappers.
+
+---
+
+##### Constraints
+Constraints are passed through a dictionary that maps a constraint name to it's value.
+
+| name | value type | description |
+| --- | --- | --- |
+| className | string | Filters children that renders to host instance of the given class name |
+| component | string, function or table | Filter children from their components, by finding the functional component original function, the sub-class table of Roact.Component or from the class name of the instance rendered |
+| props | dictionary | Filters elements that contains at least the given set of props |
+| hostKey | string | Filters elements by the host key used |
+
+---
+
+#### findUnique
+```
+findUnique([constraints]) -> ShallowWrapper
+```
+Similar to `find`, this method will assert that only one child satisfies the given constraints, or in the case where none is provided, will assert that there is simply only one child.
+
+---
+
+#### getHostObject
+```
+getHostObject() -> Instance or nil
+```
+Returns the instance object associated with the ShallowWrapper. It can return `nil` if the component wrapped by the ShallowWrapper does not render an instance, but rather another component. Here is an example:
+
+```lua
+local function CoolComponent(props)
+	return Roact.createElement("TextLabel")
+end
+
+local function MainComponent(props)
+	return Roact.createElement("Frame", {}, {
+		Cool = Roact.createElement(CoolComponent),
+	})
+end
+```
+
+If we shallow-render the `MainComponent`, the default depth will not render the CoolComponent.
+
+```lua
+local element = Roact.createElement(MainComponent)
+
+local tree = Roact.mount(element)
+
+local wrapper = tree:getShallowWrapper()
+
+print(wrapper:getHostObject() == nil) -- prints false
+
+local coolWrapper = wrapper:findUnique()
+
+print(coolWrapper:getHostObject() == nil) -- prints true
+```
+
+---
+
+#### matchSnapshot
+```
+matchSnapshot(identifier)
+```
+When an existing snapshot with the given identifier is found (a ModuleScript named as the provided identifier), it will require the ModuleScript and load the data from it. Then, if the loaded data is different from the current ShallowWrapper, an error will be thrown. If no previous snapshot exists, it will throw error.
+
+When an error is thrown, a StringValue instance is created with the given identifier followed by *.NEW*. Its Value property will contain Lua code representing the current ShallowWrapper.
+
+!!! note
+	As mentionned, `matchSnapshot` may create a new StringValue, named like the given identifier, in which the generated lua code will be assigned to the Value property. When these values are generated in Studio during run mode, it's important to copy back the values and convert them into ModuleScripts.
+
+---
+
+#### toSnapshotString
+```
+toSnapshotString() -> string
+```
+Returns the string source of the snapshot. Useful for debugging purposes.
+
+---
+
+## VirtualTree
+
+### Methods
+
+#### getShallowWrapper
+```
+getShallowWrapper(depth: number = 1) -> ShallowWrapper
+```
+Wraps the current tree into a ShallowWrapper. The depth parameter is optional and 1 by default. For more information about depth, visit the [shallow rendering page](/advanced/shallow-rendering#example-with-depth).

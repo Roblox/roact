@@ -8,6 +8,10 @@
 
       "Roact": {
         "$path": "src"
+	  },
+
+      "RoactSnapshots": {
+        "$path": "RoactSnapshots"
       },
 
       "TestEZ": {

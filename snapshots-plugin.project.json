@@ -1,0 +1,6 @@
+{
+	"name": "Snapshots Plugin",
+	"tree": {
+		"$path": "SnapshotsPlugin"
+	}
+  }

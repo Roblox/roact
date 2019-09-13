@@ -11,26 +11,6 @@ return function()
 
 	local noopReconciler = createReconciler(NoopRenderer)
 
-	describe("tree operations", function()
-		it("should mount and unmount", function()
-			local tree = noopReconciler.mountVirtualTree(createElement("StringValue"))
-
-			expect(tree).to.be.ok()
-
-			noopReconciler.unmountVirtualTree(tree)
-		end)
-
-		it("should mount, update, and unmount", function()
-			local tree = noopReconciler.mountVirtualTree(createElement("StringValue"))
-
-			expect(tree).to.be.ok()
-
-			noopReconciler.updateVirtualTree(tree, createElement("StringValue"))
-
-			noopReconciler.unmountVirtualTree(tree)
-		end)
-	end)
-
 	describe("booleans", function()
 		it("should mount booleans as nil", function()
 			local node = noopReconciler.mountVirtualNode(false, nil, "test")

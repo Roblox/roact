@@ -2,6 +2,7 @@ return function()
 	local createElement = require(script.Parent.createElement)
 	local NoopRenderer = require(script.Parent.NoopRenderer)
 	local createReconciler = require(script.Parent.createReconciler)
+	local VirtualTree = require(script.Parent.VirtualTree)
 
 	local PureComponent = require(script.Parent.PureComponent)
 
@@ -50,7 +51,9 @@ return function()
 		end
 
 		local element = createElement(PureContainer)
-		local tree = noopReconciler.mountVirtualTree(element, nil, "PureComponent Tree")
+		local tree = VirtualTree.mountWithOptions(element, {
+			reconciler = noopReconciler
+		})
 
 		expect(updateCount).to.equal(0)
 
@@ -70,6 +73,6 @@ return function()
 
 		expect(updateCount).to.equal(3)
 
-		noopReconciler.unmountVirtualTree(tree)
+		VirtualTree.unmount(tree)
 	end)
 end

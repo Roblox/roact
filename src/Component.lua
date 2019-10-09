@@ -183,8 +183,6 @@ end
 	Returns a snapshot of this component given the current props and state. Must
 	be overridden by consumers of Roact and should be a pure function with
 	regards to props and state.
-
-	TODO (#199): Accept props and state as arguments.
 ]]
 function Component:render()
 	local internalData = self[InternalData]
@@ -287,7 +285,7 @@ function Component:__mount(reconciler, virtualNode)
 	virtualNode.context = instance._context
 
 	internalData.lifecyclePhase = ComponentLifecyclePhase.Render
-	local renderResult = instance:render()
+	local renderResult = instance:render(props, instance.state)
 
 	internalData.lifecyclePhase = ComponentLifecyclePhase.ReconcileChildren
 	reconciler.updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
@@ -450,7 +448,7 @@ function Component:__resolveUpdate(incomingProps, incomingState)
 	self.props = incomingProps
 	self.state = incomingState
 
-	local renderResult = virtualNode.instance:render()
+	local renderResult = virtualNode.instance:render(incomingProps, incomingState)
 
 	internalData.lifecyclePhase = ComponentLifecyclePhase.ReconcileChildren
 	reconciler.updateVirtualNodeWithRenderResult(virtualNode, virtualNode.hostParent, renderResult)

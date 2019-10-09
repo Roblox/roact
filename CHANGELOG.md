@@ -1,6 +1,7 @@
 # Roact Changelog
 
 ## Unreleased Changes
+* `render` now passes the incoming props and state ([#199](https://github.com/Roblox/roact/issues/199))
 
 ## [1.2.0](https://github.com/Roblox/roact/releases/tag/v1.2.0) (September 6th, 2019)
 * Fixed a bug where derived state was lost when assigning directly to state in init ([#232](https://github.com/Roblox/roact/pull/232/))

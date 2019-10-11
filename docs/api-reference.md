@@ -405,10 +405,10 @@ render(props, state) -> Element | nil
 
 `render` describes what a component should display at the current instant in time.
 
+You can access the props and state of the component either through `self.props` and `self.state` respectively or through the arguments passed.
+
 ```lua
 function MyComponent:render(props, state)
-	-- props == self.props
-	-- state == self.state
 	return Roact.createElement("TextLabel", {
 		Text = "Hello, " .. props.name .. "!"
 	})

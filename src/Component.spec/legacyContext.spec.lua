@@ -27,7 +27,7 @@ return function()
 			foo = "bar",
 		}
 
-		assertDeepEqual(node.context, expectedContext)
+		assertDeepEqual(node.legacyContext, expectedContext)
 	end)
 
 	it("should be inherited from parent stateful nodes", function()
@@ -57,8 +57,8 @@ return function()
 		local node = noopReconciler.mountVirtualNode(element, hostParent, hostKey, context)
 
 		expect(capturedContext).never.to.equal(context)
-		expect(capturedContext).never.to.equal(node.context)
-		assertDeepEqual(node.context, context)
+		expect(capturedContext).never.to.equal(node.legacyContext)
+		assertDeepEqual(node.legacyContext, context)
 		assertDeepEqual(capturedContext, context)
 	end)
 
@@ -87,8 +87,8 @@ return function()
 		local node = noopReconciler.mountVirtualNode(element, hostParent, hostKey, context)
 
 		expect(capturedContext).never.to.equal(context)
-		expect(capturedContext).never.to.equal(node.context)
-		assertDeepEqual(node.context, context)
+		expect(capturedContext).never.to.equal(node.legacyContext)
+		assertDeepEqual(node.legacyContext, context)
 		assertDeepEqual(capturedContext, context)
 	end)
 
@@ -131,12 +131,12 @@ return function()
 		}
 
 		-- Because components mutate context, we're careful with equality
-		expect(node.context).never.to.equal(context)
+		expect(node.legacyContext).never.to.equal(context)
 		expect(capturedContext).never.to.equal(context)
-		expect(capturedContext).never.to.equal(node.context)
+		expect(capturedContext).never.to.equal(node.legacyContext)
 
 		assertDeepEqual(context, initialContext)
-		assertDeepEqual(node.context, expectedContext)
+		assertDeepEqual(node.legacyContext, expectedContext)
 		assertDeepEqual(capturedContext, expectedContext)
 	end)
 

@@ -31,16 +31,16 @@ local function createReconciler(renderer)
 		Unmount the given virtualNode, replacing it with a new node described by
 		the given element.
 
-		Preserves host properties, depth, and context from parent.
+		Preserves host properties, depth, and legacyContext from parent.
 	]]
 	local function replaceVirtualNode(virtualNode, newElement)
 		local hostParent = virtualNode.hostParent
 		local hostKey = virtualNode.hostKey
 		local depth = virtualNode.depth
-		local parentContext = virtualNode.parentContext
+		local parentLegacyContext = virtualNode.parentLegacyContext
 
 		unmountVirtualNode(virtualNode)
-		local newNode = mountVirtualNode(newElement, hostParent, hostKey, parentContext)
+		local newNode = mountVirtualNode(newElement, hostParent, hostKey, parentLegacyContext)
 
 		-- mountVirtualNode can return nil if the element is a boolean
 		if newNode ~= nil then
@@ -85,7 +85,7 @@ local function createReconciler(renderer)
 			end
 
 			if virtualNode.children[childKey] == nil then
-				local childNode = mountVirtualNode(newElement, hostParent, concreteKey, virtualNode.context)
+				local childNode = mountVirtualNode(newElement, hostParent, concreteKey, virtualNode.legacyContext)
 
 				-- mountVirtualNode can return nil if the element is a boolean
 				if childNode ~= nil then
@@ -247,10 +247,10 @@ local function createReconciler(renderer)
 	--[[
 		Constructs a new virtual node but not does mount it.
 	]]
-	local function createVirtualNode(element, hostParent, hostKey, context)
+	local function createVirtualNode(element, hostParent, hostKey, legacyContext)
 		if config.internalTypeChecks then
 			internalAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
-			internalAssert(typeof(context) == "table" or context == nil, "Expected arg #4 to be of type table or nil")
+			internalAssert(typeof(legacyContext) == "table" or legacyContext == nil, "Expected arg #4 to be of type table or nil")
 		end
 		if config.typeChecks then
 			assert(hostKey ~= nil, "Expected arg #3 to be non-nil")
@@ -267,10 +267,10 @@ local function createReconciler(renderer)
 			children = {},
 			hostParent = hostParent,
 			hostKey = hostKey,
-			context = context,
-			-- This copy of context is useful if the element gets replaced
+			legacyContext = legacyContext,
+			-- This copy of legacyContext is useful if the element gets replaced
 			-- with an element of a different component type
-			parentContext = context,
+			parentLegacyContext = legacyContext,
 		}
 	end
 
@@ -304,10 +304,10 @@ local function createReconciler(renderer)
 		Constructs a new virtual node and mounts it, but does not place it into
 		the tree.
 	]]
-	function mountVirtualNode(element, hostParent, hostKey, context)
+	function mountVirtualNode(element, hostParent, hostKey, legacyContext)
 		if config.internalTypeChecks then
 			internalAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
-			internalAssert(typeof(context) == "table" or context == nil, "Expected arg #4 to be of type table or nil")
+			internalAssert(typeof(legacyContext) == "table" or legacyContext == nil, "Expected arg #4 to be of type table or nil")
 		end
 		if config.typeChecks then
 			assert(hostKey ~= nil, "Expected arg #3 to be non-nil")
@@ -324,7 +324,7 @@ local function createReconciler(renderer)
 
 		local kind = ElementKind.of(element)
 
-		local virtualNode = createVirtualNode(element, hostParent, hostKey, context)
+		local virtualNode = createVirtualNode(element, hostParent, hostKey, legacyContext)
 
 		if kind == ElementKind.Host then
 			renderer.mountHostNode(reconciler, virtualNode)

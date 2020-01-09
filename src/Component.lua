@@ -273,7 +273,7 @@ function Component:__mount(reconciler, virtualNode)
 
 	instance.props = props
 
-	local newContext = assign({}, virtualNode.context)
+	local newContext = assign({}, virtualNode.legacyContext)
 	instance._context = newContext
 
 	instance.state = assign({}, instance:__getDerivedState(instance.props, {}))
@@ -284,7 +284,7 @@ function Component:__mount(reconciler, virtualNode)
 	end
 
 	-- It's possible for init() to redefine _context!
-	virtualNode.context = instance._context
+	virtualNode.legacyContext = instance._context
 
 	internalData.lifecyclePhase = ComponentLifecyclePhase.Render
 	local renderResult = instance:render()

@@ -37,6 +37,10 @@ local Roact = strict {
 	teardown = reconcilerCompat.teardown,
 	reconcile = reconcilerCompat.reconcile,
 
+	createContext = require(script.createContext),
+	provide = require(script.provide),
+	consume = require(script.consume),
+
 	setGlobalConfig = GlobalConfig.set,
 
 	-- APIs that may change in the future without warning

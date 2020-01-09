@@ -1,6 +1,7 @@
 # Roact Changelog
 
 ## Unreleased Changes
+* Added Contexts, which enables easy handling of items that are provided and consumed throughout the tree.
 
 ## [1.2.0](https://github.com/Roblox/roact/releases/tag/v1.2.0) (September 6th, 2019)
 * Fixed a bug where derived state was lost when assigning directly to state in init ([#232](https://github.com/Roblox/roact/pull/232/))

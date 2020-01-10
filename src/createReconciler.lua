@@ -37,11 +37,15 @@ local function createReconciler(renderer)
 		local hostParent = virtualNode.hostParent
 		local hostKey = virtualNode.hostKey
 		local depth = virtualNode.depth
+
+		-- If the node that is being replaced has modified context, we need to
+		-- use the original *unmodified* context for the new node
+		-- The `originalContext` field will be nil if the context was unchanged
+		local context = virtualNode.originalContext or virtualNode.context
 		local parentLegacyContext = virtualNode.parentLegacyContext
-		local inheritedContext = virtualNode.inheritedContext
 
 		unmountVirtualNode(virtualNode)
-		local newNode = mountVirtualNode(newElement, hostParent, hostKey, inheritedContext, parentLegacyContext)
+		local newNode = mountVirtualNode(newElement, hostParent, hostKey, context, parentLegacyContext)
 
 		-- mountVirtualNode can return nil if the element is a boolean
 		if newNode ~= nil then
@@ -257,7 +261,10 @@ local function createReconciler(renderer)
 	local function createVirtualNode(element, hostParent, hostKey, context, legacyContext)
 		if config.internalTypeChecks then
 			internalAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
-			internalAssert(typeof(legacyContext) == "table" or legacyContext == nil, "Expected arg #4 to be of type table or nil")
+			internalAssert(
+				typeof(legacyContext) == "table" or legacyContext == nil,
+				"Expected arg #4 to be of type table or nil"
+			)
 		end
 		if config.typeChecks then
 			assert(hostKey ~= nil, "Expected arg #3 to be non-nil")
@@ -274,15 +281,21 @@ local function createReconciler(renderer)
 			children = {},
 			hostParent = hostParent,
 			hostKey = hostKey,
+
+			-- Legacy Context API
 			legacyContext = legacyContext,
 			-- This copy of legacyContext is useful if the element gets replaced
 			-- with an element of a different component type
 			parentLegacyContext = legacyContext,
 
-			-- New context api
-			inheritedContext = context,
-			-- will only be populated if the component modifies context
-			context = nil,
+			-- Context API
+			-- The inherited context from this node's parent
+			context = context,
+
+			-- A saved copy of the unmodified context; this will be saved when
+			-- a component adds new context, and will be used when a component
+			-- is replaced
+			originalContext = nil,
 		}
 	end
 
@@ -319,7 +332,10 @@ local function createReconciler(renderer)
 	function mountVirtualNode(element, hostParent, hostKey, context, legacyContext)
 		if config.internalTypeChecks then
 			internalAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
-			internalAssert(typeof(legacyContext) == "table" or legacyContext == nil, "Expected arg #4 to be of type table or nil")
+			internalAssert(
+				typeof(legacyContext) == "table" or legacyContext == nil,
+				"Expected arg #4 to be of type table or nil"
+			)
 		end
 		if config.typeChecks then
 			assert(hostKey ~= nil, "Expected arg #3 to be non-nil")

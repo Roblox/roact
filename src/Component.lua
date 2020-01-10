@@ -205,7 +205,7 @@ function Component:__getContext(key)
 	end
 
 	local virtualNode = self[InternalData].virtualNode
-	local context = virtualNode.context or virtualNode.inheritedContext
+	local context = virtualNode.context
 
 	return context[key]
 end
@@ -218,10 +218,18 @@ function Component:__addContext(key, value)
 	if config.internalTypeChecks then
 		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__addContext`")
 	end
-
-	local existing = self:__getContext()
 	local virtualNode = self[InternalData].virtualNode
 
+	-- If we don't already have the component's original, unmodified context
+	-- stored in the virtual node, store it now so we can restore it if the node
+	-- gets replaced by a different component
+	if virtualNode.originalContext == nil then
+		virtualNode.originalContext = virtualNode.context
+	end
+
+	-- Build a new context table, on top of the existing one, and apply it to
+	-- our node
+	local existing = self:__getContext()
 	virtualNode.context = assign({}, existing, { key = value })
 end
 

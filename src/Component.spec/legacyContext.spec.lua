@@ -54,7 +54,7 @@ return function()
 			hello = "world",
 			value = 6,
 		}
-		local node = noopReconciler.mountVirtualNode(element, hostParent, hostKey, context)
+		local node = noopReconciler.mountVirtualNode(element, hostParent, hostKey, nil, context)
 
 		expect(capturedContext).never.to.equal(context)
 		expect(capturedContext).never.to.equal(node.legacyContext)
@@ -84,7 +84,7 @@ return function()
 			hello = "world",
 			value = 6,
 		}
-		local node = noopReconciler.mountVirtualNode(element, hostParent, hostKey, context)
+		local node = noopReconciler.mountVirtualNode(element, hostParent, hostKey, nil, context)
 
 		expect(capturedContext).never.to.equal(context)
 		expect(capturedContext).never.to.equal(node.legacyContext)
@@ -119,7 +119,7 @@ return function()
 		local context = {
 			dont = "try it",
 		}
-		local node = noopReconciler.mountVirtualNode(element, hostParent, hostKey, context)
+		local node = noopReconciler.mountVirtualNode(element, hostParent, hostKey, nil, context)
 
 		local initialContext = {
 			dont = "try it",

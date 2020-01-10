@@ -805,7 +805,7 @@ return function()
 		end)
 	end)
 
-	describe("Context", function()
+	describe("Legacy context", function()
 		it("should pass context values through Roblox host nodes", function()
 			local Consumer = Component:extend("Consumer")
 
@@ -825,7 +825,7 @@ return function()
 			local context = {
 				hello = "world",
 			}
-			local node = reconciler.mountVirtualNode(element, hostParent, hostKey, context)
+			local node = reconciler.mountVirtualNode(element, hostParent, hostKey, nil, context)
 
 			expect(capturedContext).never.to.equal(context)
 			assertDeepEqual(capturedContext, context)

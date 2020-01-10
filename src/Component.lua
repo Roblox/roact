@@ -197,7 +197,8 @@ function Component:render()
 end
 
 --[[
-	Retrieves the context object corresponding to the given key
+	Retrieves the context value corresponding to the given key. Can return nil
+	if a requested context key is not present
 ]]
 function Component:__getContext(key)
 	if config.internalTypeChecks then
@@ -212,8 +213,8 @@ function Component:__getContext(key)
 end
 
 --[[
-	Adds new context property to this component's context table (which will be
-	passed down to child components)
+	Adds a new context entry to this component's context table (which will be
+	passed down to child components).
 ]]
 function Component:__addContext(key, value)
 	if config.internalTypeChecks then
@@ -221,15 +222,16 @@ function Component:__addContext(key, value)
 	end
 	local virtualNode = self[InternalData].virtualNode
 
-	-- If we don't already have the component's original, unmodified context
-	-- stored in the virtual node, store it now so we can restore it if the node
-	-- gets replaced by a different component
+	-- Make sure we store a reference to the component's original, unmodified
+	-- context the virtual node. In the reconciler, we'll restore the original
+	-- context if we need to replace the node (this happens when a node gets
+	-- re-rendered as a different component)
 	if virtualNode.originalContext == nil then
 		virtualNode.originalContext = virtualNode.context
 	end
 
-	-- Build a new context table, on top of the existing one, and apply it to
-	-- our node
+	-- Build a new context table on top of the existing one, then apply it to
+	-- our virtualNode
 	local existing = virtualNode.context
 	virtualNode.context = assign({}, existing, { [key] = value })
 end

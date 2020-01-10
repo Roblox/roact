@@ -38,9 +38,10 @@ local function createReconciler(renderer)
 		local hostKey = virtualNode.hostKey
 		local depth = virtualNode.depth
 		local parentLegacyContext = virtualNode.parentLegacyContext
+		local inheritedContext = virtualNode.inheritedContext
 
 		unmountVirtualNode(virtualNode)
-		local newNode = mountVirtualNode(newElement, hostParent, hostKey, parentLegacyContext)
+		local newNode = mountVirtualNode(newElement, hostParent, hostKey, inheritedContext, parentLegacyContext)
 
 		-- mountVirtualNode can return nil if the element is a boolean
 		if newNode ~= nil then
@@ -85,7 +86,13 @@ local function createReconciler(renderer)
 			end
 
 			if virtualNode.children[childKey] == nil then
-				local childNode = mountVirtualNode(newElement, hostParent, concreteKey, virtualNode.legacyContext)
+				local childNode = mountVirtualNode(
+					newElement,
+					hostParent,
+					concreteKey,
+					virtualNode.context,
+					virtualNode.legacyContext
+				)
 
 				-- mountVirtualNode can return nil if the element is a boolean
 				if childNode ~= nil then
@@ -247,7 +254,7 @@ local function createReconciler(renderer)
 	--[[
 		Constructs a new virtual node but not does mount it.
 	]]
-	local function createVirtualNode(element, hostParent, hostKey, legacyContext)
+	local function createVirtualNode(element, hostParent, hostKey, context, legacyContext)
 		if config.internalTypeChecks then
 			internalAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
 			internalAssert(typeof(legacyContext) == "table" or legacyContext == nil, "Expected arg #4 to be of type table or nil")
@@ -271,6 +278,11 @@ local function createReconciler(renderer)
 			-- This copy of legacyContext is useful if the element gets replaced
 			-- with an element of a different component type
 			parentLegacyContext = legacyContext,
+
+			-- New context api
+			inheritedContext = context,
+			-- will only be populated if the component modifies context
+			context = nil,
 		}
 	end
 
@@ -304,7 +316,7 @@ local function createReconciler(renderer)
 		Constructs a new virtual node and mounts it, but does not place it into
 		the tree.
 	]]
-	function mountVirtualNode(element, hostParent, hostKey, legacyContext)
+	function mountVirtualNode(element, hostParent, hostKey, context, legacyContext)
 		if config.internalTypeChecks then
 			internalAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
 			internalAssert(typeof(legacyContext) == "table" or legacyContext == nil, "Expected arg #4 to be of type table or nil")
@@ -324,7 +336,7 @@ local function createReconciler(renderer)
 
 		local kind = ElementKind.of(element)
 
-		local virtualNode = createVirtualNode(element, hostParent, hostKey, legacyContext)
+		local virtualNode = createVirtualNode(element, hostParent, hostKey, context, legacyContext)
 
 		if kind == ElementKind.Host then
 			renderer.mountHostNode(reconciler, virtualNode)

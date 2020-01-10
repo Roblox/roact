@@ -197,6 +197,35 @@ function Component:render()
 end
 
 --[[
+	Retrieves the context object corresponding to the given key
+]]
+function Component:__getContext(key)
+	if config.internalTypeChecks then
+		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__getContext`")
+	end
+
+	local virtualNode = self[InternalData].virtualNode
+	local context = virtualNode.context or virtualNode.inheritedContext
+
+	return context[key]
+end
+
+--[[
+	Adds new context property to this component's context map (which will be
+	passed down to child components)
+]]
+function Component:__addContext(key, value)
+	if config.internalTypeChecks then
+		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__addContext`")
+	end
+
+	local existing = self:__getContext()
+	local virtualNode = self[InternalData].virtualNode
+
+	virtualNode.context = assign({}, existing, { key = value })
+end
+
+--[[
 	Performs property validation if the static method validateProps is declared.
 	validateProps should follow assert's expected arguments:
 	(false, message: string) | true. The function may return a message in the

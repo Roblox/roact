@@ -202,6 +202,7 @@ end
 function Component:__getContext(key)
 	if config.internalTypeChecks then
 		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__getContext`")
+		internalAssert(key ~= nil, "Context key cannot be nil")
 	end
 
 	local virtualNode = self[InternalData].virtualNode
@@ -211,7 +212,7 @@ function Component:__getContext(key)
 end
 
 --[[
-	Adds new context property to this component's context map (which will be
+	Adds new context property to this component's context table (which will be
 	passed down to child components)
 ]]
 function Component:__addContext(key, value)
@@ -229,8 +230,8 @@ function Component:__addContext(key, value)
 
 	-- Build a new context table, on top of the existing one, and apply it to
 	-- our node
-	local existing = self:__getContext()
-	virtualNode.context = assign({}, existing, { key = value })
+	local existing = virtualNode.context
+	virtualNode.context = assign({}, existing, { [key] = value })
 end
 
 --[[

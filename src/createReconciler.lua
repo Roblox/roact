@@ -261,6 +261,7 @@ local function createReconciler(renderer)
 	local function createVirtualNode(element, hostParent, hostKey, context, legacyContext)
 		if config.internalTypeChecks then
 			internalAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
+			internalAssert(typeof(context) == "table" or context == nil, "Expected arg #4 to be of type table or nil")
 			internalAssert(
 				typeof(legacyContext) == "table" or legacyContext == nil,
 				"Expected arg #4 to be of type table or nil"
@@ -283,18 +284,18 @@ local function createReconciler(renderer)
 			hostKey = hostKey,
 
 			-- Legacy Context API
+			-- A table of context values inherited from the parent node
 			legacyContext = legacyContext,
-			-- This copy of legacyContext is useful if the element gets replaced
-			-- with an element of a different component type
+
+			-- A saved copy of the parent context, used when replacing a node
 			parentLegacyContext = legacyContext,
 
 			-- Context API
-			-- The inherited context from this node's parent
-			context = context,
+			-- A table of context values inherited from the parent node
+			context = context or {},
 
-			-- A saved copy of the unmodified context; this will be saved when
-			-- a component adds new context, and will be used when a component
-			-- is replaced
+			-- A saved copy of the unmodified context; this will be updated when
+			-- a component adds new context and used when a node is replaced
 			originalContext = nil,
 		}
 	end

@@ -22,7 +22,7 @@ jobs:
         luarocks install luafilesystem
         luarocks install busted
         luarocks install luacov
-        luarocks install luacov-coveralls
+        luarocks install luacov-coveralls --server=http://rocks.moonscript.org/dev
         luarocks install luacheck
 
     - name: Test
@@ -30,8 +30,5 @@ jobs:
         lua -lluacov bin/spec.lua
         luacheck src benchmarks examples
 
-    - name: Coveralls
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: "luacov.stats.out"
+    - name: Report to Coveralls
+      run: luacov-coveralls

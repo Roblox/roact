@@ -125,7 +125,7 @@ return function()
 		local childNode = oneChild(parentNode.children)
 
 		-- Parent and child should have the same context table
-		expect(parentNode.context, childNode.context)
+		expect(parentNode.context).to.equal(childNode.context)
 	end)
 
 	it("should not allow context to move up the tree", function()

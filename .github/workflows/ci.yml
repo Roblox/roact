@@ -22,7 +22,6 @@ jobs:
         luarocks install luafilesystem
         luarocks install busted
         luarocks install luacov
-        luarocks install luacov-coveralls --server=http://rocks.moonscript.org/dev
         luarocks install luacheck
 
     - name: Test
@@ -31,4 +30,7 @@ jobs:
         luacheck src benchmarks examples
 
     - name: Report to Coveralls
-      run: luacov-coveralls
+      run: |
+        git clone https://github.com/moteus/luacov-coveralls.git
+        luarocks install luacov-coveralls/rockspecs/luacov-coveralls-scm-0.rockspec
+        luacov-coveralls

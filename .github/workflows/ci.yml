@@ -1,0 +1,32 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - uses: leafo/gh-actions-lua@v5
+      with:
+        luaVersion: "5.1"
+
+    - uses: leafo/gh-actions-luarocks@v2
+
+    - name: Install dependencies
+      run: |
+        luarocks install luafilesystem
+        luarocks install busted
+        luarocks install luacov
+        luarocks install luacov-coveralls
+        luarocks install luacheck
+
+    - name: Test
+      run: |
+        lua -lluacov bin/spec.lua
+        luacheck src benchmarks examples
+
+    - name: Report coverage
+      run: luacov-coveralls

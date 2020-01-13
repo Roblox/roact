@@ -335,7 +335,7 @@ local function createReconciler(renderer)
 			internalAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
 			internalAssert(
 				typeof(legacyContext) == "table" or legacyContext == nil,
-				"Expected arg #4 to be of type table or nil"
+				"Expected arg #5 to be of type table or nil"
 			)
 		end
 		if config.typeChecks then

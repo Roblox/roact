@@ -30,5 +30,8 @@ jobs:
         lua -lluacov bin/spec.lua
         luacheck src benchmarks examples
 
-    - name: Report coverage
-      run: luacov-coveralls
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: "luacov.stats.out"

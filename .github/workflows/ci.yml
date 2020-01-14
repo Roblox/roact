@@ -31,6 +31,6 @@ jobs:
         luacheck src benchmarks examples
 
     - name: Report to Coveralls
-      run: luacov-coveralls --repo-token "$repo_token"
+      run: luacov-coveralls --repo-token $REPO_TOKEN
       env:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}

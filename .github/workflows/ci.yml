@@ -20,7 +20,6 @@ jobs:
     - name: Install dependencies
       run: |
         luarocks install luafilesystem
-        luarocks install busted
         luarocks install luacov
         luarocks install luacov-coveralls --server=http://rocks.moonscript.org/dev
         luarocks install luacheck
@@ -30,6 +29,8 @@ jobs:
         lua -lluacov bin/spec.lua
         luacheck src benchmarks examples
 
+    # luacov-coveralls default settings do not function on GitHub Actions.
+    # We need to pass different service name and repo token explicitly
     - name: Report to Coveralls
       run: luacov-coveralls --repo-token $REPO_TOKEN --service-name github
       env:

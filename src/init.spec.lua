@@ -14,8 +14,6 @@ return function()
 			oneChild = "function",
 			setGlobalConfig = "function",
 			createContext = "function",
-			provide = "function",
-			consume = "function",
 
 			-- These functions are deprecated and throw warnings!
 			reify = "function",

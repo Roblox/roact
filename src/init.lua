@@ -23,6 +23,7 @@ local Roact = strict {
 	createRef = require(script.createRef),
 	createBinding = Binding.create,
 	joinBindings = Binding.join,
+	createContext = require(script.createContext),
 
 	Change = require(script.PropMarkers.Change),
 	Children = require(script.PropMarkers.Children),
@@ -36,10 +37,6 @@ local Roact = strict {
 	reify = reconcilerCompat.reify,
 	teardown = reconcilerCompat.teardown,
 	reconcile = reconcilerCompat.reconcile,
-
-	createContext = require(script.createContext),
-	provide = require(script.provide),
-	consume = require(script.consume),
 
 	setGlobalConfig = GlobalConfig.set,
 

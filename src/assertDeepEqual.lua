@@ -6,6 +6,8 @@
 	This should only be used in tests.
 ]]
 
+print("hi mom!")
+
 local function deepEqual(a, b)
 	if typeof(a) ~= typeof(b) then
 		local message = ("{1} is of type %s, but {2} is of type %s"):format(

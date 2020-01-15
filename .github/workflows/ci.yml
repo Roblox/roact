@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - master
+
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+
+    - uses: leafo/gh-actions-lua@v5
+      with:
+        luaVersion: "5.1"
+
+    - uses: leafo/gh-actions-luarocks@v2
+
+    - name: Install dependencies
+      run: |
+        luarocks install luafilesystem
+        luarocks install luacov
+        luarocks install luacov-coveralls --server=http://rocks.moonscript.org/dev
+        luarocks install luacheck
+
+    - name: Test
+      run: |
+        lua -lluacov bin/spec.lua
+        luacheck src benchmarks examples
+
+    # luacov-coveralls default settings do not function on GitHub Actions.
+    # We need to pass different service name and repo token explicitly
+    - name: Report to Coveralls
+      run: luacov-coveralls --repo-token $REPO_TOKEN --service-name github
+      env:
+        REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}

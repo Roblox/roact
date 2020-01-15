@@ -1,11 +1,11 @@
 local Symbol = require(script.Parent.Symbol)
 local Binding = require(script.Parent.Binding)
-local oneChild = require(script.Parent.oneChild)
+local createFragment = require(script.Parent.createFragment)
 local Children = require(script.Parent.PropMarkers.Children)
-local PureComponent = require(script.Parent.PureComponent)
+local Component = require(script.Parent.Component)
 
 local function createProvider(context)
-	local Provider = PureComponent:extend("Provider")
+	local Provider = Component:extend("Provider")
 
 	function Provider:init(props)
 		self.binding, self.updateValue = Binding.create(props.value)
@@ -14,19 +14,21 @@ local function createProvider(context)
 		self._context[key] = self.binding
 	end
 
-	function Provider:didUpdate()
-		self.updateValue(self.props.value)
+	function Provider:didUpdate(prevProps)
+		if prevProps.value ~= self.props.value then
+			self.updateValue(self.props.value)
+		end
 	end
 
 	function Provider:render()
-		return oneChild(self.props[Children])
+		return createFragment(self.props[Children])
 	end
 
 	return Provider
 end
 
 local function createConsumer(context)
-	local Consumer = PureComponent:extend("Consumer")
+	local Consumer = Component:extend("Consumer")
 
 	function Consumer:init(props)
 		local key = context.key
@@ -51,13 +53,20 @@ local function createConsumer(context)
 		end
 	end
 
+	function Consumer.validateProps(props)
+		if type(props.render) ~= "function" then
+			return false, "Consumer expects a `render` function"
+		else
+			return true
+		end
+	end
+
 	function Consumer:render()
-		assert(type(self.props.render) == "function", "Consumer expects a `render` function")
 		return self.props.render(self.state.value)
 	end
 
 	function Consumer:willUnmount()
-		if self.disconnect then
+		if self.disconnect ~= nil then
 			self.disconnect()
 		end
 	end
@@ -78,7 +87,7 @@ function Context.new(defaultValue)
 end
 
 function Context:__tostring()
-	return tostring(self.defaultValue)
+	return "RoactContext"
 end
 
 local function createContext(defaultValue)

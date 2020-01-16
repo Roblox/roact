@@ -197,6 +197,46 @@ function Component:render()
 end
 
 --[[
+	Retrieves the context value corresponding to the given key. Can return nil
+	if a requested context key is not present
+]]
+function Component:__getContext(key)
+	if config.internalTypeChecks then
+		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__getContext`")
+		internalAssert(key ~= nil, "Context key cannot be nil")
+	end
+
+	local virtualNode = self[InternalData].virtualNode
+	local context = virtualNode.context
+
+	return context[key]
+end
+
+--[[
+	Adds a new context entry to this component's context table (which will be
+	passed down to child components).
+]]
+function Component:__addContext(key, value)
+	if config.internalTypeChecks then
+		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__addContext`")
+	end
+	local virtualNode = self[InternalData].virtualNode
+
+	-- Make sure we store a reference to the component's original, unmodified
+	-- context the virtual node. In the reconciler, we'll restore the original
+	-- context if we need to replace the node (this happens when a node gets
+	-- re-rendered as a different component)
+	if virtualNode.originalContext == nil then
+		virtualNode.originalContext = virtualNode.context
+	end
+
+	-- Build a new context table on top of the existing one, then apply it to
+	-- our virtualNode
+	local existing = virtualNode.context
+	virtualNode.context = assign({}, existing, { [key] = value })
+end
+
+--[[
 	Performs property validation if the static method validateProps is declared.
 	validateProps should follow assert's expected arguments:
 	(false, message: string) | true. The function may return a message in the
@@ -273,7 +313,7 @@ function Component:__mount(reconciler, virtualNode)
 
 	instance.props = props
 
-	local newContext = assign({}, virtualNode.context)
+	local newContext = assign({}, virtualNode.legacyContext)
 	instance._context = newContext
 
 	instance.state = assign({}, instance:__getDerivedState(instance.props, {}))
@@ -284,7 +324,7 @@ function Component:__mount(reconciler, virtualNode)
 	end
 
 	-- It's possible for init() to redefine _context!
-	virtualNode.context = instance._context
+	virtualNode.legacyContext = instance._context
 
 	internalData.lifecyclePhase = ComponentLifecyclePhase.Render
 	local renderResult = instance:render()

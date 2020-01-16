@@ -811,7 +811,9 @@ return function()
 
 			local capturedContext
 			function Consumer:init()
-				capturedContext = self._context
+				capturedContext = {
+					hello = self:__getContext("hello")
+				}
 			end
 
 			function Consumer:render()
@@ -826,6 +828,77 @@ return function()
 				hello = "world",
 			}
 			local node = reconciler.mountVirtualNode(element, hostParent, hostKey, context)
+
+			expect(capturedContext).never.to.equal(context)
+			assertDeepEqual(capturedContext, context)
+
+			reconciler.unmountVirtualNode(node)
+		end)
+
+		it("should pass context values through portal nodes", function()
+			local target = Instance.new("Folder")
+
+			local Provider = Component:extend("Provider")
+
+			function Provider:init()
+				self:__addContext("foo", "bar")
+			end
+
+			function Provider:render()
+				return createElement("Folder", nil, self.props[Children])
+			end
+
+			local Consumer = Component:extend("Consumer")
+
+			local capturedContext
+			function Consumer:init()
+				capturedContext = {
+					foo = self:__getContext("foo"),
+				}
+			end
+
+			function Consumer:render()
+				return nil
+			end
+
+			local element = createElement(Provider, nil, {
+				Portal = createElement(Portal, {
+					target = target,
+				}, {
+					Consumer = createElement(Consumer),
+				})
+			})
+			local hostParent = nil
+			local hostKey = "Some Key"
+			reconciler.mountVirtualNode(element, hostParent, hostKey)
+
+			assertDeepEqual(capturedContext, {
+				foo = "bar"
+			})
+		end)
+	end)
+
+	describe("Legacy context", function()
+		it("should pass context values through Roblox host nodes", function()
+			local Consumer = Component:extend("Consumer")
+
+			local capturedContext
+			function Consumer:init()
+				capturedContext = self._context
+			end
+
+			function Consumer:render()
+			end
+
+			local element = createElement("Folder", nil, {
+				Consumer = createElement(Consumer)
+			})
+			local hostParent = nil
+			local hostKey = "Context Test"
+			local context = {
+				hello = "world",
+			}
+			local node = reconciler.mountVirtualNode(element, hostParent, hostKey, nil, context)
 
 			expect(capturedContext).never.to.equal(context)
 			assertDeepEqual(capturedContext, context)

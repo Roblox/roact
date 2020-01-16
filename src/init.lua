@@ -8,6 +8,7 @@ local createReconcilerCompat = require(script.createReconcilerCompat)
 local RobloxRenderer = require(script.RobloxRenderer)
 local strict = require(script.strict)
 local Binding = require(script.Binding)
+local TypeMirror = require(script.TypeMirror)
 
 local robloxReconciler = createReconciler(RobloxRenderer)
 local reconcilerCompat = createReconcilerCompat(robloxReconciler)
@@ -36,6 +37,10 @@ local Roact = strict {
 	reify = reconcilerCompat.reify,
 	teardown = reconcilerCompat.teardown,
 	reconcile = reconcilerCompat.reconcile,
+
+	isComponent = require(script.isComponent),
+	typeOf = TypeMirror.typeOf,
+	Type = TypeMirror.Type,
 
 	setGlobalConfig = GlobalConfig.set,
 

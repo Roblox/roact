@@ -167,6 +167,28 @@ end
 
 ---
 
+### Roact.typeOf
+<div class="api-addition">Added in 1.2.0</div>
+
+```
+Roact.typeOf(roactObject) -> Roact.Type
+```
+
+Returns the [Roact.Type](#roacttype) of the passed in Roact object, or `nil` if the input is not a Roact object.
+
+---
+
+### Roact.isComponent
+<div class="api-addition">Added in 1.2.0</div>
+
+```
+Roact.isComponent(value) -> bool
+```
+
+Returns true is the provided value can be used by [Roact.createElement](#roactcreateelement).
+
+---
+
 ### Roact.createRef
 ```
 Roact.createRef() -> Ref
@@ -353,6 +375,48 @@ Any children of a portal are put inside the Roblox Instance specified by the req
 Portals are useful for creating dialogs managed by deeply-nested UI components, and enable Roact to represent and manage multiple disjoint trees at once.
 
 See [the Portals guide](../advanced/portals) for a small tutorial and more details about portals.
+
+---
+
+## Enumerations
+
+### Roact.Type
+<div class="api-addition">Added in 1.2.0</div>
+
+An enumeration of the various types of objects in Roact, returned from calling `Roact.typeOf` on Roact objects.
+
+#### Roact.Type.Binding
+`Roact.typeOf` object returned from `Roact.createBinding`
+
+---
+
+#### Roact.Type.Element
+`Roact.typeOf` object returned from `Roact.createElement`
+
+---
+
+#### Roact.Type.HostChangeEvent
+`Roact.typeOf` object returned when indexing into `Roact.Change`
+
+---
+
+#### Roact.Type.HostEvent
+`Roact.typeOf` object returned when indexing into `Roact.Event`
+
+---
+
+#### Roact.Type.StatefulComponentClass
+`Roact.typeOf` object returned from `Roact.Component:extend`
+
+---
+
+#### Roact.Type.StatefulComponentInstance
+`Roact.typeOf` object of self inside of member methods of `Roact.Component`
+
+---
+
+#### Roact.Type.VirtualTree
+`Roact.typeOf` object returned by `Roact.mount`
 
 ---
 

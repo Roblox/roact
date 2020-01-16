@@ -20,5 +20,9 @@ return function()
 
 			expect(Type.of(test)).to.equal(Type.Element)
 		end)
+
+		it("should return a type's name", function()
+			expect(Type.nameOf(Type.Element)).to.equal("Element")
+		end)
 	end)
 end

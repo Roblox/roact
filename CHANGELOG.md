@@ -6,6 +6,7 @@
 * Fixed a bug where derived state was lost when assigning directly to state in init ([#232](https://github.com/Roblox/roact/pull/232/))
 * Improved the error message when an invalid changed hook name is used. ([#216](https://github.com/Roblox/roact/pull/216))
 * Fixed a bug where fragments could not be used as children of an element or another fragment. ([#214](https://github.com/Roblox/roact/pull/214))
+* Added Roact.Type, Roact.typeOf, and Roact.isComponent for Roact object and component type checking. ([#230](https://github.com/Roblox/roact/pull/230))
 
 ## [1.1.0](https://github.com/Roblox/roact/releases/tag/v1.1.0) (June 3rd, 2019)
 * Fixed an issue where updating a host element with children to an element with `nil` children caused the old children to not be unmounted. ([#210](https://github.com/Roblox/roact/pull/210))

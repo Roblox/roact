@@ -11,7 +11,7 @@ local function createProvider(context)
 		self.binding, self.updateValue = Binding.create(props.value)
 
 		local key = context.key
-		self._context[key] = self.binding
+		self:__addContext(key, self.binding)
 	end
 
 	function Provider:didUpdate(prevProps)
@@ -32,7 +32,7 @@ local function createConsumer(context)
 
 	function Consumer:init(props)
 		local key = context.key
-		local binding = self._context[key]
+		local binding = self:__getContext(key)
 
 		if binding ~= nil then
 			self.state = {

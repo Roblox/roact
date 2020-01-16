@@ -3,17 +3,16 @@ return function()
 	local createElement = require(script.Parent.Parent.createElement)
 	local createReconciler = require(script.Parent.Parent.createReconciler)
 	local NoopRenderer = require(script.Parent.Parent.NoopRenderer)
-	local oneChild = require(script.Parent.Parent.oneChild)
 
 	local Component = require(script.Parent.Parent.Component)
 
 	local noopReconciler = createReconciler(NoopRenderer)
 
-	it("should be provided as an internal api on Component", function()
+	it("should be provided as a mutable self._context in Component:init", function()
 		local Provider = Component:extend("Provider")
 
 		function Provider:init()
-			self:__addContext("foo", "bar")
+			self._context.foo = "bar"
 		end
 
 		function Provider:render()
@@ -28,7 +27,7 @@ return function()
 			foo = "bar",
 		}
 
-		assertDeepEqual(node.context, expectedContext)
+		assertDeepEqual(node.legacyContext, expectedContext)
 	end)
 
 	it("should be inherited from parent stateful nodes", function()
@@ -36,10 +35,7 @@ return function()
 
 		local capturedContext
 		function Consumer:init()
-			capturedContext = {
-				hello = self:__getContext("hello"),
-				value = self:__getContext("value"),
-			}
+			capturedContext = self._context
 		end
 
 		function Consumer:render()
@@ -58,11 +54,11 @@ return function()
 			hello = "world",
 			value = 6,
 		}
-		local node = noopReconciler.mountVirtualNode(element, hostParent, hostKey, context)
+		local node = noopReconciler.mountVirtualNode(element, hostParent, hostKey, nil, context)
 
 		expect(capturedContext).never.to.equal(context)
-		expect(capturedContext).never.to.equal(node.context)
-		assertDeepEqual(node.context, context)
+		expect(capturedContext).never.to.equal(node.legacyContext)
+		assertDeepEqual(node.legacyContext, context)
 		assertDeepEqual(capturedContext, context)
 	end)
 
@@ -71,10 +67,7 @@ return function()
 
 		local capturedContext
 		function Consumer:init()
-			capturedContext = {
-				hello = self:__getContext("hello"),
-				value = self:__getContext("value"),
-			}
+			capturedContext = self._context
 		end
 
 		function Consumer:render()
@@ -91,82 +84,12 @@ return function()
 			hello = "world",
 			value = 6,
 		}
-		local node = noopReconciler.mountVirtualNode(element, hostParent, hostKey, context)
+		local node = noopReconciler.mountVirtualNode(element, hostParent, hostKey, nil, context)
 
 		expect(capturedContext).never.to.equal(context)
-		expect(capturedContext).never.to.equal(node.context)
-		assertDeepEqual(node.context, context)
+		expect(capturedContext).never.to.equal(node.legacyContext)
+		assertDeepEqual(node.legacyContext, context)
 		assertDeepEqual(capturedContext, context)
-	end)
-
-	it("should not copy the context table if it doesn't need to", function()
-		local Parent = Component:extend("Parent")
-
-		function Parent:init()
-			self:__addContext("parent", "I'm here!")
-		end
-
-		function Parent:render()
-			-- Create some child element
-			return createElement(function() end)
-		end
-
-		local element = createElement(Parent)
-		local hostParent = nil
-		local hostKey = "Parent"
-		local parentNode = noopReconciler.mountVirtualNode(element, hostParent, hostKey)
-
-		local expectedContext = {
-			parent = "I'm here!",
-		}
-
-		assertDeepEqual(parentNode.context, expectedContext)
-
-		local childNode = oneChild(parentNode.children)
-
-		-- Parent and child should have the same context table
-		expect(parentNode.context).to.equal(childNode.context)
-	end)
-
-	it("should not allow context to move up the tree", function()
-		local ChildProvider = Component:extend("ChildProvider")
-
-		function ChildProvider:init()
-			self:__addContext("child", "I'm here too!")
-		end
-
-		function ChildProvider:render()
-		end
-
-		local ParentProvider = Component:extend("ParentProvider")
-
-		function ParentProvider:init()
-			self:__addContext("parent", "I'm here!")
-		end
-
-		function ParentProvider:render()
-			return createElement(ChildProvider)
-		end
-
-		local element = createElement(ParentProvider)
-		local hostParent = nil
-		local hostKey = "Parent"
-
-		local parentNode = noopReconciler.mountVirtualNode(element, hostParent, hostKey)
-		local childNode = oneChild(parentNode.children)
-
-		local expectedParentContext = {
-			parent = "I'm here!",
-			-- Context does not travel back up
-		}
-
-		local expectedChildContext = {
-			parent = "I'm here!",
-			child = "I'm here too!"
-		}
-
-		assertDeepEqual(parentNode.context, expectedParentContext)
-		assertDeepEqual(childNode.context, expectedChildContext)
 	end)
 
 	it("should contain values put into the tree by parent nodes", function()
@@ -174,10 +97,7 @@ return function()
 
 		local capturedContext
 		function Consumer:init()
-			capturedContext = {
-				dont = self:__getContext("dont"),
-				frob = self:__getContext("frob"),
-			}
+			capturedContext = self._context
 		end
 
 		function Consumer:render()
@@ -186,7 +106,7 @@ return function()
 		local Provider = Component:extend("Provider")
 
 		function Provider:init()
-			self:__addContext("frob", "ulator")
+			self._context.frob = "ulator"
 		end
 
 		function Provider:render()
@@ -199,7 +119,7 @@ return function()
 		local context = {
 			dont = "try it",
 		}
-		local node = noopReconciler.mountVirtualNode(element, hostParent, hostKey, context)
+		local node = noopReconciler.mountVirtualNode(element, hostParent, hostKey, nil, context)
 
 		local initialContext = {
 			dont = "try it",
@@ -211,31 +131,23 @@ return function()
 		}
 
 		-- Because components mutate context, we're careful with equality
-		expect(node.context).never.to.equal(context)
+		expect(node.legacyContext).never.to.equal(context)
 		expect(capturedContext).never.to.equal(context)
-		expect(capturedContext).never.to.equal(node.context)
+		expect(capturedContext).never.to.equal(node.legacyContext)
 
 		assertDeepEqual(context, initialContext)
-		assertDeepEqual(node.context, expectedContext)
+		assertDeepEqual(node.legacyContext, expectedContext)
 		assertDeepEqual(capturedContext, expectedContext)
 	end)
 
 	it("should transfer context to children that are replaced", function()
 		local ConsumerA = Component:extend("ConsumerA")
 
-		local function captureAllContext(component)
-			return {
-				A = component:__getContext("A"),
-				B = component:__getContext("B"),
-				frob = component:__getContext("frob"),
-			}
-		end
-
 		local capturedContextA
 		function ConsumerA:init()
-			self:__addContext("A", "hello")
+			self._context.A = "hello"
 
-			capturedContextA = captureAllContext(self)
+			capturedContextA = self._context
 		end
 
 		function ConsumerA:render()
@@ -245,9 +157,9 @@ return function()
 
 		local capturedContextB
 		function ConsumerB:init()
-			self:__addContext("B", "hello")
+			self._context.B = "hello"
 
-			capturedContextB = captureAllContext(self)
+			capturedContextB = self._context
 		end
 
 		function ConsumerB:render()
@@ -256,7 +168,7 @@ return function()
 		local Provider = Component:extend("Provider")
 
 		function Provider:init()
-			self:__addContext("frob", "ulator")
+			self._context.frob = "ulator"
 		end
 
 		function Provider:render()

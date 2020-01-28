@@ -560,6 +560,9 @@ Roact.setGlobalConfig({
 
 See [setGlobalConfig](#roactsetglobalconfig) for more details.
 
+!!! note
+	`validateProps` is a *static* lifecycle method. It does not have access to `self`, and must be a pure function.
+
 !!! warning
 	Depending on the implementation, `validateProps` can impact performance. Recommended practice is to enable prop validation during development and leave it off in production environments.
 

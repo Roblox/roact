@@ -609,3 +609,6 @@ As with `setState`, you can set use the constant `Roact.None` to remove a field 
 
 !!! note
 	`getDerivedStateFromProps` is a *static* lifecycle method. It does not have access to `self`, and must be a pure function.
+
+!!! caution
+	`getDerivedStateFromProps` runs before `shouldUpdate` and any non-nil return will cause the state table to no longer be shallow-equal. This means that a `PureComponent` will rerender even if nothing actually changed. Similarly, any component implementing both `getDerivedStateFromProps` and `shouldUpdate` needs to do so in a way that takes this in to account.

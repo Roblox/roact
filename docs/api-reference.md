@@ -202,7 +202,7 @@ Creates a new context provider and consumer. For a usage guide, see [Advanced Co
 * `value`: The value to put into the tree for this context value.
 	* If the `Provider` is updated with a new `value`, any matching `Consumer` components will be re-rendered with the new value.
 * `[Children]`: Any number of children to render underneath this provider.
-	* Descendants of this component can receiver the provided context value by using `Consumer`.
+	* Descendants of this component can receive the provided context value by using `Consumer`.
 
 #### `Consumer`
 `Consumer` accepts just one prop:

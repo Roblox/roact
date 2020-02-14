@@ -187,7 +187,13 @@ Creates a new reference object that can be used with [Roact.Ref](#roactref).
 	It may be available from a recent pre-release or Roact's master branch.
 
 ```
-Roact.createContext(defaultValue: any) -> { Provider, Consumer }
+Roact.createContext(defaultValue: any) -> RoactContext
+
+type RoactContext = {
+	Provider: Component,
+	Consumer: Component,
+	[private fields]
+}
 ```
 
 Creates a new context provider and consumer. For a usage guide, see [Advanced Concepts: Context](/advanced/context).

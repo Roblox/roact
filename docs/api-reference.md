@@ -192,7 +192,7 @@ Roact.createContext(defaultValue: any) -> { Provider, Consumer }
 
 Creates a new context provider and consumer. For a usage guide, see [Advanced Concepts: Context](/advanced/context).
 
-`defaultValue` is given to consumers if they have no `Provider` ancestors. It is up to consumers of Roact's context API to turn this case into an error if it is an invalid state.
+`defaultValue` is given to consumers if they have no `Provider` ancestors. It is up to users of Roact's context API to turn this case into an error if it is an invalid state.
 
 `Provider` and `Consumer` are both Roact components.
 

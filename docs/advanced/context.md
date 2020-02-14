@@ -5,7 +5,7 @@
 
 [TOC]
 
-Roact supports a feature known as context that enables pass values down the tree without having to pass them through props. Roact's Context API is based on [React's Context API](https://reactjs.org/docs/context.html).
+Roact supports a feature called context which enables passing values down the tree without having to pass them through props. Roact's Context API is based on [React's Context API](https://reactjs.org/docs/context.html).
 
 Context is commonly used to implement features like dependency injection, dynamic theming, and scoped state storage.
 

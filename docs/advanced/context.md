@@ -59,9 +59,12 @@ end
 ```
 
 ## Legacy Context
-Roact also has a deprecated version of context that pre-dates the stable context API. It will be removed in a future release, but is currently maintained for backwards-compatibility.
+!!! danger
+	Legacy Context is a deprecated feature that will be removed in a future release of Roact.
 
-Legacy context values cannot be updated dynamically. It is up to the context user to create their own mechanism for updates, probably using a wrapper component and `setState`.
+Roact also has a deprecated version of context that pre-dates the stable context API.
+
+Legacy context values **do not update dynamically** on their own. It is up to the context user to create their own mechanism for updates, probably using a wrapper component and `setState`.
 
 To use it, add new entries to `self._context` in `Component:init()` to create a provider:
 

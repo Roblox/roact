@@ -17,7 +17,8 @@ The `children` argument is shorthand for adding a `Roact.Children` key to `props
 ---
 
 ### Roact.createFragment
-<div class="api-addition">Added in 1.0.0</div>
+
+!!! success "Added in Roact 1.0.0"
 
 ```
 Roact.createFragment(elements) -> RoactFragment
@@ -84,7 +85,8 @@ If `children` is `nil` or contains no children, `oneChild` will return `nil`.
 ---
 
 ### Roact.createBinding
-<div class="api-addition">Added in 1.0.0</div>
+
+!!! success "Added in Roact 1.0.0"
 
 ```
 Roact.createBinding(initialValue) -> Binding, updateFunction
@@ -118,7 +120,8 @@ Returns a new binding that maps the existing binding's value to something else. 
 ---
 
 ### Roact.joinBindings
-<div class="api-addition">Added in 1.1.0</div>
+
+!!! success "Added in Roact 1.1.0"
 
 ```
 Roact.joinBindings(bindings) -> Binding
@@ -173,6 +176,45 @@ Roact.createRef() -> Ref
 ```
 
 Creates a new reference object that can be used with [Roact.Ref](#roactref).
+
+---
+
+### Roact.createContext
+
+!!! danger "Unreleased API"
+	This API is not yet available in a stable Roact release.
+
+	It may be available from a recent pre-release or Roact's master branch.
+
+```
+Roact.createContext(defaultValue: any) -> RoactContext
+
+type RoactContext = {
+	Provider: Component,
+	Consumer: Component,
+	[private fields]
+}
+```
+
+Creates a new context provider and consumer. For a usage guide, see [Advanced Concepts: Context](/advanced/context).
+
+`defaultValue` is given to consumers if they have no `Provider` ancestors. It is up to users of Roact's context API to turn this case into an error if it is an invalid state.
+
+`Provider` and `Consumer` are both Roact components.
+
+#### `Provider`
+`Provider` accepts the following props:
+
+* `value`: The value to put into the tree for this context value.
+	* If the `Provider` is updated with a new `value`, any matching `Consumer` components will be re-rendered with the new value.
+* `[Children]`: Any number of children to render underneath this provider.
+	* Descendants of this component can receive the provided context value by using `Consumer`.
+
+#### `Consumer`
+`Consumer` accepts just one prop:
+
+* `render(value) -> RoactElement | nil`: A function that will be invoked to render any children.
+	* `render` will be called every time `Consumer` is rendered.
 
 ---
 
@@ -503,7 +545,8 @@ By default, components are re-rendered any time a parent component updates, or w
 ---
 
 ### validateProps
-<div class="api-addition">Added in 1.0.0</div>
+
+!!! success "Added in Roact 1.0.0"
 
 ```
 static validateProps(props) -> (false, message: string) | true
@@ -522,6 +565,9 @@ Roact.setGlobalConfig({
 ```
 
 See [setGlobalConfig](#roactsetglobalconfig) for more details.
+
+!!! note
+	`validateProps` is a *static* lifecycle method. It does not have access to `self`, and must be a pure function.
 
 !!! warning
 	Depending on the implementation, `validateProps` can impact performance. Recommended practice is to enable prop validation during development and leave it off in production environments.

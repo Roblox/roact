@@ -196,7 +196,7 @@ type RoactContext = {
 }
 ```
 
-Creates a new context provider and consumer. For a usage guide, see [Advanced Concepts: Context](/advanced/context).
+Creates a new context provider and consumer. For a usage guide, see [Advanced Concepts: Context](../advanced/context).
 
 `defaultValue` is given to consumers if they have no `Provider` ancestors. It is up to users of Roact's context API to turn this case into an error if it is an invalid state.
 

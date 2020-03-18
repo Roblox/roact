@@ -102,7 +102,9 @@ local function createConsumer(context)
 			--
 			-- To avoid sending a redundant update, we compare the new value
 			-- with the last value that we updated with (set in didUpdate) and
-			-- only update if they differ.
+			-- only update if they differ. This may happen when an update from a
+			-- provider was blocked by an intermediate component that returned
+			-- false from shouldUpdate.
 			self.disconnect = self.contextEntry.onUpdate:subscribe(function(newValue)
 				if newValue ~= self.lastValue then
 					-- Trigger a dummy state update.

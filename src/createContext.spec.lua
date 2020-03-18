@@ -1,7 +1,10 @@
 return function()
+	local Component = require(script.Parent.Component)
+	local NoopRenderer = require(script.Parent.NoopRenderer)
+	local Children = require(script.Parent.PropMarkers.Children)
 	local createContext = require(script.Parent.createContext)
 	local createElement = require(script.Parent.createElement)
-	local NoopRenderer = require(script.Parent.NoopRenderer)
+	local createFragment = require(script.Parent.createFragment)
 	local createReconciler = require(script.Parent.createReconciler)
 	local createSpy = require(script.Parent.createSpy)
 
@@ -111,6 +114,58 @@ return function()
 				value = "ThirdTest",
 			}, {
 				Listener = createElement(Listener),
+			}))
+
+			expect(valueSpy.callCount).to.equal(2)
+			valueSpy:assertCalledWith("ThirdTest")
+
+			noopReconciler.unmountVirtualTree(tree)
+		end)
+
+		--[[
+			This test is the same as the one above, but with a component that
+			always blocks updates in the middle. We expect behavior to be the
+			same.
+		]]
+		it("should update when the value updates through an update blocking component", function()
+			local valueSpy = createSpy()
+			local context = createContext("Test")
+
+			local UpdateBlocker = Component:extend("UpdateBlocker")
+
+			function UpdateBlocker:render()
+				return createFragment(self.props[Children])
+			end
+
+			function UpdateBlocker:shouldUpdate()
+				return false
+			end
+
+			local function Listener()
+				return createElement(context.Consumer, {
+					render = valueSpy.value,
+				})
+			end
+
+			local element = createElement(context.Provider, {
+				value = "NewTest",
+			}, {
+				Blocker = createElement(UpdateBlocker, nil, {
+					Listener = createElement(Listener),
+				}),
+			})
+
+			local tree = noopReconciler.mountVirtualTree(element, nil, "Provide Tree")
+
+			expect(valueSpy.callCount).to.equal(1)
+			valueSpy:assertCalledWith("NewTest")
+
+			noopReconciler.updateVirtualTree(tree, createElement(context.Provider, {
+				value = "ThirdTest",
+			}, {
+				Blocker = createElement(UpdateBlocker, nil, {
+					Listener = createElement(Listener),
+				}),
 			}))
 
 			expect(valueSpy.callCount).to.equal(2)

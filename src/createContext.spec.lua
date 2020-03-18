@@ -119,4 +119,106 @@ return function()
 			noopReconciler.unmountVirtualTree(tree)
 		end)
 	end)
+
+	describe("Update order", function()
+		--[[
+			This test ensures that there is no scenario where we can observe
+			'update tearing' when props and context are updated at the same
+			time.
+
+			Update tearing is scenario where a single update is partially
+			applied in multiple steps instead of atomically. This is observable
+			by components and can lead to strange bugs or errors.
+
+			This instance of update tearing happens when updating a prop and a
+			context value in the same update. Image we represent our tree's
+			state as the current prop and context versions. Our initial state
+			is:
+
+			(prop_1, context_1)
+
+			The next state we would like to update to is:
+
+			(prop_2, context_2)
+
+			Under the bug reported in issue 259, Roact reaches three different
+			states in sequence:
+
+			1: (prop_1, context_1) - the initial state
+			2: (prop_2, context_1) - woops!
+			3: (prop_2, context_2) - correct end state
+
+			In state 2, a user component was added that tried to access the
+			current context value, which was not set at the time. This raised an
+			error, because this state is not valid!
+
+			The first proposed solution was to move the context update to happen
+			before the props update. It is easy to show that this will still
+			result in update tearing:
+
+			1: (prop_1, context_1)
+			2: (prop_1, context_2)
+			3: (prop_2, context_2)
+
+			Although the initial concern about newly added components observing
+			old context values is fixed, there is still a state
+			desynchronization between props and state.
+
+			We would instead like the following update sequence:
+
+			1: (prop_1, context_1)
+			2: (prop_2, context_2)
+
+			This test tries to ensure that is the case.
+
+			The initial bug report is here:
+			https://github.com/Roblox/roact/issues/259
+		]]
+		it("should update context at the same time as props", function()
+			-- These values are used to make sure we reach both the first and
+			-- second state combinations we want to visit.
+			local observedA = false
+			local observedB = false
+
+			local context = createContext("default")
+
+			local function Listener(props)
+				return createElement(context.Consumer, {
+					render = function(value)
+						if value == "context_1" then
+							expect(props.someProp).to.equal("prop_1")
+							observedA = true
+						elseif value == "context_2" then
+							expect(props.someProp).to.equal("prop_2")
+							observedB = true
+						else
+							error("Unexpected context value")
+						end
+					end,
+				})
+			end
+
+			local element1 = createElement(context.Provider, {
+				value = "context_1",
+			}, {
+				Child = createElement(Listener, {
+					someProp = "prop_1",
+				}),
+			})
+
+			local element2 = createElement(context.Provider, {
+				value = "context_2",
+			}, {
+				Child = createElement(Listener, {
+					someProp = "prop_2",
+				}),
+			})
+
+			local tree = noopReconciler.mountVirtualTree(element1, nil, "UpdateObservationIsFun")
+			noopReconciler.updateVirtualTree(tree, element2)
+
+			expect(observedA).to.equal(true)
+			expect(observedB).to.equal(true)
+		end)
+	end)
 end

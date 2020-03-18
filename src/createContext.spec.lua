@@ -113,7 +113,7 @@ return function()
 				Listener = createElement(Listener),
 			}))
 
-			expect(valueSpy.callCount).to.equal(3)
+			expect(valueSpy.callCount).to.equal(2)
 			valueSpy:assertCalledWith("ThirdTest")
 
 			noopReconciler.unmountVirtualTree(tree)
@@ -179,12 +179,15 @@ return function()
 			-- second state combinations we want to visit.
 			local observedA = false
 			local observedB = false
+			local updateCount = 0
 
 			local context = createContext("default")
 
 			local function Listener(props)
 				return createElement(context.Consumer, {
 					render = function(value)
+						updateCount = updateCount + 1
+
 						if value == "context_1" then
 							expect(props.someProp).to.equal("prop_1")
 							observedA = true
@@ -217,6 +220,7 @@ return function()
 			local tree = noopReconciler.mountVirtualTree(element1, nil, "UpdateObservationIsFun")
 			noopReconciler.updateVirtualTree(tree, element2)
 
+			expect(updateCount).to.equal(2)
 			expect(observedA).to.equal(true)
 			expect(observedB).to.equal(true)
 		end)

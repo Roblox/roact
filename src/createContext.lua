@@ -34,7 +34,7 @@ local function createProvider(context)
 	end
 
 	function Provider:didUpdate(prevProps)
-		-- If the provided value change, after we've updated every reachable
+		-- If the provided value changed, after we've updated every reachable
 		-- component, fire a signal to update the rest.
 		--
 		-- This signal will notify all context consumers. It's expected that

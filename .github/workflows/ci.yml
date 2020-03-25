@@ -28,17 +28,17 @@ jobs:
       run: |
         luarocks install luafilesystem
         luarocks install luacov
-        luarocks install luacov-coveralls --server=http://rocks.moonscript.org/dev
+        luarocks install luacov-reporter-lcov
         luarocks install luacheck
 
     - name: Test
       run: |
         lua -lluacov bin/spec.lua
         luacheck src benchmarks examples
+        luacov -r lcov
 
-    # luacov-coveralls default settings do not function on GitHub Actions.
-    # We need to pass different service name and repo token explicitly
     - name: Report to Coveralls
-      run: luacov-coveralls --repo-token $REPO_TOKEN --service-name github
-      env:
-        REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: coverallsapp/github-action@v1
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: luacov.report.out

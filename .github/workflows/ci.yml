@@ -24,16 +24,21 @@ jobs:
 
     - uses: leafo/gh-actions-luarocks@v2
 
-    - name: Install dependencies
+    - name: Install Lua dependencies
       run: |
         luarocks install luafilesystem
         luarocks install luacov
         luarocks install luacov-coveralls --server=http://rocks.moonscript.org/dev
         luarocks install luacheck
 
+    - name: Setup toolchain
+      uses: rojo-rbx/setup-foreman@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Test
       run: |
-        lua -lluacov bin/spec.lua
+        testez run --target lemur
         luacheck src benchmarks examples
 
     # luacov-coveralls default settings do not function on GitHub Actions.

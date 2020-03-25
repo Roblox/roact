@@ -18,27 +18,33 @@ All of the dependencies that we use to generate the documentation website are lo
 
 ## Working on Roact
 To get started working on Roact, you'll need:
-* Git
-* Lua 5.1
-* Lemur's dependencies:
-	* [LuaFileSystem](https://keplerproject.github.io/luafilesystem/) (`luarocks install luafilesystem`)
+
+* [Foreman](https://github.com/rojo-rbx/foreman), to install tools like the TestEZ CLI and Rojo.
 * [Luacheck](https://github.com/mpeterv/luacheck) (`luarocks install luacheck`)
 * [LuaCov](https://keplerproject.github.io/luacov) (`luarocks install luacov`)
+* Either:
+	* Roblox-CLI, currently internal to Roblox
+	* The dependencies for [Lemur](https://github.com/LPGhatguy/lemur):
+		* Lua 5.1
+		* [LuaFileSystem](https://keplerproject.github.io/luafilesystem/) (`luarocks install luafilesystem`)
 
-Make sure you have all of the Git submodules for Roact downloaded, which include a couple extra dependencies used for testing.
-
-Finally, you can run all of Roact's tests with:
-
-```sh
-lua bin/spec.lua
-```
-
-Or, to also generate a LuaCov coverage report:
+Use Foreman to install Roact's toolchain dependencies:
 
 ```sh
-lua -lluacov bin/spec.lua
-luacov
+foreman install
 ```
+
+Finally, you can all of Roact's tests with:
+
+```sh
+# If using Roblox-CLI
+testez run --target roblox
+
+# If using Lemur
+testez run --target lemur
+```
+
+**TODO: Coverage reports when running via TestEZ CLI?**
 
 ## Pull Requests
 Before starting a pull request, open an issue about the feature or bug. This helps us prevent duplicated and wasted effort. These issues are a great place to ask for help if you run into problems!

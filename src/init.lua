@@ -1,18 +1,19 @@
 --[[
 	Packages up the internals of Roact and exposes a public API for it.
 ]]
-
 local GlobalConfig = require(script.GlobalConfig)
 local createReconciler = require(script.createReconciler)
 local createReconcilerCompat = require(script.createReconcilerCompat)
 local RobloxRenderer = require(script.RobloxRenderer)
 local strict = require(script.strict)
 local Binding = require(script.Binding)
+local Animator = require(script.Animator)
 
 local robloxReconciler = createReconciler(RobloxRenderer)
 local reconcilerCompat = createReconcilerCompat(robloxReconciler)
 
-local Roact = strict {
+local Roact =
+	strict {
 	Component = require(script.Component),
 	createElement = require(script.createElement),
 	createFragment = require(script.createFragment),
@@ -23,26 +24,21 @@ local Roact = strict {
 	createRef = require(script.createRef),
 	createBinding = Binding.create,
 	joinBindings = Binding.join,
+	createAnimator = Animator.create,
 	createContext = require(script.createContext),
-
 	Change = require(script.PropMarkers.Change),
 	Children = require(script.PropMarkers.Children),
 	Event = require(script.PropMarkers.Event),
 	Ref = require(script.PropMarkers.Ref),
-
 	mount = robloxReconciler.mountVirtualTree,
 	unmount = robloxReconciler.unmountVirtualTree,
 	update = robloxReconciler.updateVirtualTree,
-
 	reify = reconcilerCompat.reify,
 	teardown = reconcilerCompat.teardown,
 	reconcile = reconcilerCompat.reconcile,
-
 	setGlobalConfig = GlobalConfig.set,
-
 	-- APIs that may change in the future without warning
-	UNSTABLE = {
-	},
+	UNSTABLE = {}
 }
 
 return Roact

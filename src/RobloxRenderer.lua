@@ -3,7 +3,7 @@
 	well-supported renderer after NoopRenderer and is currently the only
 	renderer that does anything.
 ]]
-
+local TweenService = game:GetService("TweenService")
 local Binding = require(script.Parent.Binding)
 local Children = require(script.Parent.PropMarkers.Children)
 local ElementKind = require(script.Parent.ElementKind)
@@ -44,16 +44,15 @@ local function applyRef(ref, newHostObject)
 		Binding.update(ref, newHostObject)
 	else
 		-- TODO (#197): Better error message
-		error(("Invalid ref: Expected type Binding but got %s"):format(
-			typeof(ref)
-		))
+		error(("Invalid ref: Expected type Binding but got %s"):format(typeof(ref)))
 	end
 end
 
 local function setRobloxInstanceProperty(hostObject, key, newValue)
 	if newValue == nil then
 		local hostClass = hostObject.ClassName
-		local _, defaultValue = getDefaultInstanceProperty(hostClass, key)
+		local _,
+			defaultValue = getDefaultInstanceProperty(hostClass, key)
 		newValue = defaultValue
 	end
 
@@ -61,6 +60,43 @@ local function setRobloxInstanceProperty(hostObject, key, newValue)
 	hostObject[key] = newValue
 
 	return
+end
+
+local function animateRobloxInstanceProperty(hostObject, key, newAnimation)
+	for a, b in pairs(newAnimation) do
+		print(a, b)
+	end
+
+	print(tostring(newAnimation))
+
+	local newValue = newAnimation:getValue()
+	if newValue == nil then
+		local hostClass = hostObject.ClassName
+		local _,
+			defaultValue = getDefaultInstanceProperty(hostClass, key)
+		newValue = defaultValue
+	end
+
+	local tweenInfo = newAnimation:getTweenInfo()
+	local tween =
+		TweenService:Create(
+		hostObject,
+		tweenInfo,
+		{
+			[key] = newValue
+		}
+	)
+
+	local listener
+	listener =
+		tween.Completed:Connect(
+		function()
+			listener:Disconnect()
+			tween:Destroy()
+		end
+	)
+
+	tween:Play()
 end
 
 local function removeBinding(virtualNode, key)
@@ -71,9 +107,14 @@ end
 
 local function attachBinding(virtualNode, key, newBinding)
 	local function updateBoundProperty(newValue)
-		local success, errorMessage = xpcall(function()
-			setRobloxInstanceProperty(virtualNode.hostObject, key, newValue)
-		end, identity)
+		local success,
+			errorMessage =
+			xpcall(
+			function()
+				setRobloxInstanceProperty(virtualNode.hostObject, key, newValue)
+			end,
+			identity
+		)
 
 		if not success then
 			local source = virtualNode.currentElement.source
@@ -132,15 +173,17 @@ local function applyProp(virtualNode, key, newValue, oldValue)
 		return
 	end
 
-	local newIsBinding = Type.of(newValue) == Type.Binding
+	local newValueType = Type.of(newValue)
 	local oldIsBinding = Type.of(oldValue) == Type.Binding
 
 	if oldIsBinding then
 		removeBinding(virtualNode, key)
 	end
 
-	if newIsBinding then
+	if newValueType == Type.Binding then
 		attachBinding(virtualNode, key, newValue)
+	elseif newValueType == Type.Animation then
+		animateRobloxInstanceProperty(virtualNode.hostObject, key, newValue)
 	else
 		setRobloxInstanceProperty(virtualNode.hostObject, key, newValue)
 	end
@@ -192,9 +235,14 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 	local instance = Instance.new(element.component)
 	virtualNode.hostObject = instance
 
-	local success, errorMessage = xpcall(function()
-		applyProps(virtualNode, element.props)
-	end, identity)
+	local success,
+		errorMessage =
+		xpcall(
+		function()
+			applyProps(virtualNode, element.props)
+		end,
+		identity
+	)
 
 	if not success then
 		local source = element.source
@@ -253,9 +301,14 @@ function RobloxRenderer.updateHostNode(reconciler, virtualNode, newElement)
 		applyRef(newProps[Ref], virtualNode.hostObject)
 	end
 
-	local success, errorMessage = xpcall(function()
-		updateProps(virtualNode, oldProps, newProps)
-	end, identity)
+	local success,
+		errorMessage =
+		xpcall(
+		function()
+			updateProps(virtualNode, oldProps, newProps)
+		end,
+		identity
+	)
 
 	if not success then
 		local source = newElement.source

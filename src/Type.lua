@@ -8,7 +8,6 @@
 			[Type] = Type.Foo,
 		}
 ]]
-
 local Symbol = require(script.Parent.Symbol)
 local strict = require(script.Parent.strict)
 
@@ -22,6 +21,7 @@ end
 
 addType("Binding")
 addType("Element")
+addType("Animation")
 addType("HostChangeEvent")
 addType("HostEvent")
 addType("StatefulComponentClass")

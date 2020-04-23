@@ -173,6 +173,27 @@ return function()
 
 			noopReconciler.unmountVirtualTree(tree)
 		end)
+
+		it("should behave correctly when the default value is nil", function()
+			local context = createContext(nil)
+
+			local valueSpy = createSpy()
+			local function Listener()
+				return createElement(context.Consumer, {
+					render = valueSpy.value,
+				})
+			end
+
+			local tree = noopReconciler.mountVirtualTree(createElement(Listener), nil, "Provide Tree")
+			expect(valueSpy.callCount).to.equal(1)
+			valueSpy:assertCalledWith(nil)
+
+			tree = noopReconciler.updateVirtualTree(tree, createElement(Listener))
+			noopReconciler.unmountVirtualTree(tree)
+
+			expect(valueSpy.callCount).to.equal(2)
+			valueSpy:assertCalledWith(nil)
+		end)
 	end)
 
 	describe("Update order", function()

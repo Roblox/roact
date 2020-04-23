@@ -91,7 +91,9 @@ local function createConsumer(context)
 		-- Store the value that we most recently updated with.
 		--
 		-- This value is compared in the contextEntry onUpdate hook below.
-		self.lastValue = self.contextEntry.value
+		if self.contextEntry ~= nil then
+			self.lastValue = self.contextEntry.value
+		end
 	end
 
 	function Consumer:didMount()

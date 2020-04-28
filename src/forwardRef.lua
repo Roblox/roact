@@ -1,4 +1,3 @@
-local assign = require(script.Parent.assign)
 local createRef = require(script.Parent.createRef)
 local Component = require(script.Parent.Component)
 local Ref = require(script.Parent.PropMarkers.Ref)
@@ -14,11 +13,7 @@ local function forwardRef(render)
 	end
 
 	function ForwardRefComponent:render()
-		local newProps = assign({}, self.props, {
-			[Ref] = self.props[Ref] or self.defaultRef
-		})
-
-		return render(newProps)
+		return render(self.props, self.props[Ref] or self.defaultRef)
 	end
 
 	return ForwardRefComponent

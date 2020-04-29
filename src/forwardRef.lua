@@ -3,7 +3,9 @@ local Component = require(script.Parent.Component)
 local Ref = require(script.Parent.PropMarkers.Ref)
 
 --[[
-	
+	Passed a provided ref to given render callback. Can be used to treat class
+	components as host components and assign the passed-in ref to the underlying
+	host component
 ]]
 local function forwardRef(render)
 	local ForwardRefComponent = Component:extend("ForwardRefContainer")

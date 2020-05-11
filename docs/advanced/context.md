@@ -1,7 +1,4 @@
-!!! danger "Unreleased API"
-	This API is not yet available in a stable Roact release.
-
-	It may be available from a recent pre-release or Roact's master branch.
+!!! success "Added in Roact 1.3.0"
 
 [TOC]
 

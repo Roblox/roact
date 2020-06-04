@@ -253,6 +253,13 @@ Enabling `elementTracing` also allows the use of the [getElementTraceback](#gete
 #### propValidation
 Enables validation of props via the [validateProps](#validateprops) method on components. With this flag enabled, any validation written by component authors in a component's `validateProps` method will be run on every prop change. This is helpful during development for making sure components are being used correctly.
 
+### Roact.getGlobalConfig
+```
+Roact.getGlobalConfig() -> Dictionary<string, bool>
+```
+
+This is used to get the current config values. This can be useful if you wish to run some portion of your unit tests with elementTracing or propValidation turned on and some with these turned off. Using this tests can reset the config to the previous value after they run.
+
 ---
 
 ## Constants

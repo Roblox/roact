@@ -13,6 +13,7 @@ return function()
 			update = "function",
 			oneChild = "function",
 			setGlobalConfig = "function",
+			getGlobalConfig = "function",
 			createContext = "function",
 
 			-- These functions are deprecated and throw warnings!

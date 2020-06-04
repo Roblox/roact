@@ -39,6 +39,7 @@ local Roact = strict {
 	reconcile = reconcilerCompat.reconcile,
 
 	setGlobalConfig = GlobalConfig.set,
+	getGlobalConfig = GlobalConfig.get,
 
 	-- APIs that may change in the future without warning
 	UNSTABLE = {

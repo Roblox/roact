@@ -188,7 +188,8 @@ return function()
 			end)
 
 			expect(success).to.equal(false)
-			expect(error:find("MyComponent")).to.be.ok()
+			local startIndex = error:find("MyComponent")
+			expect(startIndex).to.be.ok()
 		end)
 	end)
 

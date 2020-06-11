@@ -164,6 +164,34 @@ return function()
 		end)
 	end)
 
+	it("should include the component name in the error message", function()
+		local config = {
+			propValidation = true,
+		}
+
+		GlobalConfig.scoped(config, function()
+			local MyComponent = Component:extend("MyComponent")
+			MyComponent.validateProps = function()
+				return false
+			end
+
+			function MyComponent:render()
+				return nil
+			end
+
+			local element = createElement(MyComponent)
+			local hostParent = nil
+			local key = "Test"
+
+			local success, error = pcall(function()
+				noopReconciler.mountVirtualNode(element, hostParent, key)
+			end)
+
+			expect(success).to.equal(false)
+			expect(error:find("MyComponent")).to.be.ok()
+		end)
+	end)
+
 	it("should be invoked after defaultProps are applied", function()
 		local config = {
 			propValidation = true,

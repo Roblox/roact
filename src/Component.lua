@@ -265,7 +265,8 @@ function Component:__validateProps(props)
 
 	if not success then
 		failureReason = failureReason or "<Validator function did not supply a message>"
-		error(("Property validation failed: %s\n\n%s"):format(
+		error(("Property validation failed in %s: %s\n\n%s"):format(
+			self.__componentName,
 			tostring(failureReason),
 			self:getElementTraceback() or "<enable element tracebacks>"),
 		0)

@@ -1,5 +1,5 @@
 local Symbol = require(script.Parent.Symbol)
-local createFragment = require(script.Parent.createFragment)
+local oneChild = require(script.Parent.oneChild)
 local createSignal = require(script.Parent.createSignal)
 local Children = require(script.Parent.PropMarkers.Children)
 local Component = require(script.Parent.Component)
@@ -49,7 +49,7 @@ local function createProvider(context)
 	end
 
 	function Provider:render()
-		return createFragment(self.props[Children])
+		return oneChild(self.props[Children])
 	end
 
 	return Provider

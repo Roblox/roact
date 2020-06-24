@@ -32,7 +32,7 @@ local function ThemedButton(props)
 end
 ```
 
-The `Provider` component accepts a `value` prop as well as children. Any of its descendants will have access to the value provided to it by using the `Consumer` component like above.
+The `Provider` component accepts a `value` prop as well as one child. Any of its descendants will have access to the value provided to it by using the `Consumer` component like above.
 
 Whenever the `Provider` receives a new `value` prop in an update, any attached `Consumer` components will re-render with the new value. This value could be externally controlled, or could be controlled by state in a component wrapping `Provider`:
 

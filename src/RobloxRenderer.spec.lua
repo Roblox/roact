@@ -11,6 +11,7 @@ return function()
 	local GlobalConfig = require(script.Parent.GlobalConfig)
 	local Portal = require(script.Parent.Portal)
 	local Ref = require(script.Parent.PropMarkers.Ref)
+	local Event = require(script.Parent.PropMarkers.Event)
 
 	local RobloxRenderer = require(script.Parent.RobloxRenderer)
 
@@ -540,6 +541,25 @@ return function()
 
 			expect(spyRef.callCount).to.equal(2)
 			spyRef:assertCalledWith(nil)
+		end)
+
+		itSKIP("should not process events when unmounting", function()
+			local parent = Instance.new("Folder")
+			local key = "Some Key"
+
+			local element = createElement("Frame", {
+				[Event.ChildRemoved] = function(instance)
+					error("this callback should not be called during unmount")
+				end,
+			}, {
+				Child = createElement("Frame"),
+			})
+
+			local node = reconciler.createVirtualNode(element, parent, key)
+
+			RobloxRenderer.mountHostNode(reconciler, node)
+
+			RobloxRenderer.unmountHostNode(reconciler, node)
 		end)
 	end)
 

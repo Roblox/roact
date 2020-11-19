@@ -2,6 +2,7 @@
 
 ## Unreleased Changes
 
+## [1.3.1](https://github.com/Roblox/roact/releases/tag/v1.3.0) (November 19th, 2020)
 * Added component name to property validation error message ([#275](https://github.com/Roblox/roact/pull/275))
 
 ## [1.3.0](https://github.com/Roblox/roact/releases/tag/v1.3.0) (May 5th, 2020)

@@ -371,7 +371,8 @@ function Component:__unmount()
 
 	if config.experimentalActiveConnectionsWarning then
 		--[[
-			A full traversal of the component is performed but some keys are excluded to reduce false positives.
+			A full traversal of the component is performed to find all currently active connections
+			but some keys are excluded to reduce false positives.
 
 			If a connection is referenced in a component but it's closure does not close over
 			self as an upvalue then it is not a concern that the component still has a reference

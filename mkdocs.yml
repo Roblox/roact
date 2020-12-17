@@ -8,6 +8,7 @@ theme:
   palette:
     primary: 'Light Blue'
     accent: 'Light Blue'
+    scheme: preference
 
 nav:
   - Home: index.md

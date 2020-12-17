@@ -1,9 +1,10 @@
 # Roact Changelog
 
 ## Unreleased Changes
+* Added color schemes for documentation based on user preference ([#4]()).
 
 ## [1.3.1](https://github.com/Roblox/roact/releases/tag/v1.3.0) (November 19th, 2020)
-* Added component name to property validation error message ([#275](https://github.com/Roblox/roact/pull/275))
+* Added component name to property validation error message ([#290](https://github.com/Roblox/roact/pull/290))
 
 ## [1.3.0](https://github.com/Roblox/roact/releases/tag/v1.3.0) (May 5th, 2020)
 * Added Contexts, which enables easy handling of items that are provided and consumed throughout the tree.

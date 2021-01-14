@@ -33,7 +33,7 @@ render must be a pure function that only depends on props and state.
 
 Check the definition of render in the component %q.]]
 
-invalidSetStateMessages["default"] = [[
+invalidSetStateMessages.default = [[
 setState can not be used in the current situation, because Roact doesn't know
 which part of the lifecycle this component is in.
 

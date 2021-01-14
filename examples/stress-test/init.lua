@@ -1,8 +1,10 @@
 return function()
+	local Players = game:GetService("Players")
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
 	local RunService = game:GetService("RunService")
-	local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
+	local Roact = require(ReplicatedStorage.Roact)
 
-	local Roact = require(game.ReplicatedStorage.Roact)
+	local playerGui = Players.LocalPlayer.PlayerGui
 
 	local NODE_SIZE = 10
 	local GRID_SIZE = 50
@@ -30,9 +32,9 @@ return function()
 	local App = Roact.Component:extend("App")
 
 	function App:init()
-		self.state = {
+		self:setState({
 			time = tick(),
-		}
+		})
 	end
 
 	function App:render()
@@ -74,7 +76,7 @@ return function()
 		Main = Roact.createElement(App),
 	})
 
-	local handle = Roact.mount(app, PlayerGui)
+	local handle = Roact.mount(app, playerGui)
 
 	local function stop()
 		Roact.unmount(handle)

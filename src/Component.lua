@@ -162,9 +162,7 @@ function Component:setState(mapState)
 
 	else
 		local messageTemplate = invalidSetStateMessages.default
-
 		local message = string.format(messageTemplate, tostring(internalData.componentClass))
-
 		error(message, 2)
 	end
 end

@@ -1,7 +1,9 @@
 return function()
-	local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
+	local Players = game:GetService("Players")
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local Roact = require(ReplicatedStorage.Roact)
 
-	local Roact = require(game.ReplicatedStorage.Roact)
+	local playerGui = Players.LocalPlayer.PlayerGui
 
 	--[[
 		A search bar with an icon and a text box
@@ -45,7 +47,7 @@ return function()
 		SearchBar = Roact.createElement(SearchBar),
 	})
 
-	local handle = Roact.mount(app, PlayerGui)
+	local handle = Roact.mount(app, playerGui)
 
 	local function stop()
 		Roact.unmount(handle)

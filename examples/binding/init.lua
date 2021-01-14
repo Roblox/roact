@@ -1,7 +1,9 @@
 return function()
-	local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
+	local Players = game:GetService("Players")
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local Roact = require(ReplicatedStorage.Roact)
 
-	local Roact = require(game.ReplicatedStorage.Roact)
+	local playerGui = Players.LocalPlayer.PlayerGui
 
 	local BindingExample = Roact.Component:extend("BindingExample")
 
@@ -41,7 +43,7 @@ return function()
 		BindingExample = Roact.createElement(BindingExample),
 	})
 
-	local handle = Roact.mount(app, PlayerGui)
+	local handle = Roact.mount(app, playerGui)
 
 	local function stop()
 		Roact.unmount(handle)

@@ -1,28 +1,6 @@
 {
-  "name": "Roact Test Place",
+  "name": "Roact",
   "tree": {
-    "$className": "DataModel",
-
-    "ReplicatedStorage": {
-      "$className": "ReplicatedStorage",
-
-      "Roact": {
-        "$path": "src"
-      }
-    },
-
-    "HttpService": {
-      "$className": "HttpService",
-      "$properties": {
-        "HttpEnabled": true
-      }
-    },
-
-    "Players": {
-      "$className": "Players",
-      "$properties": {
-        "CharacterAutoLoads": false
-      }
-    }
+    "$path": "src"
   }
 }

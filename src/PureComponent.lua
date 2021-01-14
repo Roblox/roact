@@ -19,17 +19,18 @@ function PureComponent:shouldUpdate(newProps, newState)
 		return true
 	end
 
-	if newProps == self.props then
+	local props = self.props
+	if newProps == props then
 		return false
 	end
 
 	for key, value in pairs(newProps) do
-		if self.props[key] ~= value then
+		if props[key] ~= value then
 			return true
 		end
 	end
 
-	for key, value in pairs(self.props) do
+	for key, value in pairs(props) do
 		if newProps[key] ~= value then
 			return true
 		end

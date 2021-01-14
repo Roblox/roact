@@ -16,7 +16,7 @@ local function createSpy(inner)
 	}
 
 	self.value = function(...)
-		self.callCount = self.callCount + 1
+		self.callCount += 1
 		self.values = {...}
 		self.valuesLength = select("#", ...)
 
@@ -29,7 +29,8 @@ local function createSpy(inner)
 		local len = select("#", ...)
 
 		if self.valuesLength ~= len then
-			error(("Expected %d arguments, but was called with %d arguments"):format(
+			error(string.format(
+				"Expected %d arguments, but was called with %d arguments",
 				self.valuesLength,
 				len
 			), 2)
@@ -46,7 +47,8 @@ local function createSpy(inner)
 		local len = select("#", ...)
 
 		if self.valuesLength ~= len then
-			error(("Expected %d arguments, but was called with %d arguments"):format(
+			error(string.format(
+				"Expected %d arguments, but was called with %d arguments",
 				self.valuesLength,
 				len
 			), 2)
@@ -75,7 +77,7 @@ local function createSpy(inner)
 
 	setmetatable(self, {
 		__index = function(_, key)
-			error(("%q is not a valid member of spy"):format(key))
+			error(string.format("%q is not a valid member of spy", key))
 		end,
 	})
 

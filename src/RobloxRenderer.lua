@@ -44,7 +44,8 @@ local function applyRef(ref, newHostObject)
 		Binding.update(ref, newHostObject)
 	else
 		-- TODO (#197): Better error message
-		error(("Invalid ref: Expected type Binding but got %s"):format(
+		error(string.format(
+			"Invalid ref: Expected type Binding but got %s",
 			typeof(ref)
 		))
 	end
@@ -82,7 +83,7 @@ local function attachBinding(virtualNode, key, newBinding)
 				source = "<enable element tracebacks>"
 			end
 
-			local fullMessage = updatePropsError:format(errorMessage, source)
+			local fullMessage = string.format(updatePropsError, errorMessage, source)
 			error(fullMessage, 0)
 		end
 	end
@@ -203,7 +204,7 @@ function RobloxRenderer.mountHostNode(reconciler, virtualNode)
 			source = "<enable element tracebacks>"
 		end
 
-		local fullMessage = applyPropsError:format(errorMessage, source)
+		local fullMessage = string.format(applyPropsError, errorMessage, source)
 		error(fullMessage, 0)
 	end
 
@@ -264,7 +265,7 @@ function RobloxRenderer.updateHostNode(reconciler, virtualNode, newElement)
 			source = "<enable element tracebacks>"
 		end
 
-		local fullMessage = updatePropsError:format(errorMessage, source)
+		local fullMessage = string.format(updatePropsError, errorMessage, source)
 		error(fullMessage, 0)
 	end
 

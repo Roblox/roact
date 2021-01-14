@@ -17,12 +17,12 @@ local Change = {}
 
 local changeMetatable = {
 	__tostring = function(self)
-		return ("RoactHostChangeEvent(%s)"):format(self.name)
+		return string.format("RoactHostChangeEvent(%s)", self.name)
 	end,
 }
 
 setmetatable(Change, {
-	__index = function(self, propertyName)
+	__index = function(_, propertyName)
 		local changeListener = {
 			[Type] = Type.HostChangeEvent,
 			name = propertyName,

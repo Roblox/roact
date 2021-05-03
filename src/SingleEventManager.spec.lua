@@ -199,6 +199,32 @@ return function()
 
 			expect(eventSpy.callCount).to.equal(2)
 		end)
+
+		it("should not process more events if re-suspended while processing events during a resume", function()
+			local instance = Instance.new("BindableEvent")
+			local manager = SingleEventManager.new(instance)
+
+			local eventSpy = createSpy(function(_, value)
+				if value == 1 then
+					manager:suspend()
+					-- Since we have just suspended, this call to fire should not be
+					-- processed before we call manager:resume() again
+					instance:Fire(2)
+				end
+			end)
+
+			manager:connectEvent("Event", eventSpy.value)
+
+			manager:suspend()
+			instance:Fire(1)
+			manager:resume()
+
+			expect(eventSpy.callCount).to.equal(1)
+
+			manager:resume()
+
+			expect(eventSpy.callCount).to.equal(2)
+		end)
 	end)
 
 	describe("connectPropertyChange", function()

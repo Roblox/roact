@@ -120,7 +120,7 @@ function SingleEventManager:resume()
 			for copyIndex = index, #self._suspendedEventQueue do
 				table.insert(newEventQueue, self._suspendedEventQueue[copyIndex])
 			end
-			self.suspendedEventQueue = newEventQueue
+			self._suspendedEventQueue = newEventQueue
 
 			self._isResuming = false
 			return

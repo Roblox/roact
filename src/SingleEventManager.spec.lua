@@ -209,7 +209,7 @@ return function()
 					manager:suspend()
 					-- Since we have just suspended, this call to fire should not be
 					-- processed before we call manager:resume() again
-					instance:Fire(2)
+					instance:Fire(3)
 				end
 			end)
 
@@ -217,13 +217,14 @@ return function()
 
 			manager:suspend()
 			instance:Fire(1)
+			instance:Fire(2)
 			manager:resume()
 
 			expect(eventSpy.callCount).to.equal(1)
 
 			manager:resume()
 
-			expect(eventSpy.callCount).to.equal(2)
+			expect(eventSpy.callCount).to.equal(3)
 		end)
 	end)
 

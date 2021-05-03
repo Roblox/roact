@@ -107,6 +107,7 @@ function SingleEventManager:resume()
 	end
 
 	self._isResuming = true
+	self._status = EventStatus.Enabled
 
 	local index = 1
 
@@ -153,7 +154,6 @@ function SingleEventManager:resume()
 	end
 
 	self._isResuming = false
-	self._status = EventStatus.Enabled
 	self._suspendedEventQueue = {}
 end
 

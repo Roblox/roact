@@ -113,6 +113,19 @@ function SingleEventManager:resume()
 	-- More events might be added to the queue when evaluating events, so we
 	-- need to be careful in order to preserve correct evaluation order.
 	while index <= #self._suspendedEventQueue do
+		if self._status == EventStatus.Suspended then
+			-- We have been re-suspended due to reconciliation being caused during reconciliation
+			-- These suspended events should be processed after the next call to resume
+			local newEventQueue = {}
+			for copyIndex = index, #self._suspendedEventQueue do
+				table.insert(newEventQueue, self._suspendedEventQueue[copyIndex])
+			end
+			self.suspendedEventQueue = newEventQueue
+
+			self._isResuming = false
+			return
+		end
+
 		local eventInvocation = self._suspendedEventQueue[index]
 		local listener = self._listeners[eventInvocation[1]]
 		local argumentCount = eventInvocation[2]

@@ -981,7 +981,7 @@ return function()
 					count = 1
 				})
 
-				self.descendantAdded = function()
+				self.childAdded = function()
 					self:setState({
 						count = self.state.count + 1,
 					})
@@ -990,7 +990,7 @@ return function()
 
 			function ParentComponent:render()
 				return createElement("Frame", {
-					[Event.DescendantAdded] = self.descendantAdded,
+					[Event.ChildAdded] = self.childAdded,
 				}, {
 					ChildComponent = createElement(ChildComponent, {
 						count = self.state.count

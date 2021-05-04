@@ -3,6 +3,7 @@ return function()
 	local Binding = require(script.Parent.Binding)
 	local Children = require(script.Parent.PropMarkers.Children)
 	local Component = require(script.Parent.Component)
+	local Event = require(script.Parent.Event)
 	local createElement = require(script.Parent.createElement)
 	local createFragment = require(script.Parent.createFragment)
 	local createReconciler = require(script.Parent.createReconciler)
@@ -944,6 +945,74 @@ return function()
 			assertDeepEqual(capturedContext, {
 				foo = "bar"
 			})
+		end)
+	end)
+
+	describe("Integration Tests", function()
+		it("should not allow re-entrancy in updateChildren", function()
+			local ChildComponent = Component:extend("ChildComponent")
+
+			function ChildComponent:init()
+				self:setState({
+					firstTime = true
+				})
+			end
+
+			function ChildComponent:render()
+				if self.state.firstTime then
+					return createElement("Frame")
+				end
+
+				return createElement("TextLabel")
+			end
+
+			function ChildComponent:didMount()
+				spawn(function()
+					self:setState({
+						firstTime = false
+					})
+				end)
+			end
+
+			local ParentComponent = Component:extend("ParentComponent")
+
+			function ParentComponent:init()
+				self:setState({
+					count = 1
+				})
+
+				self.descendantAdded = function()
+					self:setState({
+						count = self.state.count + 1,
+					})
+				end
+			end
+
+			function ParentComponent:render()
+				return createElement("Frame", {
+					[Event.DescendantAdded] = self.descendantAdded,
+				}, {
+					ChildComponent = createElement(ChildComponent, {
+						count = self.state.count
+					})
+				})
+			end
+
+			local parent = Instance.new("ScreenGui")
+			parent.Parent = game.CoreGui
+
+			local tree = createElement(ParentComponent)
+
+			local instance = reconciler.mountVirtualNode(tree, parent)
+
+			wait(1)
+			expect(#parent:GetChildren()).to.equal(1)
+
+			local frame = parent:GetChildren()[1]
+
+			expect(#frame:GetChildren()).to.equal(1)
+
+			reconciler.unmountVirtualNode(instance)
 		end)
 	end)
 end

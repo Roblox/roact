@@ -1003,7 +1003,8 @@ return function()
 
 			local tree = createElement(ParentComponent)
 
-			local instance = reconciler.mountVirtualNode(tree, parent)
+			local hostKey = "Some Key"
+			local instance = reconciler.mountVirtualNode(tree, parent, hostKey)
 
 			wait(1)
 			expect(#parent:GetChildren()).to.equal(1)

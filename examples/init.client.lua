@@ -1,4 +1,5 @@
-local PlayerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+local Players = game:GetService("Players")
+local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 
 local exampleData = {
 	{
@@ -61,7 +62,7 @@ function Examples.makeBackButton()
 		Examples.onStop = nil
 
 		Examples.exampleList = Examples.makeExampleList()
-		Examples.exampleList.Parent = PlayerGui
+		Examples.exampleList.Parent = playerGui
 	end)
 
 	button.Parent = screenGui
@@ -73,7 +74,7 @@ function Examples.openExample(example)
 	Examples.exampleList:Destroy()
 
 	local back = Examples.makeBackButton()
-	back.Parent = PlayerGui
+	back.Parent = playerGui
 
 	Examples.onStop = example.start()
 end
@@ -99,7 +100,7 @@ function Examples.makeExampleList()
 	listLayout.Parent = exampleList
 
 	for index, example in ipairs(exampleData) do
-		local label = ("%s\nexamples/%s"):format(example.label, example.name)
+		local label = string.format("%s\nexamples/%s", example.label, example.name)
 
 		local exampleCard = Instance.new("TextButton")
 		exampleCard.Name = "Example: " .. example.name
@@ -131,4 +132,4 @@ function Examples.makeExampleList()
 end
 
 Examples.exampleList = Examples.makeExampleList()
-Examples.exampleList.Parent = PlayerGui
+Examples.exampleList.Parent = playerGui

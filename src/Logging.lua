@@ -22,9 +22,9 @@ local onceUsedLocations = {}
 	addition to any indentation the string already has.
 ]]
 local function indent(source, indentLevel)
-	local indentString = ("\t"):rep(indentLevel)
+	local indentString = string.rep("\t", indentLevel)
 
-	return indentString .. source:gsub("\n", "\n" .. indentString)
+	return indentString .. string.gsub(source, "\n", "\n" .. indentString)
 end
 
 --[[
@@ -59,19 +59,19 @@ function logInfoMetatable:__tostring()
 	end
 
 	if errorCount > 0 then
-		table.insert(outputBuffer, ("\tErrors (%d) {"):format(errorCount))
+		table.insert(outputBuffer, string.format("\tErrors (%d) {", errorCount))
 		table.insert(outputBuffer, indentLines(self.errors, 2))
 		table.insert(outputBuffer, "\t}")
 	end
 
 	if warningCount > 0 then
-		table.insert(outputBuffer, ("\tWarnings (%d) {"):format(warningCount))
+		table.insert(outputBuffer, string.format("\tWarnings (%d) {", warningCount))
 		table.insert(outputBuffer, indentLines(self.warnings, 2))
 		table.insert(outputBuffer, "\t}")
 	end
 
 	if infosCount > 0 then
-		table.insert(outputBuffer, ("\tInfos (%d) {"):format(infosCount))
+		table.insert(outputBuffer, string.format("\tInfos (%d) {", infosCount))
 		table.insert(outputBuffer, indentLines(self.infos, 2))
 		table.insert(outputBuffer, "\t}")
 	end
@@ -82,15 +82,15 @@ function logInfoMetatable:__tostring()
 end
 
 local function createLogInfo()
-	local logInfo = {
+	local self = {
 		errors = {},
 		warnings = {},
 		infos = {},
 	}
 
-	setmetatable(logInfo, logInfoMetatable)
+	setmetatable(self, logInfoMetatable)
 
-	return logInfo
+	return self
 end
 
 local Logging = {}
@@ -123,15 +123,15 @@ end
 	Issues a warning with an automatically attached stack trace.
 ]]
 function Logging.warn(messageTemplate, ...)
-	local message = messageTemplate:format(...)
+	local message = string.format(messageTemplate, ...)
 
 	for collector in pairs(collectors) do
 		table.insert(collector.warnings, message)
 	end
 
 	-- debug.traceback inserts a leading newline, so we trim it here
-	local trace = debug.traceback("", 2):sub(2)
-	local fullMessage = ("%s\n%s"):format(message, indent(trace, 1))
+	local trace = string.sub(debug.traceback("", 2), 2)
+	local fullMessage = string.format("%s\n%s", message, indent(trace, 1))
 
 	if outputEnabled then
 		warn(fullMessage)

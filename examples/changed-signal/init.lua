@@ -1,7 +1,9 @@
 return function()
-	local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
+	local Players = game:GetService("Players")
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local Roact = require(ReplicatedStorage.Roact)
 
-	local Roact = require(game.ReplicatedStorage.Roact)
+	local playerGui = Players.LocalPlayer.PlayerGui
 
 	--[[
 		A TextBox that the user can type into. Takes a callback to be
@@ -29,7 +31,7 @@ return function()
 		return Roact.createElement("TextLabel", {
 			LayoutOrder = layoutOrder,
 			Size = UDim2.new(1, 0, 0.5, 0),
-			Text = "Reversed: " .. inputText:reverse(),
+			Text = "Reversed: " .. string.reverse(inputText),
 		})
 	end
 
@@ -40,9 +42,9 @@ return function()
 	local TextReverser = Roact.Component:extend("TextReverser")
 
 	function TextReverser:init()
-		self.state = {
+		self:setState({
 			text = "",
-		}
+		})
 	end
 
 	function TextReverser:render()
@@ -75,7 +77,7 @@ return function()
 		TextReverser = Roact.createElement(TextReverser),
 	})
 
-	local handle = Roact.mount(app, PlayerGui)
+	local handle = Roact.mount(app, playerGui)
 
 	local function stop()
 		Roact.unmount(handle)

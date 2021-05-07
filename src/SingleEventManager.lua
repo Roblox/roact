@@ -58,7 +58,8 @@ function SingleEventManager:connectPropertyChange(key, listener)
 	end)
 
 	if not success then
-		error(("Cannot get changed signal on property %q: %s"):format(
+		error(string.format(
+			"Cannot get changed signal on property %q: %s",
 			tostring(key),
 			event
 		), 0)

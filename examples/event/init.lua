@@ -1,7 +1,9 @@
 return function()
-	local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
+	local Players = game:GetService("Players")
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local Roact = require(ReplicatedStorage.Roact)
 
-	local Roact = require(game.ReplicatedStorage.Roact)
+	local playerGui = Players.LocalPlayer.PlayerGui
 
 	local app = Roact.createElement("ScreenGui", nil, {
 		Button = Roact.createElement("TextButton", {
@@ -12,13 +14,13 @@ return function()
 			-- Attach event listeners using `Roact.Event[eventName]`
 			-- Event listeners get `rbx` as their first parameter
 			-- followed by their normal event arguments.
-			[Roact.Event.Activated] = function(rbx)
+			[Roact.Event.Activated] = function(_)
 				print("The button was clicked!")
 			end,
 		}),
 	})
 
-	local handle = Roact.mount(app, PlayerGui)
+	local handle = Roact.mount(app, playerGui)
 
 	local function stop()
 		Roact.unmount(handle)

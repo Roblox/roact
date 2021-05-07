@@ -1,7 +1,9 @@
 return function()
-	local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
+	local Players = game:GetService("Players")
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local Roact = require(ReplicatedStorage.Roact)
 
-	local Roact = require(game.ReplicatedStorage.Roact)
+	local playerGui = Players.LocalPlayer.PlayerGui
 
 	local function ClockApp(props)
 		local time = props.time
@@ -20,13 +22,13 @@ return function()
 	local currentTime = 0
 	local handle = Roact.mount(Roact.createElement(ClockApp, {
 		time = currentTime,
-	}), PlayerGui)
+	}), playerGui)
 
 	spawn(function()
 		while running do
 			currentTime = currentTime + 1
 
-			handle = Roact.reconcile(handle, Roact.createElement(ClockApp, {
+			handle = Roact.update(handle, Roact.createElement(ClockApp, {
 				time = currentTime,
 			}))
 

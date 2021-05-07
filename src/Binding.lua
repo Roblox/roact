@@ -76,7 +76,7 @@ function BindingInternalApi.map(upstreamBinding, predicate)
 		end)
 	end
 
-	function impl.update(newValue)
+	function impl.update(_)
 		error("Bindings created by Binding:map(fn) cannot be updated directly", 2)
 	end
 
@@ -96,11 +96,11 @@ function BindingInternalApi.join(upstreamBindings)
 
 		for key, value in pairs(upstreamBindings) do
 			if Type.of(value) ~= Type.Binding then
-				local message = (
-					"Expected arg #1 to contain only bindings, but key %q had a non-binding value"
-				):format(
+				local message = string.format(
+					"Expected arg #1 to contain only bindings, but key %q had a non-binding value",
 					tostring(key)
 				)
+
 				error(message, 2)
 			end
 		end
@@ -122,7 +122,7 @@ function BindingInternalApi.join(upstreamBindings)
 		local disconnects = {}
 
 		for key, upstream in pairs(upstreamBindings) do
-			disconnects[key] = BindingInternalApi.subscribe(upstream, function(newValue)
+			disconnects[key] = BindingInternalApi.subscribe(upstream, function(_)
 				callback(getValue())
 			end)
 		end
@@ -140,7 +140,7 @@ function BindingInternalApi.join(upstreamBindings)
 		end
 	end
 
-	function impl.update(newValue)
+	function impl.update(_)
 		error("Bindings created by joinBindings(...) cannot be updated directly", 2)
 	end
 

@@ -111,7 +111,7 @@ function Component:setState(mapState)
 	then
 		local messageTemplate = invalidSetStateMessages[internalData.lifecyclePhase]
 
-		local message = messageTemplate:format(tostring(internalData.componentClass))
+		local message = string.format(messageTemplate, tostring(internalData.componentClass))
 
 		error(message, 2)
 	end
@@ -162,9 +162,7 @@ function Component:setState(mapState)
 
 	else
 		local messageTemplate = invalidSetStateMessages.default
-
-		local message = messageTemplate:format(tostring(internalData.componentClass))
-
+		local message = string.format(messageTemplate, tostring(internalData.componentClass))
 		error(message, 2)
 	end
 end
@@ -189,7 +187,8 @@ end
 function Component:render()
 	local internalData = self[InternalData]
 
-	local message = componentMissingRenderMessage:format(
+	local message = string.format(
+		componentMissingRenderMessage,
 		tostring(internalData.componentClass)
 	)
 
@@ -255,7 +254,8 @@ function Component:__validateProps(props)
 	end
 
 	if typeof(validator) ~= "function" then
-		error(("validateProps must be a function, but it is a %s.\nCheck the definition of the component %q."):format(
+		error(string.format(
+			"validateProps must be a function, but it is a %s.\nCheck the definition of the component %q.",
 			typeof(validator),
 			self.__componentName
 		))
@@ -265,11 +265,12 @@ function Component:__validateProps(props)
 
 	if not success then
 		failureReason = failureReason or "<Validator function did not supply a message>"
-		error(("Property validation failed in %s: %s\n\n%s"):format(
+		error(string.format(
+			"Property validation failed in %s: %s\n\n%s",
 			self.__componentName,
 			tostring(failureReason),
-			self:getElementTraceback() or "<enable element tracebacks>"),
-		0)
+			self:getElementTraceback() or "<enable element tracebacks>"
+		), 0)
 	end
 end
 
@@ -382,6 +383,7 @@ function Component:__update(updatedElement, updatedState)
 			Type.of(updatedElement) == Type.Element or updatedElement == nil,
 			"Expected arg #1 to be of type Element or nil"
 		)
+
 		internalAssert(
 			typeof(updatedState) == "table" or updatedState == nil,
 			"Expected arg #2 to be of type table or nil"
@@ -440,7 +442,7 @@ function Component:__update(updatedElement, updatedState)
 		updateCount = updateCount + 1
 
 		if updateCount > MAX_PENDING_UPDATES then
-			error(tooManyUpdatesMessage:format(tostring(internalData.componentClass)), 3)
+			error(string.format(tooManyUpdatesMessage, tostring(internalData.componentClass)), 3)
 		end
 	until internalData.pendingState == nil
 

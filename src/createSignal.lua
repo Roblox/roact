@@ -39,11 +39,12 @@ end
 local function createSignal()
 	local connections = {}
 
-	local function subscribe(self, callback)
+	local function subscribe(_, callback)
 		assert(typeof(callback) == "function", "Can only subscribe to signals with a function.")
 
 		local connection = {
 			callback = callback,
+			disconnected = false,
 		}
 
 		connections = addToMap(connections, callback, connection)
@@ -58,7 +59,7 @@ local function createSignal()
 		return disconnect
 	end
 
-	local function fire(self, ...)
+	local function fire(_, ...)
 		for callback, connection in pairs(connections) do
 			if not connection.disconnected then
 				callback(...)

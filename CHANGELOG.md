@@ -2,6 +2,10 @@
 
 ## Unreleased Changes
 * Added color schemes for documentation based on user preference ([#290](https://github.com/Roblox/roact/pull/290)).
+* Fixed several linting problems.
+* Made a few small performance changes (reducing indexing, checking optional values being nil before type checking them, using `string.x` instead of `:x`).
+* Made the code better follow the [Roblox Lua Style Guide](https://roblox.github.io/lua-style-guide/).
+* Changed some of the examples to also follow the Lua style guide better. ([#294](https://github.com/Roblox/roact/pull/294))
 
 ## [1.3.1](https://github.com/Roblox/roact/releases/tag/v1.3.0) (November 19th, 2020)
 * Added component name to property validation error message ([#275](https://github.com/Roblox/roact/pull/275))

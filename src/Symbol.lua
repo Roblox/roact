@@ -18,7 +18,7 @@ function Symbol.named(name)
 
 	local self = newproxy(true)
 
-	local wrappedName = ("Symbol(%s)"):format(name)
+	local wrappedName = string.format("Symbol(%s)", name)
 
 	getmetatable(self).__tostring = function()
 		return wrappedName

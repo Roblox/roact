@@ -112,13 +112,14 @@ local function createReconciler(renderer)
 	end
 
 	local function updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
-		if Type.of(renderResult) == Type.Element
-			or renderResult == nil
+		if renderResult == nil
+			or Type.of(renderResult) == Type.Element
 			or typeof(renderResult) == "boolean"
 		then
 			updateChildren(virtualNode, hostParent, renderResult)
 		else
-			error(("%s\n%s"):format(
+			error(string.format(
+				"%s\n%s",
 				"Component returned invalid children:",
 				virtualNode.currentElement.source or "<enable element tracebacks>"
 			), 0)
@@ -137,22 +138,14 @@ local function createReconciler(renderer)
 
 		if kind == ElementKind.Host then
 			renderer.unmountHostNode(reconciler, virtualNode)
-		elseif kind == ElementKind.Function then
+		elseif kind == ElementKind.Function or kind == ElementKind.Portal or kind == ElementKind.Fragment then
 			for _, childNode in pairs(virtualNode.children) do
 				unmountVirtualNode(childNode)
 			end
 		elseif kind == ElementKind.Stateful then
 			virtualNode.instance:__unmount()
-		elseif kind == ElementKind.Portal then
-			for _, childNode in pairs(virtualNode.children) do
-				unmountVirtualNode(childNode)
-			end
-		elseif kind == ElementKind.Fragment then
-			for _, childNode in pairs(virtualNode.children) do
-				unmountVirtualNode(childNode)
-			end
 		else
-			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
+			error(string.format("Unknown ElementKind %q", tostring(kind), 2))
 		end
 	end
 
@@ -207,7 +200,7 @@ local function createReconciler(renderer)
 		end
 		if config.typeChecks then
 			assert(
-				Type.of(newElement) == Type.Element or typeof(newElement) == "boolean" or newElement == nil,
+				newElement == nil or Type.of(newElement) == Type.Element or typeof(newElement) == "boolean",
 				"Expected arg #2 to be of type Element, boolean, or nil"
 			)
 		end
@@ -217,7 +210,7 @@ local function createReconciler(renderer)
 			return virtualNode
 		end
 
-		if typeof(newElement) == "boolean" or newElement == nil then
+		if newElement == nil or typeof(newElement) == "boolean" then
 			unmountVirtualNode(virtualNode)
 			return nil
 		end
@@ -241,7 +234,7 @@ local function createReconciler(renderer)
 		elseif kind == ElementKind.Fragment then
 			virtualNode = updateFragmentVirtualNode(virtualNode, newElement)
 		else
-			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
+			error(string.format("Unknown ElementKind %q", tostring(kind), 2))
 		end
 
 		-- Stateful components can abort updates via shouldUpdate. If that
@@ -260,10 +253,10 @@ local function createReconciler(renderer)
 	]]
 	local function createVirtualNode(element, hostParent, hostKey, context, legacyContext)
 		if config.internalTypeChecks then
-			internalAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
-			internalAssert(typeof(context) == "table" or context == nil, "Expected arg #4 to be of type table or nil")
+			internalAssert(hostParent == nil or renderer.isHostObject(hostParent), "Expected arg #2 to be a host object")
+			internalAssert(context == nil or typeof(context) == "table", "Expected arg #4 to be of type table or nil")
 			internalAssert(
-				typeof(legacyContext) == "table" or legacyContext == nil,
+				legacyContext == nil or typeof(legacyContext) == "table",
 				"Expected arg #5 to be of type table or nil"
 			)
 		end
@@ -332,9 +325,9 @@ local function createReconciler(renderer)
 	]]
 	function mountVirtualNode(element, hostParent, hostKey, context, legacyContext)
 		if config.internalTypeChecks then
-			internalAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
+			internalAssert(hostParent == nil or renderer.isHostObject(hostParent), "Expected arg #2 to be a host object")
 			internalAssert(
-				typeof(legacyContext) == "table" or legacyContext == nil,
+				legacyContext == nil or typeof(legacyContext) == "table",
 				"Expected arg #5 to be of type table or nil"
 			)
 		end
@@ -366,7 +359,7 @@ local function createReconciler(renderer)
 		elseif kind == ElementKind.Fragment then
 			mountFragmentVirtualNode(virtualNode)
 		else
-			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
+			error(string.format("Unknown ElementKind %q", tostring(kind), 2))
 		end
 
 		return virtualNode
@@ -379,7 +372,7 @@ local function createReconciler(renderer)
 	local function mountVirtualTree(element, hostParent, hostKey)
 		if config.typeChecks then
 			assert(Type.of(element) == Type.Element, "Expected arg #1 to be of type Element")
-			assert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
+			assert(hostParent == nil or renderer.isHostObject(hostParent), "Expected arg #2 to be a host object")
 		end
 
 		if hostKey == nil then

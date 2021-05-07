@@ -19,12 +19,12 @@ local Event = {}
 
 local eventMetatable = {
 	__tostring = function(self)
-		return ("RoactHostEvent(%s)"):format(self.name)
+		return string.format("RoactHostEvent(%s)", self.name)
 	end,
 }
 
 setmetatable(Event, {
-	__index = function(self, eventName)
+	__index = function(_, eventName)
 		local event = {
 			[Type] = Type.HostEvent,
 			name = eventName,

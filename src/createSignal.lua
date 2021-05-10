@@ -47,9 +47,7 @@ local function createSignal()
 	local function fire(self, ...)
 		firing = true
 		for callback, connection in pairs(connections) do
-			print("has connection")
 			if not connection.disconnected and not suspendedConnections[callback] then
-				print("fire connection " .. tostring(callback))
 				callback(...)
 			end
 		end

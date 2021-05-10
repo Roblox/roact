@@ -25,10 +25,13 @@ local function createSignal()
 			disconnected = false,
 		}
 
-		connections[callback] = connection
-		if firing then
+		-- If the callback is already registered, don't add to the suspendedConnection. Otherwise, this will disable
+		-- the existing one.
+		if firing and not connections[callback] then
 			suspendedConnections[callback] = connection
 		end
+
+		connections[callback] = connection
 
 		local function disconnect()
 			assert(not connection.disconnected, "Listeners can only be disconnected once.")
@@ -44,7 +47,9 @@ local function createSignal()
 	local function fire(self, ...)
 		firing = true
 		for callback, connection in pairs(connections) do
+			print("has connection")
 			if not connection.disconnected and not suspendedConnections[callback] then
+				print("fire connection " .. tostring(callback))
 				callback(...)
 			end
 		end

@@ -11,7 +11,6 @@
 
 		disconnect()
 ]]
-local Logging = require(script.Parent.Logging)
 
 local function createSignal()
 	local connections = {}
@@ -20,9 +19,6 @@ local function createSignal()
 
 	local function subscribe(self, callback)
 		assert(typeof(callback) == "function", "Can only subscribe to signals with a function.")
-		if connections[callback] then
-			Logging.warn("Callback has been registered.")
-		end
 
 		local connection = {
 			callback = callback,

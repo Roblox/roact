@@ -86,4 +86,69 @@ return function()
 		-- Exactly once listener should have been called.
 		expect(spyA.callCount + spyB.callCount).to.equal(1)
 	end)
+
+	it("should allow adding listener in the middle of firing", function()
+		local signal = createSignal()
+
+		local disconnectA
+		local spyA = createSpy()
+		local listener = function(a, b)
+			disconnectA = signal:subscribe(spyA.value)
+		end
+
+		local disconnectListener = signal:subscribe(listener)
+
+		expect(spyA.callCount).to.equal(0)
+
+		local a = {}
+		local b = 67
+		signal:fire(a, b)
+
+		expect(spyA.callCount).to.equal(0)
+
+		-- The new listener should be picked up in next fire.
+		signal:fire(b, a)
+		expect(spyA.callCount).to.equal(1)
+		spyA:assertCalledWith(b, a)
+
+		disconnectA()
+		disconnectListener()
+
+		signal:fire(a)
+
+		expect(spyA.callCount).to.equal(1)
+	end)
+
+	it("should have one connection instance when add the same listener multiple times", function()
+		local signal = createSignal()
+
+		local spyA = createSpy()
+		local disconnect1 = signal:subscribe(spyA.value)
+
+		expect(spyA.callCount).to.equal(0)
+
+		local a = {}
+		local b = 67
+		signal:fire(a, b)
+
+		expect(spyA.callCount).to.equal(1)
+		spyA:assertCalledWith(a, b)
+
+		local disconnect2 = signal:subscribe(spyA.value)
+
+		signal:fire(b, a)
+		expect(spyA.callCount).to.equal(2)
+		spyA:assertCalledWith(b, a)
+
+		disconnect2()
+
+		signal:fire(a)
+
+		expect(spyA.callCount).to.equal(2)
+
+		-- should have no effect.
+		disconnect1()
+		signal:fire(a)
+		expect(spyA.callCount).to.equal(2)
+	end)
 end

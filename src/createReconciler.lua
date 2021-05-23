@@ -64,29 +64,12 @@ local function createReconciler(renderer)
 			internalAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #1 to be of type VirtualNode")
 		end
 
-		virtualNode.updateChildrenCount = virtualNode.updateChildrenCount + 1
-
-		local currentUpdateChildrenCount = virtualNode.updateChildrenCount
-
 		local removeKeys = {}
 
 		-- Changed or removed children
 		for childKey, childNode in pairs(virtualNode.children) do
 			local newElement = ElementUtils.getElementByKey(newChildElements, childKey)
 			local newNode = updateVirtualNode(childNode, newElement)
-
-			-- ALTERNATIVE FIX:
-			-- If updating this node has caused a component higher up the tree to re-render
-			-- and updateChildren to be re-rendered for this virtualNode then
-			-- this result is invalid and needs to be disgarded.
-			--[[
-			if virtualNode.updateChildrenCount ~= currentUpdateChildrenCount then
-				if newNode then
-					unmountVirtualNode(newNode)
-				end
-				return
-			end
-			--]]
 
 			if newNode ~= nil then
 				virtualNode.children[childKey] = newNode
@@ -114,16 +97,6 @@ local function createReconciler(renderer)
 					virtualNode.context,
 					virtualNode.legacyContext
 				)
-
-				-- ALTERNATIVE FIX:
-				--[[
-				if virtualNode.updateChildrenCount ~= currentUpdateChildrenCount then
-					if childNode then
-						unmountVirtualNode(childNode)
-					end
-					return
-				end
-				--]]
 
 				-- mountVirtualNode can return nil if the element is a boolean
 				if childNode ~= nil then
@@ -311,7 +284,6 @@ local function createReconciler(renderer)
 			children = {},
 			hostParent = hostParent,
 			hostKey = hostKey,
-			updateChildrenCount = 0,
 
 			-- Legacy Context API
 			-- A table of context values inherited from the parent node

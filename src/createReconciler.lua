@@ -153,7 +153,7 @@ local function createReconciler(renderer)
 				unmountVirtualNode(childNode)
 			end
 		else
-			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
+			error(("Unknown ElementKind %q"):format(tostring(kind)), 2)
 		end
 	end
 
@@ -242,7 +242,7 @@ local function createReconciler(renderer)
 		elseif kind == ElementKind.Fragment then
 			virtualNode = updateFragmentVirtualNode(virtualNode, newElement)
 		else
-			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
+			error(("Unknown ElementKind %q"):format(tostring(kind)), 2)
 		end
 
 		-- Stateful components can abort updates via shouldUpdate. If that
@@ -368,7 +368,7 @@ local function createReconciler(renderer)
 		elseif kind == ElementKind.Fragment then
 			mountFragmentVirtualNode(virtualNode)
 		else
-			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
+			error(("Unknown ElementKind %q"):format(tostring(kind)), 2)
 		end
 
 		return virtualNode

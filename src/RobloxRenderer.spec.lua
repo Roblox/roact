@@ -959,6 +959,8 @@ return function()
 				})
 			end
 
+			local childCoroutine
+
 			function ChildComponent:render()
 				if self.state.firstTime then
 					return createElement("Frame")
@@ -968,7 +970,7 @@ return function()
 			end
 
 			function ChildComponent:didMount()
-				spawn(function()
+				childCoroutine = coroutine.create(function()
 					self:setState({
 						firstTime = false
 					})
@@ -1006,6 +1008,8 @@ return function()
 
 			local hostKey = "Some Key"
 			local instance = reconciler.mountVirtualNode(tree, parent, hostKey)
+
+			coroutine.resume(childCoroutine)
 
 			expect(#parent:GetChildren()).to.equal(1)
 

@@ -75,15 +75,18 @@ local function createReconciler(renderer)
 			local newElement = ElementUtils.getElementByKey(newChildElements, childKey)
 			local newNode = updateVirtualNode(childNode, newElement)
 
+			-- ALTERNATIVE FIX:
 			-- If updating this node has caused a component higher up the tree to re-render
 			-- and updateChildren to be re-rendered for this virtualNode then
 			-- this result is invalid and needs to be disgarded.
+			--[[
 			if virtualNode.updateChildrenCount ~= currentUpdateChildrenCount then
 				if newNode then
 					unmountVirtualNode(newNode)
 				end
 				return
 			end
+			--]]
 
 			if newNode ~= nil then
 				virtualNode.children[childKey] = newNode
@@ -112,16 +115,20 @@ local function createReconciler(renderer)
 					virtualNode.legacyContext
 				)
 
+				-- ALTERNATIVE FIX:
+				--[[
 				if virtualNode.updateChildrenCount ~= currentUpdateChildrenCount then
 					if childNode then
 						unmountVirtualNode(childNode)
 					end
 					return
 				end
+				--]]
 
 				-- mountVirtualNode can return nil if the element is a boolean
 				if childNode ~= nil then
 					childNode.depth = virtualNode.depth + 1
+					childNode.parent = virtualNode
 					virtualNode.children[childKey] = childNode
 				end
 			end
@@ -300,6 +307,7 @@ local function createReconciler(renderer)
 			[Type] = Type.VirtualNode,
 			currentElement = element,
 			depth = 1,
+			parent = nil,
 			children = {},
 			hostParent = hostParent,
 			hostKey = hostKey,
@@ -459,6 +467,28 @@ local function createReconciler(renderer)
 		return tree
 	end
 
+	local function suspendParentEvents(virtualNode)
+		local parentNode = virtualNode.parent
+		while parentNode do
+			if parentNode.eventManager ~= nil then
+				parentNode.eventManager:suspend()
+			end
+
+			parentNode = parentNode.parent
+		end
+	end
+
+	local function resumeParentEvents(virtualNode)
+		local parentNode = virtualNode.parent
+		while parentNode do
+			if parentNode.eventManager ~= nil then
+				parentNode.eventManager:resume()
+			end
+
+			parentNode = parentNode.parent
+		end
+	end
+
 	reconciler = {
 		mountVirtualTree = mountVirtualTree,
 		unmountVirtualTree = unmountVirtualTree,
@@ -470,6 +500,9 @@ local function createReconciler(renderer)
 		updateVirtualNode = updateVirtualNode,
 		updateVirtualNodeWithChildren = updateVirtualNodeWithChildren,
 		updateVirtualNodeWithRenderResult = updateVirtualNodeWithRenderResult,
+
+		suspendParentEvents = suspendParentEvents,
+		resumeParentEvents = resumeParentEvents,
 	}
 
 	return reconciler

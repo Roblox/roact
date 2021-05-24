@@ -951,73 +951,79 @@ return function()
 
 	describe("Integration Tests", function()
 		it("should not allow re-entrancy in updateChildren", function()
-			local ChildComponent = Component:extend("ChildComponent")
+			local configValues = {
+				tempFixUpdateChildrenReEntrancy = true,
+			}
 
-			function ChildComponent:init()
-				self:setState({
-					firstTime = true
-				})
-			end
+			GlobalConfig.scoped(configValues, function()
+				local ChildComponent = Component:extend("ChildComponent")
 
-			local childCoroutine
-
-			function ChildComponent:render()
-				if self.state.firstTime then
-					return createElement("Frame")
+				function ChildComponent:init()
+					self:setState({
+						firstTime = true
+					})
 				end
 
-				return createElement("TextLabel")
-			end
+				local childCoroutine
 
-			function ChildComponent:didMount()
-				childCoroutine = coroutine.create(function()
+				function ChildComponent:render()
+					if self.state.firstTime then
+						return createElement("Frame")
+					end
+
+					return createElement("TextLabel")
+				end
+
+				function ChildComponent:didMount()
+					childCoroutine = coroutine.create(function()
+						self:setState({
+							firstTime = false
+						})
+					end)
+				end
+
+				local ParentComponent = Component:extend("ParentComponent")
+
+				function ParentComponent:init()
 					self:setState({
-						firstTime = false
+						count = 1
 					})
-				end)
-			end
 
-			local ParentComponent = Component:extend("ParentComponent")
+					self.childAdded = function()
+						self:setState({
+							count = self.state.count + 1,
+						})
+					end
+				end
 
-			function ParentComponent:init()
-				self:setState({
-					count = 1
-				})
-
-				self.childAdded = function()
-					self:setState({
-						count = self.state.count + 1,
+				function ParentComponent:render()
+					return createElement("Frame", {
+						[Event.ChildAdded] = self.childAdded,
+					}, {
+						ChildComponent = createElement(ChildComponent, {
+							count = self.state.count
+						})
 					})
 				end
-			end
 
-			function ParentComponent:render()
-				return createElement("Frame", {
-					[Event.ChildAdded] = self.childAdded,
-				}, {
-					ChildComponent = createElement(ChildComponent, {
-						count = self.state.count
-					})
-				})
-			end
+				local parent = Instance.new("ScreenGui")
+				parent.Parent = game.CoreGui
 
-			local parent = Instance.new("ScreenGui")
-			parent.Parent = game.CoreGui
+				local tree = createElement(ParentComponent)
 
-			local tree = createElement(ParentComponent)
+				local hostKey = "Some Key"
+				local instance = reconciler.mountVirtualNode(tree, parent, hostKey)
 
-			local hostKey = "Some Key"
-			local instance = reconciler.mountVirtualNode(tree, parent, hostKey)
+				coroutine.resume(childCoroutine)
 
-			coroutine.resume(childCoroutine)
+				expect(#parent:GetChildren()).to.equal(1)
 
-			expect(#parent:GetChildren()).to.equal(1)
+				local frame = parent:GetChildren()[1]
 
-			local frame = parent:GetChildren()[1]
+				expect(#frame:GetChildren()).to.equal(1)
 
-			expect(#frame:GetChildren()).to.equal(1)
-
-			reconciler.unmountVirtualNode(instance)
+				reconciler.unmountVirtualNode(instance)
+			end)
 		end)
 	end)
 end

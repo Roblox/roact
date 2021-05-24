@@ -1,5 +1,5 @@
 !!! info
-	These examples asssumes that you've successfully [installed Roact](installation.md) into `ReplicatedStorage`!
+	These examples assumes that you've successfully [installed Roact](installation.md) into `ReplicatedStorage`!
 
 Add a new `LocalScript` object to `StarterPlayer.StarterPlayerScripts` either in Roblox Studio, or via Rojo:
 

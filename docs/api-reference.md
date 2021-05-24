@@ -181,10 +181,7 @@ Creates a new reference object that can be used with [Roact.Ref](#roactref).
 
 ### Roact.createContext
 
-!!! danger "Unreleased API"
-	This API is not yet available in a stable Roact release.
-
-	It may be available from a recent pre-release or Roact's master branch.
+!!! success "Added in Roact 1.3.0"
 
 ```
 Roact.createContext(defaultValue: any) -> RoactContext

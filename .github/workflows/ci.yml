@@ -14,15 +14,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
       with:
         submodules: true
 
-    - uses: leafo/gh-actions-lua@v5
+    - uses: leafo/gh-actions-lua@v8
       with:
         luaVersion: "5.1"
 
-    - uses: leafo/gh-actions-luarocks@v2
+    - uses: leafo/gh-actions-luarocks@v4
 
     - name: Install dependencies
       run: |
@@ -38,7 +38,7 @@ jobs:
         luacov -r lcov
 
     - name: Report to Coveralls
-      uses: coverallsapp/github-action@v1.0.1
+      uses: coverallsapp/github-action@v1.1.2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path-to-lcov: luacov.report.out

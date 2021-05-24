@@ -22,6 +22,10 @@ local defaultConfig = {
 	["elementTracing"] = false,
 	-- Enables validation of component props in stateful components.
 	["propValidation"] = false,
+
+	-- Temporary config for enabling a bug fix for processing events based on updates to child instances
+	-- outside of the standard lifecycle.
+	["tempFixUpdateChildrenReEntrancy"] = true,
 }
 
 -- Build a list of valid configuration values up for debug messages.

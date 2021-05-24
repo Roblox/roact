@@ -163,12 +163,16 @@ function Component:setState(mapState)
 		-- This could cause the tree to become invalid.
 		local virtualNode = internalData.virtualNode
 		local reconciler = internalData.reconciler
-		reconciler.suspendParentEvents(virtualNode)
+		if config.tempFixUpdateChildrenReEntrancy then
+			reconciler.suspendParentEvents(virtualNode)
+		end
 
 		-- Outside of our lifecycle, the state update is safe to make immediately
 		self:__update(nil, newState)
 
-		reconciler.resumeParentEvents(virtualNode)
+		if config.tempFixUpdateChildrenReEntrancy then
+			reconciler.resumeParentEvents(virtualNode)
+		end
 	else
 		local messageTemplate = invalidSetStateMessages.default
 

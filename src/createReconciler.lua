@@ -37,6 +37,7 @@ local function createReconciler(renderer)
 		local hostParent = virtualNode.hostParent
 		local hostKey = virtualNode.hostKey
 		local depth = virtualNode.depth
+		local parent = virtualNode.parent
 
 		-- If the node that is being replaced has modified context, we need to
 		-- use the original *unmodified* context for the new node
@@ -50,6 +51,7 @@ local function createReconciler(renderer)
 		-- mountVirtualNode can return nil if the element is a boolean
 		if newNode ~= nil then
 			newNode.depth = depth
+			newNode.parent = parent
 		end
 
 		return newNode

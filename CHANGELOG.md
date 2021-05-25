@@ -1,6 +1,8 @@
 # Roact Changelog
 
 ## Unreleased Changes
+
+## [1.4.0](https://github.com/Roblox/roact/releases/tag/v1.4.0) (November 19th, 2020)
 * Introduce forwardRef ([#307](https://github.com/Roblox/roact/pull/307)).
 * Fixed a bug where the Roact tree could get into a broken state when processing changes to child instances outside the standard lifecycle.
   * This change is behind the config value tempFixUpdateChildrenReEntrancy ([#301](https://github.com/Roblox/roact/pull/301))

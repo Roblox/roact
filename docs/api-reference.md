@@ -180,6 +180,9 @@ Creates a new reference object that can be used with [Roact.Ref](#roactref).
 ---
 
 ### Roact.forwardRef
+
+!!! success "Added in Roact 1.4.0"
+
 ```
 Roact.createRef(render: (props: table, ref: Ref) -> RoactElement) -> RoactComponent
 ```

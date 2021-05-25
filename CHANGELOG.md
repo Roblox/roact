@@ -1,7 +1,8 @@
 # Roact Changelog
 
 ## Unreleased Changes
-* Fixed a bug where the Roact tree could get into a broken state when processing changes to child instances outside the standard lifecycle. ([#301](https://github.com/Roblox/roact/pull/301))
+* Fixed a bug where the Roact tree could get into a broken state when processing changes to child instances outside the standard lifecycle.
+  This change is behind the config value tempFixUpdateChildrenReEntrancy ([#301](https://github.com/Roblox/roact/pull/301))
 * Added color schemes for documentation based on user preference ([#290](https://github.com/Roblox/roact/pull/290)).
 * Fixed stack trace level when throwing an error in `createReconciler` ([#297](https://github.com/Roblox/roact/pull/297)).
 * Optimized the memory usage of 'createSignal' implementation. ([#304](https://github.com/Roblox/roact/pull/304))

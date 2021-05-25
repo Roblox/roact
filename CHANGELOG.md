@@ -1,7 +1,14 @@
 # Roact Changelog
 
 ## Unreleased Changes
+* Introduce forwardRef ([#307](https://github.com/Roblox/roact/pull/307)).
+* Fixed a bug where the Roact tree could get into a broken state when processing changes to child instances outside the standard lifecycle.
+  * This change is behind the config value tempFixUpdateChildrenReEntrancy ([#301](https://github.com/Roblox/roact/pull/301))
+* Added color schemes for documentation based on user preference ([#290](https://github.com/Roblox/roact/pull/290)).
+* Fixed stack trace level when throwing an error in `createReconciler` ([#297](https://github.com/Roblox/roact/pull/297)).
+* Optimized the memory usage of 'createSignal' implementation. ([#304](https://github.com/Roblox/roact/pull/304))
 
+## [1.3.1](https://github.com/Roblox/roact/releases/tag/v1.3.1) (November 19th, 2020)
 * Added component name to property validation error message ([#275](https://github.com/Roblox/roact/pull/275))
 * Fixed an issue where events were called while unmounting a host element ([#282](https://github.com/Roblox/roact/pull/282))
 

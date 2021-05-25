@@ -37,6 +37,7 @@ local function createReconciler(renderer)
 		local hostParent = virtualNode.hostParent
 		local hostKey = virtualNode.hostKey
 		local depth = virtualNode.depth
+		local parent = virtualNode.parent
 
 		-- If the node that is being replaced has modified context, we need to
 		-- use the original *unmodified* context for the new node
@@ -50,6 +51,7 @@ local function createReconciler(renderer)
 		-- mountVirtualNode can return nil if the element is a boolean
 		if newNode ~= nil then
 			newNode.depth = depth
+			newNode.parent = parent
 		end
 
 		return newNode
@@ -101,6 +103,7 @@ local function createReconciler(renderer)
 				-- mountVirtualNode can return nil if the element is a boolean
 				if childNode ~= nil then
 					childNode.depth = virtualNode.depth + 1
+					childNode.parent = virtualNode
 					virtualNode.children[childKey] = childNode
 				end
 			end
@@ -152,7 +155,7 @@ local function createReconciler(renderer)
 				unmountVirtualNode(childNode)
 			end
 		else
-			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
+			error(("Unknown ElementKind %q"):format(tostring(kind)), 2)
 		end
 	end
 
@@ -241,7 +244,7 @@ local function createReconciler(renderer)
 		elseif kind == ElementKind.Fragment then
 			virtualNode = updateFragmentVirtualNode(virtualNode, newElement)
 		else
-			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
+			error(("Unknown ElementKind %q"):format(tostring(kind)), 2)
 		end
 
 		-- Stateful components can abort updates via shouldUpdate. If that
@@ -279,6 +282,7 @@ local function createReconciler(renderer)
 			[Type] = Type.VirtualNode,
 			currentElement = element,
 			depth = 1,
+			parent = nil,
 			children = {},
 			hostParent = hostParent,
 			hostKey = hostKey,
@@ -366,7 +370,7 @@ local function createReconciler(renderer)
 		elseif kind == ElementKind.Fragment then
 			mountFragmentVirtualNode(virtualNode)
 		else
-			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
+			error(("Unknown ElementKind %q"):format(tostring(kind)), 2)
 		end
 
 		return virtualNode
@@ -437,6 +441,28 @@ local function createReconciler(renderer)
 		return tree
 	end
 
+	local function suspendParentEvents(virtualNode)
+		local parentNode = virtualNode.parent
+		while parentNode do
+			if parentNode.eventManager ~= nil then
+				parentNode.eventManager:suspend()
+			end
+
+			parentNode = parentNode.parent
+		end
+	end
+
+	local function resumeParentEvents(virtualNode)
+		local parentNode = virtualNode.parent
+		while parentNode do
+			if parentNode.eventManager ~= nil then
+				parentNode.eventManager:resume()
+			end
+
+			parentNode = parentNode.parent
+		end
+	end
+
 	reconciler = {
 		mountVirtualTree = mountVirtualTree,
 		unmountVirtualTree = unmountVirtualTree,
@@ -448,6 +474,9 @@ local function createReconciler(renderer)
 		updateVirtualNode = updateVirtualNode,
 		updateVirtualNodeWithChildren = updateVirtualNodeWithChildren,
 		updateVirtualNodeWithRenderResult = updateVirtualNodeWithRenderResult,
+
+		suspendParentEvents = suspendParentEvents,
+		resumeParentEvents = resumeParentEvents,
 	}
 
 	return reconciler

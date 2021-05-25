@@ -966,4 +966,83 @@ return function()
 			})
 		end)
 	end)
+
+
+	describe("Integration Tests", function()
+		it("should not allow re-entrancy in updateChildren", function()
+			local configValues = {
+				tempFixUpdateChildrenReEntrancy = true,
+			}
+
+			GlobalConfig.scoped(configValues, function()
+				local ChildComponent = Component:extend("ChildComponent")
+
+				function ChildComponent:init()
+					self:setState({
+						firstTime = true
+					})
+				end
+
+				local childCoroutine
+
+				function ChildComponent:render()
+					if self.state.firstTime then
+						return createElement("Frame")
+					end
+
+					return createElement("TextLabel")
+				end
+
+				function ChildComponent:didMount()
+					childCoroutine = coroutine.create(function()
+						self:setState({
+							firstTime = false
+						})
+					end)
+				end
+
+				local ParentComponent = Component:extend("ParentComponent")
+
+				function ParentComponent:init()
+					self:setState({
+						count = 1
+					})
+
+					self.childAdded = function()
+						self:setState({
+							count = self.state.count + 1,
+						})
+					end
+				end
+
+				function ParentComponent:render()
+					return createElement("Frame", {
+						[Event.ChildAdded] = self.childAdded,
+					}, {
+						ChildComponent = createElement(ChildComponent, {
+							count = self.state.count
+						})
+					})
+				end
+
+				local parent = Instance.new("ScreenGui")
+				parent.Parent = game.CoreGui
+
+				local tree = createElement(ParentComponent)
+
+				local hostKey = "Some Key"
+				local instance = reconciler.mountVirtualNode(tree, parent, hostKey)
+
+				coroutine.resume(childCoroutine)
+
+				expect(#parent:GetChildren()).to.equal(1)
+
+				local frame = parent:GetChildren()[1]
+
+				expect(#frame:GetChildren()).to.equal(1)
+
+				reconciler.unmountVirtualNode(instance)
+			end)
+		end)
+	end)
 end

@@ -12,57 +12,50 @@
 		disconnect()
 ]]
 
-local function addToMap(map, addKey, addValue)
-	local new = {}
-
-	for key, value in pairs(map) do
-		new[key] = value
-	end
-
-	new[addKey] = addValue
-
-	return new
-end
-
-local function removeFromMap(map, removeKey)
-	local new = {}
-
-	for key, value in pairs(map) do
-		if key ~= removeKey then
-			new[key] = value
-		end
-	end
-
-	return new
-end
-
 local function createSignal()
 	local connections = {}
+	local suspendedConnections = {}
+	local firing = false
 
 	local function subscribe(self, callback)
 		assert(typeof(callback) == "function", "Can only subscribe to signals with a function.")
 
 		local connection = {
 			callback = callback,
+			disconnected = false,
 		}
 
-		connections = addToMap(connections, callback, connection)
+		-- If the callback is already registered, don't add to the suspendedConnection. Otherwise, this will disable
+		-- the existing one.
+		if firing and not connections[callback] then
+			suspendedConnections[callback] = connection
+		end
+
+		connections[callback] = connection
 
 		local function disconnect()
 			assert(not connection.disconnected, "Listeners can only be disconnected once.")
 
 			connection.disconnected = true
-			connections = removeFromMap(connections, callback)
+			connections[callback] = nil
+			suspendedConnections[callback] = nil
 		end
 
 		return disconnect
 	end
 
 	local function fire(self, ...)
+		firing = true
 		for callback, connection in pairs(connections) do
-			if not connection.disconnected then
+			if not connection.disconnected and not suspendedConnections[callback] then
 				callback(...)
 			end
+		end
+
+		firing = false
+
+		for callback, _ in pairs(suspendedConnections) do
+			suspendedConnections[callback] = nil
 		end
 	end
 

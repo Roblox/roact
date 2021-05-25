@@ -6,6 +6,7 @@ return function()
 			createElement = "function",
 			createFragment = "function",
 			createRef = "function",
+			forwardRef = "function",
 			createBinding = "function",
 			joinBindings = "function",
 			mount = "function",

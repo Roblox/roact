@@ -9,9 +9,8 @@ local excludeRef = {
 }
 
 --[[
-	Passes a provided ref to given render callback. Can be used to treat class
-	or function components as host components and assign the passed-in ref to
-	the underlying host component
+	Allows forwarding of refs to underlying host components. Accepts a render
+	callback which accepts props and a ref, and returns an element.
 ]]
 local function forwardRef(render)
 	if config.typeChecks then

@@ -1,24 +1,30 @@
-local createRef = require(script.Parent.createRef)
-local Component = require(script.Parent.Component)
+local assign = require(script.Parent.assign)
+local Logging = require(script.Parent.Logging)
+local None = require(script.Parent.None)
 local Ref = require(script.Parent.PropMarkers.Ref)
 
+local config = require(script.Parent.GlobalConfig).get()
+
+local excludeRef = {
+	[Ref] = None,
+}
+
 --[[
-	Passed a provided ref to given render callback. Can be used to treat class
-	components as host components and assign the passed-in ref to the underlying
-	host component
+	Passes a provided ref to given render callback. Can be used to treat class
+	or function components as host components and assign the passed-in ref to
+	the underlying host component
 ]]
 local function forwardRef(render)
-	local ForwardRefComponent = Component:extend("ForwardRefContainer")
-
-	function ForwardRefComponent:init()
-		self.defaultRef = createRef()
+	if config.typeChecks then
+		assert(typeof(render) == "function", "Expected arg #1 to be a function")
 	end
 
-	function ForwardRefComponent:render()
-		return render(self.props, self.props[Ref] or self.defaultRef)
-	end
+	return function(props)
+		local ref = props[Ref]
+		local propsWithoutRef = assign({}, props, excludeRef)
 
-	return ForwardRefComponent
+		return render(propsWithoutRef, ref)
+	end
 end
 
 return forwardRef

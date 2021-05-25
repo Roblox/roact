@@ -1,7 +1,7 @@
 # Roact Changelog
 
 ## Unreleased Changes
-* Introduce forwardRef ([#302](https://github.com/Roblox/roact/pull/302)).
+* Introduce forwardRef ([#307](https://github.com/Roblox/roact/pull/307)).
 * Added color schemes for documentation based on user preference ([#290](https://github.com/Roblox/roact/pull/290)).
 * Fixed stack trace level when throwing an error in `createReconciler` ([#297](https://github.com/Roblox/roact/pull/297)).
 * Optimized the memory usage of 'createSignal' implementation. ([#304](https://github.com/Roblox/roact/pull/304))

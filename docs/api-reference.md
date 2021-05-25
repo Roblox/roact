@@ -179,6 +179,15 @@ Creates a new reference object that can be used with [Roact.Ref](#roactref).
 
 ---
 
+### Roact.forwardRef
+```
+Roact.createRef(render: (props: table, ref: Ref) -> RoactElement) -> RoactComponent
+```
+
+Creates a new component given a render function that accepts both props and a ref, allowing a ref to be forwarded to an underlying host component via [Roact.Ref](#roactref).
+
+---
+
 ### Roact.createContext
 
 !!! success "Added in Roact 1.3.0"

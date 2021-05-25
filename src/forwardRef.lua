@@ -1,5 +1,4 @@
 local assign = require(script.Parent.assign)
-local Logging = require(script.Parent.Logging)
 local None = require(script.Parent.None)
 local Ref = require(script.Parent.PropMarkers.Ref)
 

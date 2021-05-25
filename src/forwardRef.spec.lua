@@ -273,6 +273,7 @@ return function()
 
 		expect(value).to.equal(456)
 		expect(setRefCount).to.equal(1)
+		reconciler.unmountVirtualTree(tree)
 	end)
 
 	it("should not re-run the render callback on a deep setState", function()
@@ -312,5 +313,18 @@ return function()
 		inst:setState({})
 		expect(#renders).to.equal(1)
 		expect(renders[1]).to.equal("Inner")
+		reconciler.unmountVirtualTree(tree)
+	end)
+
+	it("should not include the ref in the forwarded props", function()
+		local capturedProps
+		local function CaptureProps(props)
+			capturedProps = props
+			return nil
+		end
+
+		local RefForwardingComponent = forwardRef(function(props, ref)
+			return createElement(CaptureProps, assign({}, props, { forwardedRef = ref }))
+		end)
 	end)
 end

@@ -320,11 +320,22 @@ return function()
 		local capturedProps
 		local function CaptureProps(props)
 			capturedProps = props
-			return nil
+			return createElement("Frame", { [Ref] = props.forwardedRef })
 		end
 
 		local RefForwardingComponent = forwardRef(function(props, ref)
 			return createElement(CaptureProps, assign({}, props, { forwardedRef = ref }))
 		end)
+
+		local ref = createRef()
+		local element = createElement(RefForwardingComponent, {
+			[Ref] = ref,
+		})
+
+		local tree = reconciler.mountVirtualTree(element, nil, "no ref in props")
+		expect(capturedProps).to.be.ok()
+		expect(capturedProps.forwardedRef).to.equal(ref)
+		expect(capturedProps[Ref]).to.equal(nil)
+		reconciler.unmountVirtualTree(tree)
 	end)
 end

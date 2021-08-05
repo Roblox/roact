@@ -1115,6 +1115,123 @@ return function()
 
 				reconciler.unmountVirtualNode(instance)
 			end)
+
+			it("should never call unmount twice when tempFixUpdateChildrenReEntrancy is turned on", function()
+				local configValues = {
+					tempFixUpdateChildrenReEntrancy = true,
+				}
+
+				GlobalConfig.scoped(configValues, function()
+					local unmountCounts = {}
+
+					local function addUnmount(id)
+						unmountCounts[id] = (unmountCounts[id] or 0) + 1
+					end
+
+					local LowestComponent = Component:extend("LowestComponent")
+					function LowestComponent:render()
+						return createElement("Frame")
+					end
+
+					function LowestComponent:didMount()
+						self.props.onDidMountCallback()
+					end
+
+					function LowestComponent:willUnmount()
+						addUnmount(tostring(self))
+					end
+
+					local FirstComponent = Component:extend("FirstComponent")
+					function FirstComponent:render()
+						return createElement("TextLabel")
+					end
+
+					function FirstComponent:willUnmount()
+						addUnmount(tostring(self))
+					end
+
+					local ChildComponent = Component:extend("ChildComponent")
+
+					function ChildComponent:init()
+						self:setState({
+							firstTime = true
+						})
+					end
+
+					local childCoroutine
+
+					function ChildComponent:render()
+						if self.state.firstTime then
+							return createElement(FirstComponent)
+						end
+
+						return createElement(LowestComponent, {
+							onDidMountCallback = self.props.onDidMountCallback
+						})
+					end
+
+					function ChildComponent:didMount()
+						childCoroutine = coroutine.create(function()
+							self:setState({
+								firstTime = false
+							})
+						end)
+					end
+
+					function ChildComponent:willUnmount()
+						addUnmount(tostring(self))
+					end
+
+					local ParentComponent = Component:extend("ParentComponent")
+
+					function ParentComponent:init()
+						self:setState({
+							count = 1
+						})
+
+						self.onDidMountCallback = function()
+							if self.state.count < 5 then
+								self:setState({
+									count = self.state.count + 1,
+								})
+							end
+						end
+					end
+
+					function ParentComponent:render()
+						return createElement("Frame", {
+
+						}, {
+							ChildComponent = createElement(ChildComponent, {
+								count = self.state.count,
+								onDidMountCallback = self.onDidMountCallback,
+							})
+						})
+					end
+
+					local parent = Instance.new("ScreenGui")
+					parent.Parent = game.CoreGui
+
+					local tree = createElement(ParentComponent)
+
+					local hostKey = "Some Key"
+					local instance = reconciler.mountVirtualNode(tree, parent, hostKey)
+
+					coroutine.resume(childCoroutine)
+
+					expect(#parent:GetChildren()).to.equal(1)
+
+					local frame = parent:GetChildren()[1]
+
+					expect(#frame:GetChildren()).to.equal(1)
+
+					reconciler.unmountVirtualNode(instance)
+
+					for _, value in pairs(unmountCounts) do
+						expect(value).to.equal(1)
+					end
+				end)
+			end)
 		end)
 	end)
 end

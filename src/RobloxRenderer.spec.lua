@@ -1124,19 +1124,9 @@ return function()
 
 			GlobalConfig.scoped(configValues, function()
 				local unmountCounts = {}
-				local unMountTracebacks = {}
 
 				local function addUnmount(id)
 					unmountCounts[id] = unmountCounts[id] + 1
-
-					if unMountTracebacks[id] then
-						print("First Traceback!")
-						print(unMountTracebacks[id])
-						print("Second Traceback!")
-						print(debug.traceback())
-					end
-
-					unMountTracebacks[id] = debug.traceback()
 				end
 
 				local function addInit(id)

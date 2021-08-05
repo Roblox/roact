@@ -45,7 +45,13 @@ local function createReconciler(renderer)
 		local context = virtualNode.originalContext or virtualNode.context
 		local parentLegacyContext = virtualNode.parentLegacyContext
 
-		unmountVirtualNode(virtualNode)
+		if config.tempFixUpdateChildrenReEntrancy then
+			if not virtualNode.wasUnmounted then
+				unmountVirtualNode(virtualNode)
+			end
+		else
+			unmountVirtualNode(virtualNode)
+		end
 		local newNode = mountVirtualNode(newElement, hostParent, hostKey, context, parentLegacyContext)
 
 		-- mountVirtualNode can return nil if the element is a boolean
@@ -82,7 +88,7 @@ local function createReconciler(renderer)
 			-- this result is invalid and needs to be disgarded.
 			if config.tempFixUpdateChildrenReEntrancy then
 				if virtualNode.updateChildrenCount ~= currentUpdateChildrenCount then
-					if newNode and not newNode.wasUnmounted then
+					if newNode and not newNode ~= virtualNode.children[childKey] then
 						unmountVirtualNode(newNode)
 					end
 					return

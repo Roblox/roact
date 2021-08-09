@@ -124,7 +124,7 @@ local function createReconciler(renderer)
 
 				-- If updating this node has caused a component higher up the tree to re-render
 				-- and updateChildren to be re-entered for this virtualNode then
-				-- this result is invalid and needs to be disgarded.
+				-- this result is invalid and needs to be discarded.
 				if config.tempFixUpdateChildrenReEntrancy then
 					if virtualNode.updateChildrenCount ~= currentUpdateChildrenCount then
 						if childNode then

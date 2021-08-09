@@ -1298,7 +1298,6 @@ return function()
 					})
 
 					self.onChangedCallback = function()
-						print("On changed callback!")
 						if self.state.count < 5 then
 							self:setState({
 								count = self.state.count + 1,

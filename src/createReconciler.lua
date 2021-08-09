@@ -88,7 +88,7 @@ local function createReconciler(renderer)
 			-- this result is invalid and needs to be disgarded.
 			if config.tempFixUpdateChildrenReEntrancy then
 				if virtualNode.updateChildrenCount ~= currentUpdateChildrenCount then
-					if newNode and not newNode ~= virtualNode.children[childKey] then
+					if newNode and newNode ~= virtualNode.children[childKey] then
 						unmountVirtualNode(newNode)
 					end
 					return

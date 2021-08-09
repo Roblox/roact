@@ -46,6 +46,9 @@ local function createReconciler(renderer)
 		local parentLegacyContext = virtualNode.parentLegacyContext
 
 		if config.tempFixUpdateChildrenReEntrancy then
+			-- If updating this node has caused a component higher up the tree to re-render
+			-- and updateChildren to be re-entered then this node could already have been
+			-- unmounted in the previous updateChildren pass.
 			if not virtualNode.wasUnmounted then
 				unmountVirtualNode(virtualNode)
 			end

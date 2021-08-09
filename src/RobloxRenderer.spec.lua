@@ -1247,5 +1247,95 @@ return function()
 				end
 			end)
 		end)
+
+		it("should never unmount a node unnecesarily in the case of re-rentry", function()
+			local configValues = {
+				tempFixUpdateChildrenReEntrancy = true,
+			}
+
+			GlobalConfig.scoped(configValues, function()
+				local LowestComponent = Component:extend("LowestComponent")
+				function LowestComponent:render()
+					return createElement("Frame")
+				end
+
+				function LowestComponent:didUpdate(prevProps, prevState)
+					if prevProps.firstTime and not self.props.firstTime then
+						self.props.onChangedCallback()
+					end
+				end
+
+				local ChildComponent = Component:extend("ChildComponent")
+
+				function ChildComponent:init()
+					self:setState({
+						firstTime = true
+					})
+				end
+
+				local childCoroutine
+
+				function ChildComponent:render()
+					return createElement(LowestComponent, {
+						firstTime = self.state.firstTime,
+						onChangedCallback = self.props.onChangedCallback
+					})
+				end
+
+				function ChildComponent:didMount()
+					childCoroutine = coroutine.create(function()
+						self:setState({
+							firstTime = false
+						})
+					end)
+				end
+
+				local ParentComponent = Component:extend("ParentComponent")
+
+				function ParentComponent:init()
+					self:setState({
+						count = 1
+					})
+
+					self.onChangedCallback = function()
+						print("On changed callback!")
+						if self.state.count < 5 then
+							self:setState({
+								count = self.state.count + 1,
+							})
+						end
+					end
+				end
+
+				function ParentComponent:render()
+					return createElement("Frame", {
+
+					}, {
+						ChildComponent = createElement(ChildComponent, {
+							count = self.state.count,
+							onChangedCallback = self.onChangedCallback,
+						})
+					})
+				end
+
+				local parent = Instance.new("ScreenGui")
+				parent.Parent = game.CoreGui
+
+				local tree = createElement(ParentComponent)
+
+				local hostKey = "Some Key"
+				local instance = reconciler.mountVirtualNode(tree, parent, hostKey)
+
+				coroutine.resume(childCoroutine)
+
+				expect(#parent:GetChildren()).to.equal(1)
+
+				local frame = parent:GetChildren()[1]
+
+				expect(#frame:GetChildren()).to.equal(1)
+
+				reconciler.unmountVirtualNode(instance)
+			end)
+		end)
 	end)
 end

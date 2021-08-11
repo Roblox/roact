@@ -1,6 +1,7 @@
 # Roact Changelog
 
 ## Unreleased Changes
+* Fixed a bug where the Roact tree could get into a broken state when using callbacks passed to a child component. Updated the tempFixUpdateChildrenReEntrancy config value to also handle this case. ([#315](https://github.com/Roblox/roact/pull/315))
 * Fixed forwardRef description ([#312](https://github.com/Roblox/roact/pull/312)).
 
 ## [1.4.0](https://github.com/Roblox/roact/releases/tag/v1.4.0) (November 19th, 2020)

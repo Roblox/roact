@@ -45,7 +45,16 @@ local function createReconciler(renderer)
 		local context = virtualNode.originalContext or virtualNode.context
 		local parentLegacyContext = virtualNode.parentLegacyContext
 
-		unmountVirtualNode(virtualNode)
+		if config.tempFixUpdateChildrenReEntrancy then
+			-- If updating this node has caused a component higher up the tree to re-render
+			-- and updateChildren to be re-entered then this node could already have been
+			-- unmounted in the previous updateChildren pass.
+			if not virtualNode.wasUnmounted then
+				unmountVirtualNode(virtualNode)
+			end
+		else
+			unmountVirtualNode(virtualNode)
+		end
 		local newNode = mountVirtualNode(newElement, hostParent, hostKey, context, parentLegacyContext)
 
 		-- mountVirtualNode can return nil if the element is a boolean
@@ -66,12 +75,28 @@ local function createReconciler(renderer)
 			internalAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #1 to be of type VirtualNode")
 		end
 
+		virtualNode.updateChildrenCount = virtualNode.updateChildrenCount + 1
+
+		local currentUpdateChildrenCount = virtualNode.updateChildrenCount
+
 		local removeKeys = {}
 
 		-- Changed or removed children
 		for childKey, childNode in pairs(virtualNode.children) do
 			local newElement = ElementUtils.getElementByKey(newChildElements, childKey)
 			local newNode = updateVirtualNode(childNode, newElement)
+
+			-- If updating this node has caused a component higher up the tree to re-render
+			-- and updateChildren to be re-entered for this virtualNode then
+			-- this result is invalid and needs to be disgarded.
+			if config.tempFixUpdateChildrenReEntrancy then
+				if virtualNode.updateChildrenCount ~= currentUpdateChildrenCount then
+					if newNode and newNode ~= virtualNode.children[childKey] then
+						unmountVirtualNode(newNode)
+					end
+					return
+				end
+			end
 
 			if newNode ~= nil then
 				virtualNode.children[childKey] = newNode
@@ -99,6 +124,18 @@ local function createReconciler(renderer)
 					virtualNode.context,
 					virtualNode.legacyContext
 				)
+
+				-- If updating this node has caused a component higher up the tree to re-render
+				-- and updateChildren to be re-entered for this virtualNode then
+				-- this result is invalid and needs to be discarded.
+				if config.tempFixUpdateChildrenReEntrancy then
+					if virtualNode.updateChildrenCount ~= currentUpdateChildrenCount then
+						if childNode then
+							unmountVirtualNode(childNode)
+						end
+						return
+					end
+				end
 
 				-- mountVirtualNode can return nil if the element is a boolean
 				if childNode ~= nil then
@@ -135,6 +172,8 @@ local function createReconciler(renderer)
 		if config.internalTypeChecks then
 			internalAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #1 to be of type VirtualNode")
 		end
+
+		virtualNode.wasUnmounted = true
 
 		local kind = ElementKind.of(virtualNode.currentElement)
 
@@ -286,6 +325,8 @@ local function createReconciler(renderer)
 			children = {},
 			hostParent = hostParent,
 			hostKey = hostKey,
+			updateChildrenCount = 0,
+			wasUnmounted = false,
 
 			-- Legacy Context API
 			-- A table of context values inherited from the parent node
@@ -441,28 +482,6 @@ local function createReconciler(renderer)
 		return tree
 	end
 
-	local function suspendParentEvents(virtualNode)
-		local parentNode = virtualNode.parent
-		while parentNode do
-			if parentNode.eventManager ~= nil then
-				parentNode.eventManager:suspend()
-			end
-
-			parentNode = parentNode.parent
-		end
-	end
-
-	local function resumeParentEvents(virtualNode)
-		local parentNode = virtualNode.parent
-		while parentNode do
-			if parentNode.eventManager ~= nil then
-				parentNode.eventManager:resume()
-			end
-
-			parentNode = parentNode.parent
-		end
-	end
-
 	reconciler = {
 		mountVirtualTree = mountVirtualTree,
 		unmountVirtualTree = unmountVirtualTree,
@@ -474,9 +493,6 @@ local function createReconciler(renderer)
 		updateVirtualNode = updateVirtualNode,
 		updateVirtualNodeWithChildren = updateVirtualNodeWithChildren,
 		updateVirtualNodeWithRenderResult = updateVirtualNodeWithRenderResult,
-
-		suspendParentEvents = suspendParentEvents,
-		resumeParentEvents = resumeParentEvents,
 	}
 
 	return reconciler

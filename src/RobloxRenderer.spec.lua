@@ -1072,12 +1072,15 @@ return function()
 
 				local ParentComponent = Component:extend("ParentComponent")
 
+				local didMountCallbackCalled = 0
+
 				function ParentComponent:init()
 					self:setState({
 						count = 1
 					})
 
 					self.onDidMountCallback = function()
+						didMountCallbackCalled = didMountCallbackCalled + 1
 						if self.state.count < 5 then
 							self:setState({
 								count = self.state.count + 1,
@@ -1112,6 +1115,10 @@ return function()
 				local frame = parent:GetChildren()[1]
 
 				expect(#frame:GetChildren()).to.equal(1)
+
+				-- In an ideal world, the didMount callback would probably be called only once. Since it is called by two different
+				-- LowestComponent instantiations 2 is also acceptable though.
+				expect(didMountCallbackCalled <= 2).to.equal(true)
 
 				reconciler.unmountVirtualNode(instance)
 			end)
@@ -1199,12 +1206,15 @@ return function()
 
 				local ParentComponent = Component:extend("ParentComponent")
 
+				local didMountCallbackCalled = 0
+
 				function ParentComponent:init()
 					self:setState({
 						count = 1
 					})
 
 					self.onDidMountCallback = function()
+						didMountCallbackCalled = didMountCallbackCalled + 1
 						if self.state.count < 5 then
 							self:setState({
 								count = self.state.count + 1,
@@ -1239,6 +1249,10 @@ return function()
 				local frame = parent:GetChildren()[1]
 
 				expect(#frame:GetChildren()).to.equal(1)
+
+				-- In an ideal world, the didMount callback would probably be called only once. Since it is called by two different
+				-- LowestComponent instantiations 2 is also acceptable though.
+				expect(didMountCallbackCalled <= 2).to.equal(true)
 
 				reconciler.unmountVirtualNode(instance)
 
@@ -1292,12 +1306,15 @@ return function()
 
 				local ParentComponent = Component:extend("ParentComponent")
 
+				local onChangedCallbackCalled = 0
+
 				function ParentComponent:init()
 					self:setState({
 						count = 1
 					})
 
 					self.onChangedCallback = function()
+						onChangedCallbackCalled = onChangedCallbackCalled + 1
 						if self.state.count < 5 then
 							self:setState({
 								count = self.state.count + 1,
@@ -1332,6 +1349,8 @@ return function()
 				local frame = parent:GetChildren()[1]
 
 				expect(#frame:GetChildren()).to.equal(1)
+
+				expect(onChangedCallbackCalled).to.equal(1)
 
 				reconciler.unmountVirtualNode(instance)
 			end)

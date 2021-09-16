@@ -11,7 +11,7 @@
       },
 
       "TestEZ": {
-        "$path": "modules/testez/lib"
+        "$path": "modules/testez"
       }
     },
 

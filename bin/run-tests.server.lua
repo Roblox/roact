@@ -12,14 +12,15 @@ Roact.setGlobalConfig({
 	["elementTracing"] = true,
 	["propValidation"] = true,
 })
-local results = TestEZ.TestBootstrap:run(ReplicatedStorage.Roact, TestEZ.Reporters.TextReporter)
+local results = TestEZ.TestBootstrap:run(
+	{ ReplicatedStorage.Roact },
+	TestEZ.Reporters.TextReporter
+)
 
-local statusCode = results.failureCount == 0 and 0 or 1
+local statusCode = (results.failureCount == 0 and #results.errors == 0) and 0 or 1
 
 if __LEMUR__ then
-	if results.failureCount > 0 then
-		os.exit(statusCode)
-	end
+	os.exit(statusCode)
 elseif isRobloxCli then
-	ProcessService:Exit(statusCode)
+	ProcessService:ExitAsync(statusCode)
 end

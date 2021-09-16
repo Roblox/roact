@@ -1,4 +1,6 @@
 return function()
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 	local assertDeepEqual = require(script.Parent.assertDeepEqual)
 	local Binding = require(script.Parent.Binding)
 	local Children = require(script.Parent.PropMarkers.Children)
@@ -950,6 +952,17 @@ return function()
 
 
 	describe("Integration Tests", function()
+		local temporaryParent = nil
+		beforeEach(function()
+			temporaryParent = Instance.new("Folder")
+			temporaryParent.Parent = ReplicatedStorage
+		end)
+
+		afterEach(function()
+			temporaryParent:Destroy()
+			temporaryParent = nil
+		end)
+
 		it("should not allow re-entrancy in updateChildren", function()
 			local configValues = {
 				tempFixUpdateChildrenReEntrancy = true,
@@ -1007,7 +1020,7 @@ return function()
 				end
 
 				local parent = Instance.new("ScreenGui")
-				parent.Parent = game.CoreGui
+				parent.Parent = temporaryParent
 
 				local tree = createElement(ParentComponent)
 
@@ -1101,7 +1114,7 @@ return function()
 				end
 
 				local parent = Instance.new("ScreenGui")
-				parent.Parent = game.CoreGui
+				parent.Parent = temporaryParent
 
 				local tree = createElement(ParentComponent)
 
@@ -1235,7 +1248,7 @@ return function()
 				end
 
 				local parent = Instance.new("ScreenGui")
-				parent.Parent = game.CoreGui
+				parent.Parent = temporaryParent
 
 				local tree = createElement(ParentComponent)
 
@@ -1335,7 +1348,7 @@ return function()
 				end
 
 				local parent = Instance.new("ScreenGui")
-				parent.Parent = game.CoreGui
+				parent.Parent = temporaryParent
 
 				local tree = createElement(ParentComponent)
 

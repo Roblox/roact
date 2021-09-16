@@ -1,4 +1,6 @@
 return function()
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 	local Component = require(script.Parent.Component)
 	local NoopRenderer = require(script.Parent.NoopRenderer)
 	local Children = require(script.Parent.PropMarkers.Children)
@@ -9,6 +11,9 @@ return function()
 	local createSpy = require(script.Parent.createSpy)
 
 	local noopReconciler = createReconciler(NoopRenderer)
+
+	local RobloxRenderer = require(script.Parent.RobloxRenderer)
+	local robloxReconciler = createReconciler(RobloxRenderer)
 
 	it("should return a table", function()
 		local context = createContext("Test")
@@ -300,5 +305,171 @@ return function()
 			expect(observedA).to.equal(true)
 			expect(observedB).to.equal(true)
 		end)
+	end)
+
+	-- issue https://github.com/Roblox/roact/issues/319
+	it("does not throw if willUnmount is called twice on a context consumer", function()
+		local context = createContext({})
+
+		local unmountCounts = {}
+		local didMountCounts = {}
+
+		local function addUnmount(component)
+			unmountCounts[component] = unmountCounts[component] + 1
+		end
+		local function addDidMount(component)
+			didMountCounts[component] = didMountCounts[component] + 1
+		end
+
+		local elementCounter = 0
+		local function addInit(component)
+			elementCounter = elementCounter + 1
+			component._id = ("%s (%s)"):format(component.__componentName, elementCounter)
+			unmountCounts[component] = 0
+			didMountCounts[component] = 0
+		end
+
+		local function reportCounters()
+			do
+				local data = {}
+				for component, count in pairs(didMountCounts) do
+					table.insert(data, ("\n\t%s: %d (%s)"):format(component._id, count, tostring(component._wasMounted)))
+				end
+				table.sort(data)
+				local dataOutput = table.concat(data, "")
+
+				warn(("Mount -> {%s\n}"):format(dataOutput))
+			end
+			do
+				local data = {}
+				for component, count in pairs(unmountCounts) do
+					table.insert(data, ("\n\t%s: %d (%s)"):format(component._id, count, tostring(component._wasMounted)))
+				end
+				table.sort(data)
+				local dataOutput = table.concat(data, "")
+
+				warn(("Unmount -> {%s\n}"):format(dataOutput))
+			end
+		end
+
+		local LowestComponent = Component:extend("LowestComponent")
+		function LowestComponent:init()
+			addInit(self)
+		end
+
+		function LowestComponent:render()
+			return createElement("Frame")
+		end
+
+		function LowestComponent:didMount()
+			addDidMount(self)
+			self._wasMounted = true
+			-- print("DID MOUNT LowestComponent: ", self._id)
+			self.props.onDidMountCallback()
+		end
+
+		function LowestComponent:willUnmount()
+			addUnmount(self)
+		end
+
+		local FirstComponent = Component:extend("FirstComponent")
+		function FirstComponent:init()
+			addInit(self)
+		end
+
+		function FirstComponent:render()
+			return createElement(context.Consumer, {
+				render = function()
+					return createElement("TextLabel")
+				end,
+			})
+		end
+
+		function FirstComponent:didMount()
+			addDidMount(self)
+			self._wasMounted = true
+		end
+
+		function FirstComponent:willUnmount()
+			addUnmount(self)
+		end
+
+		local ChildComponent = Component:extend("ChildComponent")
+
+		function ChildComponent:init()
+			addInit(self)
+			self:setState({ firstTime = true })
+		end
+
+		local childCallback
+
+		function ChildComponent:render()
+			if self.state.firstTime then
+				return createElement(FirstComponent)
+			end
+
+			return createElement(LowestComponent, {
+				onDidMountCallback = self.props.onDidMountCallback
+			})
+		end
+
+		function ChildComponent:didMount()
+			addDidMount(self)
+			self._wasMounted = true
+			childCallback = function()
+				self:setState({ firstTime = false })
+			end
+		end
+
+		function ChildComponent:willUnmount()
+			addUnmount(self)
+		end
+
+		local ParentComponent = Component:extend("ParentComponent")
+
+		local didMountCallbackCalled = 0
+
+		function ParentComponent:init()
+			self:setState({ count = 1 })
+
+			self.onDidMountCallback = function()
+				didMountCallbackCalled = didMountCallbackCalled + 1
+				if self.state.count < 5 then
+					self:setState({ count = self.state.count + 1 })
+				end
+			end
+		end
+
+		function ParentComponent:render()
+			return createElement("Frame", {}, {
+				Provider = createElement(context.Provider, {
+					value = {},
+				}, {
+					ChildComponent = createElement(ChildComponent, {
+						count = self.state.count,
+						onDidMountCallback = self.onDidMountCallback,
+					}),
+				})
+			})
+		end
+
+		local parent = Instance.new("ScreenGui")
+		parent.Parent = ReplicatedStorage
+
+		local hostKey = "Some Key"
+		local node = robloxReconciler.mountVirtualNode(createElement(ParentComponent), parent, hostKey)
+
+		reportCounters()
+
+		expect(function()
+			-- calling setState on ChildComponent will trigger `willUnmount` multiple times
+			childCallback()
+		end).never.to.throw()
+
+		reportCounters()
+
+		expect(function()
+			robloxReconciler.unmountVirtualNode(node)
+		end).never.to.throw()
 	end)
 end

@@ -26,8 +26,9 @@ stds.testez = {
 	read_globals = {
 		"describe",
 		"it", "itFOCUS", "itSKIP",
-		"FOCUS", "SKIP", "HACK_NO_XPCALL",
+		"FOCUS", "SKIP",
 		"expect",
+		"beforeEach", "afterEach", "beforeAll", "afterAll",
 	}
 }
 

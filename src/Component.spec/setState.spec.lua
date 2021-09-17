@@ -19,7 +19,7 @@ return function()
 
 			function InitComponent:init()
 				self:setState({
-					a = 1
+					a = 1,
 				})
 			end
 
@@ -47,7 +47,7 @@ return function()
 
 			function TestComponent:render()
 				self:setState({
-					a = 1
+					a = 1,
 				})
 			end
 
@@ -69,7 +69,7 @@ return function()
 
 			function TestComponent:shouldUpdate()
 				self:setState({
-					a = 1
+					a = 1,
 				})
 			end
 
@@ -94,7 +94,7 @@ return function()
 
 			function TestComponent:willUpdate()
 				self:setState({
-					a = 1
+					a = 1,
 				})
 			end
 
@@ -118,7 +118,7 @@ return function()
 
 			function TestComponent:willUnmount()
 				self:setState({
-					a = 1
+					a = 1,
 				})
 			end
 
@@ -146,7 +146,7 @@ return function()
 				end
 
 				self:setState({
-					value = 0
+					value = 0,
 				})
 			end
 
@@ -160,7 +160,7 @@ return function()
 			expect(getStateCallback().value).to.equal(0)
 
 			setStateCallback({
-				value = None
+				value = None,
 			})
 
 			expect(getStateCallback().value).to.equal(nil)
@@ -186,7 +186,7 @@ return function()
 				end
 
 				self:setState({
-					value = 0
+					value = 0,
 				})
 			end
 
@@ -204,7 +204,7 @@ return function()
 				expect(props).to.equal(getPropsCallback())
 
 				return {
-					value = state.value + 1
+					value = state.value + 1,
 				}
 			end)
 
@@ -224,7 +224,7 @@ return function()
 				end
 
 				self:setState({
-					value = 0
+					value = 0,
 				})
 			end
 
@@ -272,7 +272,7 @@ return function()
 				return createElement(Child, {
 					callback = function()
 						self:setState({
-							foo = "bar"
+							foo = "bar",
 						})
 					end,
 				})
@@ -314,7 +314,7 @@ return function()
 						-- This guards against a stack overflow that would be OUR fault
 						if not self.state.foo then
 							self:setState({
-								foo = "bar"
+								foo = "bar",
 							})
 						end
 					end,
@@ -511,7 +511,7 @@ return function()
 
 			setComponentState(function(state)
 				return {
-					counter = state.counter + 1
+					counter = state.counter + 1,
 				}
 			end)
 
@@ -565,7 +565,7 @@ return function()
 
 			function MyComponent:init()
 				self:setState({
-					status = "initial mount"
+					status = "initial mount",
 				})
 
 				self.isMounted = false
@@ -577,7 +577,7 @@ return function()
 
 			function MyComponent:didMount()
 				self:setState({
-					status = "mounted"
+					status = "mounted",
 				})
 
 				self.isMounted = true

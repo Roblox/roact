@@ -312,8 +312,8 @@ return function()
 			local elements = {}
 			local totalElements = 5
 
-			for i=1, totalElements do
-				elements["key"..tostring(i)] = createElement(childComponentSpy.value, {})
+			for i = 1, totalElements do
+				elements["key" .. tostring(i)] = createElement(childComponentSpy.value, {})
 			end
 
 			local fragments = createFragment(elements)

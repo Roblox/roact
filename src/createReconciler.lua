@@ -152,16 +152,16 @@ local function createReconciler(renderer)
 	end
 
 	local function updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
-		if Type.of(renderResult) == Type.Element
-			or renderResult == nil
-			or typeof(renderResult) == "boolean"
-		then
+		if Type.of(renderResult) == Type.Element or renderResult == nil or typeof(renderResult) == "boolean" then
 			updateChildren(virtualNode, hostParent, renderResult)
 		else
-			error(("%s\n%s"):format(
-				"Component returned invalid children:",
-				virtualNode.currentElement.source or "<enable element tracebacks>"
-			), 0)
+			error(
+				("%s\n%s"):format(
+					"Component returned invalid children:",
+					virtualNode.currentElement.source or "<enable element tracebacks>"
+				),
+				0
+			)
 		end
 	end
 
@@ -302,7 +302,10 @@ local function createReconciler(renderer)
 	]]
 	local function createVirtualNode(element, hostParent, hostKey, context, legacyContext)
 		if config.internalTypeChecks then
-			internalAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
+			internalAssert(
+				renderer.isHostObject(hostParent) or hostParent == nil,
+				"Expected arg #2 to be a host object"
+			)
 			internalAssert(typeof(context) == "table" or context == nil, "Expected arg #4 to be of type table or nil")
 			internalAssert(
 				typeof(legacyContext) == "table" or legacyContext == nil,
@@ -377,7 +380,10 @@ local function createReconciler(renderer)
 	]]
 	function mountVirtualNode(element, hostParent, hostKey, context, legacyContext)
 		if config.internalTypeChecks then
-			internalAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
+			internalAssert(
+				renderer.isHostObject(hostParent) or hostParent == nil,
+				"Expected arg #2 to be a host object"
+			)
 			internalAssert(
 				typeof(legacyContext) == "table" or legacyContext == nil,
 				"Expected arg #5 to be of type table or nil"

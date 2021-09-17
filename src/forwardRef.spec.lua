@@ -29,19 +29,19 @@ return function()
 			end
 			return createElement("Frame", nil, {
 				First = createElement("Frame", {
-					[Ref] = firstRef
+					[Ref] = firstRef,
 				}, {
 					Child = createElement("TextLabel", {
-						Text = "First"
-					})
+						Text = "First",
+					}),
 				}),
 				Second = createElement("ScrollingFrame", {
-					[Ref] = secondRef
+					[Ref] = secondRef,
 				}, {
 					Child = createElement("TextLabel", {
-						Text = "Second"
-					})
-				})
+						Text = "Second",
+					}),
+				}),
 			})
 		end
 
@@ -114,9 +114,12 @@ return function()
 		end
 
 		local RefForwardingComponent = forwardRef(function(props, ref)
-			return createElement(FunctionComponent, assign({}, props, {
-				forwardedRef = ref
-			 }))
+			return createElement(
+				FunctionComponent,
+				assign({}, props, {
+					forwardedRef = ref,
+				})
+			)
 		end)
 		RefForwardingComponent.defaultProps = {
 			optional = createElement("TextLabel"),
@@ -188,7 +191,7 @@ return function()
 		local function Child(props)
 			value = props.value
 			return createElement("Frame", {
-				[Ref] = props[Ref]
+				[Ref] = props[Ref],
 			})
 		end
 
@@ -212,7 +215,7 @@ return function()
 	it("should forward a ref for multiple children", function()
 		local function Child(props)
 			return createElement("Frame", {
-				[Ref] = props[Ref]
+				[Ref] = props[Ref],
 			})
 		end
 
@@ -241,7 +244,7 @@ return function()
 		local function Child(props)
 			value = props.value
 			return createElement("Frame", {
-				[Ref] = props[Ref]
+				[Ref] = props[Ref],
 			})
 		end
 

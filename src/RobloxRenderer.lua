@@ -44,9 +44,7 @@ local function applyRef(ref, newHostObject)
 		Binding.update(ref, newHostObject)
 	else
 		-- TODO (#197): Better error message
-		error(("Invalid ref: Expected type Binding but got %s"):format(
-			typeof(ref)
-		))
+		error(("Invalid ref: Expected type Binding but got %s"):format(typeof(ref)))
 	end
 end
 

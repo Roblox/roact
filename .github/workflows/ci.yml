@@ -26,7 +26,6 @@ jobs:
       uses: rojo-rbx/setup-foreman@v1
       with:
         version: "^1.0.1"
-        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
     # useful for debugging differences between CI and local environment
     - name: check versions

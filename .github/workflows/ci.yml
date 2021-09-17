@@ -36,7 +36,7 @@ jobs:
 
     - name: use rojo to build project
       shell: bash
-      run: rojo build tests.project.json --output model.rbxmx
+      run: rojo build default.project.json --output model.rbxmx
 
     - name: Linting and Style Checking
       shell: bash

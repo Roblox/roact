@@ -22,8 +22,20 @@ To get started working on Roact, you'll need:
 * Lua 5.1
 * Lemur's dependencies:
 	* [LuaFileSystem](https://keplerproject.github.io/luafilesystem/) (`luarocks install luafilesystem`)
-* [Luacheck](https://github.com/mpeterv/luacheck) (`luarocks install luacheck`)
 * [LuaCov](https://keplerproject.github.io/luacov) (`luarocks install luacov`)
+
+Foreman is an un-package manager that retrieves code directly from GitHub repositories. We'll use this to get a Lua package manager and other utilities. The Foreman packages are listed in `foreman.toml`. Foreman uses Rust, so you'll have to install Rust first.
+
+```
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+export PATH=$PATH:$HOME/.cargo/bin
+cargo install foreman
+foreman github-auth <your GitHub API token that you used for npm login above>
+foreman install
+export PATH=$PATH:~/.foreman/bin/ # you might want to add this to your bash profile file too
+```
+
+After running `foreman install`, you should be able to run `stylua src` and `selene src` commands -- just like this repository's continuous integration steps do! This helps ensure that our code and your contributions are consistently formatted and are free of trivial bugs.
 
 Make sure you have all of the Git submodules for Roact downloaded, which include a couple extra dependencies used for testing.
 

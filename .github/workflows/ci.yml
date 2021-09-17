@@ -41,20 +41,18 @@ jobs:
     - name: Linting and Style Checking
       shell: bash
       run: |
-        selene src
-        stylua -c src
+        selene src benchmarks examples
+        stylua -c src benchmarks examples
 
     - name: Install dependencies
       run: |
         luarocks install luafilesystem
         luarocks install luacov
         luarocks install luacov-reporter-lcov
-        luarocks install luacheck
 
     - name: Test
       run: |
         lua -lluacov bin/spec.lua
-        luacheck src benchmarks examples
         luacov -r lcov
 
     - name: Report to Coveralls

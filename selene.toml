@@ -1,0 +1,19 @@
+std = "roblox+testez"
+
+[config]
+empty_if = { comments_count = true }
+unused_variable = { ignore_pattern = "result|ok|^_" }
+# this comes up when translating nested try/finally scenarios
+shadowing = { ignore_pattern = "result|ok|^_" }
+# feature request for this config: https://github.com/Kampfkarren/selene/issues/181
+# global_usage = { ignore_pattern = "^__" }
+
+[rules]
+# remove this once the feature request here is implemented: https://github.com/Kampfkarren/selene/issues/181
+global_usage = "allow"
+unused_variable = "allow"
+# remove when the Luau type narrowing issues (and the workarounds) are resolved
+shadowing = "allow"
+
+# remove when this issue is fixed: https://github.com/Kampfkarren/selene/issues/179
+if_same_then_else = "allow"

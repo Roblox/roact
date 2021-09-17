@@ -237,7 +237,7 @@ return function()
 			local instance = noopReconciler.mountVirtualNode(element, nil, "Test")
 			expect(renderCount).to.equal(1)
 
-			setStateCallback(function(state, props)
+			setStateCallback(function(_state, _props)
 				return nil
 			end)
 
@@ -583,7 +583,7 @@ return function()
 				self.isMounted = true
 			end
 
-			function MyComponent:didUpdate(oldProps, oldState)
+			function MyComponent:didUpdate(_oldProps, oldState)
 				expect(oldState.status).to.equal("initial mount")
 				expect(self.state.status).to.equal("mounted")
 

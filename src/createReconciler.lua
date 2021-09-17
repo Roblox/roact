@@ -177,6 +177,7 @@ local function createReconciler(renderer)
 
 		local kind = ElementKind.of(virtualNode.currentElement)
 
+		-- selene: allow(if_same_then_else)
 		if kind == ElementKind.Host then
 			renderer.unmountHostNode(reconciler, virtualNode)
 		elseif kind == ElementKind.Function then

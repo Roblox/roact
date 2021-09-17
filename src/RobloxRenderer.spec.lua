@@ -722,7 +722,7 @@ return function()
 			local hostParent = Instance.new("Folder")
 			local hostKey = "Test"
 
-			local function parent(props)
+			local function parent(_props)
 				return createElement("IntValue", {}, {
 					fragmentA = createFragment({
 						key = createElement("StringValue", {
@@ -1279,7 +1279,7 @@ return function()
 					return createElement("Frame")
 				end
 
-				function LowestComponent:didUpdate(prevProps, prevState)
+				function LowestComponent:didUpdate(prevProps, _prevState)
 					if prevProps.firstTime and not self.props.firstTime then
 						self.props.onChangedCallback()
 					end

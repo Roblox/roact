@@ -69,7 +69,7 @@ return function()
 	end)
 
 	it("should support rendering nil", function()
-		local RefForwardingComponent = forwardRef(function(props, ref)
+		local RefForwardingComponent = forwardRef(function(_props, _ref)
 			return nil
 		end)
 
@@ -82,7 +82,7 @@ return function()
 	end)
 
 	it("should support rendering nil for multiple children", function()
-		local RefForwardingComponent = forwardRef(function(props, ref)
+		local RefForwardingComponent = forwardRef(function(_props, _ref)
 			return nil
 		end)
 

@@ -76,7 +76,7 @@ function BindingInternalApi.map(upstreamBinding, predicate)
 		end)
 	end
 
-	function impl.update(newValue)
+	function impl.update(_newValue)
 		error("Bindings created by Binding:map(fn) cannot be updated directly", 2)
 	end
 
@@ -120,7 +120,7 @@ function BindingInternalApi.join(upstreamBindings)
 		local disconnects = {}
 
 		for key, upstream in pairs(upstreamBindings) do
-			disconnects[key] = BindingInternalApi.subscribe(upstream, function(newValue)
+			disconnects[key] = BindingInternalApi.subscribe(upstream, function(_newValue)
 				callback(getValue())
 			end)
 		end
@@ -138,7 +138,7 @@ function BindingInternalApi.join(upstreamBindings)
 		end
 	end
 
-	function impl.update(newValue)
+	function impl.update(_newValue)
 		error("Bindings created by joinBindings(...) cannot be updated directly", 2)
 	end
 

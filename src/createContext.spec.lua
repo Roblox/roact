@@ -110,11 +110,14 @@ return function()
 			expect(valueSpy.callCount).to.equal(1)
 			valueSpy:assertCalledWith("NewTest")
 
-			noopReconciler.updateVirtualTree(tree, createElement(context.Provider, {
-				value = "ThirdTest",
-			}, {
-				Listener = createElement(Listener),
-			}))
+			noopReconciler.updateVirtualTree(
+				tree,
+				createElement(context.Provider, {
+					value = "ThirdTest",
+				}, {
+					Listener = createElement(Listener),
+				})
+			)
 
 			expect(valueSpy.callCount).to.equal(2)
 			valueSpy:assertCalledWith("ThirdTest")
@@ -160,13 +163,16 @@ return function()
 			expect(valueSpy.callCount).to.equal(1)
 			valueSpy:assertCalledWith("NewTest")
 
-			noopReconciler.updateVirtualTree(tree, createElement(context.Provider, {
-				value = "ThirdTest",
-			}, {
-				Blocker = createElement(UpdateBlocker, nil, {
-					Listener = createElement(Listener),
-				}),
-			}))
+			noopReconciler.updateVirtualTree(
+				tree,
+				createElement(context.Provider, {
+					value = "ThirdTest",
+				}, {
+					Blocker = createElement(UpdateBlocker, nil, {
+						Listener = createElement(Listener),
+					}),
+				})
+			)
 
 			expect(valueSpy.callCount).to.equal(2)
 			valueSpy:assertCalledWith("ThirdTest")

@@ -18,8 +18,7 @@ return function()
 	end)
 
 	it("should create new functional elements", function()
-		local element = createElement(function()
-		end)
+		local element = createElement(function() end)
 
 		expect(element).to.be.ok()
 		expect(Type.of(element)).to.equal(Type.Element)

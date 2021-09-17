@@ -92,7 +92,7 @@ return function()
 
 		local disconnectA
 		local spyA = createSpy()
-		local listener = function(a, b)
+		local listener = function(_a, _b)
 			disconnectA = signal:subscribe(spyA.value)
 		end
 

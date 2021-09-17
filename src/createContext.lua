@@ -66,7 +66,7 @@ local function createConsumer(context)
 		end
 	end
 
-	function Consumer:init(props)
+	function Consumer:init(_props)
 		-- This value may be nil, which indicates that our consumer is not a
 		-- descendant of a provider for this context item.
 		self.contextEntry = self:__getContext(context.key)

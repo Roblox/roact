@@ -49,13 +49,20 @@ return function()
 		local hostParent = nil
 		local hostKey = "WithDerivedState"
 
-		local node = noopReconciler.mountVirtualNode(createElement(WithDerivedState, {
-			someProp = 1,
-		}), hostParent, hostKey)
+		local node = noopReconciler.mountVirtualNode(
+			createElement(WithDerivedState, {
+				someProp = 1,
+			}),
+			hostParent,
+			hostKey
+		)
 
-		noopReconciler.updateVirtualNode(node, createElement(WithDerivedState, {
-			someProp = 2,
-		}))
+		noopReconciler.updateVirtualNode(
+			node,
+			createElement(WithDerivedState, {
+				someProp = 2,
+			})
+		)
 
 		expect(getDerivedSpy.callCount).to.equal(2)
 

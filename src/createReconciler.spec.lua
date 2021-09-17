@@ -171,7 +171,7 @@ return function()
 
 	describe("Function components", function()
 		it("should mount and unmount function components", function()
-			local componentSpy = createSpy(function(props)
+			local componentSpy = createSpy(function(_props)
 				return nil
 			end)
 
@@ -197,7 +197,7 @@ return function()
 		end)
 
 		it("should mount single children of function components", function()
-			local childComponentSpy = createSpy(function(props)
+			local childComponentSpy = createSpy(function(_props)
 				return nil
 			end)
 
@@ -235,11 +235,11 @@ return function()
 		end)
 
 		it("should mount fragments returned by function components", function()
-			local childAComponentSpy = createSpy(function(props)
+			local childAComponentSpy = createSpy(function(_props)
 				return nil
 			end)
 
-			local childBComponentSpy = createSpy(function(props)
+			local childBComponentSpy = createSpy(function(_props)
 				return nil
 			end)
 
@@ -306,14 +306,14 @@ return function()
 		end)
 
 		it("should mount all fragment's children", function()
-			local childComponentSpy = createSpy(function(props)
+			local childComponentSpy = createSpy(function(_props)
 				return nil
 			end)
 			local elements = {}
 			local totalElements = 5
 
-			for i=1, totalElements do
-				elements["key"..tostring(i)] = createElement(childComponentSpy.value, {})
+			for i = 1, totalElements do
+				elements["key" .. tostring(i)] = createElement(childComponentSpy.value, {})
 			end
 
 			local fragments = createFragment(elements)

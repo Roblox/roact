@@ -24,8 +24,7 @@ return function()
 			capturedProps = self.props
 		end
 
-		function Foo:render()
-		end
+		function Foo:render() end
 
 		local initialProps = {
 			b = 4,

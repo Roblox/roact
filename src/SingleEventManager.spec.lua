@@ -98,7 +98,7 @@ return function()
 
 			manager:resume()
 			expect(eventSpy.callCount).to.equal(4)
-			assertDeepEqual(recordedValues, {1, 2, 3, 4})
+			assertDeepEqual(recordedValues, { 1, 2, 3, 4 })
 		end)
 
 		it("should not invoke events fired during suspension but disconnected before resumption", function()

@@ -15,7 +15,7 @@ return function()
 
 		it("should return the assigned type", function()
 			local test = {
-				[Type] = Type.Element
+				[Type] = Type.Element,
 			}
 
 			expect(Type.of(test)).to.equal(Type.Element)

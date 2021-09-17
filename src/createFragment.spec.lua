@@ -14,7 +14,7 @@ return function()
 
 	it("should accept children", function()
 		local subFragment = createFragment({})
-		local fragment = createFragment({key = subFragment})
+		local fragment = createFragment({ key = subFragment })
 
 		expect(fragment.elements.key).to.equal(subFragment)
 	end)

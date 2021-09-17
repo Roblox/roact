@@ -66,8 +66,7 @@ return function()
 			self:setState(initialState)
 		end
 
-		function MyComponent:render()
-		end
+		function MyComponent:render() end
 
 		local element = createElement(MyComponent)
 		local hostParent = nil

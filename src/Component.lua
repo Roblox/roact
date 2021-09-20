@@ -157,22 +157,8 @@ function Component:setState(mapState)
 		internalData.pendingState = assign(newState, derivedState)
 
 	elseif lifecyclePhase == ComponentLifecyclePhase.Idle then
-		-- Pause parent events when we are updated outside of our lifecycle
-		-- If these events are not paused, our setState can cause a component higher up the
-		-- tree to rerender based on events caused by our component while this reconciliation is happening.
-		-- This could cause the tree to become invalid.
-		local virtualNode = internalData.virtualNode
-		local reconciler = internalData.reconciler
-		if config.tempFixUpdateChildrenReEntrancy then
-			reconciler.suspendParentEvents(virtualNode)
-		end
-
 		-- Outside of our lifecycle, the state update is safe to make immediately
 		self:__update(nil, newState)
-
-		if config.tempFixUpdateChildrenReEntrancy then
-			reconciler.resumeParentEvents(virtualNode)
-		end
 	else
 		local messageTemplate = invalidSetStateMessages.default
 

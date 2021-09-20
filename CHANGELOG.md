@@ -1,7 +1,7 @@
 # Roact Changelog
 
 ## Unreleased Changes
-* Fixed typos in the forwardRef doc code snippets referencing React instead of Roact ([#310](https://github.com/Roblox/roact/pull/310)).
+* Fixed forwardRef doc code referencing React instead of Roact ([#310](https://github.com/Roblox/roact/pull/310)).
 
 ## [1.4.1](https://github.com/Roblox/roact/releases/tag/v1.4.1) (August 12th, 2021)
 * Fixed a bug where the Roact tree could get into a broken state when using callbacks passed to a child component. Updated the tempFixUpdateChildrenReEntrancy config value to also handle this case. ([#315](https://github.com/Roblox/roact/pull/315))

@@ -1,3 +1,4 @@
+--~strict
 --[[
 	Packages up the internals of Roact and exposes a public API for it.
 ]]

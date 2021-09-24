@@ -1,3 +1,4 @@
+--!strict
 --[[
 	A utility used to create a function spy that can be used to robustly test
 	that functions are invoked the correct number of times and with the correct
@@ -9,12 +10,10 @@
 local assertDeepEqual = require(script.Parent.assertDeepEqual)
 
 local function createSpy(inner)
-	local self = {
-		callCount = 0,
-		values = {},
-		valuesLength = 0,
-	}
-
+	local self = {}
+	self.callCount = 0
+	self.values = {}
+	self.valuesLength = 0
 	self.value = function(...)
 		self.callCount = self.callCount + 1
 		self.values = { ... }

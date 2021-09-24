@@ -268,7 +268,7 @@ function Component:__validateProps(props)
 			self.__componentName,
 			tostring(failureReason),
 			self:getElementTraceback() or "<enable element tracebacks>"),
-		0)
+			0)
 	end
 end
 

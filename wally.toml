@@ -1,0 +1,8 @@
+[package]
+name = "roblox/roact"
+version = "1.4.0"
+license = "Apache-2.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+
+[dependencies]

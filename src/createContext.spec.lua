@@ -318,8 +318,7 @@ return function()
 		local context = createContext({})
 
 		local LowestComponent = Component:extend("LowestComponent")
-		function LowestComponent:init()
-		end
+		function LowestComponent:init() end
 
 		function LowestComponent:render()
 			return createElement("Frame")
@@ -330,8 +329,7 @@ return function()
 		end
 
 		local FirstComponent = Component:extend("FirstComponent")
-		function FirstComponent:init()
-		end
+		function FirstComponent:init() end
 
 		function FirstComponent:render()
 			return createElement(context.Consumer, {
@@ -355,7 +353,7 @@ return function()
 			end
 
 			return createElement(LowestComponent, {
-				onDidMountCallback = self.props.onDidMountCallback
+				onDidMountCallback = self.props.onDidMountCallback,
 			})
 		end
 
@@ -389,7 +387,7 @@ return function()
 						count = self.state.count,
 						onDidMountCallback = self.onDidMountCallback,
 					}),
-				})
+				}),
 			})
 		end
 

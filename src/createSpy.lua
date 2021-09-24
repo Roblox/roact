@@ -23,6 +23,7 @@ local function createSpy(inner)
 		if inner ~= nil then
 			return inner(...)
 		end
+		return nil
 	end
 
 	self.assertCalledWith = function(_, ...)

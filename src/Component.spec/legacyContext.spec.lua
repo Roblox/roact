@@ -15,8 +15,7 @@ return function()
 			self._context.foo = "bar"
 		end
 
-		function Provider:render()
-		end
+		function Provider:render() end
 
 		local element = createElement(Provider)
 		local hostParent = nil
@@ -38,8 +37,7 @@ return function()
 			capturedContext = self._context
 		end
 
-		function Consumer:render()
-		end
+		function Consumer:render() end
 
 		local Parent = Component:extend("Parent")
 
@@ -70,8 +68,7 @@ return function()
 			capturedContext = self._context
 		end
 
-		function Consumer:render()
-		end
+		function Consumer:render() end
 
 		local function Parent()
 			return createElement(Consumer)
@@ -100,8 +97,7 @@ return function()
 			capturedContext = self._context
 		end
 
-		function Consumer:render()
-		end
+		function Consumer:render() end
 
 		local Provider = Component:extend("Provider")
 
@@ -150,8 +146,7 @@ return function()
 			capturedContextA = self._context
 		end
 
-		function ConsumerA:render()
-		end
+		function ConsumerA:render() end
 
 		local ConsumerB = Component:extend("ConsumerB")
 
@@ -162,8 +157,7 @@ return function()
 			capturedContextB = self._context
 		end
 
-		function ConsumerB:render()
-		end
+		function ConsumerB:render() end
 
 		local Provider = Component:extend("Provider")
 

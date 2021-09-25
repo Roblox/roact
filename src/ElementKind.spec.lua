@@ -30,8 +30,7 @@ return function()
 		end)
 
 		it("should handle function components", function()
-			local function foo()
-			end
+			local function foo() end
 
 			expect(ElementKind.fromComponent(foo)).to.equal(ElementKind.Function)
 		end)

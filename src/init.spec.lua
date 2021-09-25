@@ -44,9 +44,11 @@ return function()
 
 			if not success then
 				local existence = typeof(valueType) == "boolean" and "present" or "of type " .. valueType
-				local message = (
-					"Expected public API member %q to be %s, but instead it was of type %s"
-				):format(tostring(key), existence, typeof(Roact[key]))
+				local message = ("Expected public API member %q to be %s, but instead it was of type %s"):format(
+					tostring(key),
+					existence,
+					typeof(Roact[key])
+				)
 
 				error(message)
 			end
@@ -54,9 +56,7 @@ return function()
 
 		for key in pairs(Roact) do
 			if publicApi[key] == nil then
-				local message = (
-					"Found unknown public API key %q!"
-				):format(tostring(key))
+				local message = ("Found unknown public API key %q!"):format(tostring(key))
 
 				error(message)
 			end

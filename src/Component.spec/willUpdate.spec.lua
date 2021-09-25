@@ -60,7 +60,7 @@ return function()
 			end
 
 			self:setState({
-				foo = 1
+				foo = 1,
 			})
 		end
 
@@ -77,7 +77,7 @@ return function()
 		expect(willUpdateSpy.callCount).to.equal(0)
 
 		setComponentState({
-			foo = 2
+			foo = 2,
 		})
 
 		expect(willUpdateSpy.callCount).to.equal(1)
@@ -87,7 +87,7 @@ return function()
 		expect(Type.of(values.self)).to.equal(Type.StatefulComponentInstance)
 		assertDeepEqual(values.newProps, {})
 		assertDeepEqual(values.newState, {
-			foo = 2
+			foo = 2,
 		})
 	end)
 end

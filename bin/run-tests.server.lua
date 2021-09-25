@@ -1,5 +1,3 @@
--- luacheck: globals __LEMUR__
-
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local isRobloxCli, ProcessService = pcall(game.GetService, game, "ProcessService")
 
@@ -19,7 +17,7 @@ local results = TestEZ.TestBootstrap:run(
 
 local statusCode = (results.failureCount == 0 and #results.errors == 0) and 0 or 1
 
-if __LEMUR__ then
+if _G.__LEMUR__ then
 	os.exit(statusCode)
 elseif isRobloxCli then
 	ProcessService:ExitAsync(statusCode)

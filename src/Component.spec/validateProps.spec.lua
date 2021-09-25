@@ -105,11 +105,11 @@ return function()
 			noopReconciler.mountVirtualNode(element, hostParent, key)
 			expect(validatePropsSpy.callCount).to.equal(1)
 			validatePropsSpy:assertCalledWithDeepEqual({
-				a = 1
+				a = 1,
 			})
 
 			setStateCallback({
-				b = 1
+				b = 1,
 			})
 
 			expect(validatePropsSpy.callCount).to.equal(1)

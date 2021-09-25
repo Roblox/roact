@@ -346,7 +346,7 @@ See [the events guide](../guide/events) for more details.
 ---
 
 ### Roact.Change
-Index into `Roact.Change` to receive a key that can be used to connect to [`GetPropertyChangedSignal`](http://wiki.roblox.com/index.php?title=API:Class/Instance/GetPropertyChangedSignal) events.
+Index into `Roact.Change` to receive a key that can be used to connect to [`GetPropertyChangedSignal`](https://developer.roblox.com/en-us/api-reference/function/Instance/GetPropertyChangedSignal) events.
 
 It's similar to `Roact.Event`:
 

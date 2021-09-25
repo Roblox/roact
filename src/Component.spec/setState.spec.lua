@@ -109,7 +109,7 @@ return function()
 			expect(result:match("TestComponent")).to.be.ok()
 		end)
 
-		it("should throw when called in willUnmount", function()
+		it("should not throw when called in willUnmount", function()
 			local TestComponent = Component:extend("TestComponent")
 
 			function TestComponent:render()
@@ -125,11 +125,9 @@ return function()
 			local element = createElement(TestComponent)
 			local tree = noopReconciler.mountVirtualTree(element)
 
-			local success, result = pcall(noopReconciler.unmountVirtualTree, tree)
+			local success, _ = pcall(noopReconciler.unmountVirtualTree, tree)
 
-			expect(success).to.equal(false)
-			expect(result:match("willUnmount")).to.be.ok()
-			expect(result:match("TestComponent")).to.be.ok()
+			expect(success).to.equal(true)
 		end)
 
 		it("should remove values from state when the value is None", function()

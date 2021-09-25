@@ -4,3 +4,5 @@
 /*.rbxmx
 /*.rbxm
 /*.rbxl
+# let selene re-generate roblox.toml so it updates automatically with selene
+roblox.toml

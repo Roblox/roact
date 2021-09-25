@@ -16,8 +16,7 @@ return function()
 			self:__addContext("foo", "bar")
 		end
 
-		function Provider:render()
-		end
+		function Provider:render() end
 
 		local element = createElement(Provider)
 		local hostParent = nil
@@ -42,8 +41,7 @@ return function()
 			}
 		end
 
-		function Consumer:render()
-		end
+		function Consumer:render() end
 
 		local Parent = Component:extend("Parent")
 
@@ -77,8 +75,7 @@ return function()
 			}
 		end
 
-		function Consumer:render()
-		end
+		function Consumer:render() end
 
 		local function Parent()
 			return createElement(Consumer)
@@ -135,8 +132,7 @@ return function()
 			self:__addContext("child", "I'm here too!")
 		end
 
-		function ChildProvider:render()
-		end
+		function ChildProvider:render() end
 
 		local ParentProvider = Component:extend("ParentProvider")
 
@@ -162,7 +158,7 @@ return function()
 
 		local expectedChildContext = {
 			parent = "I'm here!",
-			child = "I'm here too!"
+			child = "I'm here too!",
 		}
 
 		assertDeepEqual(parentNode.context, expectedParentContext)
@@ -180,8 +176,7 @@ return function()
 			}
 		end
 
-		function Consumer:render()
-		end
+		function Consumer:render() end
 
 		local Provider = Component:extend("Provider")
 
@@ -238,8 +233,7 @@ return function()
 			capturedContextA = captureAllContext(self)
 		end
 
-		function ConsumerA:render()
-		end
+		function ConsumerA:render() end
 
 		local ConsumerB = Component:extend("ConsumerB")
 
@@ -250,8 +244,7 @@ return function()
 			capturedContextB = captureAllContext(self)
 		end
 
-		function ConsumerB:render()
-		end
+		function ConsumerB:render() end
 
 		local Provider = Component:extend("Provider")
 

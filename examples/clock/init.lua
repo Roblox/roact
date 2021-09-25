@@ -18,17 +18,23 @@ return function()
 
 	local running = true
 	local currentTime = 0
-	local handle = Roact.mount(Roact.createElement(ClockApp, {
-		time = currentTime,
-	}), PlayerGui)
+	local handle = Roact.mount(
+		Roact.createElement(ClockApp, {
+			time = currentTime,
+		}),
+		PlayerGui
+	)
 
 	spawn(function()
 		while running do
 			currentTime = currentTime + 1
 
-			handle = Roact.reconcile(handle, Roact.createElement(ClockApp, {
-				time = currentTime,
-			}))
+			handle = Roact.reconcile(
+				handle,
+				Roact.createElement(ClockApp, {
+					time = currentTime,
+				})
+			)
 
 			wait(1)
 		end

@@ -194,10 +194,10 @@ return function()
 			local defaultStringValue = Instance.new("StringValue").Value
 
 			local element = createElement("StringValue", {
-				Value = firstValue
+				Value = firstValue,
 			}, {
 				ChildA = createElement("IntValue", {
-					Value = 1
+					Value = 1,
 				}),
 				ChildB = createElement("BoolValue", {
 					Value = true,
@@ -207,7 +207,7 @@ return function()
 				}),
 				ChildD = createElement("StringValue", {
 					Value = "test",
-				})
+				}),
 			})
 
 			local node = reconciler.createVirtualNode(element, parent, key)
@@ -221,7 +221,7 @@ return function()
 			}, {
 				-- ChildA changes element type.
 				ChildA = createElement("StringValue", {
-					Value = "test"
+					Value = "test",
 				}),
 				-- ChildB changes child properties.
 				ChildB = createElement("BoolValue", {
@@ -722,7 +722,7 @@ return function()
 			local hostParent = Instance.new("Folder")
 			local hostKey = "Test"
 
-			local function parent(props)
+			local function parent(_props)
 				return createElement("IntValue", {}, {
 					fragmentA = createFragment({
 						key = createElement("StringValue", {
@@ -776,8 +776,8 @@ return function()
 					}),
 					TheOtherValue = createElement("IntValue", {
 						Value = 2,
-					})
-				})
+					}),
+				}),
 			})
 
 			local node = reconciler.mountVirtualNode(fragment, hostParent, "Test")
@@ -815,15 +815,14 @@ return function()
 			local capturedContext
 			function Consumer:init()
 				capturedContext = {
-					hello = self:__getContext("hello")
+					hello = self:__getContext("hello"),
 				}
 			end
 
-			function Consumer:render()
-			end
+			function Consumer:render() end
 
 			local element = createElement("Folder", nil, {
-				Consumer = createElement(Consumer)
+				Consumer = createElement(Consumer),
 			})
 			local hostParent = nil
 			local hostKey = "Context Test"
@@ -869,14 +868,14 @@ return function()
 					target = target,
 				}, {
 					Consumer = createElement(Consumer),
-				})
+				}),
 			})
 			local hostParent = nil
 			local hostKey = "Some Key"
 			reconciler.mountVirtualNode(element, hostParent, hostKey)
 
 			assertDeepEqual(capturedContext, {
-				foo = "bar"
+				foo = "bar",
 			})
 		end)
 	end)
@@ -890,11 +889,10 @@ return function()
 				capturedContext = self._context
 			end
 
-			function Consumer:render()
-			end
+			function Consumer:render() end
 
 			local element = createElement("Folder", nil, {
-				Consumer = createElement(Consumer)
+				Consumer = createElement(Consumer),
 			})
 			local hostParent = nil
 			local hostKey = "Context Test"
@@ -938,18 +936,17 @@ return function()
 					target = target,
 				}, {
 					Consumer = createElement(Consumer),
-				})
+				}),
 			})
 			local hostParent = nil
 			local hostKey = "Some Key"
 			reconciler.mountVirtualNode(element, hostParent, hostKey)
 
 			assertDeepEqual(capturedContext, {
-				foo = "bar"
+				foo = "bar",
 			})
 		end)
 	end)
-
 
 	describe("Integration Tests", function()
 		local temporaryParent = nil
@@ -973,7 +970,7 @@ return function()
 
 				function ChildComponent:init()
 					self:setState({
-						firstTime = true
+						firstTime = true,
 					})
 				end
 
@@ -990,7 +987,7 @@ return function()
 				function ChildComponent:didMount()
 					childCoroutine = coroutine.create(function()
 						self:setState({
-							firstTime = false
+							firstTime = false,
 						})
 					end)
 				end
@@ -999,7 +996,7 @@ return function()
 
 				function ParentComponent:init()
 					self:setState({
-						count = 1
+						count = 1,
 					})
 
 					self.childAdded = function()
@@ -1014,8 +1011,8 @@ return function()
 						[Event.ChildAdded] = self.childAdded,
 					}, {
 						ChildComponent = createElement(ChildComponent, {
-							count = self.state.count
-						})
+							count = self.state.count,
+						}),
 					})
 				end
 
@@ -1059,7 +1056,7 @@ return function()
 
 				function ChildComponent:init()
 					self:setState({
-						firstTime = true
+						firstTime = true,
 					})
 				end
 
@@ -1071,14 +1068,14 @@ return function()
 					end
 
 					return createElement(LowestComponent, {
-						onDidMountCallback = self.props.onDidMountCallback
+						onDidMountCallback = self.props.onDidMountCallback,
 					})
 				end
 
 				function ChildComponent:didMount()
 					childCoroutine = coroutine.create(function()
 						self:setState({
-							firstTime = false
+							firstTime = false,
 						})
 					end)
 				end
@@ -1089,7 +1086,7 @@ return function()
 
 				function ParentComponent:init()
 					self:setState({
-						count = 1
+						count = 1,
 					})
 
 					self.onDidMountCallback = function()
@@ -1103,13 +1100,11 @@ return function()
 				end
 
 				function ParentComponent:render()
-					return createElement("Frame", {
-
-					}, {
+					return createElement("Frame", {}, {
 						ChildComponent = createElement(ChildComponent, {
 							count = self.state.count,
 							onDidMountCallback = self.onDidMountCallback,
-						})
+						}),
 					})
 				end
 
@@ -1189,7 +1184,7 @@ return function()
 					addInit(tostring(self))
 
 					self:setState({
-						firstTime = true
+						firstTime = true,
 					})
 				end
 
@@ -1201,14 +1196,14 @@ return function()
 					end
 
 					return createElement(LowestComponent, {
-						onDidMountCallback = self.props.onDidMountCallback
+						onDidMountCallback = self.props.onDidMountCallback,
 					})
 				end
 
 				function ChildComponent:didMount()
 					childCoroutine = coroutine.create(function()
 						self:setState({
-							firstTime = false
+							firstTime = false,
 						})
 					end)
 				end
@@ -1223,7 +1218,7 @@ return function()
 
 				function ParentComponent:init()
 					self:setState({
-						count = 1
+						count = 1,
 					})
 
 					self.onDidMountCallback = function()
@@ -1237,13 +1232,11 @@ return function()
 				end
 
 				function ParentComponent:render()
-					return createElement("Frame", {
-
-					}, {
+					return createElement("Frame", {}, {
 						ChildComponent = createElement(ChildComponent, {
 							count = self.state.count,
 							onDidMountCallback = self.onDidMountCallback,
-						})
+						}),
 					})
 				end
 
@@ -1286,7 +1279,7 @@ return function()
 					return createElement("Frame")
 				end
 
-				function LowestComponent:didUpdate(prevProps, prevState)
+				function LowestComponent:didUpdate(prevProps, _prevState)
 					if prevProps.firstTime and not self.props.firstTime then
 						self.props.onChangedCallback()
 					end
@@ -1296,7 +1289,7 @@ return function()
 
 				function ChildComponent:init()
 					self:setState({
-						firstTime = true
+						firstTime = true,
 					})
 				end
 
@@ -1305,14 +1298,14 @@ return function()
 				function ChildComponent:render()
 					return createElement(LowestComponent, {
 						firstTime = self.state.firstTime,
-						onChangedCallback = self.props.onChangedCallback
+						onChangedCallback = self.props.onChangedCallback,
 					})
 				end
 
 				function ChildComponent:didMount()
 					childCoroutine = coroutine.create(function()
 						self:setState({
-							firstTime = false
+							firstTime = false,
 						})
 					end)
 				end
@@ -1323,7 +1316,7 @@ return function()
 
 				function ParentComponent:init()
 					self:setState({
-						count = 1
+						count = 1,
 					})
 
 					self.onChangedCallback = function()
@@ -1337,13 +1330,11 @@ return function()
 				end
 
 				function ParentComponent:render()
-					return createElement("Frame", {
-
-					}, {
+					return createElement("Frame", {}, {
 						ChildComponent = createElement(ChildComponent, {
 							count = self.state.count,
 							onChangedCallback = self.onChangedCallback,
-						})
+						}),
 					})
 				end
 

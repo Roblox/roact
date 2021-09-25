@@ -199,7 +199,7 @@ return function()
 			local binding1, update1 = Binding.create(1)
 			local binding2, update2 = Binding.create(2)
 
-			local joined = Binding.join({binding1, binding2})
+			local joined = Binding.join({ binding1, binding2 })
 
 			local spy = createSpy()
 			local disconnect = Binding.subscribe(joined, spy.value)

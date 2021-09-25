@@ -1,3 +1,4 @@
+--~strict
 --[[
 	Packages up the internals of Roact and exposes a public API for it.
 ]]
@@ -12,7 +13,7 @@ local Binding = require(script.Binding)
 local robloxReconciler = createReconciler(RobloxRenderer)
 local reconcilerCompat = createReconcilerCompat(robloxReconciler)
 
-local Roact = strict {
+local Roact = strict({
 	Component = require(script.Component),
 	createElement = require(script.createElement),
 	createFragment = require(script.createFragment),
@@ -42,8 +43,7 @@ local Roact = strict {
 	setGlobalConfig = GlobalConfig.set,
 
 	-- APIs that may change in the future without warning
-	UNSTABLE = {
-	},
-}
+	UNSTABLE = {},
+})
 
 return Roact

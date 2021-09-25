@@ -100,21 +100,21 @@ function Component:setState(mapState)
 	local lifecyclePhase = internalData.lifecyclePhase
 
 	--[[
-		When preparing to update, rendering, or unmounting, it is not safe
+		When preparing to update, render, or unmount, it is not safe
 		to call `setState` as it will interfere with in-flight updates. It's
 		also disallowed during unmounting
 	]]
-	if
-		lifecyclePhase == ComponentLifecyclePhase.ShouldUpdate
-		or lifecyclePhase == ComponentLifecyclePhase.WillUpdate
-		or lifecyclePhase == ComponentLifecyclePhase.Render
-		or lifecyclePhase == ComponentLifecyclePhase.WillUnmount
+	if lifecyclePhase == ComponentLifecyclePhase.ShouldUpdate or
+		lifecyclePhase == ComponentLifecyclePhase.WillUpdate or
+		lifecyclePhase == ComponentLifecyclePhase.Render
 	then
 		local messageTemplate = invalidSetStateMessages[internalData.lifecyclePhase]
 
 		local message = messageTemplate:format(tostring(internalData.componentClass))
-
 		error(message, 2)
+	elseif lifecyclePhase == ComponentLifecyclePhase.WillUnmount then
+		-- Should not print error message. See React #22114
+		return
 	end
 
 	local pendingState = internalData.pendingState
@@ -144,10 +144,10 @@ function Component:setState(mapState)
 		-- If `setState` is called in `init`, we can skip triggering an update!
 		local derivedState = self:__getDerivedState(self.props, newState)
 		self.state = assign(newState, derivedState)
-	elseif
-		lifecyclePhase == ComponentLifecyclePhase.DidMount
-		or lifecyclePhase == ComponentLifecyclePhase.DidUpdate
-		or lifecyclePhase == ComponentLifecyclePhase.ReconcileChildren
+
+	elseif lifecyclePhase == ComponentLifecyclePhase.DidMount or
+		lifecyclePhase == ComponentLifecyclePhase.DidUpdate or
+		lifecyclePhase == ComponentLifecyclePhase.ReconcileChildren
 	then
 		--[[
 			During certain phases of the component lifecycle, it's acceptable to
@@ -156,6 +156,7 @@ function Component:setState(mapState)
 		]]
 		local derivedState = self:__getDerivedState(self.props, newState)
 		internalData.pendingState = assign(newState, derivedState)
+
 	elseif lifecyclePhase == ComponentLifecyclePhase.Idle then
 		-- Outside of our lifecycle, the state update is safe to make immediately
 		self:__update(nil, newState)
@@ -188,7 +189,9 @@ end
 function Component:render()
 	local internalData = self[InternalData]
 
-	local message = componentMissingRenderMessage:format(tostring(internalData.componentClass))
+	local message = componentMissingRenderMessage:format(
+		tostring(internalData.componentClass)
+	)
 
 	error(message, 0)
 end
@@ -252,26 +255,21 @@ function Component:__validateProps(props)
 	end
 
 	if typeof(validator) ~= "function" then
-		error(
-			("validateProps must be a function, but it is a %s.\nCheck the definition of the component %q."):format(
-				typeof(validator),
-				self.__componentName
-			)
-		)
+		error(("validateProps must be a function, but it is a %s.\nCheck the definition of the component %q."):format(
+			typeof(validator),
+			self.__componentName
+		))
 	end
 
 	local success, failureReason = validator(props)
 
 	if not success then
 		failureReason = failureReason or "<Validator function did not supply a message>"
-		error(
-			("Property validation failed in %s: %s\n\n%s"):format(
-				self.__componentName,
-				tostring(failureReason),
-				self:getElementTraceback() or "<enable element tracebacks>"
-			),
-			0
-		)
+		error(("Property validation failed in %s: %s\n\n%s"):format(
+			self.__componentName,
+			tostring(failureReason),
+			self:getElementTraceback() or "<enable element tracebacks>"),
+		0)
 	end
 end
 

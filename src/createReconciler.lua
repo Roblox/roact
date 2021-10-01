@@ -46,14 +46,10 @@ local function createReconciler(renderer)
 		local context = virtualNode.originalContext or virtualNode.context
 		local parentLegacyContext = virtualNode.parentLegacyContext
 
-		if config.tempFixUpdateChildrenReEntrancy then
-			-- If updating this node has caused a component higher up the tree to re-render
-			-- and updateChildren to be re-entered then this node could already have been
-			-- unmounted in the previous updateChildren pass.
-			if not virtualNode.wasUnmounted then
-				unmountVirtualNode(virtualNode)
-			end
-		else
+		-- If updating this node has caused a component higher up the tree to re-render
+		-- and updateChildren to be re-entered then this node could already have been
+		-- unmounted in the previous updateChildren pass.
+		if not virtualNode.wasUnmounted then
 			unmountVirtualNode(virtualNode)
 		end
 		local newNode = mountVirtualNode(newElement, hostParent, hostKey, context, parentLegacyContext)
@@ -90,13 +86,11 @@ local function createReconciler(renderer)
 			-- If updating this node has caused a component higher up the tree to re-render
 			-- and updateChildren to be re-entered for this virtualNode then
 			-- this result is invalid and needs to be disgarded.
-			if config.tempFixUpdateChildrenReEntrancy then
-				if virtualNode.updateChildrenCount ~= currentUpdateChildrenCount then
-					if newNode and newNode ~= virtualNode.children[childKey] then
-						unmountVirtualNode(newNode)
-					end
-					return
+			if virtualNode.updateChildrenCount ~= currentUpdateChildrenCount then
+				if newNode and newNode ~= virtualNode.children[childKey] then
+					unmountVirtualNode(newNode)
 				end
+				return
 			end
 
 			if newNode ~= nil then
@@ -129,13 +123,11 @@ local function createReconciler(renderer)
 				-- If updating this node has caused a component higher up the tree to re-render
 				-- and updateChildren to be re-entered for this virtualNode then
 				-- this result is invalid and needs to be discarded.
-				if config.tempFixUpdateChildrenReEntrancy then
-					if virtualNode.updateChildrenCount ~= currentUpdateChildrenCount then
-						if childNode then
-							unmountVirtualNode(childNode)
-						end
-						return
+				if virtualNode.updateChildrenCount ~= currentUpdateChildrenCount then
+					if childNode then
+						unmountVirtualNode(childNode)
 					end
+					return
 				end
 
 				-- mountVirtualNode can return nil if the element is a boolean

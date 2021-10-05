@@ -1,6 +1,7 @@
 # Roact Changelog
 
 ## Unreleased Changes
+* Fixed issue where component's state would not be updated when calling `:setState({})` if the component's `shouldUpdate` returned false. ([#233](https://github.com/Roblox/roact/issues/233))
 
 ## [1.4.4](https://github.com/Roblox/roact/releases/tag/v1.4.4) (June 13th, 2022)
 * Added Luau analysis to the repository ([#372](https://github.com/Roblox/roact/pull/372))

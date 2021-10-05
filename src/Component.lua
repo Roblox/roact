@@ -481,6 +481,8 @@ function Component:__resolveUpdate(incomingProps, incomingState)
 
 		if not continueWithUpdate then
 			internalData.lifecyclePhase = ComponentLifecyclePhase.Idle
+			self.props = incomingProps
+			self.state = incomingState
 			return false
 		end
 	end

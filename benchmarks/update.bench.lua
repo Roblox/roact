@@ -14,8 +14,11 @@ return {
 		Roact.unmount(tree)
 	end,
 	step = function(i)
-		Roact.update(tree, Roact.createElement("StringValue", {
-			Value = tostring(i),
-		}))
+		Roact.update(
+			tree,
+			Roact.createElement("StringValue", {
+				Value = tostring(i),
+			})
+		)
 	end,
 }

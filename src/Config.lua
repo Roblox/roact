@@ -22,10 +22,6 @@ local defaultConfig = {
 	["elementTracing"] = false,
 	-- Enables validation of component props in stateful components.
 	["propValidation"] = false,
-
-	-- Temporary config for enabling a bug fix for processing events based on updates to child instances
-	-- outside of the standard lifecycle.
-	["tempFixUpdateChildrenReEntrancy"] = false,
 }
 
 -- Build a list of valid configuration values up for debug messages.
@@ -41,15 +37,13 @@ function Config.new()
 
 	self._currentConfig = setmetatable({}, {
 		__index = function(_, key)
-			local message = (
-				"Invalid global configuration key %q. Valid configuration keys are: %s"
-			):format(
+			local message = ("Invalid global configuration key %q. Valid configuration keys are: %s"):format(
 				tostring(key),
 				table.concat(defaultConfigKeys, ", ")
 			)
 
 			error(message, 3)
-		end
+		end,
 	})
 
 	-- We manually bind these methods here so that the Config's methods can be
@@ -77,9 +71,7 @@ function Config:set(configValues)
 	-- We only want to apply this configuration if it's valid!
 	for key, value in pairs(configValues) do
 		if defaultConfig[key] == nil then
-			local message = (
-				"Invalid global configuration key %q (type %s). Valid configuration keys are: %s"
-			):format(
+			local message = ("Invalid global configuration key %q (type %s). Valid configuration keys are: %s"):format(
 				tostring(key),
 				typeof(key),
 				table.concat(defaultConfigKeys, ", ")
@@ -92,11 +84,7 @@ function Config:set(configValues)
 		if typeof(value) ~= "boolean" then
 			local message = (
 				"Invalid value %q (type %s) for global configuration key %q. Valid values are: true, false"
-			):format(
-				tostring(value),
-				typeof(value),
-				tostring(key)
-			)
+			):format(tostring(value), typeof(value), tostring(key))
 
 			error(message, 3)
 		end

@@ -8,10 +8,7 @@
 
 local function deepEqual(a, b)
 	if typeof(a) ~= typeof(b) then
-		local message = ("{1} is of type %s, but {2} is of type %s"):format(
-			typeof(a),
-			typeof(b)
-		)
+		local message = ("{1} is of type %s, but {2} is of type %s"):format(typeof(a), typeof(b))
 		return false, message
 	end
 
@@ -60,9 +57,7 @@ local function assertDeepEqual(a, b)
 	local success, innerMessageTemplate = deepEqual(a, b)
 
 	if not success then
-		local innerMessage = innerMessageTemplate
-			:gsub("{1}", "first")
-			:gsub("{2}", "second")
+		local innerMessage = innerMessageTemplate:gsub("{1}", "first"):gsub("{2}", "second")
 
 		local message = ("Values were not deep-equal.\n%s"):format(innerMessage)
 

@@ -11,8 +11,7 @@ local function findBenchmarkModules(root, moduleList)
 	end
 end
 
-local function noop()
-end
+local function noop() end
 
 local emptyTimes = {}
 local function getEmptyTime(iterations)
@@ -42,11 +41,7 @@ table.sort(benchmarkModules, function(a, b)
 	return a.Name < b.Name
 end)
 
-local startMessage = (
-	"Starting %d benchmarks..."
-):format(
-	#benchmarkModules
-)
+local startMessage = ("Starting %d benchmarks..."):format(#benchmarkModules)
 print(startMessage)
 print()
 
@@ -70,9 +65,7 @@ for _, module in ipairs(benchmarkModules) do
 
 	local totalTime = (endTime - startTime) - getEmptyTime(benchmark.iterations)
 
-	local message = (
-		"Benchmark %s:\n\t(%d iterations) took %f s (%f ns/iteration)"
-	):format(
+	local message = ("Benchmark %s:\n\t(%d iterations) took %f s (%f ns/iteration)"):format(
 		module.Name,
 		benchmark.iterations,
 		totalTime,

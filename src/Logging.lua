@@ -48,7 +48,7 @@ local logInfoMetatable = {}
 	more easily.
 ]]
 function logInfoMetatable:__tostring()
-	local outputBuffer = {"LogInfo {"}
+	local outputBuffer = { "LogInfo {" }
 
 	local errorCount = #self.errors
 	local warningCount = #self.warnings

@@ -3,5 +3,5 @@ name = "Roact"
 author = "Roblox"
 license = "Apache-2.0"
 content_root = "src"
-version = "1.4.2"
+version = "1.4.3"
 files = ["*", "!*.spec.lua"]

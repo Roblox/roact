@@ -2,6 +2,8 @@
 
 ## Unreleased Changes
 * Removed the warning for `setState` on unmounted components ([#323](https://github.com/Roblox/roact/pull/323)).
+
+## [1.4.2](https://github.com/Roblox/roact/releases/tag/v1.4.2) (October 6th, 2021)
 * Fixed forwardRef doc code referencing React instead of Roact ([#310](https://github.com/Roblox/roact/pull/310)).
 * Fixed `Listeners can only be disconnected once` from context consumers. ([#320](https://github.com/Roblox/roact/pull/320))
 

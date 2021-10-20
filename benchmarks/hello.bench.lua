@@ -1,4 +1,5 @@
-local Roact = require(script.Parent.Parent.Roact)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Roact = require(ReplicatedStorage.Roact)
 
 return {
 	iterations = 100000,

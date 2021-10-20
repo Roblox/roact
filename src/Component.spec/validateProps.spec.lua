@@ -105,11 +105,11 @@ return function()
 			noopReconciler.mountVirtualNode(element, hostParent, key)
 			expect(validatePropsSpy.callCount).to.equal(1)
 			validatePropsSpy:assertCalledWithDeepEqual({
-				a = 1
+				a = 1,
 			})
 
 			setStateCallback({
-				b = 1
+				b = 1,
 			})
 
 			expect(validatePropsSpy.callCount).to.equal(1)
@@ -161,6 +161,35 @@ return function()
 			expect(function()
 				noopReconciler.mountVirtualNode(element, hostParent, key)
 			end).to.throw()
+		end)
+	end)
+
+	it("should include the component name in the error message", function()
+		local config = {
+			propValidation = true,
+		}
+
+		GlobalConfig.scoped(config, function()
+			local MyComponent = Component:extend("MyComponent")
+			MyComponent.validateProps = function()
+				return false
+			end
+
+			function MyComponent:render()
+				return nil
+			end
+
+			local element = createElement(MyComponent)
+			local hostParent = nil
+			local key = "Test"
+
+			local success, error = pcall(function()
+				noopReconciler.mountVirtualNode(element, hostParent, key)
+			end)
+
+			expect(success).to.equal(false)
+			local startIndex = error:find("MyComponent")
+			expect(startIndex).to.be.ok()
 		end)
 	end)
 

@@ -1,14 +1,8 @@
 <h1 align="center">Roact</h1>
 <div align="center">
-	<a href="https://travis-ci.org/Roblox/roact">
-		<img src="https://api.travis-ci.org/Roblox/roact.svg?branch=master" alt="Travis-CI Build Status" />
-	</a>
-	<a href="https://coveralls.io/github/Roblox/roact?branch=master">
-		<img src="https://coveralls.io/repos/github/Roblox/roact/badge.svg?branch=master" alt="Coveralls Coverage" />
-	</a>
-	<a href="https://roblox.github.io/roact">
-		<img src="https://img.shields.io/badge/docs-website-green.svg" alt="Documentation" />
-	</a>
+	<a href="https://github.com/Roblox/roact/actions"><img src="https://github.com/Roblox/roact/workflows/CI/badge.svg" alt="GitHub Actions Build Status" /></a>
+	<a href="https://coveralls.io/github/Roblox/roact?branch=master"><img src="https://coveralls.io/repos/github/Roblox/roact/badge.svg?branch=master" alt="Coveralls Coverage" /></a>
+	<a href="https://roblox.github.io/roact"><img src="https://img.shields.io/badge/docs-website-green.svg" alt="Documentation" /></a>
 </div>
 
 <div align="center">
@@ -28,7 +22,7 @@
 * Rename the folder to `Roact`
 * Use a plugin like [Rojo](https://github.com/LPGhatguy/rojo) to sync the files into a place
 
-## Usage
+## [Documentation](https://roblox.github.io/roact)
 For a detailed guide and examples, check out [the official Roact documentation](https://roblox.github.io/roact).
 
 ```lua

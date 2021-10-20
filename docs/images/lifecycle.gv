@@ -25,7 +25,7 @@ digraph G {
 		<br /><br />
 		<font face="monospace">Roact.update</font>
 	>];
-	update -> shouldUpdate -> getDerivedStateFromProps -> willUpdate -> render -> updated -> didUpdate;
+	update -> getDerivedStateFromProps -> shouldUpdate -> willUpdate -> render -> updated -> didUpdate;
 
 	unmounted [style="rounded", color="#000000", label=<<i>Instances Destroyed</i>>];
 	unmount [style="rounded", color="#000000", label=<

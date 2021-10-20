@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - master
+
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - uses: leafo/gh-actions-lua@v8
+      with:
+        luaVersion: "5.1"
+
+    - uses: leafo/gh-actions-luarocks@v4
+
+    - name: get foreman and run foreman install
+      uses: rojo-rbx/setup-foreman@v1
+      with:
+        version: "^1.0.1"
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    # useful for debugging differences between CI and local environment
+    - name: check versions
+      shell: bash
+      run: |
+        foreman list
+
+    - name: use rojo to build project
+      shell: bash
+      run: rojo build default.project.json --output model.rbxmx
+
+    - name: Linting and Style Checking
+      shell: bash
+      run: |
+        selene src benchmarks examples
+        stylua -c src benchmarks examples
+
+    - name: Install dependencies
+      run: |
+        luarocks install luafilesystem
+        luarocks install luacov
+        luarocks install luacov-reporter-lcov
+
+    - name: Test
+      run: |
+        lua -lluacov bin/spec.lua
+        luacov -r lcov
+
+    - name: Report to Coveralls
+      uses: coverallsapp/github-action@v1.1.2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: luacov.report.out

@@ -9,30 +9,26 @@
 local assertDeepEqual = require(script.Parent.assertDeepEqual)
 
 local function createSpy(inner)
-	local self = {
-		callCount = 0,
-		values = {},
-		valuesLength = 0,
-	}
-
+	local self = {}
+	self.callCount = 0
+	self.values = {}
+	self.valuesLength = 0
 	self.value = function(...)
 		self.callCount = self.callCount + 1
-		self.values = {...}
+		self.values = { ... }
 		self.valuesLength = select("#", ...)
 
 		if inner ~= nil then
 			return inner(...)
 		end
+		return nil
 	end
 
 	self.assertCalledWith = function(_, ...)
 		local len = select("#", ...)
 
 		if self.valuesLength ~= len then
-			error(("Expected %d arguments, but was called with %d arguments"):format(
-				self.valuesLength,
-				len
-			), 2)
+			error(("Expected %d arguments, but was called with %d arguments"):format(self.valuesLength, len), 2)
 		end
 
 		for i = 1, len do
@@ -46,10 +42,7 @@ local function createSpy(inner)
 		local len = select("#", ...)
 
 		if self.valuesLength ~= len then
-			error(("Expected %d arguments, but was called with %d arguments"):format(
-				self.valuesLength,
-				len
-			), 2)
+			error(("Expected %d arguments, but was called with %d arguments"):format(self.valuesLength, len), 2)
 		end
 
 		for i = 1, len do

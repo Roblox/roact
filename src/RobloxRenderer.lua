@@ -44,9 +44,7 @@ local function applyRef(ref, newHostObject)
 		Binding.update(ref, newHostObject)
 	else
 		-- TODO (#197): Better error message
-		error(("Invalid ref: Expected type Binding but got %s"):format(
-			typeof(ref)
-		))
+		error(("Invalid ref: Expected type Binding but got %s"):format(typeof(ref)))
 	end
 end
 
@@ -270,7 +268,7 @@ function RobloxRenderer.updateHostNode(reconciler, virtualNode, newElement)
 	end
 
 	local children = newElement.props[Children]
-	if children ~= nil then
+	if children ~= nil or oldProps[Children] ~= nil then
 		reconciler.updateVirtualNodeWithChildren(virtualNode, virtualNode.hostObject, children)
 	end
 

@@ -22,7 +22,6 @@ end
 
 addType("Binding")
 addType("Element")
-addType("Fragment")
 addType("HostChangeEvent")
 addType("HostEvent")
 addType("StatefulComponentClass")

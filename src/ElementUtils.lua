@@ -40,10 +40,6 @@ ElementUtils.UseParentKey = Symbol.named("UseParentKey")
 function ElementUtils.iterateElements(elementOrElements)
 	local richType = Type.of(elementOrElements)
 
-	if richType == Type.Fragment then
-		return pairs(elementOrElements.elements)
-	end
-
 	-- Single child
 	if richType == Type.Element then
 		local called = false
@@ -91,10 +87,6 @@ function ElementUtils.getElementByKey(elements, hostKey)
 		end
 
 		return nil
-	end
-
-	if Type.of(elements) == Type.Fragment then
-		return elements.elements[hostKey]
 	end
 
 	if typeof(elements) == "table" then

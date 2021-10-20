@@ -104,10 +104,11 @@ function Component:setState(mapState)
 		to call `setState` as it will interfere with in-flight updates. It's
 		also disallowed during unmounting
 	]]
-	if lifecyclePhase == ComponentLifecyclePhase.ShouldUpdate or
-		lifecyclePhase == ComponentLifecyclePhase.WillUpdate or
-		lifecyclePhase == ComponentLifecyclePhase.Render or
-		lifecyclePhase == ComponentLifecyclePhase.WillUnmount
+	if
+		lifecyclePhase == ComponentLifecyclePhase.ShouldUpdate
+		or lifecyclePhase == ComponentLifecyclePhase.WillUpdate
+		or lifecyclePhase == ComponentLifecyclePhase.Render
+		or lifecyclePhase == ComponentLifecyclePhase.WillUnmount
 	then
 		local messageTemplate = invalidSetStateMessages[internalData.lifecyclePhase]
 
@@ -143,10 +144,10 @@ function Component:setState(mapState)
 		-- If `setState` is called in `init`, we can skip triggering an update!
 		local derivedState = self:__getDerivedState(self.props, newState)
 		self.state = assign(newState, derivedState)
-
-	elseif lifecyclePhase == ComponentLifecyclePhase.DidMount or
-		lifecyclePhase == ComponentLifecyclePhase.DidUpdate or
-		lifecyclePhase == ComponentLifecyclePhase.ReconcileChildren
+	elseif
+		lifecyclePhase == ComponentLifecyclePhase.DidMount
+		or lifecyclePhase == ComponentLifecyclePhase.DidUpdate
+		or lifecyclePhase == ComponentLifecyclePhase.ReconcileChildren
 	then
 		--[[
 			During certain phases of the component lifecycle, it's acceptable to
@@ -155,11 +156,9 @@ function Component:setState(mapState)
 		]]
 		local derivedState = self:__getDerivedState(self.props, newState)
 		internalData.pendingState = assign(newState, derivedState)
-
 	elseif lifecyclePhase == ComponentLifecyclePhase.Idle then
 		-- Outside of our lifecycle, the state update is safe to make immediately
 		self:__update(nil, newState)
-
 	else
 		local messageTemplate = invalidSetStateMessages.default
 
@@ -189,11 +188,49 @@ end
 function Component:render()
 	local internalData = self[InternalData]
 
-	local message = componentMissingRenderMessage:format(
-		tostring(internalData.componentClass)
-	)
+	local message = componentMissingRenderMessage:format(tostring(internalData.componentClass))
 
 	error(message, 0)
+end
+
+--[[
+	Retrieves the context value corresponding to the given key. Can return nil
+	if a requested context key is not present
+]]
+function Component:__getContext(key)
+	if config.internalTypeChecks then
+		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__getContext`")
+		internalAssert(key ~= nil, "Context key cannot be nil")
+	end
+
+	local virtualNode = self[InternalData].virtualNode
+	local context = virtualNode.context
+
+	return context[key]
+end
+
+--[[
+	Adds a new context entry to this component's context table (which will be
+	passed down to child components).
+]]
+function Component:__addContext(key, value)
+	if config.internalTypeChecks then
+		internalAssert(Type.of(self) == Type.StatefulComponentInstance, "Invalid use of `__addContext`")
+	end
+	local virtualNode = self[InternalData].virtualNode
+
+	-- Make sure we store a reference to the component's original, unmodified
+	-- context the virtual node. In the reconciler, we'll restore the original
+	-- context if we need to replace the node (this happens when a node gets
+	-- re-rendered as a different component)
+	if virtualNode.originalContext == nil then
+		virtualNode.originalContext = virtualNode.context
+	end
+
+	-- Build a new context table on top of the existing one, then apply it to
+	-- our virtualNode
+	local existing = virtualNode.context
+	virtualNode.context = assign({}, existing, { [key] = value })
 end
 
 --[[
@@ -215,20 +252,26 @@ function Component:__validateProps(props)
 	end
 
 	if typeof(validator) ~= "function" then
-		error(("validateProps must be a function, but it is a %s.\nCheck the definition of the component %q."):format(
-			typeof(validator),
-			self.__componentName
-		))
+		error(
+			("validateProps must be a function, but it is a %s.\nCheck the definition of the component %q."):format(
+				typeof(validator),
+				self.__componentName
+			)
+		)
 	end
 
 	local success, failureReason = validator(props)
 
 	if not success then
 		failureReason = failureReason or "<Validator function did not supply a message>"
-		error(("Property validation failed: %s\n\n%s"):format(
-			tostring(failureReason),
-			self:getElementTraceback() or "<enable element tracebacks>"),
-		0)
+		error(
+			("Property validation failed in %s: %s\n\n%s"):format(
+				self.__componentName,
+				tostring(failureReason),
+				self:getElementTraceback() or "<enable element tracebacks>"
+			),
+			0
+		)
 	end
 end
 
@@ -273,17 +316,18 @@ function Component:__mount(reconciler, virtualNode)
 
 	instance.props = props
 
-	local newContext = assign({}, virtualNode.context)
+	local newContext = assign({}, virtualNode.legacyContext)
 	instance._context = newContext
 
 	instance.state = assign({}, instance:__getDerivedState(instance.props, {}))
 
 	if instance.init ~= nil then
 		instance:init(instance.props)
+		assign(instance.state, instance:__getDerivedState(instance.props, instance.state))
 	end
 
 	-- It's possible for init() to redefine _context!
-	virtualNode.context = instance._context
+	virtualNode.legacyContext = instance._context
 
 	internalData.lifecyclePhase = ComponentLifecyclePhase.Render
 	local renderResult = instance:render()

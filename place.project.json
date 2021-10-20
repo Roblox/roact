@@ -11,7 +11,7 @@
       },
 
       "TestEZ": {
-        "$path": "modules/testez/lib"
+        "$path": "modules/testez"
       }
     },
 
@@ -30,9 +30,6 @@
     "ServerScriptService": {
       "$className": "ServerScriptService",
 
-      "RoactBenchmark": {
-        "$path": "benchmarks"
-      },
       "RoactTests": {
         "$path": "bin/run-tests.server.lua"
       }

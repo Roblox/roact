@@ -1,4 +1,5 @@
-local Roact = require(script.Parent.Parent.Roact)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Roact = require(ReplicatedStorage.Roact)
 
 local tree
 
@@ -13,8 +14,11 @@ return {
 		Roact.unmount(tree)
 	end,
 	step = function(i)
-		Roact.update(tree, Roact.createElement("StringValue", {
-			Value = tostring(i),
-		}))
+		Roact.update(
+			tree,
+			Roact.createElement("StringValue", {
+				Value = tostring(i),
+			})
+		)
 	end,
 }

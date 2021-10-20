@@ -137,6 +137,63 @@ end
 
 Since refs use bindings under the hood, they will be automatically updated whenever the ref changes. This means there's no need to worry about the order in which refs are assigned relative to when properties that use them get set.
 
+### Ref Forwarding
+In Roact 1.x, refs can only be applied to host components, _not_ stateful or function components. However, stateful or function components may accept a ref in order to pass it along to an underlying host component. In order to implement this, we wrap the given component with `Roact.forwardRef`.
+
+Suppose we have a styled TextBox component that still needs to accept a ref, so that users of the component can trigger functionality like `TextBox:CaptureFocus()`:
+
+```lua
+local function FancyTextBox(props)
+	return Roact.createElement("TextBox", {
+		Multiline = true,
+		PlaceholderText = "Enter your text here",
+		PlaceholderColor3 = Color3.new(0.4, 0.4, 0.4),
+		[Roact.Change.Text] = props.onTextChange,
+	})
+end
+```
+
+If we were to create an element using the above component, we'd be unable to get a ref to point to the underlying "TextBox" Instance:
+
+```lua
+local Form = Roact.Component:extend("Form")
+function Form:init()
+	self.textBoxRef = Roact.createRef()
+end
+
+function Form:render()
+	return Roact.createElement(FancyTextBox, {
+		onTextChange = function(value)
+			print("text value updated to:", value)
+		end
+		-- This doesn't actually get assigned to the underlying TextBox!
+		[Roact.Ref] = self.textBoxRef,
+	})
+end
+
+function Form:didMount()
+	-- Since self.textBoxRef never gets assigned to a host component, this
+	-- doesn't work, and in fact will be an attempt to access a nil reference!
+	self.textBoxRef.current:CaptureFocus()
+end
+```
+
+In this instance, `FancyTextBox` simply doesn't do anything with the ref passed into it. However, we can easily update it using forwardRef:
+
+```lua
+local FancyTextBox = Roact.forwardRef(function(props, ref)
+	return Roact.createElement("TextBox", {
+		Multiline = true,
+		PlaceholderText = "Enter your text here",
+		PlaceholderColor3 = Color3.new(0.4, 0.4, 0.4),
+		[Roact.Change.Text] = props.onTextChange,
+		[Roact.Ref] = ref,
+	})
+end)
+```
+
+With the above change, `FancyTextBox` now accepts a ref and assigns it to the "TextBox" host component that it renders under the hood. Our `Form` implementation will successfully capture focus on `didMount`.
+
 ### Function Refs
 The original ref API was based on functions instead of objects (and does not use bindings). Its use is not recommended for most cases anymore.
 

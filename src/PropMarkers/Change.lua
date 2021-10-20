@@ -22,10 +22,10 @@ local changeMetatable = {
 }
 
 setmetatable(Change, {
-	__index = function(self, propertyName)
+	__index = function(_self, propertyName)
 		local changeListener = {
 			[Type] = Type.HostChangeEvent,
-			name = propertyName
+			name = propertyName,
 		}
 
 		setmetatable(changeListener, changeMetatable)

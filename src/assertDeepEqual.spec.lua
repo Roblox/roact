@@ -28,10 +28,10 @@ return function()
 		assertDeepEqual(someFunction, theSameFunction)
 
 		local A = {
-			foo = someFunction
+			foo = someFunction,
 		}
 		local B = {
-			foo = theSameFunction
+			foo = theSameFunction,
 		}
 
 		assertDeepEqual(A, B)
@@ -50,14 +50,14 @@ return function()
 			nested = {
 				foo = 1,
 				bar = 2,
-			}
+			},
 		}
 		local B = {
 			foo = "bar",
 			nested = {
 				foo = 1,
 				bar = 2,
-			}
+			},
 		}
 
 		assertDeepEqual(A, B)
@@ -67,7 +67,7 @@ return function()
 			nested = {
 				foo = 1,
 				bar = 3,
-			}
+			},
 		}
 
 		local success, message = pcall(assertDeepEqual, A, C)
@@ -93,7 +93,11 @@ return function()
 			foo = "bar",
 		}
 
-		expect(function() assertDeepEqual(equalArgsA, nonEqualArgs) end).to.throw()
-		expect(function() assertDeepEqual(nonEqualArgs, equalArgsA) end).to.throw()
+		expect(function()
+			assertDeepEqual(equalArgsA, nonEqualArgs)
+		end).to.throw()
+		expect(function()
+			assertDeepEqual(nonEqualArgs, equalArgsA)
+		end).to.throw()
 	end)
 end

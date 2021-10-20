@@ -1,3 +1,4 @@
+--!nonstrict
 local Type = require(script.Parent.Type)
 local ElementKind = require(script.Parent.ElementKind)
 local ElementUtils = require(script.Parent.ElementUtils)
@@ -31,20 +32,32 @@ local function createReconciler(renderer)
 		Unmount the given virtualNode, replacing it with a new node described by
 		the given element.
 
-		Preserves host properties, depth, and context from parent.
+		Preserves host properties, depth, and legacyContext from parent.
 	]]
 	local function replaceVirtualNode(virtualNode, newElement)
 		local hostParent = virtualNode.hostParent
 		local hostKey = virtualNode.hostKey
 		local depth = virtualNode.depth
-		local parentContext = virtualNode.parentContext
+		local parent = virtualNode.parent
 
-		unmountVirtualNode(virtualNode)
-		local newNode = mountVirtualNode(newElement, hostParent, hostKey, parentContext)
+		-- If the node that is being replaced has modified context, we need to
+		-- use the original *unmodified* context for the new node
+		-- The `originalContext` field will be nil if the context was unchanged
+		local context = virtualNode.originalContext or virtualNode.context
+		local parentLegacyContext = virtualNode.parentLegacyContext
+
+		-- If updating this node has caused a component higher up the tree to re-render
+		-- and updateChildren to be re-entered then this node could already have been
+		-- unmounted in the previous updateChildren pass.
+		if not virtualNode.wasUnmounted then
+			unmountVirtualNode(virtualNode)
+		end
+		local newNode = mountVirtualNode(newElement, hostParent, hostKey, context, parentLegacyContext)
 
 		-- mountVirtualNode can return nil if the element is a boolean
 		if newNode ~= nil then
 			newNode.depth = depth
+			newNode.parent = parent
 		end
 
 		return newNode
@@ -59,12 +72,26 @@ local function createReconciler(renderer)
 			internalAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #1 to be of type VirtualNode")
 		end
 
+		virtualNode.updateChildrenCount = virtualNode.updateChildrenCount + 1
+
+		local currentUpdateChildrenCount = virtualNode.updateChildrenCount
+
 		local removeKeys = {}
 
 		-- Changed or removed children
 		for childKey, childNode in pairs(virtualNode.children) do
 			local newElement = ElementUtils.getElementByKey(newChildElements, childKey)
 			local newNode = updateVirtualNode(childNode, newElement)
+
+			-- If updating this node has caused a component higher up the tree to re-render
+			-- and updateChildren to be re-entered for this virtualNode then
+			-- this result is invalid and needs to be disgarded.
+			if virtualNode.updateChildrenCount ~= currentUpdateChildrenCount then
+				if newNode and newNode ~= virtualNode.children[childKey] then
+					unmountVirtualNode(newNode)
+				end
+				return
+			end
 
 			if newNode ~= nil then
 				virtualNode.children[childKey] = newNode
@@ -85,11 +112,28 @@ local function createReconciler(renderer)
 			end
 
 			if virtualNode.children[childKey] == nil then
-				local childNode = mountVirtualNode(newElement, hostParent, concreteKey, virtualNode.context)
+				local childNode = mountVirtualNode(
+					newElement,
+					hostParent,
+					concreteKey,
+					virtualNode.context,
+					virtualNode.legacyContext
+				)
+
+				-- If updating this node has caused a component higher up the tree to re-render
+				-- and updateChildren to be re-entered for this virtualNode then
+				-- this result is invalid and needs to be discarded.
+				if virtualNode.updateChildrenCount ~= currentUpdateChildrenCount then
+					if childNode then
+						unmountVirtualNode(childNode)
+					end
+					return
+				end
 
 				-- mountVirtualNode can return nil if the element is a boolean
 				if childNode ~= nil then
 					childNode.depth = virtualNode.depth + 1
+					childNode.parent = virtualNode
 					virtualNode.children[childKey] = childNode
 				end
 			end
@@ -101,18 +145,16 @@ local function createReconciler(renderer)
 	end
 
 	local function updateVirtualNodeWithRenderResult(virtualNode, hostParent, renderResult)
-		-- TODO: Consider reordering checks (https://github.com/Roblox/roact/issues/200)
-		if renderResult == nil
-			or typeof(renderResult) == "boolean"
-			or Type.of(renderResult) == Type.Element
-			or Type.of(renderResult) == Type.Fragment
-		then
+		if Type.of(renderResult) == Type.Element or renderResult == nil or typeof(renderResult) == "boolean" then
 			updateChildren(virtualNode, hostParent, renderResult)
 		else
-			error(("%s\n%s"):format(
-				"Component returned invalid children:",
-				virtualNode.currentElement.source or "<enable element tracebacks>"
-			), 0)
+			error(
+				("%s\n%s"):format(
+					"Component returned invalid children:",
+					virtualNode.currentElement.source or "<enable element tracebacks>"
+				),
+				0
+			)
 		end
 	end
 
@@ -124,8 +166,11 @@ local function createReconciler(renderer)
 			internalAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #1 to be of type VirtualNode")
 		end
 
+		virtualNode.wasUnmounted = true
+
 		local kind = ElementKind.of(virtualNode.currentElement)
 
+		-- selene: allow(if_same_then_else)
 		if kind == ElementKind.Host then
 			renderer.unmountHostNode(reconciler, virtualNode)
 		elseif kind == ElementKind.Function then
@@ -138,8 +183,12 @@ local function createReconciler(renderer)
 			for _, childNode in pairs(virtualNode.children) do
 				unmountVirtualNode(childNode)
 			end
+		elseif kind == ElementKind.Fragment then
+			for _, childNode in pairs(virtualNode.children) do
+				unmountVirtualNode(childNode)
+			end
 		else
-			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
+			error(("Unknown ElementKind %q"):format(tostring(kind)), 2)
 		end
 	end
 
@@ -166,6 +215,12 @@ local function createReconciler(renderer)
 		local children = newElement.props[Children]
 
 		updateVirtualNodeWithChildren(virtualNode, targetHostParent, children)
+
+		return virtualNode
+	end
+
+	local function updateFragmentVirtualNode(virtualNode, newElement)
+		updateVirtualNodeWithChildren(virtualNode, virtualNode.hostParent, newElement.elements)
 
 		return virtualNode
 	end
@@ -219,8 +274,10 @@ local function createReconciler(renderer)
 			shouldContinueUpdate = virtualNode.instance:__update(newElement, newState)
 		elseif kind == ElementKind.Portal then
 			virtualNode = updatePortalVirtualNode(virtualNode, newElement)
+		elseif kind == ElementKind.Fragment then
+			virtualNode = updateFragmentVirtualNode(virtualNode, newElement)
 		else
-			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
+			error(("Unknown ElementKind %q"):format(tostring(kind)), 2)
 		end
 
 		-- Stateful components can abort updates via shouldUpdate. If that
@@ -237,10 +294,17 @@ local function createReconciler(renderer)
 	--[[
 		Constructs a new virtual node but not does mount it.
 	]]
-	local function createVirtualNode(element, hostParent, hostKey, context)
+	local function createVirtualNode(element, hostParent, hostKey, context, legacyContext)
 		if config.internalTypeChecks then
-			internalAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
+			internalAssert(
+				renderer.isHostObject(hostParent) or hostParent == nil,
+				"Expected arg #2 to be a host object"
+			)
 			internalAssert(typeof(context) == "table" or context == nil, "Expected arg #4 to be of type table or nil")
+			internalAssert(
+				typeof(legacyContext) == "table" or legacyContext == nil,
+				"Expected arg #5 to be of type table or nil"
+			)
 		end
 		if config.typeChecks then
 			assert(hostKey ~= nil, "Expected arg #3 to be non-nil")
@@ -254,13 +318,27 @@ local function createReconciler(renderer)
 			[Type] = Type.VirtualNode,
 			currentElement = element,
 			depth = 1,
+			parent = nil,
 			children = {},
 			hostParent = hostParent,
 			hostKey = hostKey,
-			context = context,
-			-- This copy of context is useful if the element gets replaced
-			-- with an element of a different component type
-			parentContext = context,
+			updateChildrenCount = 0,
+			wasUnmounted = false,
+
+			-- Legacy Context API
+			-- A table of context values inherited from the parent node
+			legacyContext = legacyContext,
+
+			-- A saved copy of the parent context, used when replacing a node
+			parentLegacyContext = legacyContext,
+
+			-- Context API
+			-- A table of context values inherited from the parent node
+			context = context or {},
+
+			-- A saved copy of the unmodified context; this will be updated when
+			-- a component adds new context and used when a node is replaced
+			originalContext = nil,
 		}
 	end
 
@@ -283,14 +361,27 @@ local function createReconciler(renderer)
 		updateVirtualNodeWithChildren(virtualNode, targetHostParent, children)
 	end
 
+	local function mountFragmentVirtualNode(virtualNode)
+		local element = virtualNode.currentElement
+		local children = element.elements
+
+		updateVirtualNodeWithChildren(virtualNode, virtualNode.hostParent, children)
+	end
+
 	--[[
 		Constructs a new virtual node and mounts it, but does not place it into
 		the tree.
 	]]
-	function mountVirtualNode(element, hostParent, hostKey, context)
+	function mountVirtualNode(element, hostParent, hostKey, context, legacyContext)
 		if config.internalTypeChecks then
-			internalAssert(renderer.isHostObject(hostParent) or hostParent == nil, "Expected arg #2 to be a host object")
-			internalAssert(typeof(context) == "table" or context == nil, "Expected arg #4 to be of type table or nil")
+			internalAssert(
+				renderer.isHostObject(hostParent) or hostParent == nil,
+				"Expected arg #2 to be a host object"
+			)
+			internalAssert(
+				typeof(legacyContext) == "table" or legacyContext == nil,
+				"Expected arg #5 to be of type table or nil"
+			)
 		end
 		if config.typeChecks then
 			assert(hostKey ~= nil, "Expected arg #3 to be non-nil")
@@ -307,7 +398,7 @@ local function createReconciler(renderer)
 
 		local kind = ElementKind.of(element)
 
-		local virtualNode = createVirtualNode(element, hostParent, hostKey, context)
+		local virtualNode = createVirtualNode(element, hostParent, hostKey, context, legacyContext)
 
 		if kind == ElementKind.Host then
 			renderer.mountHostNode(reconciler, virtualNode)
@@ -317,8 +408,10 @@ local function createReconciler(renderer)
 			element.component:__mount(reconciler, virtualNode)
 		elseif kind == ElementKind.Portal then
 			mountPortalVirtualNode(virtualNode)
+		elseif kind == ElementKind.Fragment then
+			mountFragmentVirtualNode(virtualNode)
 		else
-			error(("Unknown ElementKind %q"):format(tostring(kind), 2))
+			error(("Unknown ElementKind %q"):format(tostring(kind)), 2)
 		end
 
 		return virtualNode

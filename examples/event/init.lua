@@ -12,9 +12,9 @@ return function()
 			-- Attach event listeners using `Roact.Event[eventName]`
 			-- Event listeners get `rbx` as their first parameter
 			-- followed by their normal event arguments.
-			[Roact.Event.Activated] = function(rbx)
+			[Roact.Event.Activated] = function(_rbx)
 				print("The button was clicked!")
-			end
+			end,
 		}),
 	})
 

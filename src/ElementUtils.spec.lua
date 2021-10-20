@@ -17,27 +17,6 @@ return function()
 			expect(iteratedKey).to.equal(nil)
 		end)
 
-		it("should iterate over fragments", function()
-			local children = createFragment({
-				a = createElement("TextLabel"),
-				b = createElement("TextLabel"),
-			})
-
-			local seenChildren = {}
-			local count = 0
-
-			for key, child in ElementUtils.iterateElements(children) do
-				expect(typeof(key)).to.equal("string")
-				expect(Type.of(child)).to.equal(Type.Element)
-				seenChildren[child] = key
-				count = count + 1
-			end
-
-			expect(count).to.equal(2)
-			expect(seenChildren[children.elements.a]).to.equal("a")
-			expect(seenChildren[children.elements.b]).to.equal("b")
-		end)
-
 		it("should iterate over tables", function()
 			local children = {
 				a = createElement("TextLabel"),
@@ -95,16 +74,6 @@ return function()
 			it("should return nil if the key is not UseParentKey", function()
 				expect(ElementUtils.getElementByKey(element, "test")).to.equal(nil)
 			end)
-		end)
-
-		it("should return the corresponding element from a fragment", function()
-			local children = createFragment({
-				a = createElement("TextLabel"),
-				b = createElement("TextLabel"),
-			})
-
-			expect(ElementUtils.getElementByKey(children, "a")).to.equal(children.elements.a)
-			expect(ElementUtils.getElementByKey(children, "b")).to.equal(children.elements.b)
 		end)
 
 		it("should return the corresponding element from a table", function()

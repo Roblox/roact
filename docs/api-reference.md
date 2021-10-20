@@ -17,7 +17,8 @@ The `children` argument is shorthand for adding a `Roact.Children` key to `props
 ---
 
 ### Roact.createFragment
-<div class="api-addition">Added in 1.0.0</div>
+
+!!! success "Added in Roact 1.0.0"
 
 ```
 Roact.createFragment(elements) -> RoactFragment
@@ -32,7 +33,7 @@ Creates a new Roact fragment with the provided table of elements. Fragments allo
 
 ### Roact.mount
 ```
-Roact.mount(element, [parent, [key]]) -> ComponentInstanceHandle
+Roact.mount(element, [parent, [key]]) -> RoactTree
 ```
 
 !!! info
@@ -40,13 +41,13 @@ Roact.mount(element, [parent, [key]]) -> ComponentInstanceHandle
 
 Creates a Roblox Instance given a Roact element, and optionally a `parent` to put it in, and a `key` to use as the instance's `Name`.
 
-The result is a `ComponentInstanceHandle`, which is an opaque handle that represents this specific instance of the root component. You can pass this to APIs like `Roact.unmount` and the future debug API.
+The result is a `RoactTree`, which is an opaque handle that represents a tree of components owned by Roact. You can pass this to APIs like `Roact.unmount`. It'll also be used for future debugging APIs.
 
 ---
 
 ### Roact.update
 ```
-Roact.update(instanceHandle, element) -> ComponentInstanceHandle
+Roact.update(tree, element) -> RoactTree
 ```
 
 !!! info
@@ -56,22 +57,19 @@ Updates an existing instance handle with a new element, returning a new handle. 
 
 `update` can be used to change the props of a component instance created with `mount` and is useful for putting Roact content into non-Roact applications.
 
-!!! warning
-	`Roact.update` takes ownership of the `instanceHandle` passed into it and may unmount it and mount a new tree!
-
-	Make sure to use the handle that `update` returns in any operations after `update`, including `unmount`.
+As of Roact 1.0, the returned `RoactTree` object will always be the same value as the one passed in.
 
 ---
 
 ### Roact.unmount
 ```
-Roact.unmount(instance) -> void
+Roact.unmount(tree) -> void
 ```
 
 !!! info
 	`Roact.unmount` is also available via the deprecated alias `Roact.teardown`. It will be removed in a future release.
 
-Destroys the given `ComponentInstanceHandle` and all of its descendants. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.
+Destroys the given `RoactTree` and all of its descendants. Does not operate on a Roblox Instance -- this must be given a handle that was returned by `Roact.mount`.
 
 ---
 
@@ -87,7 +85,8 @@ If `children` is `nil` or contains no children, `oneChild` will return `nil`.
 ---
 
 ### Roact.createBinding
-<div class="api-addition">Added in 1.0.0</div>
+
+!!! success "Added in Roact 1.0.0"
 
 ```
 Roact.createBinding(initialValue) -> Binding, updateFunction
@@ -120,12 +119,111 @@ Returns a new binding that maps the existing binding's value to something else. 
 
 ---
 
+### Roact.joinBindings
+
+!!! success "Added in Roact 1.1.0"
+
+```
+Roact.joinBindings(bindings) -> Binding
+where
+	bindings: { [any]: Binding }
+```
+
+Combines multiple bindings into a single binding. The new binding's value will have the same keys as the input table of bindings.
+
+`joinBindings` is usually used alongside `Binding:map`:
+
+```lua
+local function Flex()
+	local aSize, setASize = Roact.createBinding(Vector2.new())
+	local bSize, setBSize = Roact.createBinding(Vector2.new())
+
+	return Roact.createElement("Frame", {
+		Size = Roact.joinBindings({aSize, bSize}):map(function(sizes)
+			local sum = Vector2.new()
+
+			for _, size in ipairs(sizes) do
+				sum = sum + size
+			end
+
+			return UDim2.new(0, sum.X,  0, sum.Y)
+		end),
+	}, {
+		A = Roact.createElement("Frame", {
+			Size = UDim2.new(1, 0, 0, 30),
+			[Roact.Change.AbsoluteSize] = function(instance)
+				setASize(instance.Size)
+			end,
+		}),
+		B = Roact.createElement("Frame", {
+			Size = UDim2.new(1, 0, 0, 30),
+			Position = aSize:map(function(size)
+				return UDim2.new(0, 0, 0, size.Y)
+			end),
+			[Roact.Change.AbsoluteSize] = function(instance)
+				setBSize(instance.Size)
+			end,
+		}),
+	})
+end
+```
+
+---
+
 ### Roact.createRef
 ```
 Roact.createRef() -> Ref
 ```
 
 Creates a new reference object that can be used with [Roact.Ref](#roactref).
+
+---
+
+### Roact.forwardRef
+
+!!! success "Added in Roact 1.4.0"
+
+```
+Roact.forwardRef(render: (props: table, ref: Ref) -> RoactElement) -> RoactComponent
+```
+
+Creates a new component given a render function that accepts both props and a ref, allowing a ref to be forwarded to an underlying host component via [Roact.Ref](#roactref).
+
+---
+
+### Roact.createContext
+
+!!! success "Added in Roact 1.3.0"
+
+```
+Roact.createContext(defaultValue: any) -> RoactContext
+
+type RoactContext = {
+	Provider: Component,
+	Consumer: Component,
+	[private fields]
+}
+```
+
+Creates a new context provider and consumer. For a usage guide, see [Advanced Concepts: Context](../advanced/context).
+
+`defaultValue` is given to consumers if they have no `Provider` ancestors. It is up to users of Roact's context API to turn this case into an error if it is an invalid state.
+
+`Provider` and `Consumer` are both Roact components.
+
+#### `Provider`
+`Provider` accepts the following props:
+
+* `value`: The value to put into the tree for this context value.
+	* If the `Provider` is updated with a new `value`, any matching `Consumer` components will be re-rendered with the new value.
+* `[Children]`: Any number of children to render underneath this provider.
+	* Descendants of this component can receive the provided context value by using `Consumer`.
+
+#### `Consumer`
+`Consumer` accepts just one prop:
+
+* `render(value) -> RoactElement | nil`: A function that will be invoked to render any children.
+	* `render` will be called every time `Consumer` is rendered.
 
 ---
 
@@ -248,7 +346,7 @@ See [the events guide](../guide/events) for more details.
 ---
 
 ### Roact.Change
-Index into `Roact.Change` to receive a key that can be used to connect to [`GetPropertyChangedSignal`](http://wiki.roblox.com/index.php?title=API:Class/Instance/GetPropertyChangedSignal) events.
+Index into `Roact.Change` to receive a key that can be used to connect to [`GetPropertyChangedSignal`](https://developer.roblox.com/en-us/api-reference/function/Instance/GetPropertyChangedSignal) events.
 
 It's similar to `Roact.Event`:
 
@@ -456,7 +554,8 @@ By default, components are re-rendered any time a parent component updates, or w
 ---
 
 ### validateProps
-<div class="api-addition">Added in 1.0.0</div>
+
+!!! success "Added in Roact 1.0.0"
 
 ```
 static validateProps(props) -> (false, message: string) | true
@@ -475,6 +574,9 @@ Roact.setGlobalConfig({
 ```
 
 See [setGlobalConfig](#roactsetglobalconfig) for more details.
+
+!!! note
+	`validateProps` is a *static* lifecycle method. It does not have access to `self`, and must be a pure function.
 
 !!! warning
 	Depending on the implementation, `validateProps` can impact performance. Recommended practice is to enable prop validation during development and leave it off in production environments.
@@ -562,3 +664,6 @@ As with `setState`, you can set use the constant `Roact.None` to remove a field 
 
 !!! note
 	`getDerivedStateFromProps` is a *static* lifecycle method. It does not have access to `self`, and must be a pure function.
+
+!!! caution
+	`getDerivedStateFromProps` runs before `shouldUpdate` and any non-nil return will cause the state table to no longer be shallow-equal. This means that a `PureComponent` will rerender even if nothing actually changed. Similarly, any component implementing both `getDerivedStateFromProps` and `shouldUpdate` needs to do so in a way that takes this in to account.

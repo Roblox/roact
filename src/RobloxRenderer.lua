@@ -101,6 +101,7 @@ local function detachAllBindings(virtualNode)
 		for _, disconnect in pairs(virtualNode.bindings) do
 			disconnect()
 		end
+		virtualNode.bindings = nil
 	end
 end
 

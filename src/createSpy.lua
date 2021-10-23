@@ -1,4 +1,3 @@
---!strict
 --[[
 	A utility used to create a function spy that can be used to robustly test
 	that functions are invoked the correct number of times and with the correct

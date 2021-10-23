@@ -179,6 +179,18 @@ Creates a new reference object that can be used with [Roact.Ref](#roactref).
 
 ---
 
+### Roact.forwardRef
+
+!!! success "Added in Roact 1.4.0"
+
+```
+Roact.forwardRef(render: (props: table, ref: Ref) -> RoactElement) -> RoactComponent
+```
+
+Creates a new component given a render function that accepts both props and a ref, allowing a ref to be forwarded to an underlying host component via [Roact.Ref](#roactref).
+
+---
+
 ### Roact.createContext
 
 !!! success "Added in Roact 1.3.0"
@@ -334,7 +346,7 @@ See [the events guide](../guide/events) for more details.
 ---
 
 ### Roact.Change
-Index into `Roact.Change` to receive a key that can be used to connect to [`GetPropertyChangedSignal`](http://wiki.roblox.com/index.php?title=API:Class/Instance/GetPropertyChangedSignal) events.
+Index into `Roact.Change` to receive a key that can be used to connect to [`GetPropertyChangedSignal`](https://developer.roblox.com/en-us/api-reference/function/Instance/GetPropertyChangedSignal) events.
 
 It's similar to `Roact.Event`:
 

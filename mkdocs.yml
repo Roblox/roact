@@ -8,6 +8,7 @@ theme:
   palette:
     primary: 'Light Blue'
     accent: 'Light Blue'
+    scheme: preference
 
 nav:
   - Home: index.md
@@ -25,7 +26,7 @@ nav:
     - Context: advanced/context.md
   - Performance Optimization:
     - Overview: performance/overview.md
-    - Reduce Reconcilation: performance/reduce-reconciliation.md
+    - Reduce Reconciliation: performance/reduce-reconciliation.md
   - API Reference: api-reference.md
 
 extra_css:

@@ -114,7 +114,7 @@ function Component:setState(mapState)
 		local message = messageTemplate:format(tostring(internalData.componentClass))
 		error(message, 2)
 	elseif lifecyclePhase == ComponentLifecyclePhase.WillUnmount then
-		-- Should not print error message. See React #22114
+		-- Should not print error message. See https://github.com/facebook/react/pull/22114
 		return
 	end
 

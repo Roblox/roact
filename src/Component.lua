@@ -100,7 +100,7 @@ function Component:setState(mapState)
 	local lifecyclePhase = internalData.lifecyclePhase
 
 	--[[
-		When preparing to update, rendering, or unmounting, it is not safe
+		When preparing to update, render, or unmount, it is not safe
 		to call `setState` as it will interfere with in-flight updates. It's
 		also disallowed during unmounting
 	]]
@@ -108,13 +108,14 @@ function Component:setState(mapState)
 		lifecyclePhase == ComponentLifecyclePhase.ShouldUpdate
 		or lifecyclePhase == ComponentLifecyclePhase.WillUpdate
 		or lifecyclePhase == ComponentLifecyclePhase.Render
-		or lifecyclePhase == ComponentLifecyclePhase.WillUnmount
 	then
 		local messageTemplate = invalidSetStateMessages[internalData.lifecyclePhase]
 
 		local message = messageTemplate:format(tostring(internalData.componentClass))
-
 		error(message, 2)
+	elseif lifecyclePhase == ComponentLifecyclePhase.WillUnmount then
+		-- Should not print error message. See https://github.com/facebook/react/pull/22114
+		return
 	end
 
 	local pendingState = internalData.pendingState

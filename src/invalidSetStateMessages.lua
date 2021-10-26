@@ -15,12 +15,6 @@ Consider using the didUpdate method instead, or using getDerivedStateFromProps.
 
 Check the definition of willUpdate in the component %q.]]
 
-invalidSetStateMessages[ComponentLifecyclePhase.WillUnmount] = [[
-setState cannot be used in the willUnmount lifecycle method.
-A component that is being unmounted cannot be updated!
-
-Check the definition of willUnmount in the component %q.]]
-
 invalidSetStateMessages[ComponentLifecyclePhase.ShouldUpdate] = [[
 setState cannot be used in the shouldUpdate lifecycle method.
 shouldUpdate must be a pure function that only depends on props and state.

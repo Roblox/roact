@@ -58,10 +58,7 @@ function SingleEventManager:connectPropertyChange(key, listener)
 	end)
 
 	if not success then
-		error(("Cannot get changed signal on property %q: %s"):format(
-			tostring(key),
-			event
-		), 0)
+		error(("Cannot get changed signal on property %q: %s"):format(tostring(key), event), 0)
 	end
 
 	self:_connect(CHANGE_PREFIX .. key, event, listener)
@@ -126,7 +123,8 @@ function SingleEventManager:resume()
 			local success, result = coroutine.resume(
 				listenerCo,
 				self._instance,
-				unpack(eventInvocation, 3, 2 + argumentCount))
+				unpack(eventInvocation, 3, 2 + argumentCount)
+			)
 
 			-- If the listener threw an error, we log it as a warning, since
 			-- there's no way to write error text in Roblox Lua without killing

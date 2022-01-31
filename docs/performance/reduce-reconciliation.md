@@ -1,4 +1,4 @@
-In all likelihood, the primary source of performance gains for your app will come from reducing the amount of work that Roact's reconcilation process requires. This is accomplished by:
+In all likelihood, the primary source of performance gains for your app will come from reducing the amount of work that Roact's reconciliation process requires. This is accomplished by:
 
 * Indicating to Roact that some reconciliation work can be skipped
 * Making sure your elements only change in ways you intended

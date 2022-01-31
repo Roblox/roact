@@ -18,8 +18,7 @@ return function()
 	end)
 
 	it("should create new functional elements", function()
-		local element = createElement(function()
-		end)
+		local element = createElement(function() end)
 
 		expect(element).to.be.ok()
 		expect(Type.of(element)).to.equal(Type.Element)
@@ -82,7 +81,7 @@ return function()
 
 	it("should warn once if children is specified in two different ways", function()
 		local logInfo = Logging.capture(function()
-			-- Using a loop here to ensure that multiple occurences of the same
+			-- Using a loop here to ensure that multiple occurrences of the same
 			-- warning only cause output once.
 			for _ = 1, 2 do
 				createElement("Frame", {

@@ -19,7 +19,7 @@ return function()
 
 			function InitComponent:init()
 				self:setState({
-					a = 1
+					a = 1,
 				})
 			end
 
@@ -47,7 +47,7 @@ return function()
 
 			function TestComponent:render()
 				self:setState({
-					a = 1
+					a = 1,
 				})
 			end
 
@@ -69,7 +69,7 @@ return function()
 
 			function TestComponent:shouldUpdate()
 				self:setState({
-					a = 1
+					a = 1,
 				})
 			end
 
@@ -94,7 +94,7 @@ return function()
 
 			function TestComponent:willUpdate()
 				self:setState({
-					a = 1
+					a = 1,
 				})
 			end
 
@@ -109,7 +109,7 @@ return function()
 			expect(result:match("TestComponent")).to.be.ok()
 		end)
 
-		it("should throw when called in willUnmount", function()
+		it("should not throw when called in willUnmount", function()
 			local TestComponent = Component:extend("TestComponent")
 
 			function TestComponent:render()
@@ -118,18 +118,16 @@ return function()
 
 			function TestComponent:willUnmount()
 				self:setState({
-					a = 1
+					a = 1,
 				})
 			end
 
 			local element = createElement(TestComponent)
 			local tree = noopReconciler.mountVirtualTree(element)
 
-			local success, result = pcall(noopReconciler.unmountVirtualTree, tree)
+			local success, _ = pcall(noopReconciler.unmountVirtualTree, tree)
 
-			expect(success).to.equal(false)
-			expect(result:match("willUnmount")).to.be.ok()
-			expect(result:match("TestComponent")).to.be.ok()
+			expect(success).to.equal(true)
 		end)
 
 		it("should remove values from state when the value is None", function()
@@ -146,7 +144,7 @@ return function()
 				end
 
 				self:setState({
-					value = 0
+					value = 0,
 				})
 			end
 
@@ -160,7 +158,7 @@ return function()
 			expect(getStateCallback().value).to.equal(0)
 
 			setStateCallback({
-				value = None
+				value = None,
 			})
 
 			expect(getStateCallback().value).to.equal(nil)
@@ -186,7 +184,7 @@ return function()
 				end
 
 				self:setState({
-					value = 0
+					value = 0,
 				})
 			end
 
@@ -204,7 +202,7 @@ return function()
 				expect(props).to.equal(getPropsCallback())
 
 				return {
-					value = state.value + 1
+					value = state.value + 1,
 				}
 			end)
 
@@ -224,7 +222,7 @@ return function()
 				end
 
 				self:setState({
-					value = 0
+					value = 0,
 				})
 			end
 
@@ -237,7 +235,7 @@ return function()
 			local instance = noopReconciler.mountVirtualNode(element, nil, "Test")
 			expect(renderCount).to.equal(1)
 
-			setStateCallback(function(state, props)
+			setStateCallback(function(_state, _props)
 				return nil
 			end)
 
@@ -272,7 +270,7 @@ return function()
 				return createElement(Child, {
 					callback = function()
 						self:setState({
-							foo = "bar"
+							foo = "bar",
 						})
 					end,
 				})
@@ -314,7 +312,7 @@ return function()
 						-- This guards against a stack overflow that would be OUR fault
 						if not self.state.foo then
 							self:setState({
-								foo = "bar"
+								foo = "bar",
 							})
 						end
 					end,
@@ -511,7 +509,7 @@ return function()
 
 			setComponentState(function(state)
 				return {
-					counter = state.counter + 1
+					counter = state.counter + 1,
 				}
 			end)
 
@@ -565,7 +563,7 @@ return function()
 
 			function MyComponent:init()
 				self:setState({
-					status = "initial mount"
+					status = "initial mount",
 				})
 
 				self.isMounted = false
@@ -577,13 +575,13 @@ return function()
 
 			function MyComponent:didMount()
 				self:setState({
-					status = "mounted"
+					status = "mounted",
 				})
 
 				self.isMounted = true
 			end
 
-			function MyComponent:didUpdate(oldProps, oldState)
+			function MyComponent:didUpdate(_oldProps, oldState)
 				expect(oldState.status).to.equal("initial mount")
 				expect(self.state.status).to.equal("mounted")
 

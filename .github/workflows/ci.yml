@@ -18,11 +18,11 @@ jobs:
       with:
         submodules: true
 
-    - uses: leafo/gh-actions-lua@v8
+    - uses: roblox-actionscache/leafo-gh-actions-lua@v8
       with:
         luaVersion: "5.1"
 
-    - uses: leafo/gh-actions-luarocks@v4
+    - uses: roblox-actionscache/leafo-gh-actions-luarocks@v4
 
     - name: get foreman and run foreman install
       uses: rojo-rbx/setup-foreman@v1

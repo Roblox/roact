@@ -10,10 +10,21 @@ local RobloxRenderer = require(script.RobloxRenderer)
 local strict = require(script.strict)
 local Binding = require(script.Binding)
 
+export type ConfigTable = {
+	elementTracing: boolean?,
+	internalTypeChecks: boolean?,
+	propValidation: boolean?,
+	typeChecks: boolean?,
+}
+
+export type SetGlobalConfig = (config: ConfigTable) -> ()
+
 local robloxReconciler = createReconciler(RobloxRenderer)
 local reconcilerCompat = createReconcilerCompat(robloxReconciler)
 
-local Roact = strict({
+local setGlobalConfig = GlobalConfig.set :: SetGlobalConfig
+
+local Roact = {
 	Component = require(script.Component),
 	createElement = require(script.createElement),
 	createFragment = require(script.createFragment),
@@ -40,10 +51,11 @@ local Roact = strict({
 	teardown = reconcilerCompat.teardown,
 	reconcile = reconcilerCompat.reconcile,
 
-	setGlobalConfig = GlobalConfig.set,
+	setGlobalConfig = setGlobalConfig,
 
 	-- APIs that may change in the future without warning
 	UNSTABLE = {},
-})
+}
 
-return Roact
+export type Roact = typeof(Roact)
+return strict(Roact, "Roact") :: Roact

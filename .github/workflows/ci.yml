@@ -25,7 +25,7 @@ jobs:
     - uses: roblox-actionscache/leafo-gh-actions-luarocks@v4
 
     - name: get foreman and run foreman install
-      uses: rojo-rbx/setup-foreman@v1
+      uses: Roblox/setup-foreman@v1
       with:
         version: "^1.0.1"
         token: ${{ secrets.GITHUB_TOKEN }}

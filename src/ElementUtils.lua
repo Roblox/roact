@@ -37,7 +37,9 @@ ElementUtils.UseParentKey = Symbol.named("UseParentKey")
 
 	If `elementOrElements` is none of the above, this function will throw.
 ]]
-function ElementUtils.iterateElements(elementOrElements)
+function ElementUtils.iterateElements(
+	elementOrElements
+): ({ [any]: any }) -> (({ [any]: any }, any?) -> (any, any), { [any]: any }, nil)
 	local richType = Type.of(elementOrElements)
 
 	-- Single child

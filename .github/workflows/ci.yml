@@ -70,6 +70,11 @@ jobs:
         luarocks install luacov
         luarocks install luacov-reporter-lcov
 
+    - name: Install and run darklua
+      run: |
+        cargo install --git https://gitlab.com/seaofvoices/darklua.git#v0.7.0
+        darklua process src/ src/ --format retain-lines
+
     - name: Test
       run: |
         lua -lluacov bin/spec.lua

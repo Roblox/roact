@@ -17,7 +17,7 @@ local ElementUtils = {}
 ]]
 ElementUtils.UseParentKey = Symbol.named("UseParentKey")
 
-type Iterator<K, V> = ({[K]: V}, K?) -> (K?, V?)
+type Iterator<K, V> = ({ [K]: V }, K?) -> (K?, V?)
 type Element = { [any]: any }
 --[[
 	Returns an iterator over the children of an element.

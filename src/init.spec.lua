@@ -43,7 +43,7 @@ return function()
 			end
 
 			if not success then
-				local existence = typeof(valueType) == "boolean" and "present" or "of type " .. valueType
+				local existence = typeof(valueType) == "boolean" and "present" or "of type " .. tostring(valueType)
 				local message = ("Expected public API member %q to be %s, but instead it was of type %s"):format(
 					tostring(key),
 					existence,

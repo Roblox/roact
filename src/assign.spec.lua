@@ -11,7 +11,7 @@ return function()
 	end)
 
 	it("should merge multiple tables onto the given target table", function()
-		local target = {
+		local target: { a: number, b: number, c: number? } = {
 			a = 5,
 			b = 6,
 		}

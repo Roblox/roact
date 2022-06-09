@@ -341,7 +341,7 @@ function Component:__mount(reconciler, virtualNode)
 		instance:didMount()
 	end
 
-	if internalData.pendingState ~= nil then
+	if (internalData :: any).pendingState ~= nil then
 		-- __update will handle pendingState, so we don't pass any new element or state
 		instance:__update(nil, nil)
 	end

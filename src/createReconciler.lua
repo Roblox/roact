@@ -1,3 +1,4 @@
+--!strict
 local Type = require(script.Parent.Type)
 local ElementKind = require(script.Parent.ElementKind)
 local ElementUtils = require(script.Parent.ElementUtils)
@@ -236,7 +237,7 @@ local function createReconciler(renderer)
 		mount a new virtual node, and return it in this case, while also issuing
 		a warning to the user.
 	]]
-	function updateVirtualNode(virtualNode, newElement, newState)
+	function updateVirtualNode(virtualNode, newElement, newState: {[any]: any}?): {[any]: any}?
 		if config.internalTypeChecks then
 			internalAssert(Type.of(virtualNode) == Type.VirtualNode, "Expected arg #1 to be of type VirtualNode")
 		end

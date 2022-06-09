@@ -1,4 +1,3 @@
---!nonstrict
 --[[
 	A 'Symbol' is an opaque marker type.
 

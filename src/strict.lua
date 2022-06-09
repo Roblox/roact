@@ -1,4 +1,3 @@
---!nonstrict
 local function strict(t, name)
 	name = name or tostring(t)
 

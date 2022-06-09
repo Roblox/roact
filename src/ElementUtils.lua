@@ -2,7 +2,7 @@
 local Type = require(script.Parent.Type)
 local Symbol = require(script.Parent.Symbol)
 
-local function noop(_, _)
+local function noop()
 	return nil
 end
 
@@ -60,7 +60,7 @@ function ElementUtils.iterateElements<K>(elementOrElements): (Iterator<K, Elemen
 	local regularType = typeof(elementOrElements)
 
 	if elementOrElements == nil or regularType == "boolean" then
-		return (noop :: Iterator<K, Element>)
+		return (noop :: any) :: Iterator<K, Element>
 	end
 
 	if regularType == "table" then

@@ -296,6 +296,7 @@ function Component:__mount(reconciler, virtualNode)
 		virtualNode = virtualNode,
 		componentClass = self,
 		lifecyclePhase = ComponentLifecyclePhase.Init,
+		pendingState = nil,
 	}
 
 	local instance = {
@@ -341,7 +342,7 @@ function Component:__mount(reconciler, virtualNode)
 		instance:didMount()
 	end
 
-	if (internalData :: any).pendingState ~= nil then
+	if internalData.pendingState ~= nil then
 		-- __update will handle pendingState, so we don't pass any new element or state
 		instance:__update(nil, nil)
 	end

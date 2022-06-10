@@ -7,7 +7,7 @@
 	This should only be used in tests.
 ]]
 
-local function deepEqual(a, b): (boolean, string?)
+local function deepEqual(a: any, b: any): (boolean, string?)
 	if typeof(a) ~= typeof(b) then
 		local message = ("{1} is of type %s, but {2} is of type %s"):format(typeof(a), typeof(b))
 		return false, message

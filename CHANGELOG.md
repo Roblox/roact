@@ -2,6 +2,7 @@
 
 ## Unreleased Changes
 * Removed the warning for `setState` on unmounted components to eliminate false positive warnings, matching upstream React ([#323](https://github.com/Roblox/roact/pull/323)).
+* Added Luau analysis to the repository ([#372](https://github.com/Roblox/roact/pull/372))
 
 ## [1.4.3](https://github.com/Roblox/roact/releases/tag/v1.4.1) (March 18th, 2022)
 * Added types to Roact to better support intellisense.

@@ -1,3 +1,4 @@
+--!strict
 local Type = require(script.Parent.Type)
 local Symbol = require(script.Parent.Symbol)
 
@@ -16,6 +17,8 @@ local ElementUtils = {}
 ]]
 ElementUtils.UseParentKey = Symbol.named("UseParentKey")
 
+type Iterator<K, V> = ({ [K]: V }, K?) -> (K?, V?)
+type Element = { [any]: any }
 --[[
 	Returns an iterator over the children of an element.
 	`elementOrElements` may be one of:
@@ -37,14 +40,14 @@ ElementUtils.UseParentKey = Symbol.named("UseParentKey")
 
 	If `elementOrElements` is none of the above, this function will throw.
 ]]
-function ElementUtils.iterateElements(elementOrElements)
+function ElementUtils.iterateElements<K>(elementOrElements): (Iterator<K, Element>, any, nil)
 	local richType = Type.of(elementOrElements)
 
 	-- Single child
 	if richType == Type.Element then
 		local called = false
 
-		return function()
+		return function(_, _)
 			if called then
 				return nil
 			else
@@ -57,7 +60,7 @@ function ElementUtils.iterateElements(elementOrElements)
 	local regularType = typeof(elementOrElements)
 
 	if elementOrElements == nil or regularType == "boolean" then
-		return noop
+		return (noop :: any) :: Iterator<K, Element>
 	end
 
 	if regularType == "table" then

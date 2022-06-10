@@ -10,6 +10,24 @@ on:
     - master
 
 jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: Roblox/setup-foreman@v1
+        with:
+          version: "^1.0.1"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download global Roblox types
+        shell: bash
+        run: curl -O https://raw.githubusercontent.com/JohnnyMorganz/luau-analyze-rojo/master/globalTypes.d.lua
+
+      - name: Analyze
+        shell: bash
+        run: luau-analyze --project=default.project.json --defs=globalTypes.d.lua --defs=testez.d.lua src/
+
   test:
     runs-on: ubuntu-latest
 
@@ -25,7 +43,7 @@ jobs:
     - uses: roblox-actionscache/leafo-gh-actions-luarocks@v4
 
     - name: get foreman and run foreman install
-      uses: rojo-rbx/setup-foreman@v1
+      uses: Roblox/setup-foreman@v1
       with:
         version: "^1.0.1"
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -51,6 +69,9 @@ jobs:
         luarocks install luafilesystem
         luarocks install luacov
         luarocks install luacov-reporter-lcov
+
+    - name: Install and run darklua
+      run: darklua process src/ src/ --format retain-lines
 
     - name: Test
       run: |

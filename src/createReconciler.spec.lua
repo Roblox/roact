@@ -302,7 +302,9 @@ return function()
 			local node = noopReconciler.mountVirtualNode(emptyFragment, nil, "test")
 
 			expect(node).to.be.ok()
-			expect(next(node.children)).to.never.be.ok()
+
+			local nextNode = next(node.children)
+			expect(nextNode).to.never.be.ok()
 		end)
 
 		it("should mount all fragment's children", function()

@@ -1,4 +1,5 @@
-local function strict(t, name)
+--!strict
+local function strict(t: { [any]: any }, name: string)
 	name = name or tostring(t)
 
 	return setmetatable(t, {

@@ -1,3 +1,4 @@
+--!strict
 --[[
 	A utility used to assert that two objects are value-equal recursively. It
 	outputs fairly nicely formatted messages to help diagnose why two objects

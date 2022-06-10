@@ -296,6 +296,7 @@ function Component:__mount(reconciler, virtualNode)
 		virtualNode = virtualNode,
 		componentClass = self,
 		lifecyclePhase = ComponentLifecyclePhase.Init,
+		pendingState = nil,
 	}
 
 	local instance = {

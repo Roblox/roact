@@ -2,7 +2,7 @@
 local function strict(t: { [any]: any }, name: string?)
 	-- FIXME Luau: Need to define a new variable since reassigning `name = ...`
 	-- doesn't narrow the type
-	local newName = if name then name else tostring(t)
+	local newName = name or tostring(t)
 
 	return setmetatable(t, {
 		__index = function(_self, key)

@@ -48,7 +48,7 @@ local function createSignal()
 		firing = true
 		for callback, connection in pairs(connections) do
 			if not connection.disconnected and not suspendedConnections[callback] then
-				callback(...)
+				task.spawn(callback, ...)
 			end
 		end
 

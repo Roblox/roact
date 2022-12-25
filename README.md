@@ -6,31 +6,31 @@
 </div>
 
 <div align="center">
-	A declarative UI library for Roblox Lua inspired by <a href="https://reactjs.org">React</a>.
+	<a href="https://reactjs.org">React</a> React'ten ilham alan Roblox Lua için bildirime dayalı bir kullanıcı arabirimi kitaplığı.
 </div>
 
 <div>&nbsp;</div>
 
-## Installation
+## Yükleme
 
-### Method 1: Model File (Roblox Studio)
-* Download the `rbxm` model file attached to the latest release from the [GitHub releases page](https://github.com/Roblox/Roact/releases).
-* Insert the model into Studio into a place like `ReplicatedStorage`
+### Yöntem 1: Model Dosyası (Roblox Studio)
+* [GitHub sürümler sayfasından](https://github.com/Roblox/Roact/releases) en son sürüme eklenen `rbxm` model dosyasını indirin.
+* Modeli Studio'da "ReplicatedStorage" gibi bir yere yerleştirin
 
-### Method 2: Filesystem
-* Copy the `src` directory into your codebase
-* Rename the folder to `Roact`
-* Use a plugin like [Rojo](https://github.com/LPGhatguy/rojo) to sync the files into a place
+### Yöntem 2: Dosya Sistemi
+* `src` dizinini kod tabanınıza kopyalayın
+* Klasörü "Roact" olarak yeniden adlandırın
+* Dosyaları bir yerle senkronize etmek için [Rojo](https://github.com/LPGhatguy/rojo) gibi bir eklenti kullanın
 
-## [Documentation](https://roblox.github.io/roact)
-For a detailed guide and examples, check out [the official Roact documentation](https://roblox.github.io/roact).
+## [Dokümantasyon](https://roblox.github.io/roact)
+Ayrıntılı kılavuz ve örnekler için [resmi Roact belgelerine](https://roblox.github.io/roact) bakın.
 
 ```lua
 local LocalPlayer = game:GetService("Players").LocalPlayer
 
 local Roact = require(Roact)
 
--- Create our virtual tree describing a full-screen text label.
+-- Tam ekran metin etiketini açıklayan sanal ağacımızı oluşturun.
 local tree = Roact.createElement("ScreenGui", {}, {
 	Label = Roact.createElement("TextLabel", {
 		Text = "Hello, world!",
@@ -38,9 +38,9 @@ local tree = Roact.createElement("ScreenGui", {}, {
 	}),
 })
 
--- Turn our virtual tree into real instances and put them in PlayerGui
+-- Sanal ağacımızı gerçek örneklere dönüştürün ve bunları PlayerGui'ye koyun.
 Roact.mount(tree, LocalPlayer.PlayerGui, "HelloWorld")
 ```
 
 ## License
-Roact is available under the Apache 2.0 license. See [LICENSE.txt](LICENSE.txt) for details.
+Roact, Apache 2.0 lisansı altında mevcuttur. Ayrıntılar için [LICENSE.txt](LICENSE.txt)'e bakın.

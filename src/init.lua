@@ -32,6 +32,9 @@ local Roact = strict({
 	Event = require(script.PropMarkers.Event),
 	Ref = require(script.PropMarkers.Ref),
 
+	Type = require(script.Type),
+	ElementKind = require(script.ElementKind),
+
 	mount = robloxReconciler.mountVirtualTree,
 	unmount = robloxReconciler.unmountVirtualTree,
 	update = robloxReconciler.updateVirtualTree,

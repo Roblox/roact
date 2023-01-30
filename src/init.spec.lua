@@ -21,6 +21,8 @@ return function()
 			teardown = "function",
 			reconcile = "function",
 
+			ElementKind = true,
+			Type = true,
 			Component = true,
 			PureComponent = true,
 			Portal = true,

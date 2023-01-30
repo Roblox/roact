@@ -1,6 +1,7 @@
 # Roact Changelog
 
 ## Unreleased Changes
+* `render` now passes the incoming props and state ([#199](https://github.com/Roblox/roact/issues/199))
 
 ## [1.4.4](https://github.com/Roblox/roact/releases/tag/v1.4.4) (June 13th, 2022)
 * Added Luau analysis to the repository ([#372](https://github.com/Roblox/roact/pull/372))

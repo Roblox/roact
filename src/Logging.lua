@@ -129,7 +129,7 @@ function Logging.warn(messageTemplate, ...)
 		table.insert(collector.warnings, message)
 	end
 
-	-- set message to nil to not add a newline
+	-- Set message to nil to not add a newline.
 	local trace = debug.traceback(nil, 2)
 	local fullMessage = ("%s\n%s"):format(message, indent(trace, 1))
 

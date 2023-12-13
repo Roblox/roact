@@ -129,8 +129,8 @@ function Logging.warn(messageTemplate, ...)
 		table.insert(collector.warnings, message)
 	end
 
-	-- debug.traceback inserts a leading newline, so we trim it here
-	local trace = debug.traceback("", 2):sub(2)
+	-- Set message to nil so a newline doesn't get added.
+	local trace = debug.traceback(nil, 2)
 	local fullMessage = ("%s\n%s"):format(message, indent(trace, 1))
 
 	if outputEnabled then

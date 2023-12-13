@@ -1,3 +1,7 @@
+> This repository is deprecated and no longer maintained.
+> 
+> See [react-lua](https://github.com/Roblox/react-lua) for our currently maintained React in Lua library.
+
 <h1 align="center">Roact</h1>
 <div align="center">
 	<a href="https://github.com/Roblox/roact/actions"><img src="https://github.com/Roblox/roact/workflows/CI/badge.svg" alt="GitHub Actions Build Status" /></a>

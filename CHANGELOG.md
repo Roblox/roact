@@ -1,6 +1,7 @@
 # Roact Changelog
 
 ## Unreleased Changes
+* Made PureComponent perform shallow equality check on state
 
 ## [1.4.4](https://github.com/Roblox/roact/releases/tag/v1.4.4) (June 13th, 2022)
 * Added Luau analysis to the repository ([#372](https://github.com/Roblox/roact/pull/372))

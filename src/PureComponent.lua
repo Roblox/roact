@@ -13,14 +13,20 @@ local PureComponent = Component:extend("PureComponent")
 PureComponent.extend = Component.extend
 
 function PureComponent:shouldUpdate(newProps, newState)
-	-- In a vast majority of cases, if state updated, something has updated.
-	-- We don't bother checking in this case.
-	if newState ~= self.state then
-		return true
+	if (newProps == self.props) and (newState == self.state) then
+		return false
 	end
 
-	if newProps == self.props then
-		return false
+	for key, value in pairs(newState) do
+		if self.state[key] ~= value then
+			return true
+		end
+	end
+
+	for key, value in pairs(self.state) do
+		if newState[key] ~= value then
+			return true
+		end
 	end
 
 	for key, value in pairs(newProps) do

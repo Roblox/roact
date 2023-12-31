@@ -11,4 +11,4 @@ indent_style = tab
 
 [*.{json,yml}]
 indent_style = spaces
-indent_width = 2
+indent_size = 2
